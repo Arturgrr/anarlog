@@ -1,23 +1,16 @@
 ---
 title: "Automate meeting follow-up"
-description: "Send recaps, create issues, update project notes, or export every meeting."
+description: "Export every meeting as Markdown when it ends."
 ---
 
-Automations run repeatable work when a meeting ends. They are part of Anarlog Pro.
+Automations run repeatable work when a meeting ends. They write local Markdown files, so they need no account or connected service.
 
-## Use a starter
+## Use the starter
 
-Open **Automations** and choose a starter from the sidebar:
-
-| Starter | What it does | Configuration |
-| --- | --- | --- |
-| Share a meeting recap in Slack | Posts the meeting title and AI summary. | Connect Slack and choose a channel. |
-| Update project notes in Notion | Appends a dated meeting update to a page. | Connect Notion and choose a page. |
-| Turn action items into Linear issues | Creates issue drafts from assigned follow-ups. | Connect Linear and choose a team. |
-| Export every meeting as Markdown | Writes the memo, summary, and transcript to a local file. | Choose an export folder. |
+Open **Automations** and choose **Export every meeting as Markdown** from the sidebar. It writes the memo, summary, and transcript to a local file.
 
 1. Select the starter.
-2. Connect the service or choose the local folder it needs.
+2. Choose the export folder.
 3. Review the trigger, source content, and result preview.
 4. Click **Save & enable**.
 
@@ -25,9 +18,7 @@ An enabled starter runs after a meeting ends and the content it needs is ready. 
 
 ## Check whether it ran
 
-The automation detail shows whether it is enabled and the result of its last run. A failed run includes a short error. Check the selected destination and reconnect the service when authorization has expired.
-
-For Markdown exports, confirm that the chosen folder still exists and is writable. The local export does not need Slack, Notion, or Linear access.
+The automation detail shows whether it is enabled and the result of its last run. A failed run includes a short error. Confirm that the chosen folder still exists and is writable.
 
 ## Choose Markdown export content
 
@@ -39,58 +30,14 @@ These options belong to desktop Automations. CLI `meetings export` still exports
 
 ## Build a custom workflow
 
-Click **+** in the Automations sidebar to start a workflow. Add a trigger, then stack actions the way you would in Zapier:
+Click **+** in the Automations sidebar to start a workflow:
 
 1. Choose when it should run: after the meeting summary is ready, or after the meeting ends.
-2. Add one or more actions: Slack recap, Notion update, Linear issues, or Markdown export.
-3. Configure each destination.
-4. Click **Save & enable**.
+2. Add a Markdown export action and configure its folder and content.
+3. Click **Save & enable**.
 
-Enabled custom workflows run automatically, the same way starters do. Chat on the right can still help you refine the workflow; it is not required to make the automation run.
+Enabled custom workflows run automatically, the same way the starter does. Chat on the right can still help you refine the workflow; it is not required to make the automation run.
 
-Examples:
+Anarlog must be open to run a workflow. It does not backfill older notes or queue runs while the app is closed.
 
-- After the summary is ready, post to Slack and append the same recap to a Notion page.
-- After the meeting ends, export Markdown and create Linear issues from action items.
-
-<Warning>
-  Automations send meeting content to the destination you configure. Use only workspaces, channels, pages, teams, and folders that should receive that content.
-</Warning>
-
-## Save summaries to Google Drive
-
-Choose **Save meetings to Google Drive** under **Get started** to open the template.
-Configure it and choose **Save draft** or **Save & enable**. Reopening the template
-returns to the same configuration without creating another automation.
-Or, in a custom workflow, choose **After the meeting summary is ready**, then add
-**Save to Google Drive**. Connect your Google account and choose a folder in My
-Drive or a shared drive where you can add files. Choose **Markdown (.md)** or
-**Google Docs** as the file format, then enable the workflow. Existing workflows
-continue to use Markdown.
-
-Every note summarized after you enable the workflow is exported to that folder
-as one file in the selected format containing its summary, transcript, title, date, and meeting
-ID. Notes without a transcript include a message that no transcript is available.
-Choose a collection folder that should receive all of these notes; this action
-does not filter by Anarlog folder or automatically route projects.
-
-Generating a summary again updates the existing export for that meeting and
-folder and format. Changing formats keeps previous exports and uses the new
-format on subsequent runs; it does not convert old exports in bulk. Renaming a note updates its exported filename. Anarlog owns the exported
-file content, so a later export replaces edits made directly to that file.
-
-The action shows the exported file link or its latest unresolved failure. Use
-**Retry Google Drive export** to retry that delivery without replaying successful
-Slack, Notion, or Linear actions. If the destination changes, generate the summary
-again to export to the new folder. Changing the format also requires a new
-summary run rather than retrying a delivery in the old format.
-
-Google Docs retries search for an existing export before creating a document.
-If a creation response is lost and Drive search has not indexed the document yet,
-a retry can create a duplicate. There is no separate recovery queue or guarantee
-of exactly-once creation.
-
-Anarlog must be open to run the workflow. This action does not backfill older
-notes or queue deliveries while the app is closed. It uses the same plan access
-as other connected automation actions and sends the exported content through
-Anarlog's integration API to Google Drive; CloudSync is not required.
+To send meeting events to your own service instead, use [webhooks](/reference/webhooks).

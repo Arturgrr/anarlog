@@ -3,18 +3,18 @@ title: "Webhooks reference"
 description: "Signed meeting events Anarlog delivers to an endpoint you configure."
 ---
 
-Webhooks let Anarlog push meeting events to your own endpoint. They are built into the desktop app and available on every plan. Configure them under **Settings → Developers → Webhooks**.
+Webhooks let Anarlog push meeting events to your own endpoint. They are built into the desktop app and sent directly from your computer to the endpoint. Configure them under **Settings → Developers → Webhooks**.
 
 <Warning>
   Meeting events include the note, summaries, participants, action items, and full transcript text. Only add an endpoint you trust.
 </Warning>
 
-To read meeting data instead of receiving it, use the [CLI](/reference/cli), the [local MCP server](/reference/mcp), or the [Cloud API](/reference/api-cloud).
+To read meeting data instead of receiving it, use the [CLI](/reference/cli) or the [local MCP server](/reference/mcp).
 
 ## Add an endpoint
 
 1. Open **Settings → Developers → Webhooks**.
-2. Enter an `https://` URL and click **Add webhook**.
+2. Enter an `http://` or `https://` URL and click **Add webhook**.
 3. Copy the signing secret (`whsec_...`). It is shown once.
 4. Click **Test** to send one `webhook.test` delivery and confirm your endpoint responds.
 

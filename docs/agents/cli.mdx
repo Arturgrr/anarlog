@@ -1,20 +1,19 @@
 ---
 title: "CLI for agents"
-description: "Use structured Anarlog CLI output as an agent-friendly MCP fallback."
+description: "Use structured Anarlog CLI output as an agent-friendly alternative to MCP."
 ---
 
 Use the global `--json` flag whenever an agent consumes CLI output.
 
 A successful response contains `schema_version`, `command`, `data`, and optional `pagination`. Read results from `data`. Follow `pagination.next_offset` only when you need another page.
 
-Meeting reads default to the local database. Use `meetings --source cloud` after `anarlog auth login` to read opted-in Cloud snapshots, or `meetings --source auto` to use Cloud only when the local database is absent.
+Meeting reads use the local database on your computer.
 
 ## Resolve meeting context
 
 ```bash
 anarlog --json meetings list --query "weekly planning" --limit 10
 anarlog --json meetings get MEETING_ID
-anarlog --json meetings --source cloud list --query "weekly planning" --limit 10
 ```
 
 Search is case-insensitive across meeting titles and IDs. If several meetings match, ask the user to choose one.
@@ -50,6 +49,15 @@ anarlog --json meetings transcript MEETING_ID --limit 200 --offset 0
 
 Transcript limits are measured in words. A page defaults to 200 words and caps at 500. Stop paging once you have enough evidence.
 
+## Import a recording
+
+```bash
+anarlog --json meetings import ./call.m4a --title "Customer call" --wait
+anarlog --json meetings import-status JOB_ID
+```
+
+The desktop app must be open on the same database. Import only when the user explicitly asks; the desktop transcribes the audio with its configured Transcription provider.
+
 ## Diagnose setup
 
 ```bash
@@ -65,7 +73,6 @@ Only export a complete meeting when the user explicitly requests a file:
 ```bash
 anarlog meetings export MEETING_ID --format markdown --output meeting.md
 anarlog meetings export MEETING_ID --format json --output meeting.json
-anarlog meetings --source cloud export MEETING_ID --format json --output meeting.json
 ```
 
 <Warning>

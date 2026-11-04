@@ -2,23 +2,20 @@
 
 ## Supported Versions
 
-Anarlog moves fast and we only ship fixes forward. Security updates are applied to the latest release only.
+Security fixes are applied to the latest release only.
 
 | Version        | Supported          |
 | -------------- | ------------------ |
 | Latest release | :white_check_mark: |
 | Older versions | :x:                |
 
-If you're on an older version, please update to the latest release before reporting an issue you can no longer reproduce.
+If you're on an older version, update to the latest release before reporting an issue you can no longer reproduce.
 
 ## Reporting a Vulnerability
 
 Please do not open a public issue for security vulnerabilities.
 
-Instead, use one of these private channels:
-
-- **GitHub**: [Report a vulnerability](https://github.com/fastrepl/anarlog/security/advisories/new) via private vulnerability reporting (preferred)
-- **Email**: team@fastrepl.com
+Report it privately through [GitHub Security Advisories](https://github.com/Arturgrr/anarlog/security/advisories/new) on this repository.
 
 When reporting, please include:
 
@@ -28,9 +25,11 @@ When reporting, please include:
 
 ## What to Expect
 
-- We'll acknowledge your report within 3 business days.
-- We'll keep you updated as we investigate, and let you know whether the report is accepted or declined.
-- If accepted, we'll work on a fix and credit you in the release notes unless you prefer to stay anonymous.
-- Please give us a reasonable window to ship a fix before any public disclosure.
+This fork is maintained by an individual, so response times are best effort.
 
-Thanks for helping keep Anarlog and its users safe.
+- You'll get an acknowledgement on the advisory once the report has been read.
+- You'll be kept updated while it is investigated, and told whether the report is accepted or declined.
+- If accepted, the fix will credit you in the release notes unless you prefer to stay anonymous.
+- Please allow a reasonable window for a fix before any public disclosure.
+
+Vulnerabilities in code inherited from [fastrepl/anarlog](https://github.com/fastrepl/anarlog) may also affect upstream; consider reporting them there too.

@@ -1,9 +1,9 @@
 ---
 title: "Install the desktop app"
-description: "Choose the right Anarlog build for macOS, Windows, or Linux."
+description: "Download a macOS build of Anarlog or build it from source."
 ---
 
-[Download Anarlog](https://anarlog.so/download) to get the latest stable desktop release. The download page offers every supported platform from the same release.
+Desktop builds are published on [GitHub Releases](https://github.com/Arturgrr/anarlog/releases). Prebuilt packages are currently available for macOS. On Linux and Windows, [build Anarlog from source](#build-from-source).
 
 ## Choose the right build
 
@@ -11,122 +11,63 @@ description: "Choose the right Anarlog build for macOS, Windows, or Linux."
 | --- | --- | --- |
 | macOS | Apple Silicon DMG | For Macs with an M-series chip. Requires macOS 15 or later. |
 | macOS | Intel DMG | For Intel-based Macs. Requires macOS 15 or later. |
-| Windows | Windows x64 EXE | For 64-bit Windows PCs. Windows support is in beta. |
-| Windows | Microsoft Store | For Windows 10 and 11. Windows support is in beta. |
-| Linux | x64 or ARM64 AppImage | Portable build. Linux support is in beta. |
-| Linux | x64 or ARM64 DEB | For Debian, Ubuntu, and compatible distributions. Linux support is in beta. |
-| Linux | Arch Linux PKGBUILD | For x64 or ARM64 Arch-based distributions. Linux support is in beta. |
+| Linux | Build from source | Linux support is in beta. |
+| Windows | Build from source | Windows support is in beta. |
 
 On a Mac, open **Apple menu → About This Mac** if you do not know whether it uses an Apple or Intel chip.
 
 ## macOS
 
-1. Download the DMG that matches your Mac.
+1. Download the DMG that matches your Mac from the [latest release](https://github.com/Arturgrr/anarlog/releases).
 2. Open the DMG and move Anarlog to **Applications**.
-3. Open Anarlog and follow the setup screen.
+3. Open Anarlog (see below) and follow the setup screen.
 4. Allow microphone, system audio, and calendar access when you want to use those features.
 
-## Windows
+The macOS builds are not notarized by Apple, so macOS blocks the first launch. To open Anarlog anyway, use either method:
 
-1. Download the **Windows x64** installer or [get Anarlog from Microsoft Store](https://apps.microsoft.com/detail/XPDLN196NKSW10).
-2. For the direct download, run the EXE and follow the installer. Microsoft Store handles installation and updates automatically.
-3. Open Anarlog and complete setup.
-4. Allow microphone and system-audio access when prompted.
+- In Finder, right-click (or Control-click) Anarlog in **Applications**, choose **Open**, then confirm **Open**.
+- Or remove the quarantine attribute in Terminal:
 
-## Linux
+  ```bash
+  xattr -dr com.apple.quarantine /Applications/Anarlog.app
+  ```
 
-### APT repository
+You only need to do this once per installed version. Anarlog checks GitHub Releases for new versions.
 
-On Debian, Ubuntu, or a compatible distribution, add Anarlog's signed repository to get updates through APT:
+## Build from source
 
-```bash
-sudo install -d -m 0755 /etc/apt/keyrings
-curl -fsSL https://anarlog.so/apt/anarlog-archive-keyring.asc \
-  | sudo tee /etc/apt/keyrings/anarlog.asc > /dev/null
-sudo chmod a+r /etc/apt/keyrings/anarlog.asc
-
-sudo tee /etc/apt/sources.list.d/anarlog.sources > /dev/null <<'EOF'
-Types: deb
-URIs: https://anarlog.so/apt
-Suites: stable
-Components: main
-Signed-By: /etc/apt/keyrings/anarlog.asc
-EOF
-
-sudo apt update
-sudo apt install anarlog
-```
-
-APT verifies the repository metadata with the dedicated Anarlog archive key. New stable releases become available through the normal `apt upgrade` flow.
-
-### Downloaded DEB
-
-To install a downloaded package directly:
+Install Node.js 22, the pnpm version pinned in the repository's `package.json`, and the Rust toolchain pinned in `rust-toolchain.toml`. On Debian or Ubuntu, `scripts/setup-linux-tauri.sh` installs the system libraries Tauri needs.
 
 ```bash
-sudo apt install ./anarlog-*.deb
+git clone https://github.com/Arturgrr/anarlog.git
+cd anarlog
+pnpm install
+pnpm -F @anlg/ui build
+pnpm -F @anlg/desktop tauri build --config '{"bundle":{"createUpdaterArtifacts":false}}'
 ```
 
-### AppImage
+Updater artifacts are only produced by release builds, which need the project's signing key. The build prints the paths of the packages it creates for your platform. The first native build takes a while.
 
-For an AppImage, make it executable and open it:
-
-```bash
-chmod +x ./anarlog-*.AppImage
-./anarlog-*.AppImage
-```
+### Linux black window
 
 On Wayland with an NVIDIA GPU, if the window is black or only audio plays, launch with:
 
 ```bash
-WEBKIT_DISABLE_DMABUF_RENDERER=1 ./anarlog-*.AppImage
+WEBKIT_DISABLE_DMABUF_RENDERER=1 anarlog
 ```
 
 If the window is still black, also disable compositing:
 
 ```bash
-WEBKIT_DISABLE_DMABUF_RENDERER=1 WEBKIT_DISABLE_COMPOSITING_MODE=1 ./anarlog-*.AppImage
+WEBKIT_DISABLE_DMABUF_RENDERER=1 WEBKIT_DISABLE_COMPOSITING_MODE=1 anarlog
 ```
 
 Current builds apply the DMA-BUF workaround automatically. Set the variables yourself only if a black window remains.
 
-### Arch Linux
-
-Build the maintained `anarlog-bin` package with `makepkg`:
-
-```bash
-git clone https://github.com/fastrepl/anarlog.git
-cd anarlog/packaging/aur/anarlog-bin
-makepkg -si
-```
-
-The PKGBUILD downloads the stable DEB for your architecture, verifies its checksum, and installs it through pacman.
-
 ## Platform differences
 
-- Apple Calendar integration is available on macOS. Google Calendar works through your Anarlog account on every supported platform.
-- Soniqo, Apple Speech, and On-device file transcription require Apple Silicon. Apple Speech also appears only when a compatible Mac running macOS 26 reports the required system assets. On other systems, choose Anarlog Cloud or configure a supported transcription provider. See [how to use on-device models](/help#use-on-device-models) and [local models for hour-long calls](/help#local-model-hour-long-calls).
+- Apple Calendar and Apple Reminders integrations are available on macOS.
+- Soniqo, Apple Speech, and BYO-model on-device transcription require Apple Silicon. Apple Speech also appears only when a compatible Mac running macOS 26 reports the required system assets. On other systems, configure a local Deepgram-compatible server or a provider with your own API key. See [how to use on-device models](/help#use-on-device-models) and [local models for hour-long calls](/help#local-model-hour-long-calls).
 - Windows and Linux support are in beta. Include your operating system and Anarlog version when you report a platform-specific problem.
-- Mobile beta testing is available through [TestFlight](https://testflight.apple.com/join/y7WJCXvG) on iOS and [Google Play beta](https://play.google.com/apps/testing/so.anarlog.mobile) on Android.
 
 When installation is complete, continue to [Your first meeting](/quickstart). If the app does not open or cannot capture audio, see [Troubleshooting](/troubleshooting).
-
-## Nightly
-
-Anarlog Nightly is no longer published and does not receive updates. Install
-the [stable app](https://anarlog.so/download/) and quit Nightly before opening
-it: both apps use the same local notes database, and Anarlog does not open while
-the other app is running. Sign-in and app settings stay separate per app.
-
-If stable shows an update prompt instead of opening your notes, Nightly already
-updated the database format. Keep using Nightly until a stable release includes
-that change. Your data is not modified by the older app.
-
-<Warning>
-  Use matching stable versions on all devices connected to cloud sync. Older
-  builds may not read records written by a newer Nightly. Do not reset your notes
-  or recovery key to resolve a version mismatch; see [Cloud sync troubleshooting](/sync).
-</Warning>
-
-If you installed the bundled CLI from Nightly, its command is `anarlog-nightly`;
-`anarlog` uses stable.
