@@ -6188,21 +6188,11 @@ name = "gbnf"
 version = "0.1.0"
 dependencies = [
  "colored",
- "gbnf-validator",
  "indoc",
  "insta",
  "serde",
  "serde_json",
  "specta",
-]
-
-[[package]]
-name = "gbnf-validator"
-version = "0.1.0"
-source = "git+https://github.com/fastrepl/gbnf-validator?rev=3dec055#3dec0551311840ae8c9a0feb10e556dd18ffe291"
-dependencies = [
- "anyhow",
- "tempfile",
 ]
 
 [[package]]
@@ -9813,17 +9803,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51c55d61e72fc3ab704396c5fa16f4c184db37978ae4e94ca8959693a235fc0e"
 dependencies = [
  "log",
-]
-
-[[package]]
-name = "meeting-capture"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "futures-core",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
 ]
 
 [[package]]

@@ -109,7 +109,6 @@ anlg-local-model = { path = "crates/local-model", package = "local-model" }
 anlg-local-stt-core = { path = "crates/local-stt-core", package = "local-stt-core" }
 anlg-loops = { path = "crates/loops", package = "loops" }
 anlg-mcp = { path = "crates/mcp", package = "mcp" }
-anlg-meeting-capture = { path = "crates/meeting-capture", package = "meeting-capture" }
 anlg-meeting-import = { path = "crates/meeting-import", package = "meeting-import" }
 anlg-model-downloader = { path = "crates/model-downloader", package = "model-downloader" }
 anlg-model-manager = { path = "crates/model-manager", package = "model-manager" }
@@ -318,7 +317,6 @@ chrono-tz = "0.10"
 async-stripe = { version = "1.0.0-rc.0" }
 async-stripe-billing = { version = "1.0.0-rc.1", default-features = false }
 async-stripe-core = { version = "1.0.0-rc.1", default-features = false }
-gbnf-validator = { git = "https://github.com/fastrepl/gbnf-validator", rev = "3dec055" }
 
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 sentry = "=0.42.0"

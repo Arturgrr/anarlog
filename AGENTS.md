@@ -11,7 +11,6 @@ Anarlog is a pnpm and Rust workspace. Read the nearest `AGENTS.md` before changi
 - `apps/cli/`: Rust CLI/TUI and MCP entry point (`anarlog-cli` package, `anarlog` binary).
 - `crates/db-app/`: canonical SQLite schema and migrations shared by desktop and mobile. `db-core` owns runtime initialization, `db-migrate` owns migration execution, and `plugins/db/` / `crates/mobile-bridge/` expose transports. React consumes these through `packages/db-runtime`, `packages/db-react`, and `packages/db-tauri`; `packages/db` is the Drizzle adapter.
 - `supabase/`: hosted Postgres migrations and database tests, separate from local SQLite migrations.
-- `enterprise/`: a separate Cargo workspace with a commercial license. Community packages must not depend on it.
 
 Sessions are the core entity: all notes are backed by sessions. ProseMirror powers the editor (`packages/editor`, via `@handlewithcare/react-prosemirror`); documents use TipTap-dialect ProseMirror JSON, with converters/validation in `crates/tiptap`.
 
@@ -75,7 +74,7 @@ Only when the result is exactly `gitbutler/workspace`, use the repository-local 
 - Install: `pnpm install --frozen-lockfile`. Match CI's Node 22, `package.json#packageManager`, and `rust-toolchain.toml`; keep lockfiles in sync with intentional dependency changes.
 - Format: `pnpm exec dprint fmt --allow-no-files <changed-files>`; check: `pnpm exec dprint check --allow-no-files <changed-files>`. Whole-repository check: `pnpm fmt:check`.
 - Typecheck (TS): `pnpm -F <package-name> typecheck`; use `pnpm -r typecheck` for changes spanning packages. Use actual names from package manifests, such as `@anlg/desktop`.
-- Typecheck (Rust): `cargo check --locked -p <package>`; match the relevant workflow's features and target. A root `cargo check` does not cover the separate enterprise workspace or every platform.
+- Typecheck (Rust): `cargo check --locked -p <package>`; match the relevant workflow's features and target. A root `cargo check` does not cover every platform.
 - Build shared UI before desktop/web checks: `pnpm -F @anlg/ui build`.
 - Desktop dev: `pnpm dev:desktop`.
 - Web dev: `pnpm dev:web`.
@@ -90,7 +89,7 @@ Treat `.github/workflows/` and their composite actions as the source of truth fo
 
 - Format the changed files, then check the same files. `fmt.yaml` checks added/copied/modified/renamed files against the PR base and falls back to `pnpm fmt:check` when no base is available. Use the complete branch diff for final verification, not only the last commit. Respect `dprint.json` associations/exclusions: `--allow-no-files` permits excluded paths but does not validate them. Avoid formatting unrelated work in a shared workspace.
 - `lint.yaml`: `pnpm exec oxlint --quiet --format=github apps/desktop/src/`. The root `pnpm lint` also runs type-aware Oxlint and ESLint; it is broader than this CI job. Run configured ESLint checks for touched desktop/web query code with `pnpm exec eslint <changed-files>`.
-- `ci.yaml`: run both license-boundary Python commands and the complete `node --test` command listed there. These run on every PR, including documentation-only changes.
+- `ci.yaml`: run the complete `node --test` command listed there. These run on every PR, including documentation-only changes.
 - `zizmor.yaml` runs on every PR. Reproduce `uvx zizmor --format sarif .` (save output outside the repository) with read-only GitHub access; report unavailable authenticated checks. Inspect the SARIF findings: a successful scan/upload does not mean zero findings. Fix findings introduced by workflow/action changes and report existing findings separately.
 - For TypeScript changes, run affected packages' typechecks and existing test scripts. For Rust changes, run affected crate checks/tests with the workflow's flags; retain `--locked`, feature selections, test filters, and Clippy's `-D warnings`. Add regression coverage for changed behavior, especially persistence, auth, billing, and recording lifecycles.
 - Decide what to test, delete, or leave untested with `.agents/skills/testing/SKILL.md`: one regression test per fix, no tests for CSS, copy, mock call counts, private state, or file layout. Structural and import-boundary rules belong in lint rules, not tests.
@@ -109,7 +108,6 @@ This map is a starting point; execute the relevant workflow's full locally repro
 | Mobile, watch, and native bridge                          | `pnpm -F @anlg/mobile typecheck` and `pnpm -F @anlg/mobile test`. See `mobile_ci.yaml` for `APP_VARIANT=stable`, bridge builds (`cargo xtask mobile-bridge ios` / `android`), iOS Release, Android `assembleRelease`, and watchOS simulator builds.                                                                                                                                                                                                              |
 | Hosted database                                           | In an isolated local Supabase stack with Docker, run `supabase db start`, then `supabase test db` as in `db_ci.yaml`. Include migration and RLS regression tests; never point these checks at a hosted database.                                                                                                                                                                                                                                                 |
 | Stripe billing service                                    | Run `pnpm -F @anlg/stripe typecheck` and `pnpm -F @anlg/stripe test` (requires Bun). `stripe_ci.yaml` runs the billing component checks; `api_cd.yaml` with `service=billing` deploys the combined service. Dependency/container changes also require a local image build using the repository root as context: `docker build --target billing-runtime -f apps/api/Dockerfile .`.                                                                                                                                                      |
-| Enterprise capture                                        | Use `--manifest-path enterprise/Cargo.toml`; the root workspace does not include these checks. Run the reliability/fixture-replay, worker library, control-plane upgrade, and Clippy commands in `enterprise_ci.yaml`.                                                                                                                                                                                                                                           |
 
 ### Generated files and data compatibility
 
