@@ -30,22 +30,3 @@ processes:
     depends_on:
       ui-build:
         condition: process_completed_successfully
-
-  web:
-    description: Run the website on http://localhost:3000
-    command: pnpm -F @anlg/web dev --strictPort
-    log_location: ${PC_LOG_DIR:-.process-compose/logs}/web.log
-    depends_on:
-      ui-build:
-        condition: process_completed_successfully
-    readiness_probe:
-      http_get:
-        host: localhost
-        port: 3000
-        path: /@vite/client
-      initial_delay_seconds: 2
-      period_seconds: 2
-      timeout_seconds: 5
-      failure_threshold: 60
-    availability:
-      restart: exit_on_failure

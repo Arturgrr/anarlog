@@ -31,7 +31,6 @@ function fixture(
 for (const [target, port] of Object.entries({
   stack: "18080",
   desktop: "18081",
-  web: "18082",
   api: "18083",
 })) {
   test(`${target} selects the required stack from any working directory`, (t) => {
@@ -66,7 +65,7 @@ test("preserves overrides and forwards flags without shell interpolation", (t) =
   const flags = ["--dry-run", "-f", "config with spaces and $(literal).yaml"];
   const result = spawnSync(
     process.execPath,
-    [launcher, "web", "--", ...flags],
+    [launcher, "desktop", "--", ...flags],
     { env, encoding: "utf8" },
   );
   assert.equal(result.status, 0, result.stderr);
@@ -94,7 +93,7 @@ test("returns the process-compose failure code", (t) => {
 test("explains how to install a missing process-compose binary", (t) => {
   const { directory, env } = fixture(t);
   rmSync(join(directory, "process-compose"));
-  const result = spawnSync(process.execPath, [launcher, "web"], {
+  const result = spawnSync(process.execPath, [launcher, "desktop"], {
     env,
     encoding: "utf8",
   });
