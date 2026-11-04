@@ -78,7 +78,6 @@ anlg-db-sync = { path = "crates/db-sync", package = "db-sync" }
 anlg-detect = { path = "crates/detect", package = "detect" }
 anlg-device-monitor = { path = "crates/device-monitor", package = "device-monitor" }
 anlg-dictation-ui-macos = { path = "crates/dictation-ui-macos", package = "dictation-ui-macos" }
-anlg-docs = { path = "crates/docs", package = "docs" }
 anlg-download-interface = { path = "crates/download-interface", package = "download-interface" }
 anlg-e2ee = { path = "crates/e2ee", package = "e2ee" }
 anlg-embedding = { path = "crates/embedding", package = "embedding" }

@@ -6,18 +6,12 @@ on:
     branches:
       - main
     paths:
-      - .agents/plugins/**
-      - .claude-plugin/**
-      - .cursor-plugin/**
-      - .github/plugin/**
       - .github/workflows/cli_ci.yaml
       - .github/actions/rust_install/**
       - .cargo/**
       - .agents/skills/**
       - agent-plugins/**
       - apps/cli/**
-      - apps/web/vercel-build-config.ts
-      - apps/web/public/llms.txt
       - crates/agent-access/**
       - crates/cloudsync/**
       - crates/cli-docs/**
@@ -30,8 +24,6 @@ on:
       - crates/e2ee/**
       - crates/tiptap/**
       - docs/**
-      - scripts/publish-anarlog-skill.mjs
-      - scripts/publish-anarlog-skill.test.mjs
       - skills/**
       - Cargo.lock
       - Cargo.toml
@@ -40,18 +32,12 @@ on:
       - rustfmt.toml
   pull_request:
     paths:
-      - .agents/plugins/**
-      - .claude-plugin/**
-      - .cursor-plugin/**
-      - .github/plugin/**
       - .github/workflows/cli_ci.yaml
       - .github/actions/rust_install/**
       - .cargo/**
       - .agents/skills/**
       - agent-plugins/**
       - apps/cli/**
-      - apps/web/vercel-build-config.ts
-      - apps/web/public/llms.txt
       - crates/agent-access/**
       - crates/cloudsync/**
       - crates/cli-docs/**
@@ -64,8 +50,6 @@ on:
       - crates/e2ee/**
       - crates/tiptap/**
       - docs/**
-      - scripts/publish-anarlog-skill.mjs
-      - scripts/publish-anarlog-skill.test.mjs
       - skills/**
       - Cargo.lock
       - Cargo.toml
@@ -160,8 +144,6 @@ jobs:
           awk 'NR > 1 && $0 == "---" { found = 1; exit } END { if (!found) exit 1 }' skills/anarlog/SKILL.md
           test "$(readlink docs/.mintlify/skills)" = "../../skills"
           test -f docs/.mintlify/skills/anarlog/SKILL.md
-          node scripts/publish-anarlog-skill.mjs --check
-          node --test scripts/publish-anarlog-skill.test.mjs
           skill_list="$(npx --yes skills@1.5.16 add . --list)"
           echo "$skill_list"
           grep -q 'anarlog' <<<"$skill_list"

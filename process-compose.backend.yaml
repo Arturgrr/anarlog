@@ -35,15 +35,9 @@ processes:
     shutdown:
       timeout_seconds: 60
 
-  web:
-    depends_on:
-      api:
-        condition: process_healthy
-
   desktop:
     environment:
-      - VITE_APP_URL=http://localhost:3000
       - VITE_API_URL=http://localhost:3001
     depends_on:
-      web:
+      api:
         condition: process_healthy

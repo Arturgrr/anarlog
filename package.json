@@ -2,7 +2,6 @@
   "scripts": {
     "dev": "node scripts/dev.mjs stack",
     "dev:desktop": "node scripts/dev.mjs desktop",
-    "dev:web": "node scripts/dev.mjs web",
     "dev:api": "node scripts/dev.mjs api",
     "fmt:check": "dprint check",
     "fmt": "dprint fmt",
@@ -13,13 +12,13 @@
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.61.0",
-    "@infisical/cli": "^0.43.72",
     "@tanstack/eslint-plugin-query": "^5.99.0",
     "braces": "3.0.3",
     "decode-uri-component": "0.5.1",
     "dprint": "^0.51.1",
     "eslint": "^9.39.4",
     "extract-zip": "2.0.1",
+    "js-yaml": "^5.4.1",
     "lint-staged": "^16.4.0",
     "node-forge": "1.4.0",
     "oxfmt": "^0.45.0",
