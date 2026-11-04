@@ -1,0 +1,101 @@
+name: Desktop release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semantic version to release, for example 1.2.3"
+        required: true
+        type: string
+  push:
+    tags:
+      - "desktop_v*"
+
+permissions: {}
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-macos:
+    name: Build macOS (${{ matrix.target }})
+    runs-on: macos-26
+    timeout-minutes: 180
+    permissions:
+      contents: write # create the draft release and upload its assets
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            extra_config: ""
+          - target: x86_64-apple-darwin
+            extra_config: "--config src-tauri/tauri.conf.macos-intel.json"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Resolve version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            VERSION="${REF_NAME#desktop_v}"
+          else
+            VERSION="$INPUT_VERSION"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Expected a semantic version such as 1.2.3"
+            exit 1
+          fi
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "VITE_APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Set app version
+        run: |
+          config=apps/desktop/src-tauri/tauri.conf.json
+          jq --arg version "$APP_VERSION" '.version = $version' "$config" > "$RUNNER_TEMP/tauri.conf.json"
+          mv "$RUNNER_TEMP/tauri.conf.json" "$config"
+
+      - uses: ./.github/actions/install_desktop_deps
+      - uses: ./.github/actions/rust_install
+        with:
+          platform: macos
+      - run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
+      - uses: ./.github/actions/pnpm_install
+      - run: pnpm -F @anlg/ui build
+
+      - name: Prepare sidecars
+        env:
+          TAURI_ENV_TARGET_TRIPLE: ${{ matrix.target }}
+        run: |
+          cargo xtask prepare-binaries
+          config=apps/desktop/src-tauri/tauri.conf.stable.json
+          jq '.bundle.externalBin = ((.bundle.externalBin // []) + ["binaries/char-chrome-native-host", "binaries/check-permissions", "resources/cli/anarlog-cli"] | unique)' \
+            "$config" > "$RUNNER_TEMP/tauri.conf.stable.json"
+          mv "$RUNNER_TEMP/tauri.conf.stable.json" "$config"
+
+      - uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Ad-hoc signature: builds are not notarized until an Apple Developer ID is configured.
+          APPLE_SIGNING_IDENTITY: "-"
+        with:
+          projectPath: apps/desktop
+          tauriScript: pnpm tauri
+          args: --target ${{ matrix.target }} --config src-tauri/tauri.conf.stable.json ${{ matrix.extra_config }}
+          tagName: desktop_v__VERSION__
+          releaseName: Anarlog v__VERSION__
+          releaseBody: "macOS builds are ad-hoc signed and not notarized. On first launch, right-click the app and choose Open."
+          releaseDraft: true
+          prerelease: false
+          uploadUpdaterJson: true
