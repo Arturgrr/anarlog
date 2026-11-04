@@ -4,9 +4,7 @@ import {
   assertCanonicalTemplateSections,
   parseStoredTemplateSections,
   parseStoredTemplateTargets,
-  parseWebTemplates,
 } from "./codec";
-import { DEFAULT_TEMPLATE_ICON } from "./template-icon";
 
 describe("parseStoredTemplateSections", () => {
   it.each([
@@ -48,63 +46,6 @@ describe("parseStoredTemplateTargets", () => {
       "Manager",
     ]);
     expect(parseStoredTemplateTargets("{", "template-1")).toBeUndefined();
-  });
-});
-
-describe("parseWebTemplates", () => {
-  it("parses canonical web templates and their icons", () => {
-    expect(
-      parseWebTemplates([
-        {
-          title: "Launch",
-          icon: { type: "emoji", value: "🚀" },
-          sections: [],
-        },
-      ])[0]?.icon,
-    ).toEqual({ type: "emoji", value: "🚀" });
-    expect(
-      parseWebTemplates([
-        {
-          slug: "one-on-one-meeting",
-          title: "1:1 Meeting",
-          description: "For structured one-on-one meetings",
-          category: "Management",
-          targets: ["Manager", "Team Lead"],
-          sections: [
-            { title: "Updates", description: "What changed?" },
-            { title: "Feedback" },
-          ],
-        },
-      ]),
-    ).toEqual([
-      {
-        slug: "one-on-one-meeting",
-        title: "1:1 Meeting",
-        description: "For structured one-on-one meetings",
-        category: "Management",
-        icon: DEFAULT_TEMPLATE_ICON,
-        targets: ["Manager", "Team Lead"],
-        sections: [
-          { title: "Updates", description: "What changed?" },
-          { title: "Feedback", description: "" },
-        ],
-      },
-    ]);
-  });
-
-  it("drops malformed web templates instead of repairing them", () => {
-    expect(
-      parseWebTemplates([
-        {
-          slug: "broken",
-          title: "Broken Template",
-          description: "",
-          category: "",
-          targets: ["Manager"],
-          sections: ["Updates", "Feedback"],
-        },
-      ]),
-    ).toEqual([]);
   });
 });
 

@@ -17,17 +17,13 @@ import {
 } from "@anlg/ui/components/ui/popover";
 import { cn } from "@anlg/utils";
 
-import { useWebResources } from "~/shared/ui/resource-list";
 import {
   DEFAULT_TEMPLATE_ICON,
-  filterWebTemplatesAgainstUserTemplates,
-  parseWebTemplates,
   TemplateIconGlyph,
   type TemplateIcon,
   useCreateTemplate,
   useOpenTemplatesTab,
   useUserTemplates,
-  type WebTemplate,
 } from "~/templates";
 
 export type TemplateSelection = {
@@ -55,16 +51,6 @@ export function TemplatePickerPopover({
   const resultRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const userTemplates = useUserTemplates();
   const createTemplate = useCreateTemplate("session_note");
-  const { data: rawWebTemplates = [] } =
-    useWebResources<Record<string, unknown>>("templates");
-  const webTemplates = useMemo(
-    () =>
-      filterWebTemplatesAgainstUserTemplates({
-        userTemplates,
-        webTemplates: parseWebTemplates(rawWebTemplates),
-      }),
-    [rawWebTemplates, userTemplates],
-  );
   const openTemplatesTab = useOpenTemplatesTab();
 
   const handleUseTemplate = useCallback(
@@ -85,34 +71,6 @@ export function TemplatePickerPopover({
       resultRefs.current = [];
     }
   }, []);
-
-  const handleWebTemplateClick = useCallback(
-    (template: WebTemplate) => {
-      setOpen(false);
-      setSearch("");
-      resultRefs.current = [];
-
-      void (async () => {
-        const templateId = await createTemplate({
-          title: template.title,
-          description: template.description,
-          category: template.category,
-          icon: template.icon,
-          targets: template.targets,
-          sections: template.sections ?? [],
-        });
-        if (!templateId) {
-          return;
-        }
-
-        onSelectTemplate({
-          templateId,
-          title: template.title || "Untitled",
-        });
-      })();
-    },
-    [createTemplate, onSelectTemplate],
-  );
 
   const handleCreateTemplate = useCallback(
     (title?: string) => {
@@ -148,9 +106,9 @@ export function TemplatePickerPopover({
     resultRefs.current = [];
     openTemplatesTab({
       showHomepage: false,
-      isWebMode: true,
+      isWebMode: false,
       selectedMineId: null,
-      selectedWebIndex: 0,
+      selectedWebIndex: null,
     });
   }, [openTemplatesTab]);
 
@@ -186,21 +144,6 @@ export function TemplatePickerPopover({
   }, [otherTemplates, searchQuery]);
 
   const hasSearch = searchQuery.length > 0;
-  const filteredWebTemplates = useMemo(() => {
-    if (!searchQuery) {
-      return webTemplates;
-    }
-
-    return webTemplates.filter(
-      (template) =>
-        template.title?.toLowerCase().includes(searchQuery) ||
-        template.description?.toLowerCase().includes(searchQuery) ||
-        template.category?.toLowerCase().includes(searchQuery) ||
-        template.targets?.some((target) =>
-          target.toLowerCase().includes(searchQuery),
-        ),
-    );
-  }, [searchQuery, webTemplates]);
   const templateItems = useMemo<
     Array<{
       key: string;
@@ -233,25 +176,8 @@ export function TemplatePickerPopover({
         }),
     }));
 
-    const webItems = filteredWebTemplates.map((template, index) => ({
-      key: template.slug || `library-${index}`,
-      title: template.title || "Untitled",
-      icon: template.icon,
-      onClick: () => handleWebTemplateClick(template),
-    }));
-
-    const otherItems = [...userItems, ...webItems].sort((a, b) =>
-      a.title.localeCompare(b.title),
-    );
-
-    return [...favoriteItems, ...otherItems];
-  }, [
-    filteredFavoriteTemplates,
-    filteredOtherTemplates,
-    filteredWebTemplates,
-    handleWebTemplateClick,
-    handleUseTemplate,
-  ]);
+    return [...favoriteItems, ...userItems];
+  }, [filteredFavoriteTemplates, filteredOtherTemplates, handleUseTemplate]);
   const resultSections = useMemo<
     Array<{
       key: string;

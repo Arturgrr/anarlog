@@ -8,8 +8,9 @@ import {
 } from "./meeting-consent";
 import { persistDisclosureAttempt } from "./meeting-consent-store";
 
-export const MEETING_DISCLOSURE_MESSAGE =
-  "I'm using Anarlog to record and transcribe this meeting. https://anarlog.so";
+import { REPOSITORY_URL } from "~/shared/links";
+
+export const MEETING_DISCLOSURE_MESSAGE = `I'm using Anarlog to record and transcribe this meeting. ${REPOSITORY_URL}`;
 
 const MEETING_DISCLOSURE_MAX_ATTEMPTS = 30;
 const MEETING_DISCLOSURE_RETRY_INTERVAL_MS = 1_000;

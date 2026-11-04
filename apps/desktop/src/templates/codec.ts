@@ -1,17 +1,5 @@
 import type { TemplateSection } from "@anlg/store";
 
-import { normalizeTemplateIcon, type TemplateIcon } from "./template-icon";
-
-export type WebTemplate = {
-  slug: string;
-  title: string;
-  description: string;
-  category: string;
-  icon: TemplateIcon;
-  targets?: string[];
-  sections: TemplateSection[];
-};
-
 function templateDataError(context: string, detail: string): never {
   throw new Error(`[templates] ${context}: ${detail}`);
 }
@@ -224,51 +212,4 @@ export function parseStoredTemplateTargets(
     );
     return undefined;
   }
-}
-
-export function parseWebTemplates(
-  templates: Record<string, unknown>[],
-): WebTemplate[] {
-  return templates.flatMap((template, index) => {
-    try {
-      return [parseWebTemplate(template, index)];
-    } catch (error) {
-      console.error("[templates] dropping invalid web template", error);
-      return [];
-    }
-  });
-}
-
-function parseWebTemplate(
-  template: Record<string, unknown>,
-  index: number,
-): WebTemplate {
-  if (typeof template.title !== "string" || !template.title.trim()) {
-    return templateDataError(
-      `web template ${index}`,
-      "title must be a non-empty string",
-    );
-  }
-
-  return {
-    slug:
-      typeof template.slug === "string" && template.slug.trim()
-        ? template.slug.trim()
-        : `template-${index}`,
-    title: template.title.trim(),
-    description:
-      typeof template.description === "string" ? template.description : "",
-    category: typeof template.category === "string" ? template.category : "",
-    icon: normalizeTemplateIcon(template.icon ?? template.icon_json),
-    targets: validateTargets(
-      template.targets ?? undefined,
-      `web template ${template.title} targets`,
-      { lenient: true },
-    ),
-    sections: validateSections(
-      template.sections,
-      `web template ${template.title} sections`,
-      { allowBareStrings: false, requireDescription: false },
-    ),
-  };
 }

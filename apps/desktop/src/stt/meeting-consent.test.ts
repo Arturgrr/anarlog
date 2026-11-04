@@ -11,7 +11,7 @@ import {
 } from "./meeting-consent";
 
 const DISCLOSURE =
-  "I'm using Anarlog to record and transcribe this meeting. https://anarlog.so";
+  "I'm using Anarlog to record and transcribe this meeting. https://github.com/Arturgrr/anarlog";
 
 function attempt(
   delivery: DisclosureAttempt["delivery"] = "sent",

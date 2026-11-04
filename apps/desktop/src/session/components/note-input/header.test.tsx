@@ -246,10 +246,6 @@ vi.mock("~/shared/hooks/useNativeContextMenu", () => ({
   },
 }));
 
-vi.mock("~/shared/ui/resource-list", () => ({
-  useWebResources: () => ({ data: [], isLoading: false }),
-}));
-
 vi.mock("~/store/zustand/tabs", () => ({
   useTabs: vi.fn((selector: (state: unknown) => unknown) =>
     selector({
@@ -313,9 +309,6 @@ vi.mock("~/templates", async () => {
       color: "#9ca3af",
     },
     TemplateIconGlyph,
-    filterWebTemplatesAgainstUserTemplates: () => [],
-    getTemplateCreatorLabel: () => "You",
-    parseWebTemplates: () => [],
     useCreateTemplate: () => vi.fn(),
     useOpenTemplatesTab: () => vi.fn(),
     useTemplateCreatorName: () => "You",

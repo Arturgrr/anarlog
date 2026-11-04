@@ -9,10 +9,11 @@ import { CloudApiSection } from "./cloud-api";
 import { WebhooksSection } from "./webhooks";
 
 import { SettingsPageTitle } from "~/settings/page-title";
+import { docsUrl } from "~/shared/links";
 
 export { buildMcpConfiguration, getCliInstallNotification } from "./cli";
 
-const DEVELOPERS_GUIDE_URL = "https://docs.anarlog.so/agents/overview";
+const DEVELOPERS_GUIDE_URL = docsUrl("agents/overview");
 
 export function SettingsDevelopers() {
   return (

@@ -2,13 +2,9 @@ import { md2json } from "@anlg/editor/markdown";
 import type { SessionEvent } from "@anlg/store";
 
 import { liveQueryClient } from "~/db";
-import {
-  WELCOME_NOTE_DEMO_URL,
-  WELCOME_NOTE_TRACKING_ID,
-} from "~/onboarding/welcome-note.constants";
+import { WELCOME_NOTE_TRACKING_ID } from "~/onboarding/welcome-note.constants";
 import { createSession } from "~/session/queries";
 import { DEFAULT_USER_ID } from "~/shared/utils";
-import { listenerStore } from "~/store/zustand/listener/instance";
 
 const PENDING_WELCOME_SESSION_KEY = "anarlog.pending-welcome-session";
 
@@ -18,10 +14,10 @@ const WELCOME_NOTE = `Welcome to Anarlog 👋
 This note is a quick way to see how Anarlog works.
 
 
-Click **Join & record** in the top-right corner. It will open a private, prerecorded demo meeting, so you don't have to worry about your camera or microphone. Anarlog will save the audio. To create a transcript and notes, choose a provider in **Settings → Transcription**; if one is not ready, Anarlog will show you a setup shortcut.
+Click **Record** in the top-right corner and talk for a minute, or play a video with someone speaking. Anarlog saves the audio on your device. To create a transcript and notes, choose a provider in **Settings → Transcription**; if one is not ready, Anarlog will show you a setup shortcut.
 
 
-When the video ends, Anarlog will stop listening. If transcription and intelligence are configured, it will start creating your summary automatically.`;
+When you stop recording, Anarlog will create your summary automatically if transcription and intelligence are configured.`;
 
 let pendingWelcomeSession: Promise<string> | null = null;
 
@@ -46,42 +42,6 @@ export function takePendingWelcomeSession(): string | null {
   const sessionId = localStorage.getItem(PENDING_WELCOME_SESSION_KEY);
   localStorage.removeItem(PENDING_WELCOME_SESSION_KEY);
   return sessionId;
-}
-
-export async function stopActiveWelcomeDemo() {
-  const active = listenerStore.getState().live;
-  const sessionId = active.sessionId;
-  if (!sessionId || active.status !== "active") {
-    return;
-  }
-  const captureGeneration = active.captureGenerationBySession[sessionId];
-
-  const rows = await liveQueryClient.execute<{ id: string }>(
-    `
-      SELECT id
-      FROM sessions
-      WHERE id = ?
-        AND deleted_at IS NULL
-        AND CASE
-          WHEN json_valid(event_json)
-          THEN json_extract(event_json, '$.tracking_id')
-        END = ?
-      LIMIT 1
-    `,
-    [sessionId, WELCOME_NOTE_TRACKING_ID],
-  );
-  if (!rows[0]) {
-    return;
-  }
-
-  const current = listenerStore.getState();
-  if (
-    current.live.sessionId === sessionId &&
-    current.live.status === "active" &&
-    current.live.captureGenerationBySession[sessionId] === captureGeneration
-  ) {
-    current.stop();
-  }
 }
 
 async function findOrCreateWelcomeSession(): Promise<string> {
@@ -110,8 +70,7 @@ async function findOrCreateWelcomeSession(): Promise<string> {
     ended_at: "",
     is_all_day: false,
     has_recurrence_rules: false,
-    meeting_link: WELCOME_NOTE_DEMO_URL,
-    description: "A private, prerecorded introduction to Anarlog.",
+    description: "A quick introduction to Anarlog.",
   };
 
   return createSession("Welcome to Anarlog", DEFAULT_USER_ID, {
