@@ -248,17 +248,14 @@ html[data-rounded-window] #root {
     height: 100%;
   }
 
-  /* https://github.com/gitbutlerapp/gitbutler/blob/master/apps/desktop/src/styles/styles.css */
-
   html,
   body {
-    height: 100vh;
     width: 100vw;
+    height: 100vh;
     overflow-y: hidden;
-    font-family: var(--font-sans);
-
-    user-select: none;
     overscroll-behavior: none;
+    user-select: none;
+    font-family: var(--font-sans);
   }
 }
 
