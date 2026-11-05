@@ -43,8 +43,6 @@ Process Compose builds the shared UI through Turbo, starts the app, and writes l
 
 If the checkout path contains spaces, set `CARGO_TARGET_DIR` to a path without spaces before starting the desktop app; some native dependencies use Autotools, which rejects build directories containing spaces.
 
-The upstream web app, hosted API, and local Supabase stack are being removed from this fork. Their development commands may still exist while that happens, but they are not maintained.
-
 ## Find the right code
 
 | Path             | Scope                                    |

@@ -10,8 +10,8 @@ Use this skill when adding, changing, deleting, or reviewing tests in Anarlog, d
 ## Write a test when
 
 - A bug was fixed: add one regression test that fails without the fix. One, not a matrix of neighbours.
-- The behavior is observable by a user or another component: public APIs, tauri-specta bindings, OpenAPI contracts, MCP and CLI output, serializers and parsers, TipTap/ProseMirror JSON conversion.
-- Losing it loses data or trust: SQLite migrations and schema compatibility, auth, billing and Stripe webhooks, permissions and RLS, recording and STT lifecycles.
+- The behavior is observable by a user or another component: public APIs, tauri-specta bindings, MCP and CLI output, serializers and parsers, TipTap/ProseMirror JSON conversion.
+- Losing it loses data or trust: SQLite migrations and schema compatibility, auth, permissions, recording and STT lifecycles.
 - It is a real concurrency or recovery invariant: capture start/stop races, crash recovery, retry, cancellation, ordering between actors or tasks.
 - It encodes release or store policy that a workflow edit could silently break.
 

@@ -31,7 +31,6 @@ function fixture(
 for (const [target, port] of Object.entries({
   stack: "18080",
   desktop: "18081",
-  api: "18083",
 })) {
   test(`${target} selects the required stack from any working directory`, (t) => {
     const { directory, env } = fixture(t);
@@ -45,10 +44,6 @@ for (const [target, port] of Object.entries({
     assert.equal(invocation.cwd, root.replace(/\/$/, ""));
     assert.equal(invocation.env.PC_PORT_NUM, port);
     assert.equal(invocation.env.PC_DISABLE_TUI, "1");
-    assert.equal(
-      invocation.args.includes("process-compose.backend.yaml"),
-      target === "stack" || target === "api",
-    );
     assert.deepEqual(
       invocation.args.slice(invocation.args.indexOf("up")),
       target === "stack" ? ["up"] : ["up", target],
@@ -61,7 +56,7 @@ test("preserves overrides and forwards flags without shell interpolation", (t) =
   const { env } = fixture(t);
   env.PC_PORT_NUM = "19000";
   env.PC_DISABLE_TUI = "0";
-  env.VITE_API_URL = "http://localhost:39001";
+  env.RUST_LOG = "debug";
   const flags = ["--dry-run", "-f", "config with spaces and $(literal).yaml"];
   const result = spawnSync(
     process.execPath,
@@ -75,7 +70,7 @@ test("preserves overrides and forwards flags without shell interpolation", (t) =
     "PC_PORT_NUM",
     "PC_DISABLE_TUI",
     "PC_LOG_DIR",
-    "VITE_API_URL",
+    "RUST_LOG",
   ]) {
     assert.equal(invocation.env[key], env[key]);
   }
