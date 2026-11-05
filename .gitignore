@@ -28,3 +28,4 @@ internal
 .codex-security-artifacts-*/
 .codex-security-work-ledger-*.jsonl
 .claude/launch.json
+.claude/worktrees/
