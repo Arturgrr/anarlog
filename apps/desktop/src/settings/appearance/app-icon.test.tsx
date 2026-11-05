@@ -61,7 +61,12 @@ describe("AppIconSelector", () => {
 
   it.each([
     ["a removed icon variant", "walnut", "com.arturgrr.librelog", "Graphite"],
-    ["the dev channel default", "default", "com.arturgrr.librelog.dev", "Light"],
+    [
+      "the dev channel default",
+      "default",
+      "com.arturgrr.librelog.dev",
+      "Light",
+    ],
   ])("selects the resolved icon for %s", (_, appIcon, identifier, label) => {
     mocks.appIcon = appIcon;
     mocks.appIdentifier = identifier;

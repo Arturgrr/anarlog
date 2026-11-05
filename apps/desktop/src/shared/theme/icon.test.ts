@@ -22,7 +22,11 @@ describe("app icon preference", () => {
     expect(resolveAppIconName("default", "com.arturgrr.librelog.staging")).toBe(
       "graphite",
     );
-    expect(resolveAppIconName("default", "com.arturgrr.librelog.dev")).toBe("light");
-    expect(resolveAppIconName("graphite", "com.arturgrr.librelog.dev")).toBe("graphite");
+    expect(resolveAppIconName("default", "com.arturgrr.librelog.dev")).toBe(
+      "light",
+    );
+    expect(resolveAppIconName("graphite", "com.arturgrr.librelog.dev")).toBe(
+      "graphite",
+    );
   });
 });
