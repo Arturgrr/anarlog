@@ -506,9 +506,7 @@ export type TabInput =
   | { type: "edit"; requestId: string };
 export type TemplatesState = {
   showHomepage: boolean | null;
-  isWebMode: boolean | null;
   selectedMineId: string | null;
-  selectedWebIndex: number | null;
 };
 export type VisibilityEvent = { window: AppWindow; visible: boolean };
 export type WebviewHealthCheck = { requestId: string };

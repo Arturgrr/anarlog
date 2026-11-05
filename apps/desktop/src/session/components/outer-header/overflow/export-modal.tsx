@@ -5,7 +5,6 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { useMemo, useState } from "react";
 
 import { json2md } from "@anlg/editor/markdown";
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import {
   commands as exportCommands,
   type ExportMetadata,
@@ -464,12 +463,6 @@ function ExportModalContent({
         export_include_memo: submitted.includeMemo,
         export_include_summary: submitted.includeSummary,
         export_include_transcript: submitted.includeTranscript,
-      });
-      void analyticsCommands.event({
-        event: "session_exported",
-        format: submitted.format,
-        include_summary: submitted.includeSummary,
-        include_transcript: submitted.includeTranscript,
       });
       void openerCommands.revealItemInDir(path);
       onOpenChange(false);

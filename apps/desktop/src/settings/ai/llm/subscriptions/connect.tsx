@@ -3,7 +3,6 @@ import { useMutation } from "@tanstack/react-query";
 import { readText as readClipboardText } from "@tauri-apps/plugin-clipboard-manager";
 import { useEffect, useRef, useState } from "react";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import {
   commands as deeplink2Commands,
   events as deeplink2Events,
@@ -80,10 +79,6 @@ export function ConnectSubscriptionDialog({
 
   const finishConnect = async (stored: string) => {
     notifyProviderSelection(stored);
-    void analyticsCommands.event({
-      event: "ai_provider_configured",
-      provider: "llm",
-    });
     onOpenChange(false);
   };
 
@@ -330,10 +325,6 @@ export function ConnectSubscriptionDialog({
           api_key: result,
         });
         notifyProviderSelectionRef.current(result);
-        void analyticsCommands.event({
-          event: "ai_provider_configured",
-          provider: "llm",
-        });
         onOpenChangeRef.current(false);
       } catch (caught) {
         if (!cancelled) {

@@ -14,7 +14,6 @@ import { cn } from "@anlg/utils";
 
 import { preserveScrollPosition } from "./viewport-hooks";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { useSessionEventParticipants } from "~/calendar/queries";
 import { ContactImage } from "~/contacts/contact-avatar";
 import { createHuman, useHumans } from "~/contacts/queries";
@@ -85,10 +84,6 @@ export function SpeakerAssignPopover({
             });
       void preserveScrollPosition(scrollContainer, assign)
         .then(() => {
-          trackAnalyticsEvent("participant_assigned", {
-            assignment_scope: assignmentMode,
-            word_count: segment.words.length,
-          });
           onAssigned?.(humanId);
           handleOpenChange(false);
         })
@@ -464,7 +459,6 @@ export function SpeakerParticipantPicker({
         ownerUserId: session.user_id,
         name: option.name,
         email: option.email,
-        entryPoint: "speaker_assignment",
       });
     },
     [contacts, session?.user_id],

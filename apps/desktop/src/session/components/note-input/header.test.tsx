@@ -135,12 +135,6 @@ vi.mock("@anlg/editor/markdown", () => ({
   parseJsonContent: () => ({}),
 }));
 
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: {
-    event: vi.fn(),
-  },
-}));
-
 vi.mock("@anlg/ui/components/ui/spinner", () => ({
   Spinner: () => <span data-testid="view-spinner" />,
 }));

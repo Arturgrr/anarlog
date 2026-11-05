@@ -14,10 +14,6 @@ const mocks = vi.hoisted(() => ({
   meetingSettingsProps: vi.fn(),
 }));
 
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: { event: vi.fn() },
-}));
-
 vi.mock("@tanstack/react-query", () => ({
   useQuery: () => ({
     data: { configured: true },

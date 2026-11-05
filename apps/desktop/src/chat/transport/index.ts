@@ -33,8 +33,6 @@ import {
   type ToolOutputPart,
 } from "./helpers";
 
-import { trackAnalyticsEvent } from "~/analytics";
-
 export type ResolvedChatContext =
   | { kind: "session"; context: SessionContext }
   | { kind: "text"; text: string };
@@ -318,9 +316,6 @@ export class CustomChatTransport implements ChatTransport<AnlgUIMessage> {
       },
       onError: (error: unknown) => {
         console.error(error);
-        trackAnalyticsEvent("chat_response_failed", {
-          failure_stage: "response_stream",
-        });
         if (error instanceof Error) {
           return `${error.name}: ${error.message}`;
         }

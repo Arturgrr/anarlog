@@ -4,7 +4,6 @@ use std::sync::{Arc, Mutex};
 
 const LAUNCH_LOCK_FILENAME: &str = "launch.lock";
 const SLOW_STARTUP_INDICATOR_DELAY: std::time::Duration = std::time::Duration::from_secs(3);
-const CRASH_REPORTER_SERVER_ARG: &str = "--crash-reporter-server";
 const WEBKIT_DISABLE_DMABUF_RENDERER: &str = "WEBKIT_DISABLE_DMABUF_RENDERER";
 
 // WebKitGTK's DMA-BUF renderer leaves a blank window on NVIDIA/Wayland and
@@ -41,14 +40,6 @@ pub enum LaunchLockState {
     Acquired(LaunchLock),
     HeldByAnotherProcess,
     Unavailable(String),
-}
-
-pub fn is_crash_reporter_process() -> bool {
-    std::env::args().any(|arg| is_crash_reporter_arg(&arg))
-}
-
-fn is_crash_reporter_arg(arg: &str) -> bool {
-    arg.starts_with(CRASH_REPORTER_SERVER_ARG)
 }
 
 pub fn acquire_launch_lock(identifier: &str) -> LaunchLockState {
@@ -283,16 +274,6 @@ mod tests {
             linux_webkit_dmabuf_override(Some(std::ffi::OsStr::new("1"))),
             None
         );
-    }
-
-    #[test]
-    fn crash_reporter_args_are_detected() {
-        assert!(is_crash_reporter_arg(
-            "--crash-reporter-server=/tmp/temp-socket-abc"
-        ));
-        assert!(is_crash_reporter_arg("--crash-reporter-server"));
-        assert!(!is_crash_reporter_arg("--background"));
-        assert!(!is_crash_reporter_arg("--crash-reporter"));
     }
 
     #[test]

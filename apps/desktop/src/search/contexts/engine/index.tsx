@@ -6,8 +6,6 @@ import { buildTantivyFilters } from "./filters";
 import type { SearchEntityType, SearchFilters, SearchHit } from "./types";
 import { normalizeQuery } from "./utils";
 
-import { trackAnalyticsEvent } from "~/analytics";
-
 export type { SearchFilters, SearchHit } from "./types";
 
 const SearchEngineContext = createContext<{
@@ -29,8 +27,6 @@ export function SearchEngineProvider({
     ): Promise<SearchHit[]> => {
       const normalizedQuery = normalizeQuery(query);
       const tantivyFilters = buildTantivyFilters(filters);
-      const filterCount = filters?.created_at ? 1 : 0;
-      const startedAt = performance.now();
 
       try {
         const result = await tantivy.search({
@@ -40,11 +36,6 @@ export function SearchEngineProvider({
 
         if (result.status === "error") {
           console.error("Search failed:", result.error);
-          trackAnalyticsEvent("search_performed", {
-            outcome: "failed",
-            latency_ms: Math.round(performance.now() - startedAt),
-            filter_count: filterCount,
-          });
           return [];
         }
 
@@ -58,23 +49,9 @@ export function SearchEngineProvider({
             created_at: hit.document.created_at,
           },
         }));
-        trackAnalyticsEvent("search_performed", {
-          outcome: "succeeded",
-          result_count: hits.length,
-          latency_ms: Math.round(performance.now() - startedAt),
-          filter_count: filterCount,
-          entity_types: [
-            ...new Set(hits.map((hit) => hit.document.type)),
-          ].sort(),
-        });
         return hits;
       } catch (error) {
         console.error("Search failed:", error);
-        trackAnalyticsEvent("search_performed", {
-          outcome: "failed",
-          latency_ms: Math.round(performance.now() - startedAt),
-          filter_count: filterCount,
-        });
         return [];
       }
     },

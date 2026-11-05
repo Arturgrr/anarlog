@@ -12,7 +12,6 @@ import {
 
 import { useToolState } from "./shared";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { Disclosure } from "~/chat/components/message/shared";
 import { ToolRenderer } from "~/chat/components/message/types";
 import { useTabs } from "~/store/zustand/tabs";
@@ -236,10 +235,6 @@ function RenderMeeting({ result }: { result: MeetingSearchResult }) {
   const openNew = useTabs((state) => state.openNew);
 
   const handleClick = useCallback(() => {
-    trackAnalyticsEvent("search_result_opened", {
-      entry_point: "chat_search",
-      result_type: "session",
-    });
     openNew({ type: "sessions", id: sessionId });
   }, [openNew, sessionId]);
 

@@ -4,13 +4,8 @@ const mocks = vi.hoisted(() => ({
   createSession: vi.fn(),
   createSessionForEvent: vi.fn(),
   ensureFolderCatalog: vi.fn(() => Promise.resolve("Work")),
-  eventFireAndForget: vi.fn(() => Promise.resolve()),
   execute: vi.fn(),
   updateSession: vi.fn(() => Promise.resolve()),
-}));
-
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: { eventFireAndForget: mocks.eventFireAndForget },
 }));
 
 vi.mock("@anlg/plugin-session", () => ({

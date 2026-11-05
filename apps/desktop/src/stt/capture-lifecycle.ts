@@ -37,7 +37,6 @@ import {
 import { useSTTConnection } from "./useSTTConnection";
 
 import { requestMainAutoEnhance } from "~/ai/task-window-sync";
-import { trackAnalyticsEvent } from "~/analytics";
 import {
   deleteProcessedAudioForRetention,
   normalizeAudioRetention,
@@ -311,7 +310,6 @@ export function useCaptureLifecycle(sessionId: string) {
       let pendingSummaryMode = recoveredMarker?.summaryMode;
       const refreshSummaryAfterRepair =
         recoveredMarker?.refreshSummaryAfterRepair ?? false;
-      let completionTracked = false;
       let capturePhase =
         recoveredMarker?.phase ??
         (recoveredMarker?.summaryMode ? "finalizing" : "capturing");
@@ -758,10 +756,6 @@ export function useCaptureLifecycle(sessionId: string) {
           recoveryStateCleared = true;
           return;
         }
-        trackSessionCompletion(
-          details,
-          recoveredMarker ? "recovered_capture_stopped" : "capture_stopped",
-        );
         if (details.audioPath) {
           try {
             await enqueueSessionAudioOperation(sessionId, () =>
@@ -869,10 +863,6 @@ export function useCaptureLifecycle(sessionId: string) {
               reasons: repairReasons,
               error,
             });
-            trackAnalyticsEvent("transcription_failed", {
-              mode: "post_capture",
-              failure_stage: "batch_repair",
-            });
             if (transcriptWriteError || !details.liveTranscriptionActive) {
               await notifyFailure(
                 "Anarlog could not finish saving the transcript. The recording was kept so you can try again.",
@@ -929,10 +919,6 @@ export function useCaptureLifecycle(sessionId: string) {
           postCaptureAction === "enhance_only" ||
           emptyFreshCapture;
         if (!transcriptIsComplete) {
-          trackAnalyticsEvent("transcription_failed", {
-            mode: "live",
-            failure_stage: "persist",
-          });
           await requestRecovery();
           return;
         }
@@ -1065,11 +1051,6 @@ export function useCaptureLifecycle(sessionId: string) {
           await releaseMarker();
           recoveryPending = false;
           recoveryStateCleared = true;
-          if (hasTranscriptEvidence && !batchCompleted) {
-            trackAnalyticsEvent("transcription_completed", {
-              mode: "live",
-            });
-          }
         } catch (error) {
           await requestRecovery();
           throw error;
@@ -1102,23 +1083,6 @@ export function useCaptureLifecycle(sessionId: string) {
           if (!transcriptPersistence.hasPendingFailure())
             transcriptPersistence.dispose();
           updateBatchTranscriptionPending(false);
-        }
-      };
-      const trackSessionCompletion = (
-        details: Parameters<OnStoppedCallback>[1],
-        completionReason: "capture_stopped" | "recovered_capture_stopped",
-      ) => {
-        if (!completionTracked) {
-          completionTracked = true;
-          trackAnalyticsEvent("session_completed", {
-            duration_seconds: Math.max(
-              0,
-              Math.round((Date.now() - startedAt) / 1_000),
-            ),
-            transcription_requested:
-              details.liveTranscriptionActive || canRunBatchRef.current,
-            completion_reason: completionReason,
-          });
         }
       };
       const onStopped: OnStoppedCallback = async (_sessionId, details) => {

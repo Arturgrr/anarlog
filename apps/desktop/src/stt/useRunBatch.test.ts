@@ -86,12 +86,6 @@ vi.mock("@anlg/ui/components/ui/toast", () => ({
   },
 }));
 
-vi.mock("~/env", () => ({
-  env: {
-    VITE_API_URL: "https://api.test",
-  },
-}));
-
 vi.mock("~/services/audio-retention", () => ({
   deleteProcessedAudioForRetention: deleteProcessedAudioForRetentionMock,
   normalizeAudioRetention: (value: unknown) =>

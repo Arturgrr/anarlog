@@ -8,7 +8,6 @@ import {
   syntheticBatchProgress,
 } from "./general-batch";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { BatchResponseProcessingError } from "~/stt/batch-response-processing-error";
 
 const {
@@ -38,8 +37,6 @@ const {
   startTranscriptionMock: vi.fn(),
   stopTranscriptionMock: vi.fn(),
 }));
-
-vi.mock("~/analytics", () => ({ trackAnalyticsEvent: vi.fn() }));
 
 vi.mock("@tauri-apps/api/window", () => ({
   UserAttentionType: { Critical: 1, Informational: 2 },
@@ -860,21 +857,6 @@ describe("runBatchSession", () => {
       );
 
       expect(handleBatchFailed).toHaveBeenCalledWith("session-1", message);
-      if (recovery && empty) {
-        expect(trackAnalyticsEvent).not.toHaveBeenCalledWith(
-          "transcription_failed",
-          expect.anything(),
-        );
-      } else {
-        expect(trackAnalyticsEvent).toHaveBeenCalledWith(
-          "transcription_failed",
-          { mode: "batch", failure_stage: "persist" },
-        );
-      }
-      expect(trackAnalyticsEvent).not.toHaveBeenCalledWith(
-        "transcription_completed",
-        expect.anything(),
-      );
       expect(clearBatchPersist).toHaveBeenCalledWith("session-1");
       expect(clearBatchSession).not.toHaveBeenCalled();
     },
@@ -1038,12 +1020,6 @@ describe("runBatchSession", () => {
         code === "timed_out" ? "timed_out" : "failed",
         code,
       );
-      expect(trackAnalyticsEvent).toHaveBeenCalledWith("transcription_failed", {
-        mode: "batch",
-        failure_stage: code === "timed_out" ? "timed_out" : "failed",
-        error_code: code,
-        provider: "deepgram",
-      });
       expect(handleBatchStopped).not.toHaveBeenCalled();
     },
   );

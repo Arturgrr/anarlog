@@ -3,7 +3,6 @@ import { Trans } from "@lingui/react/macro";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { commands as listenerCommands } from "@anlg/plugin-transcription";
 import { CircleNotch } from "@anlg/ui/components/icons";
 
@@ -117,24 +116,6 @@ function useSettingsForm(storedSettings: StoredSettingValues) {
         ai_language: normalizedValue.ai_language,
         summary_use_main_language: normalizedValue.summary_use_main_language,
         spoken_languages: JSON.stringify(normalizedValue.spoken_languages),
-      });
-
-      void analyticsCommands.event({
-        event: "settings_changed",
-        autostart: normalizedValue.autostart,
-        automatic_updates: normalizedValue.automatic_updates,
-        auto_join_scheduled_meetings:
-          normalizedValue.auto_join_scheduled_meetings,
-        auto_start_scheduled_meetings:
-          normalizedValue.auto_start_scheduled_meetings,
-        auto_stop_meetings: normalizedValue.auto_stop_meetings,
-        floating_bar_enabled: normalizedValue.floating_bar_enabled,
-        show_app_in_dock: normalizedValue.show_app_in_dock,
-        show_tray_icon: normalizedValue.show_tray_icon,
-        notification_detect: normalizedValue.notification_detect,
-        consent_auto_send_chat: normalizedValue.consent_auto_send_chat,
-        capture_meeting_chat: normalizedValue.capture_meeting_chat,
-        capture_shared_screens: normalizedValue.capture_shared_screens,
       });
     },
   });

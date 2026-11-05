@@ -50,7 +50,7 @@ export function TemplatePickerPopover({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const resultRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const userTemplates = useUserTemplates();
-  const createTemplate = useCreateTemplate("session_note");
+  const createTemplate = useCreateTemplate();
   const openTemplatesTab = useOpenTemplatesTab();
 
   const handleUseTemplate = useCallback(
@@ -92,8 +92,6 @@ export function TemplatePickerPopover({
 
         openTemplatesTab({
           selectedMineId: templateId,
-          selectedWebIndex: null,
-          isWebMode: false,
           showHomepage: false,
         });
       })();
@@ -106,9 +104,7 @@ export function TemplatePickerPopover({
     resultRefs.current = [];
     openTemplatesTab({
       showHomepage: false,
-      isWebMode: false,
       selectedMineId: null,
-      selectedWebIndex: null,
     });
   }, [openTemplatesTab]);
 

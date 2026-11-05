@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { toast } from "@anlg/ui/components/ui/toast";
 
 import { useAITaskTask } from "~/ai/hooks";
@@ -68,11 +67,6 @@ export function useEnhancedNoteActions({
         });
         return;
       }
-
-      void analyticsCommands.event({
-        event: "note_enhanced",
-        is_auto: false,
-      });
 
       if (!note) {
         await getEnhancerService()?.enhance(sessionId, {

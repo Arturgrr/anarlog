@@ -23,7 +23,6 @@ tauri-build = { workspace = true, features = [] }
 tauri = { workspace = true, features = ["specta", "protocol-asset"] }
 
 tauri-plugin-agent = { workspace = true }
-tauri-plugin-analytics = { workspace = true }
 tauri-plugin-audio-priority = { workspace = true }
 tauri-plugin-autostart = { workspace = true }
 tauri-plugin-bedrock = { workspace = true }
@@ -62,7 +61,6 @@ tauri-plugin-permissions = { workspace = true }
 tauri-plugin-prevent-default = { workspace = true }
 tauri-plugin-process = { workspace = true }
 tauri-plugin-relay = { workspace = true }
-tauri-plugin-sentry = { workspace = true }
 tauri-plugin-session = { workspace = true }
 tauri-plugin-settings = { workspace = true }
 tauri-plugin-sfx = { workspace = true }
@@ -96,7 +94,6 @@ chrono = { workspace = true }
 dirs = { workspace = true }
 pico-args = { workspace = true }
 ractor = { workspace = true }
-sentry = { workspace = true, features = ["tracing"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 specta = { workspace = true }

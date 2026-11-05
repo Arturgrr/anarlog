@@ -14,9 +14,7 @@ const mocks = vi.hoisted(() => ({
     type: "templates";
     state: {
       showHomepage: boolean;
-      isWebMode: boolean;
       selectedMineId: string | null;
-      selectedWebIndex: number | null;
     };
   }>,
   openNew: vi.fn(),

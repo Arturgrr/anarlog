@@ -16,7 +16,6 @@ specta-typescript = { workspace = true }
 [dependencies]
 anlg-notification = { workspace = true, features = ["legacy"] }
 
-tauri-plugin-analytics = { workspace = true }
 tauri-plugin-windows = { workspace = true }
 
 serde = { workspace = true }

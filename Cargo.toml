@@ -173,7 +173,6 @@ tauri-plugin-opener = "2.5"
 tauri-plugin-os = "2.3"
 tauri-plugin-prevent-default = "4"
 tauri-plugin-process = "2.3"
-tauri-plugin-sentry = "0.5"
 tauri-plugin-shell = "2.3"
 tauri-plugin-single-instance = "2.4"
 tauri-plugin-store = "2.4.3"
@@ -181,7 +180,6 @@ tauri-plugin-updater = "2.10"
 tauri-plugin-window-state = "2.4"
 
 tauri-plugin-agent = { path = "plugins/agent" }
-tauri-plugin-analytics = { path = "plugins/analytics" }
 tauri-plugin-audio-priority = { path = "plugins/audio-priority" }
 tauri-plugin-bedrock = { path = "plugins/bedrock" }
 tauri-plugin-calendar = { path = "plugins/calendar" }

@@ -41,7 +41,6 @@
     "windows:allow-live-caption-current-state",
     "tracing:default",
     "anlg-tray:default",
-    "analytics:default",
     "agent:default",
     "bedrock:default",
     "updater:default",

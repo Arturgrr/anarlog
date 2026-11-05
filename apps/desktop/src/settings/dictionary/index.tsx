@@ -19,7 +19,6 @@ import {
   InputGroupInput,
 } from "@anlg/ui/components/ui/input-group";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { SettingsPageTitle } from "~/settings/page-title";
 import { useSetSettingValue } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
@@ -58,11 +57,6 @@ export function DictionarySettings({
       }
 
       onSave(JSON.stringify(nextTerms));
-      trackAnalyticsEvent("dictionary_updated", {
-        operation: "added",
-        term_count: nextTerms.length,
-        added_count: nextTerms.length - normalizedTerms.length,
-      });
       form.setFieldValue("term", "");
     },
   });
@@ -70,11 +64,6 @@ export function DictionarySettings({
   const removeTerm = (term: string) => {
     const nextTerms = normalizedTerms.filter((value) => value !== term);
     onSave(JSON.stringify(nextTerms));
-    trackAnalyticsEvent("dictionary_updated", {
-      operation: "removed",
-      term_count: nextTerms.length,
-      removed_count: normalizedTerms.length - nextTerms.length,
-    });
   };
 
   const editTerm = (term: string, nextTerm: string) => {
@@ -82,11 +71,6 @@ export function DictionarySettings({
       value === term ? nextTerm : value,
     );
     onSave(JSON.stringify(nextTerms));
-    trackAnalyticsEvent("dictionary_updated", {
-      operation: "edited",
-      term_count: nextTerms.length,
-      edited_count: 1,
-    });
   };
 
   return (

@@ -15,10 +15,6 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
 import {
-  trackPermissionRequested,
-  usePermissionAnalytics,
-} from "~/shared/hooks/usePermissionAnalytics";
-import {
   closePermissionAssistant,
   usePermission,
   usePermissionGuidance,
@@ -143,17 +139,6 @@ function PermissionsSectionContent({
   const mic = usePermission("microphone");
   const systemAudio = usePermission("systemAudio");
   const hasContinuedRef = useRef(false);
-  usePermissionAnalytics("microphone", mic.confirmedStatus, "onboarding");
-  usePermissionAnalytics(
-    "system_audio",
-    systemAudio.confirmedStatus,
-    "onboarding",
-  );
-  usePermissionAnalytics(
-    "accessibility",
-    accessibility?.confirmedStatus,
-    "onboarding",
-  );
 
   const isComplete =
     mic.status === "authorized" &&
@@ -161,7 +146,6 @@ function PermissionsSectionContent({
     (!accessibility || accessibility.status === "authorized");
 
   const handleAction = (
-    permission: string,
     perm: ReturnType<typeof usePermission>,
     opensSettingsWhenDenied: boolean,
     assisted = false,
@@ -169,20 +153,8 @@ function PermissionsSectionContent({
     // Assisted panes are granted by hand in System Settings; their request API
     // only prompts once, so every click after that would be a silent no-op.
     if (assisted || (opensSettingsWhenDenied && perm.status === "denied")) {
-      trackPermissionRequested(
-        permission,
-        perm.status,
-        "onboarding",
-        "open_settings",
-      );
       perm.open();
     } else {
-      trackPermissionRequested(
-        permission,
-        perm.status,
-        "onboarding",
-        "request",
-      );
       perm.request();
     }
   };
@@ -206,7 +178,7 @@ function PermissionsSectionContent({
           permissionName={t`Microphone`}
           status={mic.status}
           isPending={mic.isPending}
-          onAction={() => handleAction("microphone", mic, !runtimeCapabilities)}
+          onAction={() => handleAction(mic, !runtimeCapabilities)}
           actionLabel={
             runtimeCapabilities && mic.status === "denied"
               ? `${t`Try again`}: ${t`Microphone`}`
@@ -226,9 +198,7 @@ function PermissionsSectionContent({
           permissionName={t`System audio`}
           status={systemAudio.status}
           isPending={systemAudio.isPending}
-          onAction={() =>
-            handleAction("system_audio", systemAudio, !runtimeCapabilities)
-          }
+          onAction={() => handleAction(systemAudio, !runtimeCapabilities)}
           actionLabel={
             runtimeCapabilities && systemAudio.status === "denied"
               ? `${t`Try again`}: ${t`System audio`}`
@@ -252,12 +222,7 @@ function PermissionsSectionContent({
             status={accessibility.status}
             isPending={accessibility.isPending}
             onAction={() =>
-              handleAction(
-                "accessibility",
-                accessibility,
-                false,
-                Boolean(accessibilityGuidance),
-              )
+              handleAction(accessibility, false, Boolean(accessibilityGuidance))
             }
             assisted={Boolean(accessibilityGuidance)}
             opensSettingsWhenDenied={false}

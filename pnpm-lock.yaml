@@ -160,9 +160,6 @@ importers:
       '@anlg/editor':
         specifier: workspace:^
         version: link:../../packages/editor
-      '@anlg/plugin-analytics':
-        specifier: workspace:*
-        version: link:../../plugins/analytics
       '@anlg/plugin-calendar':
         specifier: workspace:*
         version: link:../../plugins/calendar
@@ -307,12 +304,6 @@ importers:
       '@radix-ui/react-hover-card':
         specifier: ^1.1.23
         version: 1.1.23(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@sentry/react':
-        specifier: ^8.55.1
-        version: 8.55.1(react@19.2.5)
-      '@t3-oss/env-core':
-        specifier: ^0.13.11
-        version: 0.13.11(typescript@5.8.3)(zod@4.6.6)
       '@tanstack/react-form':
         specifier: ^1.29.0
         version: 1.29.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -900,12 +891,6 @@ importers:
         version: 2.6.1
 
   plugins/agent:
-    dependencies:
-      '@tauri-apps/api':
-        specifier: ^2.10.1
-        version: 2.10.1
-
-  plugins/analytics:
     dependencies:
       '@tauri-apps/api':
         specifier: ^2.10.1
@@ -4559,26 +4544,6 @@ packages:
       rollup:
         optional: true
 
-  '@sentry-internal/browser-utils@8.55.1':
-    resolution: {integrity: sha512-SipXiwVhJrxzy3/4kf+YIFmpYlLKtGSRD+er7SBCcuSBtv31Fee8IXMDvk+bq24gRXxyjOLUmT//GGXjy2LL6w==}
-    engines: {node: '>=14.18'}
-
-  '@sentry-internal/feedback@8.55.1':
-    resolution: {integrity: sha512-9iFHaT/ijtzB0ffZhXMnt2rPNIXO/dDiCL1G1Bc55rQMPXgawR9AIaAWciyqQjYcbL1DDOhWbzdVqB+kVs5gXw==}
-    engines: {node: '>=14.18'}
-
-  '@sentry-internal/replay-canvas@8.55.1':
-    resolution: {integrity: sha512-2sKRu96Qe70y6TiYdYbwkhg4um2prgzH/ZJRItuoSEAjPjoFYYlP+1qjE2CcBw4RPS8/PimV7SFheSaeZs2GCw==}
-    engines: {node: '>=14.18'}
-
-  '@sentry-internal/replay@8.55.1':
-    resolution: {integrity: sha512-XaX6r8pXeX47rfiQrSQUwkgxHsDkOKzIT++zfTwrmveVlYSqAhp3x+AKhxAXGmKG62wlmAKQz54GJKcG4cgyKQ==}
-    engines: {node: '>=14.18'}
-
-  '@sentry/browser@8.55.1':
-    resolution: {integrity: sha512-OEn2eg8h3Mr7BmBGQ28BqbWehYA/NklZ0pAZB1FypPPl+kMd85AbaRdGTnaSjgmpc8bKbBO64edq4Y14sbCs5w==}
-    engines: {node: '>=14.18'}
-
   '@sentry/conventions@0.16.0':
     resolution: {integrity: sha512-fO9PLmHdVURcSPUpWCItWAtgKiMwGdJHbovoSEyLplX5sxs2ugvI4CBPTrkkgqhObnZOD0CnWBKDzSVQYBKEyQ==}
     engines: {node: '>=14'}
@@ -4586,10 +4551,6 @@ packages:
   '@sentry/core@10.76.2':
     resolution: {integrity: sha512-vndrQalRiwYatTkjlLWvyf69KocXIb9TKJ4A9oiyWguL8PJYtqIRTlRe4OpkpjLrxS18fvRdV0jEm29c/9p3hQ==}
     engines: {node: '>=18'}
-
-  '@sentry/core@8.55.1':
-    resolution: {integrity: sha512-0ea+yDOgaijR3ba2al1QZxY0bZ9MBZq2a0G+2A0uCBpBkiXnpLFGVAo9UAlEikN1C4M8ROZYiuFU7yZCqacgLQ==}
-    engines: {node: '>=14.18'}
 
   '@sentry/node-core@10.76.2':
     resolution: {integrity: sha512-TrgAc/SvU5kQfjw8pz6I8LLIUiblOSf9BPPNkTbS0Dzcqa4yQLVbmsbS3rvGT7ot64m9Vjzn327ZRy63MlI6/w==}
@@ -4623,12 +4584,6 @@ packages:
       '@opentelemetry/api': ^1.9.0
       '@opentelemetry/core': 2.8.0
       '@opentelemetry/sdk-trace-base': ^1.30.1 || ^2.1.0
-
-  '@sentry/react@8.55.1':
-    resolution: {integrity: sha512-vrqEI1EVRMaeUluHSt84//WFuMecqAfwS+t2SojhvXtsSP6BbaCHd0jt7til5MBzI9kWAQjIxsUUr3pbFAviVg==}
-    engines: {node: '>=14.18'}
-    peerDependencies:
-      react: ^16.14.0 || 17.x || 18.x || 19.x
 
   '@sentry/server-utils@10.76.2':
     resolution: {integrity: sha512-wogj6Trj8fAu+aD7HbpvHEBlyANMOvvO9MP5NFJaiQbprLKugtCdE6rFTxDhofXvRo4nswL9m4Cvysg3k5KcvQ==}
@@ -4739,23 +4694,6 @@ packages:
   '@supabase/supabase-js@2.103.0':
     resolution: {integrity: sha512-j/6q5+LtXbR/YOLSLhy7Na74RD1cV2v+KwIIuuqMEjk1JpLEEyu0ynwDHpGoxMncDQl+R5FogaVqZm+85lZvtw==}
     engines: {node: '>=20.0.0'}
-
-  '@t3-oss/env-core@0.13.11':
-    resolution: {integrity: sha512-sM7GYY+KL7H/Hl0BE0inWfk3nRHZOLhmVn7sHGxaZt9FAR6KqREXAE+6TqKfiavfXmpRxO/OZ2QgKRd+oiBYRQ==}
-    peerDependencies:
-      arktype: ^2.1.0
-      typescript: '>=5.0.0'
-      valibot: ^1.0.0-beta.7 || ^1.0.0
-      zod: ^3.24.0 || ^4.0.0
-    peerDependenciesMeta:
-      arktype:
-        optional: true
-      typescript:
-        optional: true
-      valibot:
-        optional: true
-      zod:
-        optional: true
 
   '@tailwindcss/cli@4.2.2':
     resolution: {integrity: sha512-iJS+8kAFZ8HPqnh0O5DHCLjo4L6dD97DBQEkrhfSO4V96xeefUus2jqsBs1dUMt3OU9Ks4qIkiY0mpL5UW+4LQ==}
@@ -12211,39 +12149,11 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.7
 
-  '@sentry-internal/browser-utils@8.55.1':
-    dependencies:
-      '@sentry/core': 8.55.1
-
-  '@sentry-internal/feedback@8.55.1':
-    dependencies:
-      '@sentry/core': 8.55.1
-
-  '@sentry-internal/replay-canvas@8.55.1':
-    dependencies:
-      '@sentry-internal/replay': 8.55.1
-      '@sentry/core': 8.55.1
-
-  '@sentry-internal/replay@8.55.1':
-    dependencies:
-      '@sentry-internal/browser-utils': 8.55.1
-      '@sentry/core': 8.55.1
-
-  '@sentry/browser@8.55.1':
-    dependencies:
-      '@sentry-internal/browser-utils': 8.55.1
-      '@sentry-internal/feedback': 8.55.1
-      '@sentry-internal/replay': 8.55.1
-      '@sentry-internal/replay-canvas': 8.55.1
-      '@sentry/core': 8.55.1
-
   '@sentry/conventions@0.16.0': {}
 
   '@sentry/core@10.76.2':
     dependencies:
       '@sentry/conventions': 0.16.0
-
-  '@sentry/core@8.55.1': {}
 
   '@sentry/node-core@10.76.2(@opentelemetry/api@1.10.0)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.10.0))(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.10.0))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.10.0))':
     dependencies:
@@ -12280,13 +12190,6 @@ snapshots:
       '@opentelemetry/sdk-trace-base': 2.12.0(@opentelemetry/api@1.10.0)
       '@sentry/conventions': 0.16.0
       '@sentry/core': 10.76.2
-
-  '@sentry/react@8.55.1(react@19.2.5)':
-    dependencies:
-      '@sentry/browser': 8.55.1
-      '@sentry/core': 8.55.1
-      hoist-non-react-statics: 3.3.2
-      react: 19.2.5
 
   '@sentry/server-utils@10.76.2':
     dependencies:
@@ -12414,11 +12317,6 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
-
-  '@t3-oss/env-core@0.13.11(typescript@5.8.3)(zod@4.6.6)':
-    optionalDependencies:
-      typescript: 5.8.3
-      zod: 4.6.6
 
   '@tailwindcss/cli@4.2.2':
     dependencies:
