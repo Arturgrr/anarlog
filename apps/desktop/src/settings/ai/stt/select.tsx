@@ -408,7 +408,7 @@ const TRANSCRIPTION_LANGUAGE_WARNING_TOAST_ID =
   "transcription-language-warning";
 const MAX_DISMISSED_TRANSCRIPTION_LANGUAGE_WARNINGS = 128;
 const DISMISSED_TRANSCRIPTION_LANGUAGE_WARNINGS_KEY =
-  "anarlog:dismissed-transcription-language-warnings";
+  "librelog:dismissed-transcription-language-warnings";
 
 function rememberDismissedTranscriptionLanguageWarning(warningKey: string) {
   try {

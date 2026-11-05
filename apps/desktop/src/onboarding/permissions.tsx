@@ -170,8 +170,8 @@ function PermissionsSectionContent({
 
       <div className="flex flex-col gap-2">
         <PermissionBlock
-          enabledLabel={t`Anarlog can hear your voice`}
-          enableLabel={t`Help Anarlog listen to you`}
+          enabledLabel={t`Librelog can hear your voice`}
+          enableLabel={t`Help Librelog listen to you`}
           enabledBody={t`Microphone access turned on`}
           enableBody={mic.error ?? t`Use your microphone to capture your voice`}
           Icon={Microphone}
@@ -188,8 +188,8 @@ function PermissionsSectionContent({
         />
 
         <PermissionBlock
-          enabledLabel={t`Anarlog can hear others`}
-          enableLabel={t`Help Anarlog listen to others`}
+          enabledLabel={t`Librelog can hear others`}
+          enableLabel={t`Help Librelog listen to others`}
           enabledBody={t`System audio enabled`}
           enableBody={
             systemAudio.error ?? t`Use system audio to capture other speakers`
@@ -209,12 +209,12 @@ function PermissionsSectionContent({
 
         {accessibility && (
           <PermissionBlock
-            enabledLabel={t`Anarlog can read meeting details`}
-            enableLabel={t`Help Anarlog read meeting activity`}
+            enabledLabel={t`Librelog can read meeting details`}
+            enableLabel={t`Help Librelog read meeting activity`}
             enabledBody={t`Meeting details access turned on`}
             enableBody={
               accessibilityGuidance
-                ? t`Opens System Settings and guides you to add Anarlog to the ${accessibilityGuidance.paneTitle ?? "Privacy"} list`
+                ? t`Opens System Settings and guides you to add Librelog to the ${accessibilityGuidance.paneTitle ?? "Privacy"} list`
                 : t`Read meeting controls and visible chat`
             }
             Icon={Cursor}

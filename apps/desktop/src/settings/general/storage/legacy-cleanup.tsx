@@ -130,7 +130,7 @@ export function LegacyMigrationCleanupRow() {
     return {
       state: "unavailable" as const,
       label: t`Migration status unavailable`,
-      description: t`Anarlog will retry automatically. This does not affect your notes.`,
+      description: t`Librelog will retry automatically. This does not affect your notes.`,
     };
   })();
 

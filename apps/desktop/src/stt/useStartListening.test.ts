@@ -3126,7 +3126,7 @@ describe("useStartListening", () => {
     });
 
     expect(toastErrorMock).toHaveBeenCalledWith(
-      "Anarlog could not save part of the live transcript.",
+      "Librelog could not save part of the live transcript.",
       { id: "live-transcript-persist-failed" },
     );
     expect(queueAutoEnhanceIfSummaryEmptyMock).not.toHaveBeenCalled();
@@ -3175,7 +3175,7 @@ describe("useStartListening", () => {
     });
 
     expect(toastErrorMock).toHaveBeenCalledWith(
-      "Anarlog could not finish saving the transcript. The recording was kept so you can try again.",
+      "Librelog could not finish saving the transcript. The recording was kept so you can try again.",
       { id: "post-capture-transcript-incomplete" },
     );
     expect(markSessionAudioTranscriptionCompleteMock).not.toHaveBeenCalled();
@@ -3620,7 +3620,7 @@ describe("useStartListening", () => {
     listMicUsingApplicationsMock
       .mockResolvedValueOnce({
         status: "ok",
-        data: [{ id: "com.anarlog.dev", name: "Anarlog Dev" }],
+        data: [{ id: "com.arturgrr.librelog.dev", name: "Librelog Dev" }],
       })
       .mockResolvedValueOnce({
         status: "ok",
@@ -3653,12 +3653,12 @@ describe("useStartListening", () => {
     expect(listMicUsingApplicationsMock).toHaveBeenCalledTimes(2);
     expect(sendMeetingChatMessageMock).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining("https://github.com/Arturgrr/anarlog"),
-      ["com.anarlog.dev"],
+      expect.stringContaining("https://github.com/Arturgrr/librelog"),
+      ["com.arturgrr.librelog.dev"],
     );
     expect(sendMeetingChatMessageMock).toHaveBeenNthCalledWith(
       2,
-      expect.stringContaining("https://github.com/Arturgrr/anarlog"),
+      expect.stringContaining("https://github.com/Arturgrr/librelog"),
       ["us.zoom.xos"],
     );
     expect(toastWarningMock).not.toHaveBeenCalled();
@@ -3810,7 +3810,7 @@ describe("useStartListening", () => {
       expect(startMeetingChatCaptureMock).toHaveBeenCalledWith({
         sessionId: "session-1",
         excludedTexts: [
-          "I'm using Anarlog to record and transcribe this meeting. https://github.com/Arturgrr/anarlog",
+          "I'm using Librelog to record and transcribe this meeting. https://github.com/Arturgrr/librelog",
         ],
         onParticipantDeclined: expect.any(Function),
       });
@@ -3849,7 +3849,7 @@ describe("useStartListening", () => {
       expect(startMeetingChatCaptureMock).toHaveBeenCalledWith({
         sessionId: "session-1",
         excludedTexts: [
-          "I'm using Anarlog to record and transcribe this meeting. https://github.com/Arturgrr/anarlog",
+          "I'm using Librelog to record and transcribe this meeting. https://github.com/Arturgrr/librelog",
         ],
         onParticipantDeclined: expect.any(Function),
       });

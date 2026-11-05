@@ -10,7 +10,7 @@ import { persistDisclosureAttempt } from "./meeting-consent-store";
 
 import { REPOSITORY_URL } from "~/shared/links";
 
-export const MEETING_DISCLOSURE_MESSAGE = `I'm using Anarlog to record and transcribe this meeting. ${REPOSITORY_URL}`;
+export const MEETING_DISCLOSURE_MESSAGE = `I'm using Librelog to record and transcribe this meeting. ${REPOSITORY_URL}`;
 
 const MEETING_DISCLOSURE_MAX_ATTEMPTS = 30;
 const MEETING_DISCLOSURE_RETRY_INTERVAL_MS = 1_000;
@@ -142,7 +142,7 @@ function meetingDisclosureFailure(reason: unknown): MeetingDisclosureOutcome {
   const detail = reason instanceof Error ? reason.message : String(reason);
   console.warn("[listener] meeting disclosure was not sent", reason);
   toast.warning(
-    "Recording started, but Anarlog could not post the meeting chat disclosure.",
+    "Recording started, but Librelog could not post the meeting chat disclosure.",
     { id: "meeting-disclosure-send-failed", duration: Infinity },
   );
   return { status: "notSent", reason: detail };

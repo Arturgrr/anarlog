@@ -52,7 +52,7 @@ describe("personal activity query", () => {
         expect.objectContaining({ session_id: "guest", duration_ms: 800 }),
       ]);
       db.exec(
-        `UPDATE sessions SET event_json = '{"tracking_id":"anarlog-onboarding-demo-v1"}' WHERE id = 'mine'`,
+        `UPDATE sessions SET event_json = '{"tracking_id":"librelog-onboarding-demo-v1"}' WHERE id = 'mine'`,
       );
       db.exec(`UPDATE sessions SET event_json = 'invalid' WHERE id = 'guest'`);
       expect(db.prepare(ACTIVITY_SQL).all("user")).toEqual(

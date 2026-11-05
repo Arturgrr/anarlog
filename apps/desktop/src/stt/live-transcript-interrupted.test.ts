@@ -30,7 +30,7 @@ describe("getLiveTranscriptPausedMessage", () => {
         sttProvider: "deepgram",
         online: true,
       }),
-    ).toMatch(/Anarlog can't reach Deepgram/);
+    ).toMatch(/Librelog can't reach Deepgram/);
   });
 
   it("does not blame the network for on-device models", () => {

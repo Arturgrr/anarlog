@@ -7,7 +7,7 @@ tasks:
 
   bacon: bacon {{.CLI_ARGS}}
 
-  stat: btop -f anarlog -u 500 --preset 1
+  stat: btop -f librelog -u 500 --preset 1
 
   clean-plugins:
     cmds:
@@ -45,15 +45,6 @@ tasks:
     cmds:
       - chmod +x ./apps/desktop/src-tauri/resources/stt-aarch64-apple-darwin
       - chmod +x ./apps/desktop/src-tauri/resources/passthrough-aarch64-apple-darwin
-
-  db:
-    env:
-      DB: /Users/yujonglee/Library/Application Support/hyprnote/db.sqlite
-    cmds:
-      - |
-          sqlite3 -json "$DB" 'SELECT store FROM main LIMIT 1;' |
-          jq -r '.[0].store' |
-          jless
 
   env-sample:
     vars:

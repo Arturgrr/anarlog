@@ -1,4 +1,4 @@
-export const REPOSITORY_URL = "https://github.com/Arturgrr/anarlog";
+export const REPOSITORY_URL = "https://github.com/Arturgrr/librelog";
 export const ISSUES_URL = `${REPOSITORY_URL}/issues`;
 export const DOCS_URL = `${REPOSITORY_URL}/tree/main/docs`;
 

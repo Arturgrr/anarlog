@@ -22,7 +22,7 @@ describe("remote meeting detection", () => {
   test("keeps non-call X links out of join controls", () => {
     expect(detectMeetingType("https://call.x.com/")).toBeNull();
     expect(detectMeetingType("https://call.x.com/new")).toBeNull();
-    expect(detectMeetingType("https://x.com/anarlog")).toBeNull();
+    expect(detectMeetingType("https://x.com/librelog")).toBeNull();
     expect(detectMeetingType("https://x.com/i/call/new")).toBeNull();
     expect(detectMeetingType("https://call.x.com/123-456")).toBeNull();
   });

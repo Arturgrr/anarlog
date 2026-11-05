@@ -385,7 +385,7 @@ describe("session correction chat tool", () => {
     );
     let persistedDictionary = "";
     mocks.updateSettingValue.mockImplementation(async (_key, update) => {
-      persistedDictionary = update(JSON.stringify(["Anarlog"]));
+      persistedDictionary = update(JSON.stringify(["Librelog"]));
       return persistedDictionary;
     });
 
@@ -420,7 +420,7 @@ describe("session correction chat tool", () => {
     expect(
       mocks.applySessionContentCorrections.mock.invocationCallOrder[0],
     ).toBeLessThan(mocks.updateSettingValue.mock.invocationCallOrder[0]);
-    expect(persistedDictionary).toBe(JSON.stringify(["Anarlog", "Erebor"]));
+    expect(persistedDictionary).toBe(JSON.stringify(["Librelog", "Erebor"]));
   });
 
   it("updates the visible session title even when it is not in the summary body", async () => {
@@ -434,7 +434,7 @@ describe("session correction chat tool", () => {
     const result = await (buildTool() as any).execute({
       target: "summary",
       oldText: "Analog",
-      newText: "Anarlog",
+      newText: "Librelog",
     });
 
     expect(result).toMatchObject({
@@ -443,7 +443,7 @@ describe("session correction chat tool", () => {
       transcriptChanges: [],
       titleChange: {
         replacements: 1,
-        nextTitle: "Scratchpad Design and Anarlog vs Chyle Direction",
+        nextTitle: "Scratchpad Design and Librelog vs Chyle Direction",
       },
     });
     expect(mocks.applySessionContentCorrections).toHaveBeenCalledWith({
@@ -452,7 +452,7 @@ describe("session correction chat tool", () => {
       transcripts: [],
       title: {
         currentTitle: "Scratchpad Design and Analog vs Chyle Direction",
-        nextTitle: "Scratchpad Design and Anarlog vs Chyle Direction",
+        nextTitle: "Scratchpad Design and Librelog vs Chyle Direction",
       },
     });
   });

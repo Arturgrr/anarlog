@@ -16,7 +16,7 @@ const LANGUAGES: &[&str] = &[
     "ar", "cs", "da", "de", "el", "en", "es", "fa", "fi", "fil", "fr", "hi", "hu", "id", "it",
     "ja", "ko", "mk", "ms", "nl", "pl", "pt", "ro", "ru", "sv", "th", "tr", "vi", "yue", "zh",
 ];
-const FINALIZE_ID: &str = "anarlog_end_of_input";
+const FINALIZE_ID: &str = "librelog_end_of_input";
 
 #[derive(Clone, Default)]
 pub struct NariAdapter {

@@ -27,7 +27,7 @@ fn test_chat_mutation_is_enabled_only_for_macos_slack_huddles() {
         "com.hnc.Discord",
         "zoom",
         "google-chrome",
-        "com.anarlog.dev",
+        "com.arturgrr.librelog.dev",
     ] {
         assert!(
             !supports_meeting_chat_mutation(bundle_id),
@@ -116,7 +116,7 @@ fn test_chat_mutation_scope_requires_exactly_one_recognized_meeting_app() {
     let bundle_ids = vec![
         "com.tinyspeck.slackmacgap".to_string(),
         "com.tinyspeck.slackmacgap".to_string(),
-        "com.hyprnote.dev".to_string(),
+        "com.arturgrr.librelog.dev".to_string(),
     ];
 
     assert_eq!(

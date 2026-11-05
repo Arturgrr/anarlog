@@ -17,7 +17,7 @@ import {
 import { useLiveQuery } from "~/db";
 
 const DISMISSED_SAVED_CAPTURE_AUDIO_KEY =
-  "anarlog:dismissed-saved-capture-audio-prompts";
+  "librelog:dismissed-saved-capture-audio-prompts";
 const MAX_DISMISSED_SAVED_CAPTURE_AUDIO_PROMPTS = 128;
 
 function useSavedCaptureAudioAt(sessionId: string) {
@@ -85,7 +85,7 @@ export function SavedCaptureAudioPrompt({ sessionId }: { sessionId: string }) {
         console.error("[listener] failed to resume listening", error);
       });
     };
-    toast.warning("Anarlog saved this meeting's audio", {
+    toast.warning("Librelog saved this meeting's audio", {
       id,
       duration: Infinity,
       description: (

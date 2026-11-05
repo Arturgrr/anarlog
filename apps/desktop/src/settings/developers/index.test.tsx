@@ -80,13 +80,13 @@ import {
 describe("buildMcpConfiguration", () => {
   it("uses the exact installed CLI path", () => {
     const configuration = JSON.parse(
-      buildMcpConfiguration("/Users/test/.local/bin/anarlog"),
+      buildMcpConfiguration("/Users/test/.local/bin/librelog"),
     );
 
     expect(configuration).toEqual({
       mcpServers: {
-        anarlog: {
-          command: "/Users/test/.local/bin/anarlog",
+        librelog: {
+          command: "/Users/test/.local/bin/librelog",
           args: ["mcp"],
         },
       },
@@ -99,12 +99,12 @@ describe("getCliInstallNotification", () => {
     expect(
       getCliInstallNotification({
         supported: true,
-        commandName: "anarlog",
-        installPath: "/Users/test/.local/bin/anarlog",
+        commandName: "librelog",
+        installPath: "/Users/test/.local/bin/librelog",
         state: "installed",
         details: "Installed.",
       }),
-    ).toEqual({ type: "success", message: "anarlog is ready to use" });
+    ).toEqual({ type: "success", message: "librelog is ready to use" });
   });
 
   it.each(["resource_missing", "unsupported"] as const)(
@@ -113,8 +113,8 @@ describe("getCliInstallNotification", () => {
       expect(
         getCliInstallNotification({
           supported: false,
-          commandName: "anarlog",
-          installPath: "/Users/test/.local/bin/anarlog",
+          commandName: "librelog",
+          installPath: "/Users/test/.local/bin/librelog",
           state,
           details: "The CLI is unavailable in this build.",
         }),
@@ -153,11 +153,11 @@ describe("SettingsDevelopers", () => {
       status: "ok",
       data: {
         supported: true,
-        commandName: "anarlog",
-        installPath: "/Users/test/.local/bin/anarlog",
+        commandName: "librelog",
+        installPath: "/Users/test/.local/bin/librelog",
         state: "installed",
         details:
-          "Installed at /Users/test/.local/bin/anarlog and managed by Anarlog.",
+          "Installed at /Users/test/.local/bin/librelog and managed by Librelog.",
       },
     });
 
@@ -174,18 +174,18 @@ describe("SettingsDevelopers", () => {
     expect(screen.getByLabelText("Installed")).toBeTruthy();
     expect(screen.queryByText("Installed")).toBeNull();
     expect(
-      screen.queryByText(/\/Users\/test\/\.local\/bin\/anarlog/),
+      screen.queryByText(/\/Users\/test\/\.local\/bin\/librelog/),
     ).toBeNull();
-    expect(screen.queryByText("anarlog --json meetings list")).toBeNull();
-    expect(screen.queryByText("anarlog mcp")).toBeNull();
+    expect(screen.queryByText("librelog --json meetings list")).toBeNull();
+    expect(screen.queryByText("librelog mcp")).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Copy config" }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledOnce());
     expect(JSON.parse(writeText.mock.calls[0][0])).toEqual({
       mcpServers: {
-        anarlog: {
-          command: "/Users/test/.local/bin/anarlog",
+        librelog: {
+          command: "/Users/test/.local/bin/librelog",
           args: ["mcp"],
         },
       },
@@ -197,8 +197,8 @@ describe("SettingsDevelopers", () => {
       status: "ok",
       data: {
         supported: false,
-        commandName: "anarlog-dev",
-        installPath: "/Users/test/.local/bin/anarlog-dev",
+        commandName: "librelog-dev",
+        installPath: "/Users/test/.local/bin/librelog-dev",
         state: "unsupported",
         details: "Bundled CLI installation is currently available on macOS.",
       },
@@ -218,7 +218,7 @@ describe("SettingsDevelopers", () => {
     });
     expect(copyButton.hasAttribute("disabled")).toBe(true);
     expect(
-      screen.queryByText(/\/Users\/test\/\.local\/bin\/anarlog-dev/),
+      screen.queryByText(/\/Users\/test\/\.local\/bin\/librelog-dev/),
     ).toBeNull();
   });
 
@@ -227,8 +227,8 @@ describe("SettingsDevelopers", () => {
       status: "ok",
       data: {
         supported: false,
-        commandName: "anarlog",
-        installPath: "/Users/test/.local/bin/anarlog",
+        commandName: "librelog",
+        installPath: "/Users/test/.local/bin/librelog",
         state: "unsupported",
         details: "Unavailable.",
       },
@@ -241,28 +241,28 @@ describe("SettingsDevelopers", () => {
           displayName: "Claude Code",
           detected: true,
           installed: true,
-          skillPath: "/Users/test/.claude/skills/anarlog",
+          skillPath: "/Users/test/.claude/skills/librelog",
         },
         {
           agent: "codex",
           displayName: "Codex",
           detected: true,
           installed: false,
-          skillPath: "/Users/test/.codex/skills/anarlog",
+          skillPath: "/Users/test/.codex/skills/librelog",
         },
         {
           agent: "cursor",
           displayName: "Cursor",
           detected: false,
           installed: false,
-          skillPath: "/Users/test/.cursor/skills/anarlog",
+          skillPath: "/Users/test/.cursor/skills/librelog",
         },
         {
           agent: "opencode",
           displayName: "OpenCode",
           detected: true,
           installed: false,
-          skillPath: "/Users/test/.config/opencode/skills/anarlog",
+          skillPath: "/Users/test/.config/opencode/skills/librelog",
         },
       ],
     });
@@ -318,7 +318,7 @@ describe("SettingsDevelopers", () => {
     expect(mocks.installAgentSkill).not.toHaveBeenCalledWith("cursor");
     await waitFor(() =>
       expect(mocks.toastSuccess).toHaveBeenCalledWith(
-        "Anarlog skill added to 3 agents",
+        "Librelog skill added to 3 agents",
       ),
     );
   });
@@ -328,8 +328,8 @@ describe("SettingsDevelopers", () => {
       status: "ok",
       data: {
         supported: false,
-        commandName: "anarlog",
-        installPath: "/Users/test/.local/bin/anarlog",
+        commandName: "librelog",
+        installPath: "/Users/test/.local/bin/librelog",
         state: "unsupported",
         details: "Unavailable.",
       },
@@ -342,7 +342,7 @@ describe("SettingsDevelopers", () => {
           displayName: "Codex",
           detected: true,
           installed: false,
-          skillPath: "/Users/test/.codex/skills/anarlog",
+          skillPath: "/Users/test/.codex/skills/librelog",
         },
       ],
     });
@@ -353,7 +353,7 @@ describe("SettingsDevelopers", () => {
         displayName: "Codex",
         detected: true,
         installed: true,
-        skillPath: "/Users/test/.codex/skills/anarlog",
+        skillPath: "/Users/test/.codex/skills/librelog",
       },
     });
 
@@ -373,7 +373,7 @@ describe("SettingsDevelopers", () => {
     );
     await waitFor(() =>
       expect(mocks.toastSuccess).toHaveBeenCalledWith(
-        "Anarlog skill added to Codex",
+        "Librelog skill added to Codex",
       ),
     );
   });

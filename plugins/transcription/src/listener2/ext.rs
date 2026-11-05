@@ -763,7 +763,7 @@ mod tests {
     #[test]
     fn completed_batches_survive_restart_until_discarded() {
         let dir = std::env::temp_dir().join(format!(
-            "anarlog-batch-results-{}-{}",
+            "librelog-batch-results-{}-{}",
             std::process::id(),
             now_ms()
         ));

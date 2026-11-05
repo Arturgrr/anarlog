@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const appId = process.env.CHAR_APP_ID || "com.hyprnote.dev";
+const appId = process.env.LIBRELOG_APP_ID || "com.arturgrr.librelog.dev";
 const pluginRoot = resolve(__dirname);
 const targetRoot =
-  process.env.CHAR_PLUGIN_DIR ||
+  process.env.LIBRELOG_PLUGIN_DIR ||
   (() => {
     switch (process.platform) {
       case "darwin":

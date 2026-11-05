@@ -91,7 +91,7 @@ describe("AppSettingsView", () => {
     renderAppSettings({ appStoreBuild: true });
 
     expect(
-      screen.queryByRole("switch", { name: "Start Anarlog at login" }),
+      screen.queryByRole("switch", { name: "Start Librelog at login" }),
     ).toBeNull();
     expect(
       screen.queryByRole("switch", { name: "Automatically install updates" }),

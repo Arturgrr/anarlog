@@ -42,7 +42,7 @@ pub fn list_supported_models() -> Vec<ModelInfo> {
 
 pub fn supported_model_info(model: &SupportedModel) -> ModelInfo {
     let description = match model {
-        SupportedModel::AnarlogLLM => "Experimental model trained by the Char team.",
+        SupportedModel::AnarlogLLM => "Experimental model trained by Fastrepl.",
         SupportedModel::Gemma3_4bQ4 | SupportedModel::Llama3p2_3bQ4 => {
             "Deprecated. Exists only for backward compatibility."
         }

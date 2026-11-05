@@ -11,7 +11,7 @@ import {
 } from "./meeting-consent";
 
 const DISCLOSURE =
-  "I'm using Anarlog to record and transcribe this meeting. https://github.com/Arturgrr/anarlog";
+  "I'm using Librelog to record and transcribe this meeting. https://github.com/Arturgrr/librelog";
 
 function attempt(
   delivery: DisclosureAttempt["delivery"] = "sent",
@@ -22,7 +22,7 @@ function attempt(
     attemptedAt: "2026-08-21T00:00:00.000Z",
     platform: "slack_huddle",
     surface: "huddle",
-    messageVersion: "anarlog-disclosure-v1",
+    messageVersion: "librelog-disclosure-v1",
     message: DISCLOSURE,
     delivery,
     failureReason: "",

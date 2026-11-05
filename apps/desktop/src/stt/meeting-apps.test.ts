@@ -34,7 +34,7 @@ describe("meeting app platform names", () => {
       getBrowserMeetingPlatform([chrome], {
         id: "event-2",
         title: "Call",
-        location: "https://x.com/anarlog",
+        location: "https://x.com/librelog",
         participantNames: [],
       }),
     ).toBeNull();

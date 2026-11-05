@@ -14,9 +14,9 @@ describe("preferred names guidance", () => {
   it("appends preferred names after the rendered prompt", () => {
     expect(
       appendPreferredNamesGuidance("Base prompt", [
-        "Anarlog",
+        "Librelog",
         "Char",
-        "anarlog",
+        "librelog",
       ]),
     ).toBe(
       `Base prompt
@@ -24,7 +24,7 @@ describe("preferred names guidance", () => {
 # Preferred Names
 
 Use these names and terms exactly when they appear, even if the transcript or notes spell them differently:
-- Anarlog
+- Librelog
 - Char`,
     );
   });

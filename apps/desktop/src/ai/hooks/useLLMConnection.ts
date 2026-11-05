@@ -34,8 +34,8 @@ import { useSettingsReady } from "~/settings/queries";
 import { useConfigValues } from "~/shared/config";
 
 // App attribution per https://openrouter.ai/docs/app-attribution.
-const OPENROUTER_APP_URL = "https://github.com/Arturgrr/anarlog";
-const OPENROUTER_APP_NAME = "Anarlog";
+const OPENROUTER_APP_URL = "https://github.com/Arturgrr/librelog";
+const OPENROUTER_APP_NAME = "Librelog";
 const OPENROUTER_APP_CATEGORIES = "writing-assistant,personal-agent";
 
 type LanguageModelV3 = Parameters<typeof wrapLanguageModel>[0]["model"];

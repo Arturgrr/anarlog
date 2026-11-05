@@ -31,7 +31,7 @@ describe("ChatCTA", () => {
     render(<ChatCTA />);
 
     const button = screen.getByRole("button", {
-      name: "Ask Anarlog anything",
+      name: "Ask Librelog anything",
     });
 
     fireEvent.click(button);
@@ -47,7 +47,7 @@ describe("ChatCTA", () => {
       render(<ChatCTA />);
 
       expect(
-        screen.queryByRole("button", { name: "Ask Anarlog anything" }),
+        screen.queryByRole("button", { name: "Ask Librelog anything" }),
       ).toBeNull();
     },
   );
