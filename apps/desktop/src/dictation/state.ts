@@ -9,17 +9,7 @@ export const useDictationStatus = create<{
   lastTranscript: string;
   ready: boolean;
   retry: number;
-  owner: string | null;
-  presentedOwner: string | null;
-  microphone: string;
-  amplitude: number;
-  text: string;
-  partial: string;
-  previewEnabled: boolean;
-  previewUnavailable: boolean;
-  expanded: boolean;
   cancel: (() => void) | null;
-  finish: (() => void) | null;
 }>(() => ({
   capturingShortcut: false,
   phase: "idle",
@@ -27,15 +17,5 @@ export const useDictationStatus = create<{
   lastTranscript: "",
   ready: false,
   retry: 0,
-  owner: null,
-  presentedOwner: null,
-  microphone: "Default microphone",
-  amplitude: 0,
-  text: "",
-  partial: "",
-  previewEnabled: false,
-  previewUnavailable: false,
-  expanded: false,
   cancel: null,
-  finish: null,
 }));

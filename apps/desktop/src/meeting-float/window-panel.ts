@@ -6,9 +6,7 @@ let sentTranscriptSessionId: string | null = null;
 let sentTranscriptBubbles: FloatingRouteState["transcriptBubbles"] | null =
   null;
 
-export function createFloatingMeetingWindowSynchronizer(
-  onPresented?: (state: FloatingRouteState | null) => void,
-) {
+export function createFloatingMeetingWindowSynchronizer() {
   let desiredRouteState: FloatingRouteState | null = null;
   let desiredRevision = 0;
   let appliedRevision = 0;
@@ -62,7 +60,6 @@ export function createFloatingMeetingWindowSynchronizer(
       } else {
         shownSessionId = nextShownSessionId;
         appliedRouteState = routeState;
-        onPresented?.(routeState);
       }
     }
 
@@ -167,7 +164,6 @@ export async function showFloatingMeetingWindow(
   const updateResult = amplitudeOnly
     ? await windowsCommands.floatingBarUpdateAmplitude(routeState.amplitude)
     : await windowsCommands.floatingBarUpdate({
-        dictation: routeState.dictation ?? null,
         amplitude: routeState.amplitude,
         title: routeState.title,
         status: routeState.status,
@@ -226,8 +222,6 @@ function isAmplitudeOnlyFloatingRouteUpdate(
     previousState.amplitude !== nextState.amplitude &&
     previousState.sessionId === nextState.sessionId &&
     previousState.title === nextState.title &&
-    JSON.stringify(previousState.dictation) ===
-      JSON.stringify(nextState.dictation) &&
     previousState.status === nextState.status &&
     previousState.colorScheme === nextState.colorScheme &&
     previousState.opacity === nextState.opacity &&

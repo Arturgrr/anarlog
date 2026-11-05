@@ -15,12 +15,13 @@ enum FloatingOverlayOpacity {
   static let minLiveCaption = 0.05
   static let maxFloatingBar = 0.95
   static let maxLiveCaption = 1.0
+  static let defaultFloatingBar = 0.78
 }
 
 final class FloatingOverlaySettingsModel: ObservableObject {
   static let shared = FloatingOverlaySettingsModel()
 
-  @Published var floatingBarOpacity: Double = 0.78
+  @Published var floatingBarOpacity: Double = FloatingOverlayOpacity.defaultFloatingBar
   @Published var liveCaptionOpacity: Double = 0.30
   @Published var liveCaptionWidth: Double = Double(LiveCaptionLayout.defaultWidth)
   @Published var liveCaptionLineCount: Int = LiveCaptionLayout.defaultLineCount
@@ -42,9 +43,7 @@ final class FloatingOverlaySettingsModel: ObservableObject {
     applyLiveCaptionWidth(state.liveCaptionWidth)
     applyLiveCaptionLineCount(state.liveCaptionLineCount)
     _ = applyLiveCaptionPosition(state.liveCaptionPosition)
-    if state.dictation == nil {
-      _ = applyLiveCaptionMinimized(state.liveCaptionMinimized)
-    }
+    _ = applyLiveCaptionMinimized(state.liveCaptionMinimized)
   }
 
   func apply(liveCaptionState state: LiveCaptionStatePayload) -> Bool {
