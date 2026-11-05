@@ -3,16 +3,11 @@ target/
 node_modules/
 .pnpm-store/
 .DS_Store
-.shuttle/
-Secrets*.toml
 .env
 .env.*
 !.env.sample
 .venv
 **/__pycache__/
-.supabase/
-.stripe/
-supabase/.seed/
 
 *storybook.log
 .cache/
@@ -24,9 +19,6 @@ internal
 
 **/examples/out/
 
-# Local Netlify folder
-.netlify
-
 # TypeScript incremental build cache
 *.tsbuildinfo
 
@@ -36,8 +28,3 @@ internal
 .codex-security-artifacts-*/
 .codex-security-work-ledger-*.jsonl
 .claude/launch.json
-
-# Web build and deployment outputs
-.vercel/
-.output/
-.nitro/

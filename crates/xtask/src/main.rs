@@ -1,5 +1,4 @@
 mod prepare_binaries;
-mod toml_util;
 
 use anyhow::{Result, bail};
 use std::{
@@ -17,8 +16,6 @@ fn main() -> Result<()> {
 
     match args.first().map(String::as_str) {
         Some("prepare-binaries") => prepare_binaries::prepare_binaries(),
-        Some("supabase-patch") => toml_util::supabase_patch(),
-        Some("toml-set") => toml_util::toml_set(&args[1..]),
         None => {
             print_help();
             Ok(())
@@ -28,9 +25,7 @@ fn main() -> Result<()> {
 }
 
 fn print_help() {
-    println!(
-        "xtask\n\nUSAGE:\n    cargo xtask prepare-binaries\n    cargo xtask supabase-patch\n    cargo xtask toml-set <file> <key> <toml-value> [...]\n",
-    );
+    println!("xtask\n\nUSAGE:\n    cargo xtask prepare-binaries\n");
 }
 
 pub(crate) fn repo_root() -> PathBuf {

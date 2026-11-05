@@ -1,13 +1,9 @@
 pub mod batch;
 pub mod batch_sse;
 pub mod batch_stream;
-#[cfg(feature = "openapi")]
-pub mod openapi;
 pub mod progress;
 pub mod stream;
 
-#[cfg(feature = "openapi")]
-pub use openapi::openapi;
 pub use progress::{InferencePhase, InferenceProgress};
 
 #[macro_export]
@@ -22,7 +18,6 @@ macro_rules! common_derives {
             specta::Type,
             schemars::JsonSchema,
         )]
-        #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
         #[schemars(deny_unknown_fields)]
         $item
     };
@@ -81,7 +76,6 @@ common_derives! {
 common_derives! {
     #[derive(Default)]
     pub struct ListenOutputChunk {
-        #[cfg_attr(feature = "openapi", schema(value_type = Option<Object>))]
         pub meta: Option<serde_json::Value>,
         pub words: Vec<Word2>,
     }
@@ -142,7 +136,6 @@ common_derives! {
         pub sample_rate: u32,
         // https://docs.rs/axum-extra/0.10.1/axum_extra/extract/struct.Query.html#example-1
         #[serde(default, alias = "language")]
-        #[cfg_attr(feature = "openapi", schema(value_type = Vec<String>))]
         pub languages: Vec<anlg_language::Language>,
         #[serde(default)]
         pub keywords: Vec<String>,
@@ -157,7 +150,6 @@ common_derives! {
         #[serde(default)]
         pub mic_num_speakers: Option<u32>,
         #[serde(default)]
-        #[cfg_attr(feature = "openapi", schema(value_type = Option<Object>))]
         pub custom_query: Option<std::collections::HashMap<String, String>>,
     }
 }

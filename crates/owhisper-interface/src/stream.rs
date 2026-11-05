@@ -5,7 +5,6 @@ use crate::common_derives;
 
 common_derives! {
     #[specta(rename = "StreamWord")]
-    #[cfg_attr(feature = "openapi", schema(as = StreamWord))]
     pub struct Word {
         pub word: String,
         pub start: f64,
@@ -19,7 +18,6 @@ common_derives! {
 
 common_derives! {
     #[specta(rename = "StreamAlternatives")]
-    #[cfg_attr(feature = "openapi", schema(as = StreamAlternatives))]
     pub struct Alternatives {
         pub transcript: String,
         pub words: Vec<Word>,
@@ -31,7 +29,6 @@ common_derives! {
 
 common_derives! {
     #[specta(rename = "StreamChannel")]
-    #[cfg_attr(feature = "openapi", schema(as = StreamChannel))]
     pub struct Channel {
         pub alternatives: Vec<Alternatives>,
     }
@@ -39,7 +36,6 @@ common_derives! {
 
 common_derives! {
     #[specta(rename = "StreamModelInfo")]
-    #[cfg_attr(feature = "openapi", schema(as = StreamModelInfo))]
     pub struct ModelInfo {
         pub name: String,
         pub version: String,
@@ -49,14 +45,12 @@ common_derives! {
 
 common_derives! {
     #[specta(rename = "StreamMetadata")]
-    #[cfg_attr(feature = "openapi", schema(as = StreamMetadata))]
     pub struct Metadata {
         pub request_id: String,
         pub model_info: ModelInfo,
         pub model_uuid: String,
         #[serde(default)]
         #[specta(type = Extra)]
-        #[cfg_attr(feature = "openapi", schema(value_type = Option<Object>))]
         pub extra: Option<std::collections::HashMap<String, serde_json::Value>>,
     }
 }
