@@ -107,6 +107,11 @@ pub struct PluginDbRuntime {
 
 impl PluginDbRuntime {
     pub fn new(db: std::sync::Arc<Db>) -> Self {
+        // Plugin setup runs on the main thread, outside any Tokio runtime, and the
+        // live query runtime spawns its dispatcher on construction.
+        let handle = tokio::runtime::Handle::try_current()
+            .unwrap_or_else(|_| tauri::async_runtime::handle().inner().clone());
+        let _guard = handle.enter();
         let (startup_tx, _) = tokio::sync::watch::channel(None);
         Self {
             db: std::sync::Arc::clone(&db),

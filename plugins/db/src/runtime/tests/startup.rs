@@ -1,5 +1,16 @@
 use super::*;
 
+#[test]
+fn constructs_outside_a_tokio_runtime_like_plugin_setup() {
+    let db = tauri::async_runtime::block_on(Db::connect_memory_plain()).unwrap();
+    let runtime = PluginDbRuntime::new(std::sync::Arc::new(db));
+
+    assert_eq!(
+        runtime.startup_status().phase,
+        crate::StartupPhase::PreparingDatabase
+    );
+}
+
 #[tokio::test]
 async fn wait_until_ready_resolves_after_startup_finishes() {
     let db = Db::connect_memory_plain().await.unwrap();
