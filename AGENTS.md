@@ -1,9 +1,9 @@
 # Overview
 
-Anarlog is a pnpm and Rust workspace. Read the nearest `AGENTS.md` before changing a component.
+Librelog is a pnpm and Rust workspace. Read the nearest `AGENTS.md` before changing a component.
 
 - `apps/desktop/`: Tauri 2 with React, TypeScript, Vite, and Tailwind. Zustand owns UI state; TanStack Query/Form own queries, mutations, and forms.
-- `apps/cli/`: Rust CLI/TUI and MCP entry point (`anarlog-cli` package, `anarlog` binary).
+- `apps/cli/`: Rust CLI/TUI and MCP entry point (`librelog-cli` package, `librelog` binary).
 - `crates/db-app/`: canonical SQLite schema and migrations shared by desktop and the CLI. `db-core` owns runtime initialization, `db-migrate` owns migration execution, and `plugins/db/` exposes the desktop transport. React consumes these through `packages/db-runtime`, `packages/db-react`, and `packages/db-tauri`; `packages/db` is the Drizzle adapter.
 
 Sessions are the core entity: all notes are backed by sessions. ProseMirror powers the editor (`packages/editor`, via `@handlewithcare/react-prosemirror`); documents use TipTap-dialect ProseMirror JSON, with converters/validation in `crates/tiptap`.
@@ -39,7 +39,7 @@ This map is a starting point; execute the relevant workflow's full locally repro
 | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Desktop frontend and shared UI/editor packages            | Build `@anlg/ui`, then `pnpm -F @anlg/desktop typecheck`, `pnpm -F @anlg/desktop test`, lint, and i18n validation. Run changed packages' own scripts too. See `desktop_ci.yaml`.                                                                                                                                                                                                                                                                                 |
 | Desktop Rust and plugins                                  | See `desktop_ci.yaml`: macOS checks both `direct-distribution` and `app-store` features and runs desktop/workspace tests; Linux/Windows use their own targets and test selections. Preserve the workspace-test exclusions. Swift window changes also require `swift build --package-path plugins/windows/swift-lib` on macOS. |
-| CLI, agent access, local SQLite schema/migrations, TipTap | See `cli_ci.yaml`: locked tests for `agent-access`, `anarlog-cli`, `db-app`, `db-core`, `db-migrate`, and `tiptap`; Clippy with `--all-targets --no-deps -- -D warnings`; release CLI build and isolated smoke tests. Preserve the Linux/Windows smoke checks and skill/docs validation.                                                                                                                                                                         |
+| CLI, agent access, local SQLite schema/migrations, TipTap | See `cli_ci.yaml`: locked tests for `agent-access`, `librelog-cli`, `db-app`, `db-core`, `db-migrate`, and `tiptap`; Clippy with `--all-targets --no-deps -- -D warnings`; release CLI build and isolated smoke tests. Preserve the Linux/Windows smoke checks and skill/docs validation.                                                                                                                                                                         |
 
 ### Generated files and data compatibility
 

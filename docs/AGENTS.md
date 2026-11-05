@@ -1,17 +1,17 @@
-# Anarlog documentation instructions
+# Librelog documentation instructions
 
 ## Scope
 
-- This is the Mintlify project for Anarlog. There is no hosted documentation site yet; the pages live in this repository.
-- Write for Anarlog users, developers, and agents using the CLI or local MCP server.
+- This is the Mintlify project for Librelog. There is no hosted documentation site yet; the pages live in this repository.
+- Write for Librelog users, developers, and agents using the CLI or local MCP server.
 - Configuration lives in `docs.json`; content pages are MDX.
-- `skill.md` is generated from the packaged skill in `../skills/anarlog/`. Do not edit it by hand.
+- `skill.md` is generated from the packaged skill in `../skills/librelog/`. Do not edit it by hand.
 
 ## Product boundaries
 
-- Anarlog is local-first and fully open source. There is no account, sign-in, subscription, cloud sync, sharing, telemetry, or hosted AI.
+- Librelog is local-first and fully open source. There is no account, sign-in, subscription, cloud sync, sharing, telemetry, or hosted AI.
 - Transcription and Intelligence run on local models or on providers configured with the user's own API keys.
-- Do not document hosted services, paid plans, or features that require an Anarlog server.
+- Do not document hosted services, paid plans, or features that require an Librelog server.
 
 ## Sources of truth
 
@@ -25,7 +25,7 @@
 - Use active voice and second person.
 - Keep headings and sentences concise.
 - Put the result before implementation detail.
-- Use `Anarlog` for the product and `anarlog` for the executable.
+- Use `Librelog` for the product and `librelog` for the executable.
 - Use root-relative links between Mintlify pages.
 
 ## Accuracy boundaries

@@ -4,7 +4,7 @@ Issues, pull requests, bug reports, and documentation fixes are welcome.
 
 ## Before you start
 
-- Search existing [issues](https://github.com/Arturgrr/anarlog/issues) and pull requests before starting a large change.
+- Search existing [issues](https://github.com/Arturgrr/librelog/issues) and pull requests before starting a large change.
 - Keep changes focused. Add tests for behavior that can regress.
 - Never commit credentials, meeting content, or other private data.
 - The app must stay local-first: no accounts, telemetry, or calls to services other than the user's chosen AI provider, Hugging Face model downloads, and GitHub Releases for updates.
@@ -53,7 +53,7 @@ If the checkout path contains spaces, set `CARGO_TARGET_DIR` to a path without s
 | `crates/*`       | Rust libraries                           |
 | `packages/*`     | Shared TypeScript packages               |
 | `crates/db-app`  | SQLite schema and migrations             |
-| `skills/anarlog` | Agent skill for the CLI and MCP server   |
+| `skills/librelog` | Agent skill for the CLI and MCP server   |
 | `docs`           | Mintlify product and reference documentation |
 
 Sessions are the core data entity. Notes, transcripts, and summaries are all backed by sessions. ProseMirror documents use the TipTap JSON dialect.

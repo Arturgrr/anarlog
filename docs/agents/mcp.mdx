@@ -1,9 +1,9 @@
 ---
 title: "MCP for agents"
-description: "Connect an MCP client to Anarlog meeting context over local stdio."
+description: "Connect an MCP client to Librelog meeting context over local stdio."
 ---
 
-The `anarlog` executable includes a local MCP server. It communicates over standard input and output, opens no port, and reads the database on your computer. No account or network connection is needed.
+The `librelog` executable includes a local MCP server. It communicates over standard input and output, opens no port, and reads the database on your computer. No account or network connection is needed.
 
 ## Configure the client
 
@@ -14,8 +14,8 @@ Add the server to your MCP client:
 ```json
 {
   "mcpServers": {
-    "anarlog": {
-      "command": "anarlog",
+    "librelog": {
+      "command": "librelog",
       "args": ["mcp"]
     }
   }
@@ -27,18 +27,18 @@ In the desktop app, **Settings → Developers → MCP server → Copy config** c
 In Claude Code, you can add the same server from a terminal:
 
 ```bash
-claude mcp add anarlog -- anarlog mcp
+claude mcp add librelog -- librelog mcp
 ```
 
-If `anarlog` is not on the client's `PATH`, use the executable's absolute path as `command`. Restart the client after changing its configuration.
+If `librelog` is not on the client's `PATH`, use the executable's absolute path as `command`. Restart the client after changing its configuration.
 
 For a custom database path:
 
 ```json
 {
   "mcpServers": {
-    "anarlog": {
-      "command": "anarlog",
+    "librelog": {
+      "command": "librelog",
       "args": ["--db-path", "/path/to/app.db", "mcp"]
     }
   }
@@ -59,6 +59,6 @@ To persist an edit, use `propose_summary_edit` or `propose_memo_edit`. The tool 
 
 Use `import_recording` only when the user explicitly asks to import a recording. The desktop app must be open. Poll `get_recording_import` for the result.
 
-The server also exposes MCP resources (`anarlog://meetings/...`) for Markdown or plain-text context when the client prefers resources over tools.
+The server also exposes MCP resources (`librelog://meetings/...`) for Markdown or plain-text context when the client prefers resources over tools.
 
 See the [MCP reference](/reference/mcp) for exact parameters and resources.
