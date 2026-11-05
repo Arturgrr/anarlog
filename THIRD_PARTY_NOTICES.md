@@ -1,6 +1,6 @@
 # Third-party notices
 
-Anarlog's own code is available under the [MIT License](LICENSE). This repository also contains third-party material that keeps its original license. This file lists that material, where it lives, and where it came from.
+Librelog's own code is available under the [MIT License](LICENSE). This repository also contains third-party material that keeps its original license. This file lists that material, where it lives, and where it came from.
 
 Packages fetched by Cargo or pnpm carry their own license metadata. They appear here only when they need a specific notice.
 
@@ -58,6 +58,7 @@ These files link to the upstream code they were adapted from or written against.
 | `crates/tcc/swift-lib/src/lib.swift`                                                        | [insidegui/AudioCap](https://github.com/insidegui/AudioCap), Copyright (c) 2024 Guilherme Rambo                                                                 | BSD-2-Clause           |
 | `crates/audio-actual/src/speaker/mod.rs`                                                    | [floneum/floneum](https://github.com/floneum/floneum)                                                                                                           | MIT OR Apache-2.0      |
 | `crates/whisper-local/src/model/actual.rs`                                                  | [tazz4843/whisper-rs](https://github.com/tazz4843/whisper-rs)                                                                                                   | Unlicense              |
+| `crates/dictation-ui-macos/swift-lib/src/{DictationHud,HudModel,HudScope,HudShader,HudViews}.swift`, `apps/desktop/src/dictation/hud/{model,scope,shader,spring}.ts` | [anomalyco/hex](https://github.com/anomalyco/hex) at `3dc7f538` (the Dot scope dictation indicator), Copyright (c) 2026 Christopher Langton | MIT |
 | `scripts/pre_build.py`                                                                      | [thewh1teagle/vibe](https://github.com/thewh1teagle/vibe), Copyright (c) 2024 thewh1teagle; [utilityai/llama-cpp-rs](https://github.com/utilityai/llama-cpp-rs) | MIT; MIT OR Apache-2.0 |
 
 ## Other material
