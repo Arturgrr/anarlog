@@ -1,14 +1,14 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "anarlog",
+  "name": "librelog",
   "version": "1.3.5",
-  "description": "Search your local Anarlog meetings through the Anarlog CLI and local MCP server.",
+  "description": "Search your local Librelog meetings through the Librelog CLI and local MCP server.",
   "author": {
     "name": "Artur Guerra",
     "url": "https://github.com/Arturgrr"
   },
-  "homepage": "https://github.com/Arturgrr/anarlog/tree/main/agent-plugins/anarlog",
-  "repository": "https://github.com/Arturgrr/anarlog/tree/main/agent-plugins/anarlog",
+  "homepage": "https://github.com/Arturgrr/librelog/tree/main/agent-plugins/librelog",
+  "repository": "https://github.com/Arturgrr/librelog/tree/main/agent-plugins/librelog",
   "license": "MIT",
   "keywords": [
     "meetings",

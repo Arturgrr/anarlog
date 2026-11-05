@@ -1,6 +1,6 @@
 # MCP tools and resources
 
-The local MCP server (`anarlog mcp`) reads the local database. Proposal tools insert or decline staged edits; they never apply those edits to the meeting.
+The local MCP server (`librelog mcp`) reads the local database. Proposal tools insert or decline staged edits; they never apply those edits to the meeting.
 
 | Tool                            | Use                                                                                                                        |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -24,9 +24,9 @@ Transcript limits are measured in words. The default is 200 and the maximum is 5
 
 Available resources:
 
-- `anarlog://meetings/{meeting_id}`
-- `anarlog://meetings/{meeting_id}/transcript{?offset,limit}`
-- `anarlog://series/{series_id}`
+- `librelog://meetings/{meeting_id}`
+- `librelog://meetings/{meeting_id}/transcript{?offset,limit}`
+- `librelog://series/{series_id}`
 
 Prefer tools when the workflow needs structured JSON. Use resources when the client needs concise Markdown or plain-text context. Transcript resources default to 200 words (cap 500) and return plain text only.
 

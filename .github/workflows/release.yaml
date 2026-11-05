@@ -78,7 +78,7 @@ jobs:
         run: |
           cargo xtask prepare-binaries
           config=apps/desktop/src-tauri/tauri.conf.stable.json
-          jq '.bundle.externalBin = ((.bundle.externalBin // []) + ["binaries/char-chrome-native-host", "binaries/check-permissions", "resources/cli/anarlog-cli"] | unique)' \
+          jq '.bundle.externalBin = ((.bundle.externalBin // []) + ["binaries/librelog-chrome-native-host", "binaries/check-permissions", "resources/cli/librelog-cli"] | unique)' \
             "$config" > "$RUNNER_TEMP/tauri.conf.stable.json"
           mv "$RUNNER_TEMP/tauri.conf.stable.json" "$config"
 
@@ -94,7 +94,7 @@ jobs:
           tauriScript: pnpm tauri
           args: --target ${{ matrix.target }} --config src-tauri/tauri.conf.stable.json ${{ matrix.extra_config }}
           tagName: desktop_v__VERSION__
-          releaseName: Anarlog v__VERSION__
+          releaseName: Librelog v__VERSION__
           releaseBody: "macOS builds are ad-hoc signed and not notarized. On first launch, right-click the app and choose Open."
           releaseDraft: true
           prerelease: false

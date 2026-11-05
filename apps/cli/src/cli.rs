@@ -6,15 +6,15 @@ use anlg_agent_access::{DEFAULT_TRANSCRIPT_LIMIT, MAX_TRANSCRIPT_LIMIT};
 
 #[derive(Debug, Parser)]
 #[command(
-    name = "anarlog",
+    name = "librelog",
     version = crate::VERSION,
-    about = "Access Anarlog from the command line"
+    about = "Access Librelog from the command line"
 )]
 pub struct Args {
     #[arg(
         long,
         global = true,
-        env = "ANARLOG_BASE",
+        env = "LIBRELOG_BASE",
         hide_env_values = true,
         value_name = "DIR"
     )]
@@ -23,7 +23,7 @@ pub struct Args {
     #[arg(
         long,
         global = true,
-        env = "ANARLOG_DB_PATH",
+        env = "LIBRELOG_DB_PATH",
         hide_env_values = true,
         value_name = "FILE"
     )]
@@ -64,7 +64,7 @@ pub enum Command {
         #[command(subcommand)]
         command: ProposalCommand,
     },
-    /// Run the Anarlog MCP server over stdio
+    /// Run the Librelog MCP server over stdio
     Mcp,
 }
 
@@ -254,7 +254,7 @@ mod tests {
     #[test]
     fn parses_meeting_arguments() {
         let args = Args::parse_from([
-            "anarlog", "--json", "meetings", "list", "--query", "planning", "--limit", "10",
+            "librelog", "--json", "meetings", "list", "--query", "planning", "--limit", "10",
         ]);
 
         assert!(args.json);
@@ -266,9 +266,14 @@ mod tests {
         };
         assert_eq!(query.as_deref(), Some("planning"));
         assert_eq!(limit, 10);
-        let Command::Meetings { command, .. } =
-            Args::parse_from(["anarlog", "meetings", "list", "--folder", "Projects/Launch"])
-                .command
+        let Command::Meetings { command, .. } = Args::parse_from([
+            "librelog",
+            "meetings",
+            "list",
+            "--folder",
+            "Projects/Launch",
+        ])
+        .command
         else {
             panic!("expected meetings command");
         };
@@ -278,7 +283,7 @@ mod tests {
         assert_eq!(folder.as_deref(), Some("Projects/Launch"));
 
         let Command::Meetings { command, .. } =
-            Args::parse_from(["anarlog", "meetings", "folders", "--query", "acme"]).command
+            Args::parse_from(["librelog", "meetings", "folders", "--query", "acme"]).command
         else {
             panic!("expected meetings command");
         };
@@ -292,7 +297,7 @@ mod tests {
         ));
 
         let Command::Meetings { command, .. } = Args::parse_from([
-            "anarlog",
+            "librelog",
             "meetings",
             "export",
             "meeting-1",
@@ -312,7 +317,7 @@ mod tests {
         ));
 
         let Command::Meetings { command, .. } = Args::parse_from([
-            "anarlog",
+            "librelog",
             "meetings",
             "transcript",
             "meeting-1",
@@ -335,7 +340,7 @@ mod tests {
         ));
 
         let Command::Meetings { command, .. } = Args::parse_from([
-            "anarlog",
+            "librelog",
             "meetings",
             "history",
             "meeting-1",
@@ -361,7 +366,7 @@ mod tests {
         assert!(help.contains("proposals"));
 
         let Command::Meetings { command, .. } = Args::parse_from([
-            "anarlog",
+            "librelog",
             "meetings",
             "export",
             "meeting-1",
@@ -384,7 +389,7 @@ mod tests {
     #[test]
     fn export_force_requires_an_output_path() {
         assert!(
-            Args::try_parse_from(["anarlog", "meetings", "export", "meeting-1", "--force"])
+            Args::try_parse_from(["librelog", "meetings", "export", "meeting-1", "--force"])
                 .is_err()
         );
     }
@@ -393,8 +398,8 @@ mod tests {
     fn public_docs_and_skill_cover_the_command_contract() {
         let docs = include_str!("../../../docs/reference/cli.mdx");
         let skill = concat!(
-            include_str!("../../../skills/anarlog/references/cli.md"),
-            include_str!("../../../skills/anarlog/references/setup.md"),
+            include_str!("../../../skills/librelog/references/cli.md"),
+            include_str!("../../../skills/librelog/references/setup.md"),
         );
         let command = Args::command();
         let mut paths = Vec::new();
@@ -402,7 +407,7 @@ mod tests {
 
         for path in paths {
             assert!(docs.contains(&path), "CLI docs are missing `{path}`");
-            assert!(skill.contains(&path), "Anarlog skill is missing `{path}`");
+            assert!(skill.contains(&path), "Librelog skill is missing `{path}`");
         }
         assert_options_are_documented(&command, docs);
     }

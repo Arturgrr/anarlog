@@ -33,15 +33,15 @@ pub(crate) fn prepare_binaries() -> Result<()> {
         .join("target")
         .join(&triple)
         .join("release")
-        .join(format!("char-chrome-native-host{ext}"));
-    let dst = binaries_dir.join(format!("char-chrome-native-host-{triple}{ext}"));
+        .join(format!("librelog-chrome-native-host{ext}"));
+    let dst = binaries_dir.join(format!("librelog-chrome-native-host-{triple}{ext}"));
     fs::copy(&src, &dst).with_context(|| format!("copy {} -> {}", src.display(), dst.display()))?;
 
-    println!("prepare-binaries: binaries/char-chrome-native-host-{triple}{ext}");
+    println!("prepare-binaries: binaries/librelog-chrome-native-host-{triple}{ext}");
 
     cmd!(
         sh,
-        "{cargo} build --release --target {triple} -p anarlog-cli"
+        "{cargo} build --release --target {triple} -p librelog-cli"
     )
     .run()?;
 
@@ -51,11 +51,11 @@ pub(crate) fn prepare_binaries() -> Result<()> {
         .join("target")
         .join(&triple)
         .join("release")
-        .join(format!("anarlog{ext}"));
-    let dst = embedded_cli_dir.join(format!("anarlog-cli-{triple}{ext}"));
+        .join(format!("librelog{ext}"));
+    let dst = embedded_cli_dir.join(format!("librelog-cli-{triple}{ext}"));
     fs::copy(&src, &dst).with_context(|| format!("copy {} -> {}", src.display(), dst.display()))?;
 
-    println!("prepare-binaries: resources/cli/anarlog-cli-{triple}{ext}");
+    println!("prepare-binaries: resources/cli/librelog-cli-{triple}{ext}");
     Ok(())
 }
 

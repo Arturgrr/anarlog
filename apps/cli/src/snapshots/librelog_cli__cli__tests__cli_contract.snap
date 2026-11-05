@@ -3,7 +3,7 @@ source: apps/cli/src/cli.rs
 expression: canonicalize_json(contract)
 ---
 {
-  "about": "Access Anarlog from the command line",
+  "about": "Access Librelog from the command line",
   "global_options": [
     {
       "flags": "--base",
@@ -23,7 +23,7 @@ expression: canonicalize_json(contract)
       "required": false
     }
   ],
-  "name": "anarlog",
+  "name": "librelog",
   "options": [
     {
       "flags": "-h, --help",
@@ -41,7 +41,7 @@ expression: canonicalize_json(contract)
   "subcommands": [
     {
       "about": "Check the local CLI and database connection without changing data",
-      "name": "anarlog doctor",
+      "name": "librelog doctor",
       "options": [
         {
           "flags": "-h, --help",
@@ -50,11 +50,11 @@ expression: canonicalize_json(contract)
           "required": false
         }
       ],
-      "synopsis": "anarlog doctor [-h]"
+      "synopsis": "librelog doctor [-h]"
     },
     {
       "about": "Browse and export meetings",
-      "name": "anarlog meetings",
+      "name": "librelog meetings",
       "options": [
         {
           "flags": "-h, --help",
@@ -72,7 +72,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog meetings import",
+          "name": "librelog meetings import",
           "options": [
             {
               "flags": "--title",
@@ -111,7 +111,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings import [--title] [--folder] [--request-key] [--wait] [--timeout] [-h] <file>"
+          "synopsis": "librelog meetings import [--title] [--folder] [--request-key] [--wait] [--timeout] [-h] <file>"
         },
         {
           "about": "Read durable status for a recording import",
@@ -121,7 +121,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog meetings import-status",
+          "name": "librelog meetings import-status",
           "options": [
             {
               "flags": "-h, --help",
@@ -130,11 +130,11 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings import-status [-h] <id>"
+          "synopsis": "librelog meetings import-status [-h] <id>"
         },
         {
           "about": "Read local capture intervals without meeting content or identifiers",
-          "name": "anarlog meetings pilot-usage",
+          "name": "librelog meetings pilot-usage",
           "options": [
             {
               "flags": "--from-ms",
@@ -155,11 +155,11 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings pilot-usage <--from-ms> <--until-ms> [-h]"
+          "synopsis": "librelog meetings pilot-usage <--from-ms> <--until-ms> [-h]"
         },
         {
           "about": "List all persisted local meetings for preservation, including deleted rows",
-          "name": "anarlog meetings hold-list",
+          "name": "librelog meetings hold-list",
           "options": [
             {
               "default": "",
@@ -188,7 +188,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings hold-list [--after] [--limit] [--database-only] [-h]"
+          "synopsis": "librelog meetings hold-list [--after] [--limit] [--database-only] [-h]"
         },
         {
           "about": "Stream raw local meeting history as NDJSON for encrypted preservation",
@@ -198,7 +198,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog meetings hold-export",
+          "name": "librelog meetings hold-export",
           "options": [
             {
               "flags": "--database-only",
@@ -213,11 +213,11 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings hold-export [--database-only] [-h] <id>"
+          "synopsis": "librelog meetings hold-export [--database-only] [-h] <id>"
         },
         {
           "about": "Describe managed capture capabilities without opening a database",
-          "name": "anarlog meetings capabilities",
+          "name": "librelog meetings capabilities",
           "options": [
             {
               "flags": "-h, --help",
@@ -226,11 +226,11 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings capabilities [-h]"
+          "synopsis": "librelog meetings capabilities [-h]"
         },
         {
           "about": "Prepare the local database using an existing managed settings policy",
-          "name": "anarlog meetings initialize-managed",
+          "name": "librelog meetings initialize-managed",
           "options": [
             {
               "flags": "-h, --help",
@@ -239,7 +239,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings initialize-managed [-h]"
+          "synopsis": "librelog meetings initialize-managed [-h]"
         },
         {
           "about": "Permanently remove an exact, completed local meeting and its recordings",
@@ -249,7 +249,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog meetings delete",
+          "name": "librelog meetings delete",
           "options": [
             {
               "flags": "--if-export-sha256",
@@ -269,11 +269,11 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings delete <--if-export-sha256> <--require-transcription-complete> [-h] <id>"
+          "synopsis": "librelog meetings delete <--if-export-sha256> <--require-transcription-complete> [-h] <id>"
         },
         {
           "about": "List meetings, optionally filtered by text, recurring series, or folder",
-          "name": "anarlog meetings list",
+          "name": "librelog meetings list",
           "options": [
             {
               "flags": "-q, --query",
@@ -317,11 +317,11 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings list [-q] [--series-id] [--folder] [--limit] [--offset] [-h]"
+          "synopsis": "librelog meetings list [-q] [--series-id] [--folder] [--limit] [--offset] [-h]"
         },
         {
           "about": "List meeting folders, including empty and parent folders",
-          "name": "anarlog meetings folders",
+          "name": "librelog meetings folders",
           "options": [
             {
               "flags": "-q, --query",
@@ -353,7 +353,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings folders [-q] [--limit] [--offset] [-h]"
+          "synopsis": "librelog meetings folders [-q] [--limit] [--offset] [-h]"
         },
         {
           "about": "Show meeting metadata, notes, summaries, people, and action items",
@@ -363,7 +363,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog meetings get",
+          "name": "librelog meetings get",
           "options": [
             {
               "flags": "-h, --help",
@@ -372,7 +372,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings get [-h] <id>"
+          "synopsis": "librelog meetings get [-h] <id>"
         },
         {
           "about": "Show the note or generated summaries for a meeting",
@@ -382,7 +382,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog meetings note",
+          "name": "librelog meetings note",
           "options": [
             {
               "default": "note",
@@ -403,7 +403,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings note [--kind] [-h] <id>"
+          "synopsis": "librelog meetings note [--kind] [-h] <id>"
         },
         {
           "about": "Show a bounded page of a meeting transcript",
@@ -413,7 +413,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog meetings transcript",
+          "name": "librelog meetings transcript",
           "options": [
             {
               "default": "200",
@@ -438,7 +438,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings transcript [--limit] [--offset] [-h] <id>"
+          "synopsis": "librelog meetings transcript [--limit] [--offset] [-h] <id>"
         },
         {
           "about": "List meetings from the same recurring series",
@@ -448,7 +448,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog meetings history",
+          "name": "librelog meetings history",
           "options": [
             {
               "default": "20",
@@ -473,7 +473,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings history [--limit] [--offset] [-h] <id>"
+          "synopsis": "librelog meetings history [--limit] [--offset] [-h] <id>"
         },
         {
           "about": "Export a meeting to Markdown or JSON",
@@ -483,7 +483,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog meetings export",
+          "name": "librelog meetings export",
           "options": [
             {
               "default": "markdown",
@@ -515,14 +515,14 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog meetings export [--format] [-o] [--force] [-h] <id>"
+          "synopsis": "librelog meetings export [--format] [-o] [--force] [-h] <id>"
         }
       ],
-      "synopsis": "anarlog meetings [-h] <command>"
+      "synopsis": "librelog meetings [-h] <command>"
     },
     {
       "about": "Propose meeting edits for desktop review",
-      "name": "anarlog proposals",
+      "name": "librelog proposals",
       "options": [
         {
           "flags": "-h, --help",
@@ -534,7 +534,7 @@ expression: canonicalize_json(contract)
       "subcommands": [
         {
           "about": "Stage a summary or memo replacement for desktop review",
-          "name": "anarlog proposals create",
+          "name": "librelog proposals create",
           "options": [
             {
               "flags": "--meeting",
@@ -577,11 +577,11 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog proposals create <--meeting> <--kind> [--target] [--content] [--content-file] [-h]"
+          "synopsis": "librelog proposals create <--meeting> <--kind> [--target] [--content] [--content-file] [-h]"
         },
         {
           "about": "List staged meeting proposals",
-          "name": "anarlog proposals list",
+          "name": "librelog proposals list",
           "options": [
             {
               "flags": "--meeting",
@@ -618,7 +618,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog proposals list [--meeting] [--status] [--limit] [--offset] [-h]"
+          "synopsis": "librelog proposals list [--meeting] [--status] [--limit] [--offset] [-h]"
         },
         {
           "about": "Show one proposal and its unified diff",
@@ -628,7 +628,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog proposals show",
+          "name": "librelog proposals show",
           "options": [
             {
               "flags": "-h, --help",
@@ -637,7 +637,7 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog proposals show [-h] <id>"
+          "synopsis": "librelog proposals show [-h] <id>"
         },
         {
           "about": "Decline a pending proposal without changing the meeting",
@@ -647,7 +647,7 @@ expression: canonicalize_json(contract)
               "required": true
             }
           ],
-          "name": "anarlog proposals decline",
+          "name": "librelog proposals decline",
           "options": [
             {
               "flags": "-h, --help",
@@ -656,14 +656,14 @@ expression: canonicalize_json(contract)
               "required": false
             }
           ],
-          "synopsis": "anarlog proposals decline [-h] <id>"
+          "synopsis": "librelog proposals decline [-h] <id>"
         }
       ],
-      "synopsis": "anarlog proposals [-h] <command>"
+      "synopsis": "librelog proposals [-h] <command>"
     },
     {
-      "about": "Run the Anarlog MCP server over stdio",
-      "name": "anarlog mcp",
+      "about": "Run the Librelog MCP server over stdio",
+      "name": "librelog mcp",
       "options": [
         {
           "flags": "-h, --help",
@@ -672,8 +672,8 @@ expression: canonicalize_json(contract)
           "required": false
         }
       ],
-      "synopsis": "anarlog mcp [-h]"
+      "synopsis": "librelog mcp [-h]"
     }
   ],
-  "synopsis": "anarlog [--base] [--db-path] [--json] [-h] [-V] <command>"
+  "synopsis": "librelog [--base] [--db-path] [--json] [-h] [-V] <command>"
 }

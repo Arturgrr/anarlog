@@ -57,33 +57,14 @@ fn resolve_default_path_for_command(data_dir: &Path, command_name: Option<&OsStr
         .and_then(OsStr::to_str)
         .and_then(|name| Path::new(name).file_stem())
         .and_then(OsStr::to_str);
-    // `anarlog-nightly` falls through: the Nightly desktop app opens the same
+    // `librelog-nightly` falls through: the Nightly desktop app opens the same
     // database as stable.
-    let channel_identifier = match command_name {
-        Some("anarlog-dev") => Some("com.hyprnote.dev"),
-        Some("anarlog-staging") => Some("com.hyprnote.staging"),
-        _ => None,
+    let folder = match command_name {
+        Some("librelog-dev") => "com.arturgrr.librelog.dev",
+        Some("librelog-staging") => "com.arturgrr.librelog.staging",
+        _ => "librelog",
     };
-    if let Some(identifier) = channel_identifier {
-        return data_dir.join(identifier).join("app.db");
-    }
-
-    let current = data_dir.join("anarlog").join("app.db");
-    if current.is_file() {
-        return current;
-    }
-
-    let legacy = data_dir.join("hyprnote").join("app.db");
-    if legacy.is_file() {
-        return legacy;
-    }
-
-    let identifier = data_dir.join("com.hyprnote.stable").join("app.db");
-    if identifier.is_file() {
-        return identifier;
-    }
-
-    current
+    data_dir.join(folder).join("app.db")
 }
 
 #[cfg(test)]
@@ -91,67 +72,36 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_path_prefers_current_then_legacy_then_identifier() {
-        let dir = tempfile::tempdir().unwrap();
-        let current = dir.path().join("anarlog/app.db");
-        let legacy = dir.path().join("hyprnote/app.db");
-        let identifier = dir.path().join("com.hyprnote.stable/app.db");
-
-        assert_eq!(
-            resolve_default_path_for_command(dir.path(), Some(OsStr::new("anarlog"))),
-            dir.path().join("anarlog/app.db")
-        );
-
-        std::fs::create_dir_all(identifier.parent().unwrap()).unwrap();
-        std::fs::write(&identifier, "").unwrap();
-        assert_eq!(
-            resolve_default_path_for_command(dir.path(), Some(OsStr::new("anarlog"))),
-            identifier
-        );
-
-        std::fs::create_dir_all(legacy.parent().unwrap()).unwrap();
-        std::fs::write(&legacy, "").unwrap();
-        assert_eq!(
-            resolve_default_path_for_command(dir.path(), Some(OsStr::new("anarlog"))),
-            legacy
-        );
-
-        std::fs::create_dir_all(current.parent().unwrap()).unwrap();
-        std::fs::write(&current, "").unwrap();
-        assert_eq!(
-            resolve_default_path_for_command(dir.path(), Some(OsStr::new("anarlog"))),
-            current
-        );
-    }
-
-    #[test]
     fn channel_commands_target_their_channel_database() {
         let dir = tempfile::tempdir().unwrap();
-        let stable = dir.path().join("anarlog/app.db");
-        std::fs::create_dir_all(stable.parent().unwrap()).unwrap();
-        std::fs::write(&stable, "").unwrap();
+        let stable = dir.path().join("librelog/app.db");
 
-        assert_eq!(
-            resolve_default_path_for_command(dir.path(), Some(OsStr::new("anarlog-dev"))),
-            dir.path().join("com.hyprnote.dev/app.db")
-        );
-        assert_eq!(
-            resolve_default_path_for_command(dir.path(), Some(OsStr::new("anarlog-staging"))),
-            dir.path().join("com.hyprnote.staging/app.db")
-        );
-        assert_eq!(
-            resolve_default_path_for_command(dir.path(), Some(OsStr::new("anarlog-dev.exe"))),
-            dir.path().join("com.hyprnote.dev/app.db")
-        );
-        assert_eq!(
-            resolve_default_path_for_command(dir.path(), Some(OsStr::new("anarlog-staging.exe"))),
-            dir.path().join("com.hyprnote.staging/app.db")
-        );
-        for command in ["anarlog-nightly", "anarlog-nightly.exe"] {
+        for command in [
+            "librelog",
+            "librelog.exe",
+            "librelog-nightly",
+            "librelog-nightly.exe",
+        ] {
             assert_eq!(
                 resolve_default_path_for_command(dir.path(), Some(OsStr::new(command))),
                 stable
             );
         }
+        assert_eq!(
+            resolve_default_path_for_command(dir.path(), Some(OsStr::new("librelog-dev"))),
+            dir.path().join("com.arturgrr.librelog.dev/app.db")
+        );
+        assert_eq!(
+            resolve_default_path_for_command(dir.path(), Some(OsStr::new("librelog-staging"))),
+            dir.path().join("com.arturgrr.librelog.staging/app.db")
+        );
+        assert_eq!(
+            resolve_default_path_for_command(dir.path(), Some(OsStr::new("librelog-dev.exe"))),
+            dir.path().join("com.arturgrr.librelog.dev/app.db")
+        );
+        assert_eq!(
+            resolve_default_path_for_command(dir.path(), Some(OsStr::new("librelog-staging.exe"))),
+            dir.path().join("com.arturgrr.librelog.staging/app.db")
+        );
     }
 }
