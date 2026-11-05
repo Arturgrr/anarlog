@@ -70,7 +70,6 @@ final class FloatingBarManager {
     }
 
     model.placement = nil
-    FloatingBarFonts.register()
 
     let panel = createPanel()
     let hostingView = NSHostingView(

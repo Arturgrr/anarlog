@@ -41,9 +41,10 @@ Packages fetched by Cargo or pnpm carry their own license metadata. They appear 
 | Font                                                   | Path                                                              | License | License file                                      |
 | ------------------------------------------------------ | ----------------------------------------------------------------- | ------- | ------------------------------------------------- |
 | Pretendard 1.3.9, Copyright (c) 2021 Kil Hyung-jin     | `crates/export-core/fonts/Pretendard-*.otf`                       | OFL-1.1 | `crates/export-core/fonts/OFL.txt`                |
-| Cabin Sketch, Copyright 2011 The Cabin Project Authors | `plugins/windows/swift-lib/src/Resources/CabinSketch-Regular.ttf` | OFL-1.1 | `plugins/windows/swift-lib/src/Resources/OFL.txt` |
+| Inter 4, Copyright (c) 2016 The Inter Project Authors | `@fontsource-variable/inter`, bundled into the desktop app | OFL-1.1 | `licenses/OFL-1.1-Inter.txt` |
+| IBM Plex Mono, Copyright (c) 2017 IBM Corp., with Reserved Font Name "Plex" | `@fontsource/ibm-plex-mono`, bundled into the desktop app | OFL-1.1 | `licenses/OFL-1.1-IBM-Plex-Mono.txt` |
 
-Pretendard includes glyphs from Inter, Source Han Sans, and M PLUS 1; their copyright lines are in `OFL.txt`.
+Pretendard includes glyphs from Inter, Source Han Sans, and M PLUS 1; their copyright lines are in `OFL.txt`. Inter and IBM Plex Mono are unmodified and installed through [Fontsource](https://fontsource.org) (MIT packaging). The Librelog wordmark (`crates/export-core/assets/librelog-logo.svg`, `docs/logo/*.svg`) contains Inter SemiBold glyphs converted to outlines.
 
 ## Adapted code
 
@@ -59,6 +60,7 @@ These files link to the upstream code they were adapted from or written against.
 | `crates/audio-actual/src/speaker/mod.rs`                                                    | [floneum/floneum](https://github.com/floneum/floneum)                                                                                                           | MIT OR Apache-2.0      |
 | `crates/whisper-local/src/model/actual.rs`                                                  | [tazz4843/whisper-rs](https://github.com/tazz4843/whisper-rs)                                                                                                   | Unlicense              |
 | `crates/dictation-ui-macos/swift-lib/src/{DictationHud,HudModel,HudScope,HudShader,HudViews}.swift`, `apps/desktop/src/dictation/hud/{model,scope,shader,spring}.ts` | [anomalyco/hex](https://github.com/anomalyco/hex) at `3dc7f538` (the Dot scope dictation indicator), Copyright (c) 2026 Christopher Langton | MIT |
+| `packages/design-system/src/{tokens,theme}.css`, `packages/design-system/src/index.ts`, `packages/ui` component styles | Colour, elevation, radius and type values from the "opencode" theme of [anomalyco/rune](https://github.com/anomalyco/rune) at `386b2fd3`, and component specs from [anomalyco/hex](https://github.com/anomalyco/hex), Copyright (c) 2026 Christopher Langton | MIT |
 | `scripts/pre_build.py`                                                                      | [thewh1teagle/vibe](https://github.com/thewh1teagle/vibe), Copyright (c) 2024 thewh1teagle; [utilityai/llama-cpp-rs](https://github.com/utilityai/llama-cpp-rs) | MIT; MIT OR Apache-2.0 |
 
 ## Other material
@@ -74,6 +76,6 @@ The desktop app bundles this file, `LICENSE`, and the full license texts it requ
 - `licenses/Apache-2.0.txt`: Tremor and the code adapted from vercel/ai.
 - `licenses/BSD-2-Clause-AudioCap.txt`: code adapted from AudioCap.
 - `crates/mp3/LICENSE-LAME.txt`: LAME.
-- `crates/export-core/fonts/OFL.txt` and `plugins/windows/swift-lib/src/Resources/OFL.txt`: Pretendard and Cabin Sketch.
+- `crates/export-core/fonts/OFL.txt`, `licenses/OFL-1.1-Inter.txt` and `licenses/OFL-1.1-IBM-Plex-Mono.txt`: Pretendard, Inter and IBM Plex Mono.
 
 The WeSpeaker attribution above satisfies CC-BY-4.0, whose full text is at https://creativecommons.org/licenses/by/4.0/legalcode. Licenses of npm and Cargo dependencies are not reproduced here; generate them with a license tool such as `cargo about` before publishing a release.

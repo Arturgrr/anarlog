@@ -55,8 +55,6 @@
       "icons/dev/icon.ico"
     ],
     "resources": {
-      "../../../plugins/windows/swift-lib/src/Resources/CabinSketch-Regular.ttf": "CabinSketch-Regular.ttf",
-      "../../../plugins/windows/swift-lib/src/Resources/OFL.txt": "CabinSketch-OFL.txt",
       "resources/graphite/AppIcon.icns": "icons/graphite.icns",
       "resources/light/AppIcon.icns": "icons/light.icns",
       "resources/notification-icons": "notification-icons",
@@ -66,7 +64,9 @@
       "../../../licenses/BSD-2-Clause-AudioCap.txt": "licenses/BSD-2-Clause-AudioCap.txt",
       "../../../licenses/MIT.txt": "licenses/MIT.txt",
       "../../../crates/mp3/LICENSE-LAME.txt": "licenses/LICENSE-LAME.txt",
-      "../../../crates/export-core/fonts/OFL.txt": "licenses/Pretendard-OFL.txt"
+      "../../../crates/export-core/fonts/OFL.txt": "licenses/Pretendard-OFL.txt",
+      "../../../licenses/OFL-1.1-Inter.txt": "licenses/OFL-1.1-Inter.txt",
+      "../../../licenses/OFL-1.1-IBM-Plex-Mono.txt": "licenses/OFL-1.1-IBM-Plex-Mono.txt"
     },
     "macOS": {
       "minimumSystemVersion": "15.0",
