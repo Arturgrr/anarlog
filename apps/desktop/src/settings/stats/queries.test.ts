@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("~/auth", () => ({ useAuth: vi.fn() }));
+vi.mock("~/shared/owner-user", () => ({ useLocalUserId: vi.fn() }));
 vi.mock("~/db", () => ({ useLiveQuery: vi.fn() }));
 
 import { ACTIVITY_SQL } from "./queries";

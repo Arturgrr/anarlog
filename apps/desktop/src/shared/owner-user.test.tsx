@@ -13,11 +13,11 @@ vi.mock("~/db", () => ({
   },
 }));
 
-import { useOwnerUserId } from "./owner-user";
+import { useLocalUserId } from "./owner-user";
 
 import { DEFAULT_USER_ID } from "~/shared/utils";
 
-describe("useOwnerUserId", () => {
+describe("useLocalUserId", () => {
   beforeEach(() => {
     mocks.rows = [];
     mocks.sql = "";
@@ -26,13 +26,13 @@ describe("useOwnerUserId", () => {
   it("returns the canonical SQLite owner", () => {
     mocks.rows = [{ user_id: "user-1" }];
 
-    expect(renderHook(() => useOwnerUserId()).result.current).toBe("user-1");
+    expect(renderHook(() => useLocalUserId()).result.current).toBe("user-1");
     expect(mocks.sql).toContain("FROM sessions");
     expect(mocks.sql).toContain("id = owner_user_id");
   });
 
   it("uses the stable local owner when no canonical row exists", () => {
-    expect(renderHook(() => useOwnerUserId()).result.current).toBe(
+    expect(renderHook(() => useLocalUserId()).result.current).toBe(
       DEFAULT_USER_ID,
     );
   });

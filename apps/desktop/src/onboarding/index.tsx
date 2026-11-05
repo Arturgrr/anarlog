@@ -9,7 +9,6 @@ import { SpeakerHigh, SpeakerX } from "@anlg/ui/components/icons";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
-import { LoginSection } from "./account";
 import { CalendarSection } from "./calendar";
 import {
   getInitialStep,
@@ -23,7 +22,6 @@ import { PermissionsSection } from "./permissions";
 import { OnboardingSection } from "./shared";
 
 import { trackAnalyticsEvent } from "~/analytics";
-import { useAuth } from "~/auth";
 import { StandaloneWindowShell } from "~/shared/window-shell";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
 
@@ -84,10 +82,8 @@ function OnboardingScreenContent({
   headerDragRegion?: boolean;
 }) {
   const queryClient = useQueryClient();
-  const auth = useAuth();
   const [isMuted, setIsMuted] = useState(false);
   const [currentStep, setCurrentStep] = useState(getInitialStep);
-  const [didSkipLogin, setDidSkipLogin] = useState(false);
   const onboardingVideoRef = useRef<HTMLVideoElement>(null);
   const currentPlatform = platform();
 
@@ -239,34 +235,6 @@ function OnboardingScreenContent({
             onNext={goNext}
           >
             <PermissionsSection onContinue={goNext} />
-          </OnboardingSection>
-
-          <OnboardingSection
-            title={<Trans>Create account</Trans>}
-            completedTitle={
-              auth.session ? (
-                <Trans>Signed in</Trans>
-              ) : didSkipLogin ? (
-                <Trans>Skipped</Trans>
-              ) : (
-                <Trans>Account</Trans>
-              )
-            }
-            status={getStepStatus("login", currentStep)}
-            onBack={goBack}
-            onNext={goNext}
-            onSkip={() => {
-              setDidSkipLogin(true);
-              trackAnalyticsEvent("onboarding_login_skipped");
-              trackAnalyticsEvent("onboarding_step_skipped", {
-                step: "login",
-                platform: currentPlatform,
-              });
-              const next = getNextStep("login");
-              if (next) setCurrentStep(next);
-            }}
-          >
-            <LoginSection onContinue={goNext} />
           </OnboardingSection>
 
           <OnboardingSection

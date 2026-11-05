@@ -145,9 +145,6 @@ importers:
       '@ai-sdk/react':
         specifier: ^3.0.160
         version: 3.0.160(react@19.2.5)(zod@4.6.6)
-      '@anlg/api-client':
-        specifier: workspace:*
-        version: link:../../packages/api-client
       '@anlg/changelog':
         specifier: workspace:^
         version: link:../../packages/changelog
@@ -166,9 +163,6 @@ importers:
       '@anlg/plugin-analytics':
         specifier: workspace:*
         version: link:../../plugins/analytics
-      '@anlg/plugin-auth':
-        specifier: workspace:*
-        version: link:../../plugins/auth
       '@anlg/plugin-calendar':
         specifier: workspace:*
         version: link:../../plugins/calendar
@@ -274,9 +268,6 @@ importers:
       '@anlg/store':
         specifier: workspace:*
         version: link:../../packages/store
-      '@anlg/supabase':
-        specifier: workspace:*
-        version: link:../../packages/supabase
       '@anlg/ui':
         specifier: workspace:^
         version: link:../../packages/ui
@@ -319,9 +310,6 @@ importers:
       '@sentry/react':
         specifier: ^8.55.1
         version: 8.55.1(react@19.2.5)
-      '@supabase/supabase-js':
-        specifier: ^2.103.0
-        version: 2.103.0
       '@t3-oss/env-core':
         specifier: ^0.13.11
         version: 0.13.11(typescript@5.8.3)(zod@4.6.6)
@@ -924,12 +912,6 @@ importers:
         version: 2.10.1
 
   plugins/audio-priority:
-    dependencies:
-      '@tauri-apps/api':
-        specifier: ^2.10.1
-        version: 2.10.1
-
-  plugins/auth:
     dependencies:
       '@tauri-apps/api':
         specifier: ^2.10.1

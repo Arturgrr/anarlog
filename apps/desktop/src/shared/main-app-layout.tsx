@@ -13,7 +13,6 @@ import {
   useNewNote,
 } from "./useNewNote";
 
-import { AuthProvider } from "~/auth";
 import { MeetingImportSync } from "~/services/meeting-import-sync";
 import { getOrCreateSessionForEventId } from "~/session/queries";
 import { openFoldersFromNavigation } from "~/shared/folders-navigation";
@@ -30,15 +29,6 @@ import {
 export default function MainAppLayout() {
   useNavigationEvents();
   useZoomShortcuts();
-
-  return (
-    <AuthProvider>
-      <MainAppContent />
-    </AuthProvider>
-  );
-}
-
-function MainAppContent() {
   const isMainWindow = getCurrentWebviewWindowLabel() === "main";
 
   return (

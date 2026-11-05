@@ -108,7 +108,7 @@ pub(crate) fn subscription_auth_deeplink(
     search: &AuthCallbackSearch,
 ) -> Option<String> {
     let code = search.code.as_deref()?.trim();
-    if code.is_empty() || !search.access_token.is_empty() || !search.refresh_token.is_empty() {
+    if code.is_empty() {
         return None;
     }
 
@@ -142,9 +142,7 @@ fn ui_content(deep_link: &DeepLink) -> (bool, &'static str, &'static str) {
             if search
                 .code
                 .as_deref()
-                .is_some_and(|code| !code.trim().is_empty())
-                && search.access_token.is_empty()
-                && search.refresh_token.is_empty() =>
+                .is_some_and(|code| !code.trim().is_empty()) =>
         {
             (
                 true,
@@ -152,36 +150,7 @@ fn ui_content(deep_link: &DeepLink) -> (bool, &'static str, &'static str) {
                 "Returning to Anarlog to finish connecting.",
             )
         }
-        DeepLink::AuthCallback(_) => (
-            true,
-            "Signed in successfully",
-            "Click the button below to return to the app.",
-        ),
-        DeepLink::BillingRefresh(_) => (
-            true,
-            "Subscription updated",
-            "Click the button below to return to the app.",
-        ),
-        DeepLink::IntegrationCallback(s) if s.status == "success" => (
-            true,
-            "Connected successfully",
-            "Click the button below to return to the app.",
-        ),
-        DeepLink::IntegrationCallback(s) if s.status == "upgrade_required" => (
-            false,
-            "Upgrade required",
-            "You can close this window and upgrade your plan to connect this integration.",
-        ),
-        DeepLink::IntegrationCallback(_) => (
-            false,
-            "Connection failed",
-            "Something went wrong. Please close this window and try again.",
-        ),
-        DeepLink::OnboardingDemoComplete(_) => (
-            true,
-            "Demo complete",
-            "Anarlog is finishing your transcript and creating your summary.",
-        ),
+        DeepLink::AuthCallback(_) => default_ui_content(),
     }
 }
 
@@ -221,8 +190,7 @@ async fn handle_request<R: tauri::Runtime>(
     shutdown.notify_one();
 
     // Subscription codes bounce through `{scheme}://auth/callback?code=…` so
-    // the OS opens the app. Token logins stay focus-only to avoid a second
-    // auth callback with the same secrets.
+    // the OS opens the app.
     Html(html)
 }
 
@@ -341,7 +309,6 @@ mod tests {
         AuthCallbackSearch {
             code: Some("ac_nf5hq".to_string()),
             state: Some("state-1".to_string()),
-            ..AuthCallbackSearch::default()
         }
     }
 
@@ -356,21 +323,6 @@ mod tests {
         assert!(html.contains("state=state-1"));
         assert!(html.contains(r#"document.getElementById("open-app")?.click()"#));
         assert!(!html.contains("anarlog://focus"));
-    }
-
-    #[test]
-    fn token_login_stays_focus_only() {
-        let html = render_html(
-            &DeepLink::AuthCallback(AuthCallbackSearch {
-                access_token: "access".to_string(),
-                refresh_token: "refresh".to_string(),
-                code: Some("should-ignore".to_string()),
-                ..AuthCallbackSearch::default()
-            }),
-            "anarlog-dev",
-        );
-        assert!(html.contains("anarlog-dev://focus"));
-        assert!(!html.contains("code=should-ignore"));
     }
 
     #[test]

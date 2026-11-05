@@ -7,7 +7,6 @@ import type { DownloadProgress, ToastCondition, ToastType } from "./types";
 import type { DesktopUpdateControl } from "~/main/update-banner";
 import type { DevtoolsToastPreview } from "~/store/zustand/devtools-toast-preview";
 
-const ANARLOG_ICON_SRC = "/assets/anarlog-icon.png";
 const DESKTOP_UPDATE_TOAST_PREFIX = "desktop-update:";
 
 type ToastRegistryEntry = {
@@ -16,8 +15,6 @@ type ToastRegistryEntry = {
 };
 
 type ToastRegistryParams = {
-  isAuthenticated: boolean;
-  isAuthLoading: boolean;
   hasLLMConfigured: boolean;
   hasSttConfigured: boolean;
   isAiTranscriptionTabActive: boolean;
@@ -30,7 +27,6 @@ type ToastRegistryParams = {
   localSttStatus: ServerStatus | null;
   isLocalSttModel: boolean;
   update: DesktopUpdateControl;
-  onSignIn: () => void | Promise<void>;
   onOpenLLMSettings: () => void;
   onOpenSTTSettings: () => void;
 };
@@ -42,8 +38,6 @@ type DevtoolsToastPreviewParams = {
 };
 
 export function createToastRegistry({
-  isAuthenticated,
-  isAuthLoading,
   hasLLMConfigured,
   hasSttConfigured,
   isAiTranscriptionTabActive,
@@ -56,7 +50,6 @@ export function createToastRegistry({
   localSttStatus,
   isLocalSttModel,
   update,
-  onSignIn,
   onOpenLLMSettings,
   onOpenSTTSettings,
 }: ToastRegistryParams): ToastRegistryEntry[] {
@@ -125,29 +118,6 @@ export function createToastRegistry({
         localSttStatus === "unreachable" &&
         !hasActiveDownload &&
         !isAiTranscriptionTabActive,
-    },
-    {
-      toast: {
-        id: "sign-in-benefits",
-        icon: (
-          <img
-            src={ANARLOG_ICON_SRC}
-            alt="Anarlog"
-            className="size-5 object-contain object-center"
-          />
-        ),
-        description: t`Sign in to get the most out of Anarlog`,
-        primaryAction: {
-          label: t`Sign in`,
-          onClick: onSignIn,
-        },
-        lifecycle: {
-          type: "persistent",
-          dismissal: "permanent",
-          dismissalId: "auth-promotion",
-        },
-      },
-      condition: () => !isAuthLoading && !isAuthenticated,
     },
     {
       toast: {

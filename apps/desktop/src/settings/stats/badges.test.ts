@@ -16,7 +16,6 @@ const progress = (records: ActivityRecord[], timezone = "UTC") =>
     now,
     timezone,
     weekStartsOn: 1,
-    signedUp: false,
     onboardingComplete: false,
   });
 
@@ -59,19 +58,18 @@ describe("personal badges", () => {
     ).toBe(4);
   });
 
-  it("only awards the getting-started badges from confirmed account and onboarding state", () => {
+  it("only awards the getting-started badge from confirmed onboarding state", () => {
     const badges = getBadgeProgress({
       records: [],
       now,
       weekStartsOn: 0,
-      signedUp: true,
       onboardingComplete: true,
     });
     expect(
       badges
         .filter((badge) => badge.value === badge.target)
         .map((badge) => badge.id),
-    ).toEqual(["hello", "all-set"]);
+    ).toEqual(["all-set"]);
   });
 
   it("ignores unknown or malformed stored badges while preserving valid collection dates", () => {
@@ -90,11 +88,11 @@ describe("personal badges", () => {
         },
         {
           value_json: JSON.stringify({
-            id: "hello",
+            id: "first-words",
             collectedAt: now.toISOString(),
           }),
         },
       ]),
-    ).toEqual({ hello: now.toISOString() });
+    ).toEqual({ "first-words": now.toISOString() });
   });
 });

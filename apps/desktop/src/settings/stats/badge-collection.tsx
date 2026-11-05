@@ -22,8 +22,7 @@ import {
 import type { ActivityRecord } from "./queries";
 import { ProgressBar } from "./tremor/progress-bar";
 
-import { useAuth } from "~/auth";
-import { DEFAULT_USER_ID } from "~/shared/utils";
+import { useLocalUserId } from "~/shared/owner-user";
 import { commands } from "~/types/tauri.gen";
 
 export function BadgeCollection(props: {
@@ -32,22 +31,14 @@ export function BadgeCollection(props: {
   timezone?: string;
   weekStartsOn: 0 | 1;
 }) {
-  const auth = useAuth();
-  if (auth.session === undefined)
+  const ownerId = useLocalUserId();
+  if (ownerId === null)
     return (
       <p role="status">
         <Trans>Loading your badges…</Trans>
       </p>
     );
-  const ownerId = auth.session?.user.id ?? DEFAULT_USER_ID;
-  return (
-    <PersonalBadges
-      key={ownerId}
-      {...props}
-      ownerId={ownerId}
-      signedUp={!!auth.session && !auth.session.user.is_anonymous}
-    />
-  );
+  return <PersonalBadges key={ownerId} {...props} ownerId={ownerId} />;
 }
 
 function PersonalBadges({
@@ -56,7 +47,6 @@ function PersonalBadges({
 }: {
   ownerId: string;
   records: ActivityRecord[];
-  signedUp: boolean;
   now: Date;
   timezone?: string;
   weekStartsOn: 0 | 1;
@@ -143,10 +133,6 @@ export function BadgeGallery({
   const { t, i18n } = useLingui();
   const [selectedId, setSelectedId] = useState<BadgeId | null>(null);
   const details = {
-    hello: {
-      name: t`Hello, Anarlog`,
-      description: t`Create your Anarlog account. A place for your conversations to call home.`,
-    },
     "all-set": {
       name: t`All Set`,
       description: t`Complete onboarding. You're ready for your next conversation.`,
@@ -195,9 +181,7 @@ export function BadgeGallery({
           ? t`${value} / ${target} conversations`
           : badge.metric === "weeks"
             ? t`${value} / ${target} active weeks`
-            : badge.metric === "signup"
-              ? t`Create your account`
-              : t`Complete onboarding`,
+            : t`Complete onboarding`,
     };
   });
   const selected = badges.find((badge) => badge.id === selectedId);

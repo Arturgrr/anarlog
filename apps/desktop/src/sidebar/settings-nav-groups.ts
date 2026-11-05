@@ -17,7 +17,6 @@ import {
   ShieldCheck,
   Sparkle,
   Sun,
-  User,
   Users,
   VideoCamera,
   Waveform,
@@ -49,7 +48,6 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
       label: t`App`,
       items: [
         { id: "app", label: t`General`, icon: Gear },
-        { id: "account", label: t`Account`, icon: User },
         { id: "insights", label: t`Insights`, icon: ChartLineUp },
         { id: "appearance", label: t`Appearance`, icon: Sun },
         { id: "notifications", label: t`Notifications`, icon: Bell },

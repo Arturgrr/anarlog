@@ -28,12 +28,12 @@ import { useChatGroup } from "~/chat/store/queries";
 import { useChatActions } from "~/chat/store/use-chat-actions";
 import { useShell } from "~/contexts/shell";
 import { useMentionConfig } from "~/editor-bridge/mention-config";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { useLocalUserId } from "~/shared/owner-user";
 
 export function ComposerScreen() {
   const { chat } = useShell();
   const model = useLanguageModel();
-  const userId = useOwnerUserId();
+  const userId = useLocalUserId();
   const currentChatGroup = useChatGroup(chat.groupId, chat.scope);
   const { handleSendMessage } = useChatActions({
     chatScope: chat.scope,

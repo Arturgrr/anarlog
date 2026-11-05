@@ -115,7 +115,6 @@ describe("SettingsNav", () => {
 
   it.each([
     ["Permissions", "permissions"],
-    ["Account", "account"],
     ["Dictation", "dictation"],
   ])("opens %s inside settings", (label, tab) => {
     render(<SettingsNav />);

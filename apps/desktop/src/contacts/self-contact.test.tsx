@@ -11,16 +11,9 @@ const mocks = vi.hoisted(() => ({
   selectContact: vi.fn(),
   contextMenu: vi.fn(),
   ownerId: "self",
-  authId: null as string | null,
 }));
 
-vi.mock("~/auth", () => ({
-  useOptionalAuth: () => ({
-    session: mocks.authId ? { user: { id: mocks.authId } } : null,
-  }),
-  useAuth: () => null,
-}));
-vi.mock("~/shared/owner-user", () => ({ useOwnerUserId: () => mocks.ownerId }));
+vi.mock("~/shared/owner-user", () => ({ useLocalUserId: () => mocks.ownerId }));
 vi.mock("~/shared/hooks/useNativeContextMenu", () => ({
   useNativeContextMenu: () => mocks.contextMenu,
 }));
@@ -92,7 +85,6 @@ function human(id: string, name: string, pinned = false): HumanRecord {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.ownerId = "self";
-  mocks.authId = null;
   mocks.humans = [human("other", "Alice", true), human("self", "Zoe")];
   mocks.organizations = [];
   mocks.togglePin.mockResolvedValue(undefined);
@@ -120,16 +112,6 @@ it("keeps your unpinned card before draggable pins and visible during search", (
     target: { value: "nobody" },
   });
   expect(screen.getAllByRole("button", { name: /Zoe/ })).toHaveLength(1);
-});
-
-it("prefers the signed-in identity over the local owner fallback", () => {
-  mocks.ownerId = "other";
-  mocks.authId = "self";
-  render(<ContactsNav />);
-  expect(
-    screen.getByRole("img", { name: "Pinned contact" }).parentElement
-      ?.textContent,
-  ).toContain("Zoe");
 });
 
 it("renders your details without edit, photo, merge, or delete controls", () => {

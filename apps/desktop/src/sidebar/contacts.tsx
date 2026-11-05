@@ -4,7 +4,6 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import type { ContactsSelection } from "@anlg/plugin-windows";
 
-import { useOptionalAuth } from "~/auth";
 import { NewPersonForm } from "~/contacts/new-person-form";
 import { OrganizationItem } from "~/contacts/organization-item";
 import { PersonItem } from "~/contacts/person-item";
@@ -18,7 +17,7 @@ import {
   useOrganizations,
 } from "~/contacts/queries";
 import { ColumnHeader, type SortOption } from "~/contacts/shared";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { useLocalUserId } from "~/shared/owner-user";
 import { useTabs } from "~/store/zustand/tabs";
 
 type ContactItem =
@@ -106,9 +105,7 @@ function ContactsList({
     [],
   );
 
-  const localOwnerUserId = useOwnerUserId();
-  const auth = useOptionalAuth();
-  const ownerUserId = auth?.session?.user.id ?? localOwnerUserId;
+  const ownerUserId = useLocalUserId();
   const humans = useHumans();
   const self = humans.find((human) => human.id === ownerUserId);
   const organizations = useOrganizations();

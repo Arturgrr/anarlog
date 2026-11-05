@@ -183,13 +183,11 @@ export function looksLikeAuthorizationInput(input: string): boolean {
 }
 
 export function subscriptionAuthFromCallback(search: {
-  access_token?: string | null;
-  refresh_token?: string | null;
   code?: string | null;
   state?: string | null;
 }): { code: string; state?: string } | null {
   const code = search.code?.trim();
-  if (!code || search.access_token?.trim() || search.refresh_token?.trim()) {
+  if (!code) {
     return null;
   }
 

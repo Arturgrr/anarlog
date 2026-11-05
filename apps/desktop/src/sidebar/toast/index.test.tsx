@@ -2,7 +2,6 @@ import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  signIn: vi.fn(),
   dismissToast: vi.fn(),
   openNew: vi.fn(),
   updateSettingsTabState: vi.fn(),
@@ -70,16 +69,12 @@ vi.mock("@anlg/ui/components/ui/toast", async (importOriginal) => {
   };
 });
 
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: null, signIn: mocks.signIn }),
-}));
-
 vi.mock("~/contexts/notifications", () => ({
   useNotifications: () => mocks.notifications,
 }));
 
 vi.mock("~/main/update-banner", () => ({
-  useDesktopUpdateControl: () => mocks.update,
+  useDesktopUpdateControl: () => ({ ...mocks.update }),
 }));
 
 vi.mock("~/shared/config", () => ({
@@ -148,7 +143,6 @@ describe("ToastNotifications", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.stubGlobal("localStorage", localStorageMock);
-    mocks.signIn.mockClear();
     mocks.dismissToast.mockClear();
     mocks.message.mockClear();
     mocks.error.mockClear();
@@ -184,39 +178,6 @@ describe("ToastNotifications", () => {
     cleanup();
     vi.unstubAllGlobals();
     vi.useRealTimers();
-  });
-
-  it("routes the sign-in suggestion through the shared toaster", () => {
-    render(<ToastNotifications />);
-
-    act(() => vi.advanceTimersByTime(500));
-
-    expect(mocks.message).toHaveBeenCalledWith(
-      "Sign in to get the most out of Anarlog",
-      expect.objectContaining({
-        id: "sign-in-benefits",
-        duration: Infinity,
-        closeButton: true,
-        action: expect.objectContaining({ label: "Sign in" }),
-      }),
-    );
-
-    const options = mocks.message.mock.calls[0][1];
-    options.action.onClick();
-    expect(mocks.signIn).toHaveBeenCalledOnce();
-
-    options.onDismiss();
-    expect(mocks.dismissToast).not.toHaveBeenCalled();
-  });
-
-  it("persists explicit toast dismissals", () => {
-    render(<ToastNotifications />);
-
-    act(() => vi.advanceTimersByTime(500));
-
-    const options = mocks.message.mock.calls[0][1];
-    options.onDismiss();
-    expect(mocks.dismissToast).toHaveBeenCalledWith("auth-promotion");
   });
 
   it("lets users dismiss a model download toast until the next download", () => {
@@ -360,7 +321,6 @@ describe("ToastNotifications", () => {
   });
 
   it("uses the latest registry action while a toast remains visible", () => {
-    mocks.dismissedToastIds.add("auth-promotion");
     mocks.config.current_llm_provider = null;
     mocks.config.current_llm_model = null;
 

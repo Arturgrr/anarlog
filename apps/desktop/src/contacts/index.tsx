@@ -11,9 +11,8 @@ import {
   useOrganizations,
 } from "./queries";
 
-import { useOptionalAuth } from "~/auth";
 import { StandardContentWrapper } from "~/shared/main";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { useLocalUserId } from "~/shared/owner-user";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
 
 export function TabContentContact({
@@ -36,9 +35,7 @@ function ContactView({ tab }: { tab: Extract<Tab, { type: "contacts" }> }) {
   const invalidateResource = useTabs((state) => state.invalidateResource);
 
   const selected = tab.state.selected;
-  const localOwnerUserId = useOwnerUserId();
-  const auth = useOptionalAuth();
-  const ownerUserId = auth?.session?.user.id ?? localOwnerUserId;
+  const ownerUserId = useLocalUserId();
   const humans = useHumans();
   const self = humans.find((human) => human.id === ownerUserId);
   const organizations = useOrganizations();

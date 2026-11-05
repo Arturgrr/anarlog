@@ -28,7 +28,10 @@ const OWNER_USER_SQL = `
   LIMIT 1
 `;
 
-export function useOwnerUserId(): string | null {
+// Data created while signed in to the upstream hosted account is owned by that
+// account's id, so the local user is whoever owns the newest data rather than
+// always DEFAULT_USER_ID.
+export function useLocalUserId(): string | null {
   const { data } = useLiveQuery<OwnerUserSqlRow, string>({
     sql: OWNER_USER_SQL,
     mapRows: (rows) => rows[0]?.user_id.trim() || DEFAULT_USER_ID,

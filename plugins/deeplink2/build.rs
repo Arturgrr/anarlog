@@ -1,10 +1,4 @@
-const COMMANDS: &[&str] = &[
-    "list_pending_share_opens",
-    "start_callback_server",
-    "stop_callback_server",
-    "take_pending_deep_links",
-    "take_pending_share_open",
-];
+const COMMANDS: &[&str] = &["start_callback_server", "stop_callback_server"];
 
 fn main() {
     tauri_plugin::Builder::new(COMMANDS).build();

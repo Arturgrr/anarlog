@@ -1,14 +1,13 @@
 import { useCallback, useState } from "react";
 
 import { commands as notificationCommands } from "@anlg/plugin-notification";
-import { openUrlWithInstruction } from "@anlg/plugin-windows";
 import { toast } from "@anlg/ui/components/ui/toast";
 
 import { populateRecurringMeetingNotes } from "./recurring-notes";
 
 import { executeTransaction } from "~/db";
 import { createSession, updateSession } from "~/session/queries";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { useLocalUserId } from "~/shared/owner-user";
 import {
   type DevtoolsOtaPreviewStatus,
   useDevtoolsOtaPreview,
@@ -26,7 +25,6 @@ import {
 
 export type DevtoolsAction =
   | "navigation:onboarding"
-  | "instruction:sign-in"
   | `toasts:preview:${DevtoolsToastPreview}`
   | "toasts:clear"
   | `ota:${DevtoolsOtaPreviewStatus}`
@@ -65,12 +63,6 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
         label: "Onboarding",
         description: "Open the onboarding tab as a first-time user sees it.",
         action: "navigation:onboarding",
-      },
-      {
-        label: "Instruction: sign-in",
-        description:
-          "Show the continue-in-browser instruction screen used for signing in.",
-        action: "instruction:sign-in",
       },
     ],
   },
@@ -235,7 +227,7 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
 
 export function useDevtoolsActions() {
   const openNew = useTabs((state) => state.openNew);
-  const userId = useOwnerUserId() ?? undefined;
+  const userId = useLocalUserId() ?? undefined;
   const showToastPreview = useDevtoolsToastPreview(
     (state) => state.showPreview,
   );
@@ -249,14 +241,6 @@ export function useDevtoolsActions() {
   if (shouldThrow) {
     throw new Error("Test error triggered from devtools");
   }
-
-  const showInstruction = useCallback((type: string) => {
-    void openUrlWithInstruction(
-      `https://example.com/${type}`,
-      type,
-      async () => ({ status: "ok" as const }),
-    );
-  }, []);
 
   const clearNotifications = useCallback(async () => {
     try {
@@ -464,9 +448,6 @@ export function useDevtoolsActions() {
         case "navigation:onboarding":
           openNew({ type: "onboarding" });
           return;
-        case "instruction:sign-in":
-          showInstruction("sign-in");
-          return;
         case "toasts:preview:language-model":
         case "toasts:preview:transcription-model":
         case "toasts:preview:transcription-error":
@@ -533,7 +514,6 @@ export function useDevtoolsActions() {
       seedRecurringNotes,
       showAutoStopNotification,
       showCalendarNotification,
-      showInstruction,
       showMicDetectedNotification,
       showMicOptionsNotification,
       showOtaPreview,

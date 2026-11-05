@@ -1,6 +1,6 @@
-import { useAuth } from "~/auth";
 import { useLiveQuery } from "~/db";
 import { WELCOME_NOTE_TRACKING_ID } from "~/onboarding/welcome-note.constants";
+import { useLocalUserId } from "~/shared/owner-user";
 import { DEFAULT_USER_ID } from "~/shared/utils";
 
 export type ActivityRecord = {
@@ -43,9 +43,10 @@ export const ACTIVITY_SQL = `
 `;
 
 export function useActivity() {
-  const auth = useAuth();
+  const userId = useLocalUserId();
   return useLiveQuery<ActivityRecord, ActivityRecord[]>({
     sql: ACTIVITY_SQL,
-    params: [auth.session?.user.id ?? DEFAULT_USER_ID],
+    params: [userId ?? DEFAULT_USER_ID],
+    enabled: userId !== null,
   });
 }

@@ -20,9 +20,7 @@ const mocks = vi.hoisted(() => ({
   collect: vi.fn(),
   onboarding: vi.fn(),
 }));
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: { user: { id: "alice" } } }),
-}));
+vi.mock("~/shared/owner-user", () => ({ useLocalUserId: () => "alice" }));
 vi.mock("./badge-queries", () => ({
   useCollectedBadges: () => mocks.collection,
   collectBadges: mocks.collect,
@@ -72,19 +70,17 @@ describe("badge collection", () => {
     const { rerender } = render(view());
     await waitFor(() =>
       expect(mocks.collect).toHaveBeenCalledWith("alice", [
-        "hello",
         "all-set",
         "first-words",
       ]),
     );
-    expect(screen.getByText("0 of 9 collected")).toBeTruthy();
+    expect(screen.getByText("0 of 8 collected")).toBeTruthy();
     mocks.collection.data = {
-      hello: now.toISOString(),
       "all-set": now.toISOString(),
       "first-words": now.toISOString(),
     };
     rerender(view());
-    expect(screen.getByText("3 of 9 collected")).toBeTruthy();
+    expect(screen.getByText("2 of 8 collected")).toBeTruthy();
     expect(mocks.collect).toHaveBeenCalledTimes(1);
   });
 
@@ -115,13 +111,12 @@ describe("badge collection", () => {
           records: [],
           now,
           weekStartsOn: 1,
-          signedUp: false,
           onboardingComplete: false,
         })}
         collected={{ "first-words": "2026-09-01T12:00:00Z" }}
       />,
     );
-    expect(screen.getByText("1 of 9 collected")).toBeTruthy();
+    expect(screen.getByText("1 of 8 collected")).toBeTruthy();
     const first = screen.getByRole("button", { name: "First Words" });
     expect(within(first).getByText("Collected")).toBeTruthy();
     fireEvent.click(first);
@@ -137,7 +132,6 @@ describe("badge collection", () => {
           records: [record],
           now,
           weekStartsOn: 1,
-          signedUp: false,
           onboardingComplete: false,
         })}
         collected={{}}

@@ -7,7 +7,6 @@ vi.mock("~/settings/hydration-boundary", () => ({
 }));
 
 vi.mock("./general", () => ({
-  SettingsAccount: () => <div>Account settings</div>,
   SettingsApp: () => null,
   SettingsMeetings: () => null,
   SettingsNotifications: () => null,

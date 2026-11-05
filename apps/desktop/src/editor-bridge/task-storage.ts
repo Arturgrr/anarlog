@@ -11,7 +11,7 @@ import {
 
 import { executeTransaction, liveQueryClient } from "~/db";
 import { enqueueDatabaseWrite } from "~/db/write-queue";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { useLocalUserId } from "~/shared/owner-user";
 import { DEFAULT_USER_ID } from "~/shared/utils";
 
 export type SqliteTaskRow = {
@@ -63,7 +63,7 @@ const defaultDependencies: TaskStorageDependencies = {
 };
 
 export function useStoreBackedTaskStorage(): TaskStorage {
-  const ownerUserId = useOwnerUserId();
+  const ownerUserId = useLocalUserId();
 
   return useMemo(
     () => createSqliteTaskStorage(ownerUserId || DEFAULT_USER_ID),

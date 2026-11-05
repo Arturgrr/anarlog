@@ -5,8 +5,6 @@ import { createToastRegistry, getToastToShow } from "./registry";
 type RegistryParams = Parameters<typeof createToastRegistry>[0];
 
 const baseParams: RegistryParams = {
-  isAuthenticated: true,
-  isAuthLoading: false,
   hasLLMConfigured: true,
   hasSttConfigured: true,
   isAiTranscriptionTabActive: false,
@@ -28,7 +26,6 @@ const baseParams: RegistryParams = {
     downloadUpdate: vi.fn(),
     installUpdate: vi.fn(),
   },
-  onSignIn: vi.fn(),
   onOpenLLMSettings: vi.fn(),
   onOpenSTTSettings: vi.fn(),
 };
@@ -62,20 +59,6 @@ describe("sidebar toast registry", () => {
       expect(toast?.lifecycle).toEqual({ type: "condition-bound" });
     },
   );
-
-  it("suggests signing in before provider setup", () => {
-    const onSignIn = vi.fn();
-    const toast = showToast({
-      isAuthenticated: false,
-      hasLLMConfigured: false,
-      hasSttConfigured: false,
-      onSignIn,
-    });
-
-    expect(toast?.id).toBe("sign-in-benefits");
-    toast?.primaryAction?.onClick();
-    expect(onSignIn).toHaveBeenCalledOnce();
-  });
 
   it("shows local STT loading unless the transcript tab shows batch progress", () => {
     const loading = {

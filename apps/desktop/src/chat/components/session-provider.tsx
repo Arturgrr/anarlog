@@ -47,7 +47,7 @@ import type {
   AnlgUIMessage,
 } from "~/chat/types";
 import { flushDatabaseWritesByPrefix } from "~/db/write-queue";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { useLocalUserId } from "~/shared/owner-user";
 import { id } from "~/shared/utils";
 
 export type ChatSessionRenderProps = {
@@ -117,7 +117,7 @@ function ChatSessionLifecycle({
   children,
 }: ChatSessionProps) {
   const { t } = useLingui();
-  const ownerUserId = useOwnerUserId();
+  const ownerUserId = useLocalUserId();
   const persistedMessages = usePersistedChatMessages(chatGroupId);
 
   const [pendingManualRefs, setPendingManualRefs] = useState<ContextRef[]>([]);
