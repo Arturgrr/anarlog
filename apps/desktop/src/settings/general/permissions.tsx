@@ -184,7 +184,7 @@ function MacOSPermissions() {
         title={t`Accessibility`}
         description={
           accessibilityGuidance
-            ? t`Opens System Settings and guides you to add Anarlog to the ${accessibilityGuidance.paneTitle ?? "Privacy"} list.`
+            ? t`Opens System Settings and guides you to add Librelog to the ${accessibilityGuidance.paneTitle ?? "Privacy"} list.`
             : t`Read meeting controls and visible chat.`
         }
         status={accessibility.status}
@@ -197,7 +197,7 @@ function MacOSPermissions() {
       <PermissionGroup title={<Trans>Others</Trans>}>
         <PermissionRow
           title={t`Calendar`}
-          description={t`Show Apple Calendar events in Anarlog.`}
+          description={t`Show Apple Calendar events in Librelog.`}
           status={calendar.status}
           isPending={calendar.isPending}
           onRequest={calendar.request}

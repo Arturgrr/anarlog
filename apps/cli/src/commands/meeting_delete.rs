@@ -12,10 +12,8 @@ fn closed(base: &Path) -> Result<Vec<std::fs::File>> {
     let mut locks = Vec::new();
     for name in [
         "launch.lock",
-        "com.anarlog.stable.running.lock",
-        "com.anarlog.nightly.running.lock",
-        "com.hyprnote.stable.running.lock",
-        "com.hyprnote.nightly.running.lock",
+        "com.arturgrr.librelog.running.lock",
+        "com.arturgrr.librelog.nightly.running.lock",
     ] {
         let file = std::fs::OpenOptions::new()
             .create(true)
@@ -24,7 +22,7 @@ fn closed(base: &Path) -> Result<Vec<std::fs::File>> {
             .open(base.join(name))
             .map_err(|_| invalid("cannot lock recorder"))?;
         file.try_lock()
-            .map_err(|_| invalid("close Anarlog before deletion"))?;
+            .map_err(|_| invalid("close Librelog before deletion"))?;
         locks.push(file);
     }
     Ok(locks)
@@ -317,7 +315,7 @@ mod tests {
             std::fs::write(dir.path().join(folder).join("audio.wav"), b"Raw audio").unwrap();
         }
         let args = Args::try_parse_from([
-            "anarlog",
+            "librelog",
             "--json",
             "--db-path",
             path.to_str().unwrap(),
@@ -419,7 +417,7 @@ mod tests {
             .write(true)
             .create(true)
             .truncate(false)
-            .open(dir.path().join("com.hyprnote.stable.running.lock"))
+            .open(dir.path().join("com.arturgrr.librelog.running.lock"))
             .unwrap();
         lock.try_lock().unwrap();
         assert!(run(&args, "meeting-1", &hash, true).await.is_err());
@@ -459,7 +457,7 @@ mod tests {
     async fn first_launch_initialization_requires_managed_policy_and_never_enables_intelligence() {
         let dir = tempfile::tempdir().unwrap();
         let args = Args::try_parse_from([
-            "anarlog",
+            "librelog",
             "--json",
             "--base",
             dir.path().to_str().unwrap(),

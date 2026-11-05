@@ -14,7 +14,7 @@ function fixture(
   t,
   body = `console.log(JSON.stringify({ args: process.argv.slice(2), cwd: process.cwd(), env: process.env }));`,
 ) {
-  const directory = mkdtempSync(join(tmpdir(), "anarlog-dev-"));
+  const directory = mkdtempSync(join(tmpdir(), "librelog-dev-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   writeFileSync(
     join(directory, "process-compose"),

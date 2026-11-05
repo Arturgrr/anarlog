@@ -1,11 +1,11 @@
 ---
-title: "Anarlog skill"
-description: "Teach a compatible agent when and how to use Anarlog's local MCP and CLI surfaces."
+title: "Librelog skill"
+description: "Teach a compatible agent when and how to use Librelog's local MCP and CLI surfaces."
 ---
 
-The Anarlog skill teaches agents a single workflow across the local MCP server and the `anarlog` CLI:
+The Librelog skill teaches agents a single workflow across the local MCP server and the `librelog` CLI:
 
-1. Use local MCP, or check CLI readiness with `anarlog --json doctor` and read with `anarlog --json meetings --source local list`.
+1. Use local MCP, or check CLI readiness with `librelog --json doctor` and read with `librelog --json meetings --source local list`.
 2. Resolve meeting IDs from search results.
 3. Fetch meeting detail before transcript text.
 4. Keep transcript reads bounded and never access SQLite directly.
@@ -13,31 +13,31 @@ The Anarlog skill teaches agents a single workflow across the local MCP server a
 
 ## Sources
 
-- Repository package: [`skills/anarlog`](https://github.com/Arturgrr/anarlog/tree/main/skills/anarlog)
+- Repository package: [`skills/librelog`](https://github.com/Arturgrr/librelog/tree/main/skills/librelog)
 - Self-contained copy: `docs/skill.md`, generated from the package
 
 The repository package adds references for setup, CLI commands, MCP tools, and errors.
 
 ## Install from the desktop app
 
-Open **Settings → Developers → Agent skills**. Choose **Add skill to…** and pick a detected agent, or choose **Install to all agents**. Anarlog copies the skill bundled with the running app into that agent's skills directory.
+Open **Settings → Developers → Agent skills**. Choose **Add skill to…** and pick a detected agent, or choose **Install to all agents**. Librelog copies the skill bundled with the running app into that agent's skills directory.
 
 The desktop app detects Claude Code, Codex, Cursor, and OpenCode when their configuration directory exists on your computer.
 
-The skill uses the local CLI and MCP server. [Install the Anarlog CLI](/installation) and [configure local MCP](/agents/mcp) as well.
+The skill uses the local CLI and MCP server. [Install the Librelog CLI](/installation) and [configure local MCP](/agents/mcp) as well.
 
 ## Install manually
 
-For a filesystem-based agent, copy the complete `skills/anarlog` directory from a clone of the repository into that agent's skills directory. Keep the directory name `anarlog` so relative reference links continue to work.
+For a filesystem-based agent, copy the complete `skills/librelog` directory from a clone of the repository into that agent's skills directory. Keep the directory name `librelog` so relative reference links continue to work.
 
-The repository also contains an agent plugin in `agent-plugins/anarlog` that bundles the skill and a local MCP configuration running `anarlog mcp`. Load it from a clone of the repository, for example in Claude Code:
+The repository also contains an agent plugin in `agent-plugins/librelog` that bundles the skill and a local MCP configuration running `librelog mcp`. Load it from a clone of the repository, for example in Claude Code:
 
 ```bash
-claude --plugin-dir ./agent-plugins/anarlog
+claude --plugin-dir ./agent-plugins/librelog
 ```
 
 <Note>
   Agent skill locations vary by client. Follow your agent's skill installation instructions rather than copying only `SKILL.md`.
 </Note>
 
-The contributor skills under `.agents/skills` are internal repository workflows. They are not part of the public Anarlog skill.
+The contributor skills under `.agents/skills` are internal repository workflows. They are not part of the public Librelog skill.

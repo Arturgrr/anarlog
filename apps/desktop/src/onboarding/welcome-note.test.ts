@@ -35,7 +35,7 @@ it("reuses an existing onboarding welcome note", async () => {
   await expect(getOrCreateWelcomeSession()).resolves.toBe("welcome-session");
   expect(mocks.createSession).not.toHaveBeenCalled();
   expect(mocks.execute).toHaveBeenCalledWith(expect.any(String), [
-    "anarlog-onboarding-demo-v1",
+    "librelog-onboarding-demo-v1",
   ]);
 });
 
@@ -47,9 +47,9 @@ it("creates a local welcome note without a hosted demo link", async () => {
 
   const [title, , initial] = mocks.createSession.mock.calls[0];
   const event = JSON.parse(initial.event_json);
-  expect(title).toBe("Welcome to Anarlog");
+  expect(title).toBe("Welcome to Librelog");
   expect(event.meeting_link).toBeUndefined();
-  expect(event.tracking_id).toBe("anarlog-onboarding-demo-v1");
+  expect(event.tracking_id).toBe("librelog-onboarding-demo-v1");
   expect(() => JSON.parse(initial.raw_md)).not.toThrow();
 });
 

@@ -13,16 +13,16 @@ describe("app icon preference", () => {
   });
 
   it("resolves the default icon from the app channel", () => {
-    expect(resolveAppIconName("default", "com.hyprnote.stable")).toBe(
+    expect(resolveAppIconName("default", "com.arturgrr.librelog")).toBe(
       "graphite",
     );
-    expect(resolveAppIconName("default", "com.hyprnote.nightly")).toBe(
+    expect(resolveAppIconName("default", "com.arturgrr.librelog.nightly")).toBe(
       "graphite",
     );
-    expect(resolveAppIconName("default", "com.hyprnote.staging")).toBe(
+    expect(resolveAppIconName("default", "com.arturgrr.librelog.staging")).toBe(
       "graphite",
     );
-    expect(resolveAppIconName("default", "com.hyprnote.dev")).toBe("light");
-    expect(resolveAppIconName("graphite", "com.hyprnote.dev")).toBe("graphite");
+    expect(resolveAppIconName("default", "com.arturgrr.librelog.dev")).toBe("light");
+    expect(resolveAppIconName("graphite", "com.arturgrr.librelog.dev")).toBe("graphite");
   });
 });

@@ -144,7 +144,7 @@ fn run_detector(
         }
     };
 
-    let mut context = match Context::new(&mainloop, "anarlog-mic-detector") {
+    let mut context = match Context::new(&mainloop, "librelog-mic-detector") {
         Some(c) => c,
         None => {
             tracing::warn!("failed_to_create_pulseaudio_context");

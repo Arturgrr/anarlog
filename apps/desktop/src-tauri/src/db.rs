@@ -4,8 +4,8 @@ use anlg_db_core::Db;
 
 const DB_FILENAME: &str = "app.db";
 const DB_RESET_MARKER: &str = "app.db.reset-requested";
-pub(crate) const STABLE_BUNDLE_ID: &str = "com.hyprnote.stable";
-pub(crate) const NIGHTLY_BUNDLE_ID: &str = "com.hyprnote.nightly";
+pub(crate) const STABLE_BUNDLE_ID: &str = "com.arturgrr.librelog";
+pub(crate) const NIGHTLY_BUNDLE_ID: &str = "com.arturgrr.librelog.nightly";
 const DB_OPEN_LOCK_RETRIES: u32 = 12;
 const DB_OPEN_LOCK_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(5);
 
@@ -85,7 +85,7 @@ pub fn is_transient_lock_error(error: &impl std::fmt::Display) -> bool {
 pub fn is_newer_schema_error(error: &impl std::fmt::Display) -> bool {
     error
         .to_string()
-        .contains("created by a newer version of Anarlog")
+        .contains("created by a newer version of Librelog")
 }
 
 // Nightly previews run against the user's real notes, so it opens stable's
@@ -110,16 +110,7 @@ fn database_identifier(identifier: &str) -> &str {
 }
 
 pub(crate) fn desktop_db_dir(identifier: &str) -> Option<std::path::PathBuf> {
-    let identifier = database_identifier(identifier);
-    let data_dir = dirs::data_dir()?;
-    let default_dir = anlg_storage::global::compute_default_base(identifier)?;
-    let identifier_dir = data_dir.join(identifier);
-
-    if identifier_dir.join(DB_FILENAME).is_file() && !default_dir.join(DB_FILENAME).is_file() {
-        Some(identifier_dir)
-    } else {
-        Some(default_dir)
-    }
+    anlg_storage::global::compute_default_base(database_identifier(identifier))
 }
 
 #[cfg(test)]
@@ -166,7 +157,7 @@ mod tests {
         // Rendered form of MigrateError::SchemaFromNewerApp after crossing the
         // plugin setup boundary as a string.
         assert!(is_newer_schema_error(
-            &"plugin db failed: the database was created by a newer version of Anarlog: it requires migration 20260901000000, but this build only includes migrations up to 20260816100100"
+            &"plugin db failed: the database was created by a newer version of Librelog: it requires migration 20260901000000, but this build only includes migrations up to 20260816100100"
         ));
         assert!(!is_newer_schema_error(
             &"unable to open database file: /tmp/app.db"
@@ -175,9 +166,9 @@ mod tests {
 
     #[test]
     fn only_nightly_and_stable_share_a_database_directory() {
-        let db_dir = desktop_db_dir("com.hyprnote.dev").unwrap();
+        let db_dir = desktop_db_dir("com.arturgrr.librelog.dev").unwrap();
 
-        assert!(db_dir.ends_with("com.hyprnote.dev"));
+        assert!(db_dir.ends_with("com.arturgrr.librelog.dev"));
 
         assert_eq!(
             desktop_db_dir(NIGHTLY_BUNDLE_ID),
@@ -197,7 +188,7 @@ mod tests {
             shared_database_peer(STABLE_BUNDLE_ID),
             Some(NIGHTLY_BUNDLE_ID)
         );
-        assert_eq!(shared_database_peer("com.hyprnote.staging"), None);
-        assert_eq!(shared_database_peer("com.hyprnote.dev"), None);
+        assert_eq!(shared_database_peer("com.arturgrr.librelog.staging"), None);
+        assert_eq!(shared_database_peer("com.arturgrr.librelog.dev"), None);
     }
 }

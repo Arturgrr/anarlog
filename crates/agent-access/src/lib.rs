@@ -75,14 +75,14 @@ pub struct ListFoldersInput {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct GetMeetingInput {
-    #[schemars(description = "Anarlog meeting id")]
+    #[schemars(description = "Librelog meeting id")]
     pub meeting_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct GetMeetingTranscriptInput {
-    #[schemars(description = "Anarlog meeting id")]
+    #[schemars(description = "Librelog meeting id")]
     pub meeting_id: String,
     #[schemars(description = "Word offset; defaults to 0")]
     pub offset: Option<u32>,

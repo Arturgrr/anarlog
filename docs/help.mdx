@@ -3,13 +3,13 @@ title: "Frequently asked questions"
 description: "Answers about recording, transcription cost, languages, local models, privacy, and developer tools."
 ---
 
-Browse a topic, then expand the question. If something is not working, go to [Troubleshooting](/troubleshooting). For a question not covered here, [open a GitHub issue](https://github.com/Arturgrr/anarlog/issues).
+Browse a topic, then expand the question. If something is not working, go to [Troubleshooting](/troubleshooting). For a question not covered here, [open a GitHub issue](https://github.com/Arturgrr/librelog/issues).
 
 ## Transcription and cost
 
 <AccordionGroup>
   <Accordion title="How can I compare the costs of all the transcription options?" id="compare-transcription-costs">
-    Anarlog itself is free, so the only cost is the transcription option you choose. Compare those first, then compare providers inside the one you choose.
+    Librelog itself is free, so the only cost is the transcription option you choose. Compare those first, then compare providers inside the one you choose.
 
     | Option | What you pay | When to use it |
     | --- | --- | --- |
@@ -24,7 +24,7 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
     3. On the provider's pricing page, compare live vs after-recording rates, language coverage, speaker labels, and any free tier.
     4. Select the model under **Model being used** and run a short test meeting.
 
-    Anarlog does not publish a live price table for third-party providers because those rates change. [OpenRouter](https://openrouter.ai/models?output_modalities=transcription) is one key that can reach several after-recording models if you want a single bill to compare.
+    Librelog does not publish a live price table for third-party providers because those rates change. [OpenRouter](https://openrouter.ai/models?output_modalities=transcription) is one key that can reach several after-recording models if you want a single bill to compare.
 
     See [How can I use on-device models?](/help#use-on-device-models), [Models and providers](/models-and-providers), and [Transcription and AI](/ai-setup).
   </Accordion>
@@ -40,11 +40,11 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
 
     Built-in on-device transcription is not available on Windows, Linux, or Intel Macs. On those systems, use a Deepgram-compatible local server or a bring-your-own-key provider. After-recording hosted models handle hour-long audio. Some live models have short session limits — for example, Gemini 3.5 Transcribe Live preview sessions last up to 10 minutes.
 
-    Quality and speed depend on the computer. Run a short test recording before a long call. See [How can I use on-device models?](/help#use-on-device-models) and [Use Anarlog offline](/offline).
+    Quality and speed depend on the computer. Run a short test recording before a long call. See [How can I use on-device models?](/help#use-on-device-models) and [Use Librelog offline](/offline).
   </Accordion>
 
   <Accordion title="Can I replace Granola on Windows?" id="replace-granola-on-windows">
-    Yes. [Build Anarlog from source](/desktop-installation#build-from-source) on Windows and record from the desktop without a meeting bot. Windows support is in beta.
+    Yes. [Build Librelog from source](/desktop-installation#build-from-source) on Windows and record from the desktop without a meeting bot. Windows support is in beta.
 
     Expect these differences from a Mac setup:
 
@@ -59,12 +59,12 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
 ## Recording and notes
 
 <AccordionGroup>
-  <Accordion title="Does Anarlog join the call?" id="does-anarlog-join-the-call">
-    No. Anarlog captures your microphone and computer audio from the desktop without adding a meeting bot. See [Record meetings](/meetings).
+  <Accordion title="Does Librelog join the call?" id="does-librelog-join-the-call">
+    No. Librelog captures your microphone and computer audio from the desktop without adding a meeting bot. See [Record meetings](/meetings).
   </Accordion>
 
   <Accordion title="Can recording start automatically?" id="can-recording-start-automatically">
-    Yes. Anarlog can start calendar-backed meetings on schedule and prompt you when it detects an unscheduled call. Manage scheduled meeting controls under **Settings → Meetings** and microphone detection under **Settings → Notifications**. Microphone detection, auto-stop, and meeting-chat capture are available on macOS and Linux, not Windows. See [Automatic capture](/automatic-capture).
+    Yes. Librelog can start calendar-backed meetings on schedule and prompt you when it detects an unscheduled call. Manage scheduled meeting controls under **Settings → Meetings** and microphone detection under **Settings → Notifications**. Microphone detection, auto-stop, and meeting-chat capture are available on macOS and Linux, not Windows. See [Automatic capture](/automatic-capture).
   </Accordion>
 
   <Accordion title="Can I edit a transcript or fix a speaker?" id="can-i-edit-a-transcript-or-fix-a-speaker">
@@ -84,7 +84,7 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
 
 <AccordionGroup>
   <Accordion title="How can I use on-device models?" id="use-on-device-models">
-    Anarlog can transcribe without sending audio to any provider. Open **Settings → Transcription** and pick the path that matches your computer.
+    Librelog can transcribe without sending audio to any provider. Open **Settings → Transcription** and pick the path that matches your computer.
 
     | Path | What you select | When it runs | Requirements |
     | --- | --- | --- | --- |
@@ -97,14 +97,14 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
 
     Summaries and chat are a separate setting. For those to stay local too, choose LM Studio, Ollama, Unsloth, or eligible Apple Intelligence under **Settings → Intelligence**.
 
-    See [Models and providers](/models-and-providers), [Use Anarlog offline](/offline), and [Is there a reliable local model that can handle hour-long calls?](/help#local-model-hour-long-calls).
+    See [Models and providers](/models-and-providers), [Use Librelog offline](/offline), and [Is there a reliable local model that can handle hour-long calls?](/help#local-model-hour-long-calls).
   </Accordion>
 
-  <Accordion title="Can I use Anarlog offline?" id="can-i-use-anarlog-offline">
-    Yes, if you prepare local models before disconnecting. Soniqo, Apple Speech, and BYO-model transcription require a supported Apple Silicon Mac; Apple Speech also needs macOS 26 to report compatible system assets. LM Studio, Ollama, Unsloth, and eligible Apple Intelligence can provide local Intelligence models. See [Use Anarlog offline](/offline) and [How can I use on-device models?](/help#use-on-device-models).
+  <Accordion title="Can I use Librelog offline?" id="can-i-use-librelog-offline">
+    Yes, if you prepare local models before disconnecting. Soniqo, Apple Speech, and BYO-model transcription require a supported Apple Silicon Mac; Apple Speech also needs macOS 26 to report compatible system assets. LM Studio, Ollama, Unsloth, and eligible Apple Intelligence can provide local Intelligence models. See [Use Librelog offline](/offline) and [How can I use on-device models?](/help#use-on-device-models).
   </Accordion>
 
-  <Accordion title="What languages does Anarlog support?" id="supported-languages">
+  <Accordion title="What languages does Librelog support?" id="supported-languages">
     **Settings → General → Language & Region** lets you choose a main language and additional spoken languages from this list:
 
     Arabic, Belarusian, Bulgarian, Bangla, Bosnian, Catalan, Czech, Danish, German, Greek, English, Spanish, Estonian, Persian, Finnish, French, Hebrew, Hindi, Croatian, Hungarian, Indonesian, Italian, Japanese, Kannada, Korean, Lithuanian, Latvian, Macedonian, Marathi, Malay, Dutch, Norwegian, Polish, Portuguese, Romanian, Russian, Slovak, Slovenian, Serbian, Swedish, Tamil, Telugu, Thai, Filipino, Turkish, Ukrainian, Urdu, Vietnamese, and Chinese.
@@ -121,16 +121,16 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
     Chat uses the main language. When you configure additional spoken languages, summaries use the language used most in the transcript, falling back to the main language if detection is unavailable. See [Use multiple languages](/languages).
   </Accordion>
 
-  <Accordion title="Which AI models does Anarlog use?" id="which-ai-models-does-anarlog-use">
+  <Accordion title="Which AI models does Librelog use?" id="which-ai-models-does-librelog-use">
     There is no single hidden model. Your Transcription selection handles audio, and your Intelligence selection handles summaries, titles, and chat. Each one is a local model or a provider you configure yourself. See [Models and providers](/models-and-providers) for the local options and supported providers.
   </Accordion>
 
   <Accordion title="Where is my data stored?" id="where-is-my-data-stored">
-    Anarlog stores app data on your computer. A hosted provider or integration you configure receives only the content needed for that feature. See [Data, privacy, and retention](/data-and-privacy) and [Security](/security).
+    Librelog stores app data on your computer. A hosted provider or integration you configure receives only the content needed for that feature. See [Data, privacy, and retention](/data-and-privacy) and [Security](/security).
   </Accordion>
 
-  <Accordion title="Does Anarlog train on my meetings?" id="does-anarlog-train-on-my-meetings">
-    Anarlog has no server and never receives your meetings. Local providers keep the model request on your computer. For a hosted provider you configure, review that provider's retention and training policy before sending sensitive content.
+  <Accordion title="Does Librelog train on my meetings?" id="does-librelog-train-on-my-meetings">
+    Librelog has no server and never receives your meetings. Local providers keep the model request on your computer. For a hosted provider you configure, review that provider's retention and training policy before sending sensitive content.
   </Accordion>
 
   <Accordion title="Can a meeting use multiple languages?" id="can-a-meeting-use-multiple-languages">
@@ -150,10 +150,10 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
 
 <AccordionGroup>
   <Accordion title="Which desktop platforms are supported?" id="which-desktop-platforms-are-supported">
-    Prebuilt releases support macOS 15 or later on Apple Silicon and Intel. On Linux and Windows, build Anarlog from source; support there is in beta. See [Install the desktop app](/desktop-installation).
+    Prebuilt releases support macOS 15 or later on Apple Silicon and Intel. On Linux and Windows, build Librelog from source; support there is in beta. See [Install the desktop app](/desktop-installation).
   </Accordion>
 
-  <Accordion title="Can agents reach my meetings while Anarlog is closed?" id="can-agents-reach-my-meetings-while-anarlog-is-closed">
+  <Accordion title="Can agents reach my meetings while Librelog is closed?" id="can-agents-reach-my-meetings-while-librelog-is-closed">
     The CLI and local MCP server read the local database, so they work while the app is closed. They can also stage a memo or summary proposal; review the **pending edit** banner in the desktop meeting note before applying it. Webhooks only deliver while the app is open. See [Agent overview](/agents/overview).
   </Accordion>
 </AccordionGroup>

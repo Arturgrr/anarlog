@@ -1,9 +1,9 @@
 ---
 title: "Webhooks reference"
-description: "Signed meeting events Anarlog delivers to an endpoint you configure."
+description: "Signed meeting events Librelog delivers to an endpoint you configure."
 ---
 
-Webhooks let Anarlog push meeting events to your own endpoint. They are built into the desktop app and sent directly from your computer to the endpoint. Configure them under **Settings → Developers → Webhooks**.
+Webhooks let Librelog push meeting events to your own endpoint. They are built into the desktop app and sent directly from your computer to the endpoint. Configure them under **Settings → Developers → Webhooks**.
 
 <Warning>
   Meeting events include the note, summaries, participants, action items, and full transcript text. Only add an endpoint you trust.
@@ -19,14 +19,14 @@ To read meeting data instead of receiving it, use the [CLI](/reference/cli) or t
 4. Click **Test** to send one `webhook.test` delivery and confirm your endpoint responds.
 
 <Note>
-  The signing secret is shown once during setup. Store it before leaving the page — Anarlog does not display it again.
+  The signing secret is shown once during setup. Store it before leaving the page — Librelog does not display it again.
 </Note>
 
 A new endpoint is subscribed to all events. One installation can configure at most 64 endpoints.
 
 ## Events
 
-Anarlog delivers events as JSON `POST` requests while the desktop app is running.
+Librelog delivers events as JSON `POST` requests while the desktop app is running.
 
 | Event | Fires when |
 | --- | --- |
@@ -52,10 +52,10 @@ Meeting event deliveries time out after 10 seconds. Failed attempts retry after 
 
 | Header | Content |
 | --- | --- |
-| `x-anarlog-event` | Event name. |
-| `x-anarlog-delivery` | Unique delivery ID. |
-| `x-anarlog-timestamp` | Unix timestamp (seconds). |
-| `x-anarlog-signature` | `sha256=<hex>` — HMAC-SHA256 of the raw request body using your endpoint's `whsec_...` secret. |
+| `x-librelog-event` | Event name. |
+| `x-librelog-delivery` | Unique delivery ID. |
+| `x-librelog-timestamp` | Unix timestamp (seconds). |
+| `x-librelog-signature` | `sha256=<hex>` — HMAC-SHA256 of the raw request body using your endpoint's `whsec_...` secret. |
 
 ## Verify signatures
 
@@ -67,7 +67,7 @@ import crypto from "node:crypto";
 const expected = `sha256=${
   crypto.createHmac("sha256", secret).update(rawBody).digest("hex")
 }`;
-const signature = request.headers["x-anarlog-signature"];
+const signature = request.headers["x-librelog-signature"];
 const received = typeof signature === "string" ? signature : "";
 const valid =
   Buffer.byteLength(received) === Buffer.byteLength(expected) &&
@@ -82,4 +82,4 @@ Verify the raw body before parsing it. For replay protection, reject stale signe
   Deliveries only run while the desktop app is open. Events that occur while it is closed are dropped, not queued for later delivery.
 </Warning>
 
-Anarlog delivers to at most 64 endpoints per event and runs at most 4 deliveries at a time.
+Librelog delivers to at most 64 endpoints per event and runs at most 4 deliveries at a time.

@@ -60,7 +60,7 @@ function getPauseCause({
     if (isLocal) {
       return "the local transcription model stopped responding";
     }
-    return `Anarlog can't reach ${providerName}`;
+    return `Librelog can't reach ${providerName}`;
   }
 
   return `${providerName} stopped sending words`;

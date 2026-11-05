@@ -426,7 +426,7 @@ pub(crate) fn persist_markdown_export(
 }
 
 fn legacy_export_prefix(meeting_id: &str) -> String {
-    format!("<!-- anarlog:legacy-markdown-export {meeting_id:?} -->\n\n")
+    format!("<!-- librelog:legacy-markdown-export {meeting_id:?} -->\n\n")
 }
 
 // Only remove files explicitly owned by the legacy exporter. Unmarked files

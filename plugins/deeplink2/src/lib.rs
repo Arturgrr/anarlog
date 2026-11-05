@@ -104,7 +104,7 @@ mod test {
 
     #[test]
     fn redacts_query_and_fragment_from_logged_urls() {
-        let value = redact_url("anarlog://auth/callback?code=secret-code&state=s1#secret");
-        assert_eq!(value, "anarlog://auth/callback");
+        let value = redact_url("librelog://auth/callback?code=secret-code&state=s1#secret");
+        assert_eq!(value, "librelog://auth/callback");
     }
 }

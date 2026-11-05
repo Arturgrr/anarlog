@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Anarlog Dev",
-  "mainBinaryName": "anarlog-dev",
-  "identifier": "com.hyprnote.dev",
+  "productName": "Librelog Dev",
+  "mainBinaryName": "librelog-dev",
+  "identifier": "com.arturgrr.librelog.dev",
   "build": {
     "features": ["direct-distribution"],
     "beforeDevCommand": "pnpm -F desktop dev",
@@ -25,7 +25,7 @@
     }
   },
   "bundle": {
-    "publisher": "Fastrepl",
+    "publisher": "Artur Guerra",
     "active": true,
     "createUpdaterArtifacts": true,
     "targets": "all",
@@ -95,11 +95,7 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "anarlog-dev",
-          "hypr",
-          "char"
-        ]
+        "schemes": ["librelog-dev"]
       }
     },
     "updater": {

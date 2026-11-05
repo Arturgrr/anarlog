@@ -321,7 +321,7 @@ fn test_native_linux_zoom_structured_message_preserves_live_metadata() {
 fn test_slack_chat_message_parser_handles_live_huddle_description() {
     let parsed = parse_chat_message(
         &MeetingPlatform::Slack,
-        "John Jeong: I'm using Anarlog to record and transcribe this meeting. https://example.com. 4:02 AM. 1 link.",
+        "John Jeong: I'm using Librelog to record and transcribe this meeting. https://example.com. 4:02 AM. 1 link.",
     )
     .unwrap();
 
@@ -329,7 +329,7 @@ fn test_slack_chat_message_parser_handles_live_huddle_description() {
     assert_eq!(parsed.timestamp, Some("4:02 AM".to_string()));
     assert_eq!(
         parsed.text,
-        "I'm using Anarlog to record and transcribe this meeting. https://example.com"
+        "I'm using Librelog to record and transcribe this meeting. https://example.com"
     );
 
     let mut active_control = node(0, "AXButton", "", None);
@@ -338,7 +338,7 @@ fn test_slack_chat_message_parser_handles_live_huddle_description() {
     let mut message = node(
         1,
         "AXGroup",
-        "John Jeong: I'm using Anarlog to record and transcribe this meeting. https://example.com. 4:02 AM. 1 link.",
+        "John Jeong: I'm using Librelog to record and transcribe this meeting. https://example.com. 4:02 AM. 1 link.",
         None,
     );
     message.value = Some(String::new());

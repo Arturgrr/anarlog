@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   stopDevtoolsMetrics: vi.fn(),
-  identifier: "com.hyprnote.staging",
+  identifier: "com.arturgrr.librelog.staging",
   outlinesEnabled: true,
   topComponents: [] as Array<{ name: string; count: number }>,
   setRenderOutlinesEnabled: vi.fn(),
@@ -146,7 +146,7 @@ function renderBar() {
 describe("DevtoolsStatusBar", () => {
   beforeEach(() => {
     localStorage.clear();
-    mocks.identifier = "com.hyprnote.staging";
+    mocks.identifier = "com.arturgrr.librelog.staging";
     vi.mocked(getIdentifier).mockImplementation(() =>
       Promise.resolve(mocks.identifier),
     );

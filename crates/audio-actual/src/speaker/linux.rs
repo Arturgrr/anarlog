@@ -326,7 +326,7 @@ fn pipewire_capture_setup(
         stream_props.insert("target.object", target);
     }
 
-    let stream = pw::stream::StreamBox::new(&core, "anarlog-speaker-capture", stream_props)
+    let stream = pw::stream::StreamBox::new(&core, "librelog-speaker-capture", stream_props)
         .context("Failed to create PipeWire stream")?;
 
     let _shutdown = shutdown_rx.attach(mainloop.loop_(), {
@@ -481,7 +481,7 @@ fn pulseaudio_capture_loop(
     init_tx: std::sync::mpsc::Sender<Result<()>>,
 ) -> Result<()> {
     let mut mainloop = Mainloop::new().context("Failed to create PulseAudio mainloop")?;
-    let mut context = PaContext::new(&mainloop, "anarlog-speaker-capture")
+    let mut context = PaContext::new(&mainloop, "librelog-speaker-capture")
         .context("Failed to create PulseAudio context")?;
 
     context
@@ -510,7 +510,7 @@ fn pulseaudio_capture_loop(
 
         mainloop.lock();
         let stream_result = (|| -> Result<_> {
-            let mut stream = PaStream::new(&mut context, "anarlog-capture", &spec, None)
+            let mut stream = PaStream::new(&mut context, "librelog-capture", &spec, None)
                 .context("Failed to create PulseAudio stream")?;
             stream
                 .connect_record(
@@ -810,7 +810,7 @@ fn pick_sink_in_use(
 
 // `None` leaves PipeWire on the default sink.
 fn resolve_sink_name() -> Option<String> {
-    with_pulse_context("anarlog-speaker-list", |mainloop, context| {
+    with_pulse_context("librelog-speaker-list", |mainloop, context| {
         sink_in_use(mainloop, context).map(|sink| sink.name)
     })
     .flatten()

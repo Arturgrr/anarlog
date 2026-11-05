@@ -6,14 +6,13 @@ use std::path::PathBuf;
 
 use serde::Serialize;
 
-const DEV_BUNDLE_ID: &str = "com.hyprnote.dev";
-const FLATPAK_BUNDLE_ID: &str = "so.anarlog.Anarlog";
-const LEGACY_STABLE_BUNDLE_ID: &str = "com.hyprnote.Hyprnote";
+const DEV_BUNDLE_ID: &str = "com.arturgrr.librelog.dev";
+const FLATPAK_BUNDLE_ID: &str = "io.github.arturgrr.Librelog";
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-const MANAGED_CLI_DIR: &str = ".anarlog-cli";
-const STABLE_BUNDLE_ID: &str = "com.hyprnote.stable";
-const STAGING_BUNDLE_ID: &str = "com.hyprnote.staging";
-const NIGHTLY_BUNDLE_ID: &str = "com.hyprnote.nightly";
+const MANAGED_CLI_DIR: &str = ".librelog-cli";
+const STABLE_BUNDLE_ID: &str = "com.arturgrr.librelog";
+const STAGING_BUNDLE_ID: &str = "com.arturgrr.librelog.staging";
+const NIGHTLY_BUNDLE_ID: &str = "com.arturgrr.librelog.nightly";
 
 #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
@@ -50,9 +49,9 @@ pub fn check<R: tauri::Runtime, T: tauri::Manager<R>>(manager: &T) -> EmbeddedCl
         // Windows resolves the install path from local app data, not the home
         // directory, so the two platforms cannot share one message.
         #[cfg(target_os = "windows")]
-        let missing_dir = "Anarlog could not find your local application data directory.";
+        let missing_dir = "Librelog could not find your local application data directory.";
         #[cfg(not(target_os = "windows"))]
-        let missing_dir = "Anarlog could not find your home directory.";
+        let missing_dir = "Librelog could not find your home directory.";
 
         return unavailable_status(command_name, missing_dir);
     };
@@ -79,7 +78,7 @@ pub fn check<R: tauri::Runtime, T: tauri::Manager<R>>(manager: &T) -> EmbeddedCl
                 command_name: command_name.to_string(),
                 install_path: install_path.display().to_string(),
                 state: EmbeddedCliState::ResourceMissing,
-                details: Some("The CLI is not included in this build of Anarlog.".to_string()),
+                details: Some("The CLI is not included in this build of Librelog.".to_string()),
             };
         };
 
@@ -94,7 +93,7 @@ pub fn check<R: tauri::Runtime, T: tauri::Manager<R>>(manager: &T) -> EmbeddedCl
                 command_name: command_name.to_string(),
                 install_path: install_path.display().to_string(),
                 state: EmbeddedCliState::ResourceMissing,
-                details: Some("The CLI is not included in this build of Anarlog.".to_string()),
+                details: Some("The CLI is not included in this build of Librelog.".to_string()),
             };
         };
         let app_version = manager.package_info().version.to_string();
@@ -167,7 +166,7 @@ pub fn install<R: tauri::Runtime, T: tauri::Manager<R>>(
             }
             EmbeddedCliState::Conflict => {
                 return Err(format!(
-                    "Another file already exists at {}. Move it before installing the Anarlog CLI.",
+                    "Another file already exists at {}. Move it before installing the Librelog CLI.",
                     status.install_path
                 ));
             }
@@ -190,7 +189,7 @@ pub fn install<R: tauri::Runtime, T: tauri::Manager<R>>(
             }
             EmbeddedCliState::Conflict => {
                 return Err(format!(
-                    "Another file already exists at {}. Move it before installing the Anarlog CLI.",
+                    "Another file already exists at {}. Move it before installing the Librelog CLI.",
                     status.install_path
                 ));
             }
@@ -224,11 +223,11 @@ fn unavailable_status(command_name: &str, details: &str) -> EmbeddedCliStatus {
 
 fn command_name_from_identifier(identifier: &str) -> &'static str {
     match identifier {
-        STABLE_BUNDLE_ID | LEGACY_STABLE_BUNDLE_ID | FLATPAK_BUNDLE_ID => "anarlog",
-        STAGING_BUNDLE_ID => "anarlog-staging",
-        NIGHTLY_BUNDLE_ID => "anarlog-nightly",
-        DEV_BUNDLE_ID => "anarlog-dev",
-        _ => "anarlog",
+        STABLE_BUNDLE_ID | FLATPAK_BUNDLE_ID => "librelog",
+        STAGING_BUNDLE_ID => "librelog-staging",
+        NIGHTLY_BUNDLE_ID => "librelog-nightly",
+        DEV_BUNDLE_ID => "librelog-dev",
+        _ => "librelog",
     }
 }
 
@@ -237,7 +236,7 @@ fn install_path_for_command(command_name: &str) -> Option<PathBuf> {
     {
         return dirs::data_local_dir().map(|data_dir| {
             data_dir
-                .join("Anarlog")
+                .join("Librelog")
                 .join("bin")
                 .join(format!("{command_name}.exe"))
         });
@@ -285,9 +284,9 @@ fn resolve_resource_path<R: tauri::Runtime, T: tauri::Manager<R>>(manager: &T) -
 #[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 fn sidecar_binary_name() -> &'static str {
     if cfg!(target_os = "windows") {
-        "anarlog-cli.exe"
+        "librelog-cli.exe"
     } else {
-        "anarlog-cli"
+        "librelog-cli"
     }
 }
 
@@ -295,27 +294,27 @@ fn sidecar_binary_name() -> &'static str {
 fn bundled_binary_name() -> Option<&'static str> {
     #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
     {
-        return Some("anarlog-cli-x86_64-pc-windows-msvc.exe");
+        return Some("librelog-cli-x86_64-pc-windows-msvc.exe");
     }
 
     #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
     {
-        return Some("anarlog-cli-aarch64-apple-darwin");
+        return Some("librelog-cli-aarch64-apple-darwin");
     }
 
     #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
     {
-        return Some("anarlog-cli-x86_64-apple-darwin");
+        return Some("librelog-cli-x86_64-apple-darwin");
     }
 
     #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
     {
-        return Some("anarlog-cli-x86_64-unknown-linux-gnu");
+        return Some("librelog-cli-x86_64-unknown-linux-gnu");
     }
 
     #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
     {
-        return Some("anarlog-cli-aarch64-unknown-linux-gnu");
+        return Some("librelog-cli-aarch64-unknown-linux-gnu");
     }
 
     #[allow(unreachable_code)]
@@ -648,7 +647,7 @@ fn is_legacy_app_cli_target(target: &Path) -> bool {
     };
     if !matches!(
         file_name,
-        "anarlog-cli" | "anarlog-cli-aarch64-apple-darwin" | "anarlog-cli-x86_64-apple-darwin"
+        "librelog-cli" | "librelog-cli-aarch64-apple-darwin" | "librelog-cli-x86_64-apple-darwin"
     ) {
         return false;
     }
@@ -675,7 +674,7 @@ fn is_legacy_app_cli_target(target: &Path) -> bool {
 
     matches!(
         app_name,
-        "Anarlog.app" | "Anarlog Staging.app" | "Anarlog Dev.app"
+        "Librelog.app" | "Librelog Staging.app" | "Librelog Dev.app"
     )
 }
 
@@ -683,7 +682,7 @@ fn is_legacy_app_cli_target(target: &Path) -> bool {
 fn details_for_state(state: EmbeddedCliState, install_path: &Path) -> Option<String> {
     match state {
         EmbeddedCliState::Installed => Some(format!(
-            "Installed at {} and managed by Anarlog.",
+            "Installed at {} and managed by Librelog.",
             install_path.display()
         )),
         EmbeddedCliState::Missing => Some(format!(

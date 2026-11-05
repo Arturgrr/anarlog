@@ -333,7 +333,7 @@ async fn attaches_explicitly_without_overwriting_user_title() {
             .unwrap();
     assert_eq!(metadata["pinned"], true);
     assert_eq!(
-        metadata["anarlog_capture_ingest"]["source_id"],
+        metadata["librelog_capture_ingest"]["source_id"],
         "capture-job-1"
     );
 }

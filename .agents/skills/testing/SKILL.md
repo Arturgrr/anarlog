@@ -1,11 +1,11 @@
 ---
 name: testing
-description: "Use when adding, changing, deleting, or reviewing tests in Anarlog (TypeScript, Rust, or node --test scripts), deciding whether a change needs a test, fixing a failing test, or pruning test suites. Covers what is worth testing, what to leave untested, test budgets, and the test-weight report."
+description: "Use when adding, changing, deleting, or reviewing tests in Librelog (TypeScript, Rust, or node --test scripts), deciding whether a change needs a test, fixing a failing test, or pruning test suites. Covers what is worth testing, what to leave untested, test budgets, and the test-weight report."
 ---
 
 # Testing
 
-Use this skill when adding, changing, deleting, or reviewing tests in Anarlog, deciding whether a change needs a test, or pruning a test suite. Tests are code we pay for on every CI run and every refactor; keep the ones that catch real regressions and nothing else.
+Use this skill when adding, changing, deleting, or reviewing tests in Librelog, deciding whether a change needs a test, or pruning a test suite. Tests are code we pay for on every CI run and every refactor; keep the ones that catch real regressions and nothing else.
 
 ## Write a test when
 

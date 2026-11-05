@@ -1,6 +1,6 @@
 # chrome-native-host
 
-Rust binary that bridges the Chrome extension to the Char desktop app.
+Rust binary that bridges the Chrome extension to the Librelog desktop app.
 It is registered as a Chrome Native Messaging host, so Chrome spawns it as a subprocess and communicates over stdio.
 
 ## System diagram
@@ -12,7 +12,7 @@ Google Meet tab
 background.js (service worker)
   │  port.postMessage(payload)   [Chrome Native Messaging]
   ▼
-char-chrome-native-host  ← this binary
+librelog-chrome-native-host  ← this binary
   │  writes atomically
   ▼
 chrome_state.json  (on disk)
@@ -72,7 +72,7 @@ Any unknown `type` is silently ignored.
 
 ## Output: `chrome_state.json`
 
-Written to `{data_dir}/char/chrome_state.json` after every message.
+Written to `{data_dir}/librelog/chrome_state.json` after every message.
 `data_dir` is platform-specific (`dirs::data_dir()`):
 
 - macOS: `~/Library/Application Support`
@@ -116,7 +116,7 @@ The watcher in `crates/detect` treats state older than 30 seconds as stale.
 ## Bundle configuration
 
 For production, the binary is included in the app bundle as a Tauri `externalBin`
-(`tauri.conf.json`), placing it at `Contents/MacOS/char-chrome-native-host` next
+(`tauri.conf.json`), placing it at `Contents/MacOS/librelog-chrome-native-host` next
 to the main executable.
 
 **How `prepare-binaries.mjs` works (runs as `beforeBundleCommand`):**
@@ -129,17 +129,17 @@ to the main executable.
 2. Runs `cargo build --release --target $triple -p chrome-native-host` with
    `cwd` set to `apps/desktop/src-tauri/` so that `.cargo/config.toml`'s
    `target-dir = "target"` applies. Binary lands at
-   `apps/desktop/src-tauri/target/$triple/release/char-chrome-native-host[.exe]`.
+   `apps/desktop/src-tauri/target/$triple/release/librelog-chrome-native-host[.exe]`.
 
-3. Copies it to `binaries/char-chrome-native-host-$triple[.exe]`, which is what
-   `externalBin: ["binaries/char-chrome-native-host"]` expects.
+3. Copies it to `binaries/librelog-chrome-native-host-$triple[.exe]`, which is what
+   `externalBin: ["binaries/librelog-chrome-native-host"]` expects.
 
 No CI steps or `build.rs` changes are needed — `beforeBundleCommand` runs inside
 `tauri build` after the main Cargo step, so the cross-compilation toolchain is
 already present.
 
 For development (`debug_assertions`), no bundling is needed — the runtime resolves
-directly to `target/debug/char-chrome-native-host` built by Cargo as part of the workspace.
+directly to `target/debug/librelog-chrome-native-host` built by Cargo as part of the workspace.
 
 ## Running tests
 

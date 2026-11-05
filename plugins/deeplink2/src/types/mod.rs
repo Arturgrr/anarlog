@@ -60,7 +60,7 @@ mod tests {
                 "s1",
             ),
             (
-                "anarlog://auth/callback?code=ac_nf5hq&state=xYc5ZmNlqtWTu3BIbfbVQg",
+                "librelog://auth/callback?code=ac_nf5hq&state=xYc5ZmNlqtWTu3BIbfbVQg",
                 "ac_nf5hq",
                 "xYc5ZmNlqtWTu3BIbfbVQg",
             ),
@@ -75,10 +75,10 @@ mod tests {
     #[test]
     fn rejects_removed_hosted_service_links() {
         for url in [
-            "anarlog://billing/refresh",
-            "anarlog://integration/callback?integration_id=x&status=success",
-            "anarlog://onboarding-demo/complete",
-            "anarlog://share/open?mode=account&share_id=x",
+            "librelog://billing/refresh",
+            "librelog://integration/callback?integration_id=x&status=success",
+            "librelog://onboarding-demo/complete",
+            "librelog://share/open?mode=account&share_id=x",
         ] {
             assert!(DeepLink::from_str(url).is_err(), "{url}");
         }

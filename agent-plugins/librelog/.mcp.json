@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "anarlog": {
-      "command": "anarlog",
+    "librelog": {
+      "command": "librelog",
       "args": [
         "mcp"
       ]

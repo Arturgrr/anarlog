@@ -449,12 +449,12 @@ mod tests {
         let previous_home = std::env::var("HOME").ok();
         let previous_profile = std::env::var("USERPROFILE").ok();
         unsafe {
-            std::env::set_var("HOME", "/home/anarlog");
+            std::env::set_var("HOME", "/home/librelog");
             std::env::remove_var("USERPROFILE");
         }
         assert_eq!(
             expand_home("~/icons/zoom.png"),
-            "/home/anarlog/icons/zoom.png"
+            "/home/librelog/icons/zoom.png"
         );
         assert_eq!(expand_home("/usr/share/zoom.png"), "/usr/share/zoom.png");
         match previous_home {

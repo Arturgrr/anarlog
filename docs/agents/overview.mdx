@@ -1,20 +1,20 @@
 ---
 title: "Agent overview"
-description: "Give an agent useful Anarlog context without exposing storage internals or unbounded transcripts."
+description: "Give an agent useful Librelog context without exposing storage internals or unbounded transcripts."
 ---
 
-Anarlog gives agents local access to meeting context through the `anarlog` CLI and the local MCP server. Both read the database on your computer, keep reads bounded, and can stage proposals for human review. Nothing is uploaded to an Anarlog server.
+Librelog gives agents local access to meeting context through the `librelog` CLI and the local MCP server. Both read the database on your computer, keep reads bounded, and can stage proposals for human review. Nothing is uploaded to an Librelog server.
 
 | Transport | Choose it when | Output |
 | --- | --- | --- |
 | CLI | The agent has shell access on your computer | JSON with `--json` |
 | Local MCP | The agent supports a local MCP server over stdio | Structured tool results and contextual resources from your database |
 
-Both transports come from the same `anarlog` executable. See [CLI installation](/installation).
+Both transports come from the same `librelog` executable. See [CLI installation](/installation).
 
 ## Recommended agent flow
 
-1. Use local MCP, or check local CLI readiness with `anarlog --json doctor`.
+1. Use local MCP, or check local CLI readiness with `librelog --json doctor`.
 2. List recent meetings or search by a short title fragment.
 3. Use a returned meeting ID. Never infer or invent one.
 4. Fetch the meeting detail before requesting transcript text.
@@ -29,7 +29,7 @@ Local reads work offline and reflect the database on your computer. Report fresh
 
 ## Safety boundary
 
-Agents should use an Anarlog interface, not SQLite. The supported interfaces apply Anarlog's rules for canonical notes, generated summaries, excluded participants, recurring meetings, and transcript text.
+Agents should use an Librelog interface, not SQLite. The supported interfaces apply Librelog's rules for canonical notes, generated summaries, excluded participants, recurring meetings, and transcript text.
 
 Meeting reads stay bounded. An agent cannot apply a note or summary change. It can stage a proposal with CLI `proposals` commands or the local MCP `propose_*` tools. A human reviews the unified diff in the desktop app and applies or declines it. CLI export can create a separate file; replacing a file requires `--force`.
 
@@ -42,8 +42,8 @@ An agent can also import a recording with CLI `meetings import` or the MCP `impo
   <Card title="MCP for agents" icon="plug" href="/agents/mcp">
     Run the local MCP server over stdio.
   </Card>
-  <Card title="Anarlog skill" icon="book" href="/agents/skills">
-    Teach a compatible agent the Anarlog workflow.
+  <Card title="Librelog skill" icon="book" href="/agents/skills">
+    Teach a compatible agent the Librelog workflow.
   </Card>
   <Card title="Webhooks" icon="webhook" href="/reference/webhooks">
     Receive signed meeting events at your endpoint.

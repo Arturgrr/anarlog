@@ -1,6 +1,6 @@
-# Anarlog documentation
+# Librelog documentation
 
-This Mintlify project holds the Anarlog user, CLI, and agent documentation. There is no hosted documentation site yet; read the pages in this directory or preview them locally.
+This Mintlify project holds the Librelog user, CLI, and agent documentation. There is no hosted documentation site yet; read the pages in this directory or preview them locally.
 
 ## Local preview
 
@@ -12,7 +12,7 @@ cd docs
 mint dev
 ```
 
-Update `docs.json` whenever a page is added, moved, or removed. Keep CLI and MCP reference content aligned with `apps/cli/src/cli.rs` and `apps/cli/src/mcp.rs`. `skill.md` is generated from `../skills/anarlog/`; keep them aligned.
+Update `docs.json` whenever a page is added, moved, or removed. Keep CLI and MCP reference content aligned with `apps/cli/src/cli.rs` and `apps/cli/src/mcp.rs`. `skill.md` is generated from `../skills/librelog/`; keep them aligned.
 
 Before submitting changes, run:
 

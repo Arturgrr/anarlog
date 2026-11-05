@@ -1,15 +1,12 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Anarlog Nightly",
-  "mainBinaryName": "anarlog-nightly",
-  "identifier": "com.hyprnote.nightly",
+  "productName": "Librelog Nightly",
+  "mainBinaryName": "librelog-nightly",
+  "identifier": "com.arturgrr.librelog.nightly",
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "anarlog-nightly",
-          "hyprnote-nightly"
-        ]
+        "schemes": ["librelog-nightly"]
       }
     },
     "updater": {

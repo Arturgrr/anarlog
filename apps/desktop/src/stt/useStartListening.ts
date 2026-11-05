@@ -265,7 +265,7 @@ export function useStartListeningState(
       excludedTexts: [MEETING_DISCLOSURE_MESSAGE],
       onParticipantDeclined: () => {
         toast.warning(
-          "A participant declined recording. Anarlog stopped listening.",
+          "A participant declined recording. Librelog stopped listening.",
           { id: "meeting-consent-declined", duration: Infinity },
         );
         stop();

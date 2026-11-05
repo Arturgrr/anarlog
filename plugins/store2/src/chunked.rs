@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 // Windows Credential Manager caps a credential blob at 2560 bytes, i.e. 1280
 // UTF-16 code units. Secrets that exceed a platform's limit are split across
 // chunk entries, and the primary entry holds a manifest pointing at them.
-const MANIFEST_PREFIX: &str = "anarlog-secure-store-chunks:v1:";
+const MANIFEST_PREFIX: &str = "librelog-secure-store-chunks:v1:";
 const CHUNK_UTF16_UNITS: usize = 1024;
 
 pub(crate) trait SecretSlot {
@@ -426,12 +426,12 @@ mod tests {
     #[test]
     fn ignores_values_that_only_resemble_a_manifest() {
         assert_eq!(
-            Manifest::parse("anarlog-secure-store-chunks:v1:abc:0"),
+            Manifest::parse("librelog-secure-store-chunks:v1:abc:0"),
             None
         );
-        assert_eq!(Manifest::parse("anarlog-secure-store-chunks:v1::2"), None);
+        assert_eq!(Manifest::parse("librelog-secure-store-chunks:v1::2"), None);
         assert_eq!(
-            Manifest::parse("anarlog-secure-store-chunks:v1:1a2b:3"),
+            Manifest::parse("librelog-secure-store-chunks:v1:1a2b:3"),
             Some(Manifest {
                 generation: "1a2b".to_string(),
                 count: 3,

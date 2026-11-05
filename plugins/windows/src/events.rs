@@ -212,12 +212,12 @@ mod test {
     fn navigate_from_str() {
         let test_cases = vec![
             (
-                "anarlog://example.com/app/new?calendarEventId=123&record=true",
+                "librelog://example.com/app/new?calendarEventId=123&record=true",
                 "/app/new",
                 Some(serde_json::json!({ "calendarEventId": "123", "record": "true" })),
             ),
             (
-                "hyprnote://example.org/app/new?record=true",
+                "librelog-dev://example.org/app/new?record=true",
                 "/app/new",
                 Some(serde_json::json!({ "record": "true" })),
             ),

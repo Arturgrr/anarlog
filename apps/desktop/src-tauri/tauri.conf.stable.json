@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Anarlog",
-  "mainBinaryName": "anarlog",
-  "identifier": "com.hyprnote.stable",
+  "productName": "Librelog",
+  "mainBinaryName": "librelog",
+  "identifier": "com.arturgrr.librelog",
   "bundle": {
     "icon": [
       "icons/stable/32x32.png",
@@ -11,13 +11,6 @@
       "icons/stable/icon.icns",
       "icons/stable/icon.ico"
     ],
-    "linux": {
-      "deb": {
-        "provides": ["char"],
-        "conflicts": ["char"],
-        "replaces": ["char"]
-      }
-    },
     "macOS": {
       "files": {
         "Resources/AppIcon.icns": "resources/graphite/AppIcon.icns"
@@ -31,12 +24,12 @@
   },
   "plugins": {
     "deep-link": {
-      "desktop": { "schemes": ["anarlog", "hyprnote"] }
+      "desktop": { "schemes": ["librelog"] }
     },
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/Arturgrr/anarlog/releases/latest/download/latest.json"
+        "https://github.com/Arturgrr/librelog/releases/latest/download/latest.json"
       ]
     }
   }

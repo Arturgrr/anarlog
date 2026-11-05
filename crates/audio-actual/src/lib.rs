@@ -15,7 +15,7 @@ pub use anlg_audio::{AudioProvider, CaptureConfig, CaptureFrame, CaptureStream, 
 pub use anlg_audio_interface::AsyncSource;
 use futures_util::Stream;
 
-pub const TAP_DEVICE_NAME: &str = "anarlog-audio-tap";
+pub const TAP_DEVICE_NAME: &str = "librelog-audio-tap";
 
 pub struct AudioOutput {}
 

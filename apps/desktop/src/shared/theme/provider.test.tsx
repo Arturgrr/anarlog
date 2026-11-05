@@ -17,7 +17,7 @@ const setDockIcon = vi.hoisted(() =>
   vi.fn(async () => ({ status: "ok", data: null })),
 );
 const getIdentifier = vi.hoisted(() =>
-  vi.fn(async () => "com.hyprnote.stable"),
+  vi.fn(async () => "com.arturgrr.librelog"),
 );
 const nativeTheme = vi.hoisted(() => vi.fn(async () => "light"));
 const setNativeTheme = vi.hoisted(() => vi.fn(async () => undefined));
@@ -85,7 +85,7 @@ describe("AppThemeProvider", () => {
     writeStoredThemePreference.mockClear();
     setDockIcon.mockClear();
     getIdentifier.mockReset();
-    getIdentifier.mockResolvedValue("com.hyprnote.stable");
+    getIdentifier.mockResolvedValue("com.arturgrr.librelog");
     nativeTheme.mockReset();
     nativeTheme.mockResolvedValue("light");
     setNativeTheme.mockReset();
@@ -148,7 +148,7 @@ describe("AppThemeProvider", () => {
   it.each([
     {
       name: "dev channel default",
-      identifier: "com.hyprnote.dev",
+      identifier: "com.arturgrr.librelog.dev",
       appIcon: "default",
       expected: "light",
     },
@@ -160,13 +160,13 @@ describe("AppThemeProvider", () => {
     },
     {
       name: "removed icon variant",
-      identifier: "com.hyprnote.stable",
+      identifier: "com.arturgrr.librelog",
       appIcon: "anagram",
       expected: "graphite",
     },
     {
       name: "light selection",
-      identifier: "com.hyprnote.stable",
+      identifier: "com.arturgrr.librelog",
       appIcon: "light",
       expected: "light",
     },

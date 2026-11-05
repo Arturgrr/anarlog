@@ -16,7 +16,7 @@ const STATUS_DECLINED: &str = "declined";
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct CreateProposalInput {
-    #[schemars(description = "Anarlog meeting id")]
+    #[schemars(description = "Librelog meeting id")]
     pub meeting_id: String,
     #[schemars(description = "summary_replace or memo_replace")]
     pub kind: String,

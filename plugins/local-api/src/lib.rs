@@ -494,7 +494,7 @@ mod test {
             .join(commands::markdown_export_filename(&export.meeting));
         let written = std::fs::read_to_string(path).unwrap();
         let content = written
-            .strip_prefix("<!-- anarlog:legacy-markdown-export \"meeting-1\" -->\n\n")
+            .strip_prefix("<!-- librelog:legacy-markdown-export \"meeting-1\" -->\n\n")
             .unwrap_or(&written);
         assert_eq!(content, format!("{}\n", export.to_markdown()));
         assert_eq!(std::fs::read_dir(directory.path()).unwrap().count(), 1);
@@ -568,7 +568,7 @@ mod test {
         assert!(
             !std::fs::read_to_string(&path)
                 .unwrap()
-                .starts_with("<!-- anarlog:legacy-markdown-export")
+                .starts_with("<!-- librelog:legacy-markdown-export")
         );
         export.meeting.title = "Planning updated".to_string();
         commands::write_markdown_export(directory.path(), &export).unwrap();

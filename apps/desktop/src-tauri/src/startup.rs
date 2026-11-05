@@ -156,18 +156,18 @@ pub fn exit_for_running_peer_channel(identifier: &str, peer: &str) -> ! {
 
 fn channel_product_name(identifier: &str) -> &'static str {
     if identifier == crate::db::NIGHTLY_BUNDLE_ID {
-        "Anarlog Nightly"
+        "Librelog Nightly"
     } else {
-        "Anarlog"
+        "Librelog"
     }
 }
 
 pub fn exit_for_already_running_instance() -> ! {
-    eprintln!("another Anarlog process holds the launch lock; exiting");
+    eprintln!("another Librelog process holds the launch lock; exiting");
 
     #[cfg(target_os = "macos")]
     {
-        let alert = "display alert \"Anarlog is already starting\" message \"Another Anarlog process is preparing your data, possibly finishing an update. The app will open automatically when it is ready.\" buttons {\"OK\"} default button \"OK\"";
+        let alert = "display alert \"Librelog is already starting\" message \"Another Librelog process is preparing your data, possibly finishing an update. The app will open automatically when it is ready.\" buttons {\"OK\"} default button \"OK\"";
         let _ = std::process::Command::new("/usr/bin/osascript")
             .args(["-e", alert])
             .spawn();
@@ -247,7 +247,7 @@ impl SlowStartupIndicator {
 
 #[cfg(target_os = "macos")]
 fn spawn_indicator_alert() -> Option<std::process::Child> {
-    let alert = "display alert \"Updating your data\" message \"Anarlog is updating your data. This can take several minutes for a large library.\\n\\nPlease keep Anarlog running; it will open automatically when the update finishes.\" buttons {\"OK\"} default button \"OK\"";
+    let alert = "display alert \"Updating your data\" message \"Librelog is updating your data. This can take several minutes for a large library.\\n\\nPlease keep Librelog running; it will open automatically when the update finishes.\" buttons {\"OK\"} default button \"OK\"";
     std::process::Command::new("/usr/bin/osascript")
         .args(["-e", alert])
         .spawn()
@@ -301,24 +301,24 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let stable = dir
             .path()
-            .join(channel_lock_filename("com.hyprnote.stable"));
+            .join(channel_lock_filename("com.arturgrr.librelog"));
         let nightly = dir
             .path()
-            .join(channel_lock_filename("com.hyprnote.nightly"));
+            .join(channel_lock_filename("com.arturgrr.librelog.nightly"));
 
-        let stable_lock = lock_channel_files(&stable, &nightly, "com.hyprnote.nightly");
+        let stable_lock = lock_channel_files(&stable, &nightly, "com.arturgrr.librelog.nightly");
         assert!(matches!(stable_lock, ChannelLockState::Acquired(Some(_))));
 
         assert!(matches!(
-            lock_channel_files(&nightly, &stable, "com.hyprnote.stable"),
+            lock_channel_files(&nightly, &stable, "com.arturgrr.librelog"),
             ChannelLockState::PeerRunning {
-                peer: "com.hyprnote.stable"
+                peer: "com.arturgrr.librelog"
             }
         ));
 
         drop(stable_lock);
         assert!(matches!(
-            lock_channel_files(&nightly, &stable, "com.hyprnote.stable"),
+            lock_channel_files(&nightly, &stable, "com.arturgrr.librelog"),
             ChannelLockState::Acquired(Some(_))
         ));
     }
@@ -328,15 +328,15 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let stable = dir
             .path()
-            .join(channel_lock_filename("com.hyprnote.stable"));
+            .join(channel_lock_filename("com.arturgrr.librelog"));
         let nightly = dir
             .path()
-            .join(channel_lock_filename("com.hyprnote.nightly"));
+            .join(channel_lock_filename("com.arturgrr.librelog.nightly"));
 
-        let _running = lock_channel_files(&stable, &nightly, "com.hyprnote.nightly");
+        let _running = lock_channel_files(&stable, &nightly, "com.arturgrr.librelog.nightly");
 
         assert!(matches!(
-            lock_channel_files(&stable, &nightly, "com.hyprnote.nightly"),
+            lock_channel_files(&stable, &nightly, "com.arturgrr.librelog.nightly"),
             ChannelLockState::Acquired(None)
         ));
     }

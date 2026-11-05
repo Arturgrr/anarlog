@@ -1,14 +1,14 @@
 ---
 title: "Models and providers"
-description: "See which models Anarlog uses for transcription, summaries, and chat."
+description: "See which models Librelog uses for transcription, summaries, and chat."
 ---
 
-Anarlog does not hide one model behind the whole app. It keeps two independent selections:
+Librelog does not hide one model behind the whole app. It keeps two independent selections:
 
 - **Transcription** turns meeting audio into text.
 - **Intelligence** turns text into summaries, titles, and chat responses.
 
-Open **Settings → Transcription** and **Settings → Intelligence** to see the selection active on your computer. Changing one selection does not change the other. Each selection uses either a model that runs on your computer or a provider you configure with your own credentials. Anarlog has no hosted model of its own.
+Open **Settings → Transcription** and **Settings → Intelligence** to see the selection active on your computer. Changing one selection does not change the other. Each selection uses either a model that runs on your computer or a provider you configure with your own credentials. Librelog has no hosted model of its own.
 
 ## How a meeting moves through AI
 
@@ -22,7 +22,7 @@ Recording, editing, and local storage do not require an AI model. A hosted Trans
 
 ## On-device models
 
-Anarlog currently offers three built-in on-device Transcription providers. Settings shows each provider only when it is supported by your Mac and release. Soniqo models download directly from Hugging Face the first time you select them.
+Librelog currently offers three built-in on-device Transcription providers. Settings shows each provider only when it is supported by your Mac and release. Soniqo models download directly from Hugging Face the first time you select them.
 
 | Provider | Model | When it runs | Requirements |
 | --- | --- | --- | --- |
@@ -31,7 +31,7 @@ Anarlog currently offers three built-in on-device Transcription providers. Setti
 | Apple Speech | Apple Speech | During the meeting | macOS 26 with a supported language added in System Settings. Live transcription uses one language at a time from German, English, Spanish, French, Italian, Japanese, Korean, Portuguese, Cantonese, or Chinese. |
 | BYO-model | A whisper.cpp `.bin` you select | After recording | Apple Silicon. Settings marks this provider **On device** and offers **Choose a .bin model** for the file picker. transcribe.cpp `.gguf` files are not supported yet. |
 
-Parakeet Batch does not always provide word-level audio timestamps. When it returns text without a usable speech alignment, Anarlog keeps the individual words editable and groups the display by audio channel and processing chunk. The order between channels within a chunk is uncertain, and those words cannot be used for precise audio seeking. Speech-aligned words retain their timing.
+Parakeet Batch does not always provide word-level audio timestamps. When it returns text without a usable speech alignment, Librelog keeps the individual words editable and groups the display by audio channel and processing chunk. The order between channels within a chunk is uncertain, and those words cannot be used for precise audio seeking. Speech-aligned words retain their timing.
 
 You can also keep audio on your network by pointing **Custom**, or Deepgram's **Advanced** base URL, at a Deepgram-compatible server on this computer or your local network.
 
@@ -39,11 +39,11 @@ You can also keep audio on your network by pointing **Custom**, or Deepgram's **
   Compatibility code still recognizes some older local model IDs, but they are not offered as new choices. The table above is the current user-facing model list.
 </Note>
 
-If you select Parakeet Streaming and also download Parakeet Batch, Anarlog can refine speaker labels on-device after a meeting with multiple remote participants.
+If you select Parakeet Streaming and also download Parakeet Batch, Librelog can refine speaker labels on-device after a meeting with multiple remote participants.
 
-For local summaries and chat, connect **LM Studio**, **Ollama**, or **Unsloth** and choose any compatible model they serve. Anarlog does not silently substitute another model. **Apple Intelligence** is also available as an experimental, text-only Intelligence provider on eligible Macs running macOS 26 or later.
+For local summaries and chat, connect **LM Studio**, **Ollama**, or **Unsloth** and choose any compatible model they serve. Librelog does not silently substitute another model. **Apple Intelligence** is also available as an experimental, text-only Intelligence provider on eligible Macs running macOS 26 or later.
 
-If a selected local model or server is unavailable, Anarlog reports a connection error instead of sending the request to another provider.
+If a selected local model or server is unavailable, Librelog reports a connection error instead of sending the request to another provider.
 
 ## Other model-backed features
 
@@ -59,14 +59,14 @@ Not every AI-adjacent feature is controlled by AI Settings:
 
 When you configure a provider with your own API key:
 
-- Anarlog sends requests directly from the desktop app to the configured base URL.
+- Librelog sends requests directly from the desktop app to the configured base URL.
 - The provider and exact model shown in Settings handle the request.
-- Anarlog stores the API key in your operating system's secure credential store, not in the app database. Keys stay on that computer.
+- Librelog stores the API key in your operating system's secure credential store, not in the app database. Keys stay on that computer.
 - The provider's pricing, retention, and training policies apply.
 
-Anarlog supports dedicated provider integrations and OpenAI-compatible endpoints. Intelligence model lists are loaded from the provider when its API supports discovery, so **Settings → Intelligence** is the current source of truth for available model IDs.
+Librelog supports dedicated provider integrations and OpenAI-compatible endpoints. Intelligence model lists are loaded from the provider when its API supports discovery, so **Settings → Intelligence** is the current source of truth for available model IDs.
 
-You can also connect a subscription for Intelligence instead of an API key: **Claude**, **ChatGPT**, **Grok**, **GitHub Copilot**, or **Kimi Code**. Open **Settings → Intelligence → Configure Providers** and use **Connect**. Anarlog signs in with that provider directly.
+You can also connect a subscription for Intelligence instead of an API key: **Claude**, **ChatGPT**, **Grok**, **GitHub Copilot**, or **Kimi Code**. Open **Settings → Intelligence → Configure Providers** and use **Connect**. Librelog signs in with that provider directly.
 
 Recent bring-your-own Intelligence providers include **Venice**, configured with a Venice API key, and **Meta Muse** (`muse-spark-1.3` and the other `muse-spark` models), configured with a Meta Model API key.
 
@@ -82,7 +82,7 @@ Recent bring-your-own Transcription models in Settings include:
 - **NVIDIA Speech NIM** for live transcription through your own deployed NIM server. NVIDIA's hosted gRPC endpoint is not supported.
 - **Amazon Bedrock** for after-recording transcription through an OpenAI-compatible gateway exposing `/audio/transcriptions`. Native Bedrock endpoints are not supported.
 
-Anarlog transcribes **AssemblyAI Universal-3.5 Pro** (`universal-3-5-pro`) recordings once after you stop. Older Universal-3 Pro selections now use Universal-3.5 Pro. Processing the whole meeting preserves speaker labels across the recording instead of restarting them for each minute.
+Librelog transcribes **AssemblyAI Universal-3.5 Pro** (`universal-3-5-pro`) recordings once after you stop. Older Universal-3 Pro selections now use Universal-3.5 Pro. Processing the whole meeting preserves speaker labels across the recording instead of restarting them for each minute.
 
 The new live-only providers keep credentials unverified until transcription starts. If live transcription fails, keep the recording and retry with a provider that supports after-recording transcription.
 
@@ -96,4 +96,4 @@ Settings may still show older model IDs for compatibility. Prefer the current Ge
 | Avoid per-minute transcription bills | Use on-device models or a local Deepgram-compatible server | Use a local Intelligence provider or a connected subscription |
 | Pin exact model IDs | Configure your own provider | Configure your own provider |
 
-To compare on-device and bring-your-own-key cost, see [How can I compare the costs of all the transcription options?](/help#compare-transcription-costs). For every on-device path, see [How can I use on-device models?](/help#use-on-device-models). For a fully local checklist, see [Use Anarlog offline](/offline). For the data sent by each feature, see [Data, privacy, and retention](/data-and-privacy).
+To compare on-device and bring-your-own-key cost, see [How can I compare the costs of all the transcription options?](/help#compare-transcription-costs). For every on-device path, see [How can I use on-device models?](/help#use-on-device-models). For a fully local checklist, see [Use Librelog offline](/offline). For the data sent by each feature, see [Data, privacy, and retention](/data-and-privacy).

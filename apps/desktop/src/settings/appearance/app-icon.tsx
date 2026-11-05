@@ -26,7 +26,7 @@ export function AppIconSelector() {
   const { t } = useLingui();
   const value = normalizeAppIconPreference(useConfigValue("app_icon"));
   const setAppIcon = useSetSettingValue("app_icon");
-  const { data: appIdentifier = "com.hyprnote.stable" } = useQuery({
+  const { data: appIdentifier = "com.arturgrr.librelog" } = useQuery({
     queryKey: ["tauri", "app-identifier"],
     queryFn: getIdentifier,
     staleTime: Infinity,
@@ -48,7 +48,7 @@ export function AppIconSelector() {
           <Trans>App icon</Trans>
         </h3>
         <p className="text-muted-foreground mt-1 text-sm">
-          <Trans>Choose how Anarlog appears in the Dock.</Trans>
+          <Trans>Choose how Librelog appears in the Dock.</Trans>
         </p>
       </div>
       <div

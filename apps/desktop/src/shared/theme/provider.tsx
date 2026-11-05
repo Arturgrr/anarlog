@@ -135,7 +135,7 @@ function applyAppearance(theme: ThemePreference, systemIsDark: boolean) {
 
 export async function applyAppIconPreference(appIcon: AppIconPreference) {
   const appIdentifier = await getIdentifier().catch(
-    () => "com.hyprnote.stable",
+    () => "com.arturgrr.librelog",
   );
 
   try {

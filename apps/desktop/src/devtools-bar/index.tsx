@@ -65,7 +65,7 @@ const CHANNEL_TEXT: Record<BuildChannel, string> = {
   stable: "text-neutral-200",
 };
 
-const COLLAPSED_STORAGE_KEY = "anarlog:devtools-bar:collapsed";
+const COLLAPSED_STORAGE_KEY = "librelog:devtools-bar:collapsed";
 
 const ITEM_CLASS = "flex items-center gap-1.5 px-2";
 const BUTTON_CLASS = cn([

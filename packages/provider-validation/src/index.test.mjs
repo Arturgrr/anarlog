@@ -141,7 +141,7 @@ test("a gateway must accept the candidate key and reject the control key", async
   );
   assert.deepEqual(keys, [
     "Bearer synthetic-key",
-    "Bearer anarlog-invalid-key-verification",
+    "Bearer librelog-invalid-key-verification",
   ]);
 });
 
@@ -196,7 +196,7 @@ test("Vertex verifies tokens through the beta publisher catalog, separate from t
     },
     {
       url: "https://us-central1-aiplatform.googleapis.com/v1beta1/publishers/google/models?pageSize=1",
-      authorization: "Bearer anarlog-invalid-key-verification",
+      authorization: "Bearer librelog-invalid-key-verification",
     },
   ]);
 });
@@ -413,7 +413,7 @@ test("Nari verifies keys using its non-billable authenticated voice catalog", as
   assert.equal(requests[0].init.headers.Authorization, "Bearer synthetic-key");
   assert.equal(
     requests[1].init.headers.Authorization,
-    "Bearer anarlog-invalid-key-verification",
+    "Bearer librelog-invalid-key-verification",
   );
 });
 
@@ -440,7 +440,7 @@ test("validates Wispr Flow with its authenticated warmup endpoint", async () => 
   assert.equal(requests[0].init.headers.Authorization, "Bearer synthetic-key");
   assert.equal(
     requests[1].init.headers.Authorization,
-    "Bearer anarlog-invalid-key-verification",
+    "Bearer librelog-invalid-key-verification",
   );
 });
 

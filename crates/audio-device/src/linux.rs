@@ -22,7 +22,7 @@ impl PulseConnection {
             Error::AudioSystemError("Failed to create PulseAudio mainloop".into())
         })?;
 
-        let context = Context::new(&mainloop, "anarlog-audio-device")
+        let context = Context::new(&mainloop, "librelog-audio-device")
             .ok_or_else(|| Error::AudioSystemError("Failed to create PulseAudio context".into()))?;
 
         Ok(Self { mainloop, context })
@@ -564,7 +564,7 @@ pub fn is_headphone_port(port_name: &str) -> bool {
 pub fn is_headphone_from_default_output_device() -> Option<bool> {
     let mut mainloop = Mainloop::new()?;
 
-    let mut context = Context::new(&mainloop, "anarlog-headphone-check")?;
+    let mut context = Context::new(&mainloop, "librelog-headphone-check")?;
 
     if context
         .connect(None, ContextFlagSet::NOFLAGS, None)

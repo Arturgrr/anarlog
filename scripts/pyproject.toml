@@ -1,5 +1,5 @@
 [project]
-name = "anarlog-scripts"
+name = "librelog-scripts"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Yujong Lee", email = "yujonglee.dev@gmail.com" }]
@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-name = "anarlog-scripts"
+name = "librelog-scripts"
 version = "0.1.0"
 description = ""
 authors = ["Yujong Lee <yujonglee.dev@gmail.com>"]

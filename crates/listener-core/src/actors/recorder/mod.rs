@@ -363,7 +363,7 @@ mod tests {
 
     #[test]
     fn writer_path_admission_rejects_overlapping_session_writers() {
-        let path = std::env::temp_dir().join(format!("anarlog-recorder-{}", uuid::Uuid::new_v4()));
+        let path = std::env::temp_dir().join(format!("librelog-recorder-{}", uuid::Uuid::new_v4()));
         let first = try_reserve_writer_path(path.clone()).unwrap();
 
         assert!(try_reserve_writer_path(path.clone()).is_err());

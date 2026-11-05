@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   setAppIcon: vi.fn(),
   applyAppIconPreference: vi.fn(),
   appIcon: "default",
-  appIdentifier: "com.hyprnote.stable" as string | undefined,
+  appIdentifier: "com.arturgrr.librelog" as string | undefined,
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -41,7 +41,7 @@ describe("AppIconSelector", () => {
     vi.clearAllMocks();
     mocks.platform.mockReturnValue("macos");
     mocks.appIcon = "default";
-    mocks.appIdentifier = "com.hyprnote.stable";
+    mocks.appIdentifier = "com.arturgrr.librelog";
   });
 
   it("applies and stores the selected icon", () => {
@@ -60,8 +60,8 @@ describe("AppIconSelector", () => {
   });
 
   it.each([
-    ["a removed icon variant", "walnut", "com.hyprnote.stable", "Graphite"],
-    ["the dev channel default", "default", "com.hyprnote.dev", "Light"],
+    ["a removed icon variant", "walnut", "com.arturgrr.librelog", "Graphite"],
+    ["the dev channel default", "default", "com.arturgrr.librelog.dev", "Light"],
   ])("selects the resolved icon for %s", (_, appIcon, identifier, label) => {
     mocks.appIcon = appIcon;
     mocks.appIdentifier = identifier;

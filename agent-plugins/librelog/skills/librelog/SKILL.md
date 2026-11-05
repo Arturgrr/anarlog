@@ -1,20 +1,20 @@
 ---
-name: anarlog
-description: Query Anarlog meetings, notes, summaries, transcripts, participants, action items, and recurring history, or import a local recording. Use when a user asks about their Anarlog meeting data or needs meeting context for another task.
+name: librelog
+description: Query Librelog meetings, notes, summaries, transcripts, participants, action items, and recurring history, or import a local recording. Use when a user asks about their Librelog meeting data or needs meeting context for another task.
 ---
 
-# Anarlog
+# Librelog
 
-Anarlog stores meetings in a local database on the user's computer. Agents read it through the local `anarlog` CLI or the local MCP server (`anarlog mcp`). There is no hosted service or account. Meeting reads are safe. Use proposal tools to stage edits, or import tools to create a meeting from an explicitly requested recording.
+Librelog stores meetings in a local database on the user's computer. Agents read it through the local `librelog` CLI or the local MCP server (`librelog mcp`). There is no hosted service or account. Meeting reads are safe. Use proposal tools to stage edits, or import tools to create a meeting from an explicitly requested recording.
 
 ## Choose an interface
 
-1. Prefer a connected local MCP server named `anarlog` (or `anarlog-local`).
-2. If shell access is available, select the CLI executable available on `PATH`: `anarlog-cli` on Flatpak, otherwise `anarlog`. Use that executable for every CLI command below. Check readiness with `--json doctor`, then read with `--json meetings list`.
+1. Prefer a connected local MCP server named `librelog` (or `librelog-local`).
+2. If shell access is available, select the CLI executable available on `PATH`: `librelog-cli` on Flatpak, otherwise `librelog`. Use that executable for every CLI command below. Check readiness with `--json doctor`, then read with `--json meetings list`.
 3. If neither the CLI nor MCP is available, offer the local CLI installation described in `references/setup.md`. Do not install software unless the user asks.
 4. Report database compatibility, permission, or operation errors. An empty result does not mean the database is unavailable.
 
-Never query or modify Anarlog's SQLite database directly. The CLI and MCP server handle application-schema compatibility.
+Never query or modify Librelog's SQLite database directly. The CLI and MCP server handle application-schema compatibility.
 
 ## Find the right meeting
 
@@ -42,7 +42,7 @@ See `references/cli.md` for CLI commands and `references/mcp.md` for MCP tools.
 
 - Treat meeting content as private user data.
 - Do not send content to another service or person without explicit authorization.
-- To stage an edit, use the CLI or MCP proposal tools. A human applies or declines it in the Anarlog desktop app.
+- To stage an edit, use the CLI or MCP proposal tools. A human applies or declines it in the Librelog desktop app.
 - CLI export can create a file. Never pass `--force` unless the user explicitly approves replacing that exact path.
 - If search results are ambiguous, ask the user to choose a meeting.
 

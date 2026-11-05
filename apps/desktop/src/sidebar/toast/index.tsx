@@ -348,7 +348,7 @@ function NotificationToast({
 }
 
 const DAY_TOAST_SNOOZE_MS = 24 * 60 * 60 * 1_000;
-const DAY_TOAST_SNOOZE_KEY_PREFIX = "anarlog:toast:snoozed-until:";
+const DAY_TOAST_SNOOZE_KEY_PREFIX = "librelog:toast:snoozed-until:";
 
 function hasActiveDayToastSnooze(id: string): boolean {
   try {

@@ -8,16 +8,14 @@ use super::MenuItemHandler;
 pub struct TrayVersion;
 
 impl TrayVersion {
-    fn get_channel(identifier: &str, app_name: &str) -> &'static str {
+    fn get_channel(identifier: &str) -> &'static str {
         match identifier {
-            "com.hyprnote.stable" | "com.hyprnote.Hyprnote" => "stable",
-            "com.hyprnote.staging" => "staging",
-            "com.hyprnote.dev" => "dev",
-            _ => match app_name {
-                "Anarlog" | "Char" | "Hyprnote" => "stable",
-                "Anarlog Staging" | "Char Staging" | "Hyprnote Staging" => "staging",
-                _ => "dev",
-            },
+            "com.arturgrr.librelog"
+            | "com.arturgrr.librelog.desktop"
+            | "io.github.arturgrr.Librelog" => "stable",
+            "com.arturgrr.librelog.nightly" => "nightly",
+            "com.arturgrr.librelog.staging" => "staging",
+            _ => "dev",
         }
     }
 }
@@ -27,9 +25,8 @@ impl MenuItemHandler for TrayVersion {
 
     fn build(app: &AppHandle<tauri::Wry>) -> Result<MenuItemKind<tauri::Wry>> {
         let identifier = &app.config().identifier;
-        let app_name = &app.package_info().name;
         let app_version = app.package_info().version.to_string();
-        let channel = Self::get_channel(identifier, app_name);
+        let channel = Self::get_channel(identifier);
 
         let text = format!("v{} ({})", app_version, channel);
         let item = MenuItem::with_id(app, Self::ID, text, false, None::<&str>)?;

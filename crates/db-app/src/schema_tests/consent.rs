@@ -10,7 +10,7 @@ async fn consent_evidence_tables_stay_local_only() {
            message_version, message, delivery, failure_reason
          ) VALUES (
            'attempt-1', 'session-1', '2026-08-21T00:00:00Z', 'slack_huddle', 'huddle',
-           'anarlog-disclosure-v1', 'disclosure', 'sent', ''
+           'librelog-disclosure-v1', 'disclosure', 'sent', ''
          )",
     )
     .execute(db.pool())

@@ -56,9 +56,8 @@ fn expand_home(path: &str) -> String {
 }
 
 fn default_app_icon() -> Option<Pixbuf> {
-    icon_theme_pixbuf("com.hyprnote.dev")
-        .or_else(|| icon_theme_pixbuf("anarlog"))
-        .or_else(|| icon_theme_pixbuf("hyprnote"))
+    icon_theme_pixbuf("librelog")
+        .or_else(|| icon_theme_pixbuf("io.github.arturgrr.Librelog"))
         .or_else(|| icon_theme_pixbuf("application-x-executable"))
 }
 
@@ -120,11 +119,11 @@ mod tests {
     fn expands_home_prefixed_icon_paths() {
         let previous = std::env::var("HOME").ok();
         unsafe {
-            std::env::set_var("HOME", "/home/anarlog");
+            std::env::set_var("HOME", "/home/librelog");
         }
         assert_eq!(
             expand_home("~/icons/zoom.svg"),
-            "/home/anarlog/icons/zoom.svg"
+            "/home/librelog/icons/zoom.svg"
         );
         assert_eq!(expand_home("/usr/share/zoom.png"), "/usr/share/zoom.png");
         match previous {

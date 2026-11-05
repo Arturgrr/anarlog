@@ -165,7 +165,7 @@ function createDesktopUpdateToast(
       // A new ID separates the finished notification from the loading state while
       // this update was downloading.
       id: `${id}:ready`,
-      description: t`Anarlog ${update.version} is ready to install`,
+      description: t`Librelog ${update.version} is ready to install`,
       primaryAction: update.installing
         ? undefined
         : { label: t`Restart`, onClick: update.installUpdate },
@@ -180,7 +180,7 @@ function createDesktopUpdateToast(
         : ` (${Math.round(update.progress * 100)}%)`;
     return {
       id: `${id}:downloading`,
-      description: t`Downloading Anarlog ${update.version}${progress}`,
+      description: t`Downloading Librelog ${update.version}${progress}`,
       lifecycle: { type: "persistent", dismissal: "session" },
       loading: true,
     };
@@ -200,7 +200,7 @@ function createDesktopUpdateToast(
 
   return {
     id: `${id}:available`,
-    description: t`Anarlog ${update.version} is available`,
+    description: t`Librelog ${update.version} is available`,
     primaryAction: busy
       ? undefined
       : { label: t`Download`, onClick: update.downloadUpdate },

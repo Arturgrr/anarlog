@@ -242,7 +242,7 @@ export function NotificationSettingsView() {
                   description={
                     <Trans>
                       Ask before stopping when a meeting may have ended. When
-                      alerts are off, Anarlog keeps listening.
+                      alerts are off, Librelog keeps listening.
                     </Trans>
                   }
                   checked={field.state.value}

@@ -15,13 +15,13 @@ If you're on an older version, update to the latest release before reporting an 
 
 Please do not open a public issue for security vulnerabilities.
 
-Report it privately through [GitHub Security Advisories](https://github.com/Arturgrr/anarlog/security/advisories/new) on this repository.
+Report it privately through [GitHub Security Advisories](https://github.com/Arturgrr/librelog/security/advisories/new) on this repository.
 
 When reporting, please include:
 
 - A description of the vulnerability and its potential impact
 - Steps to reproduce, a proof of concept, or affected code paths
-- The Anarlog version and platform you tested against
+- The Librelog version and platform you tested against
 
 ## What to Expect
 

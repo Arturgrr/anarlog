@@ -74,7 +74,7 @@ impl Recorder {
             .open_mic_capture(microphone_device, SAMPLE_RATE, CHUNK_SIZE)
             .map_err(|error| Error::Capture(error.to_string()))?;
         let temporary_file = tempfile::Builder::new()
-            .prefix("anarlog-dictation-")
+            .prefix("librelog-dictation-")
             .suffix(".wav")
             .tempfile()
             .map_err(|error| Error::Recording(error.to_string()))?;

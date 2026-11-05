@@ -6,18 +6,18 @@ import { WELCOME_NOTE_TRACKING_ID } from "~/onboarding/welcome-note.constants";
 import { createSession } from "~/session/queries";
 import { DEFAULT_USER_ID } from "~/shared/utils";
 
-const PENDING_WELCOME_SESSION_KEY = "anarlog.pending-welcome-session";
+const PENDING_WELCOME_SESSION_KEY = "librelog.pending-welcome-session";
 
-const WELCOME_NOTE = `Welcome to Anarlog 👋
-
-
-This note is a quick way to see how Anarlog works.
+const WELCOME_NOTE = `Welcome to Librelog 👋
 
 
-Click **Record** in the top-right corner and talk for a minute, or play a video with someone speaking. Anarlog saves the audio on your device. To create a transcript and notes, choose a provider in **Settings → Transcription**; if one is not ready, Anarlog will show you a setup shortcut.
+This note is a quick way to see how Librelog works.
 
 
-When you stop recording, Anarlog will create your summary automatically if transcription and intelligence are configured.`;
+Click **Record** in the top-right corner and talk for a minute, or play a video with someone speaking. Librelog saves the audio on your device. To create a transcript and notes, choose a provider in **Settings → Transcription**; if one is not ready, Librelog will show you a setup shortcut.
+
+
+When you stop recording, Librelog will create your summary automatically if transcription and intelligence are configured.`;
 
 let pendingWelcomeSession: Promise<string> | null = null;
 
@@ -65,15 +65,15 @@ async function findOrCreateWelcomeSession(): Promise<string> {
   const event: SessionEvent = {
     tracking_id: WELCOME_NOTE_TRACKING_ID,
     calendar_id: "",
-    title: "Welcome to Anarlog",
+    title: "Welcome to Librelog",
     started_at: now,
     ended_at: "",
     is_all_day: false,
     has_recurrence_rules: false,
-    description: "A quick introduction to Anarlog.",
+    description: "A quick introduction to Librelog.",
   };
 
-  return createSession("Welcome to Anarlog", DEFAULT_USER_ID, {
+  return createSession("Welcome to Librelog", DEFAULT_USER_ID, {
     event_json: JSON.stringify(event),
     raw_md: JSON.stringify(md2json(WELCOME_NOTE)),
   });
