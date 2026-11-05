@@ -1,36 +1,17 @@
-import { Icon } from "@iconify-icon/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
-import { commands as openerCommands } from "@anlg/plugin-opener2";
-import {
-  ArrowSquareOut,
-  CaretLeft,
-  GithubLogo,
-} from "@anlg/ui/components/icons";
-import { OutlookIcon } from "@anlg/ui/components/icons/outlook";
+import { CaretLeft } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
 import { Input } from "@anlg/ui/components/ui/input";
-import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
 import { useAuth } from "~/auth";
 import { WindowsWindowControls } from "~/main/windows-window-controls";
-import { useLatestRef } from "~/shared/hooks/useLatestRef";
 import { usesWindowsStyleTitleBar } from "~/shared/hooks/useWindowControlsGutter";
 
-export type InstructionType = "sign-in" | "billing" | "integration";
-
-function useInstructionCleanup(onCleanup?: () => void) {
-  const cleanupRef = useLatestRef(onCleanup);
-
-  useMountEffect(() => {
-    return () => {
-      cleanupRef.current?.();
-    };
-  });
-}
+export type InstructionType = "sign-in";
 
 function InstructionShell({
   title,
@@ -113,132 +94,14 @@ function InstructionShell({
   );
 }
 
-function ExternalInstruction({
-  title,
-  description,
-  icon,
-  actionLabel,
-  onBack,
-  onClose,
-  url,
-}: {
-  title: string;
-  description: string;
-  icon?: ReactNode;
-  actionLabel: string;
-  onBack: () => void;
-  onClose: () => void;
-  url?: string;
-}) {
-  return (
-    <InstructionShell
-      title={title}
-      description={description}
-      icon={icon}
-      onBack={onBack}
-      onClose={onClose}
-      action={
-        url ? (
-          <Button
-            variant="outline"
-            className={cn([
-              "bg-card text-muted-foreground hover:bg-background border-border h-10 w-full",
-            ])}
-            onClick={() => void openerCommands.openUrl(url, null)}
-          >
-            {actionLabel}
-            <ArrowSquareOut className="size-3.5" />
-          </Button>
-        ) : undefined
-      }
-    />
-  );
-}
-
 export function InstructionScreen({
-  type,
   onBack,
   onClose,
-  url,
-  integrationId,
-  onCleanup,
 }: {
-  type: InstructionType;
   onBack: () => void;
   onClose: () => void;
-  url?: string;
-  integrationId?: string;
-  onCleanup?: () => void;
 }) {
-  const { t } = useLingui();
-  useInstructionCleanup(onCleanup);
-
-  if (type === "sign-in") {
-    return <SignInInstruction onBack={onBack} onClose={onClose} />;
-  }
-
-  if (type === "billing") {
-    return (
-      <ExternalInstruction
-        title={t`Upgrade to Pro`}
-        description={t`Finish checkout in your browser to unlock more, then return to Anarlog.`}
-        actionLabel={t`Reopen checkout page`}
-        onBack={onBack}
-        onClose={onClose}
-        url={url}
-      />
-    );
-  }
-
-  const integration = getIntegrationInstruction(integrationId);
-
-  return (
-    <ExternalInstruction
-      title={
-        integration
-          ? t`Connect ${integration.displayName}`
-          : t`Connect your integration`
-      }
-      description={t`Authorize access in your browser, then return to Anarlog.`}
-      icon={integration?.icon}
-      actionLabel={t`Reopen in browser`}
-      onBack={onBack}
-      onClose={onClose}
-      url={url}
-    />
-  );
-}
-
-function getIntegrationInstruction(integrationId?: string):
-  | {
-      displayName: string;
-      icon: ReactNode;
-    }
-  | undefined {
-  switch (integrationId) {
-    case "google-calendar":
-      return {
-        displayName: "Google Calendar",
-        icon: <Icon icon="logos:google-calendar" width={56} height={56} />,
-      };
-    case "outlook":
-      return {
-        displayName: "Outlook",
-        icon: <OutlookIcon size={56} />,
-      };
-    case "github":
-      return {
-        displayName: "GitHub",
-        icon: <GithubLogo className="text-foreground size-14" weight="light" />,
-      };
-    case "slack":
-      return {
-        displayName: "Slack",
-        icon: <Icon icon="logos:slack-icon" width={56} height={56} />,
-      };
-    default:
-      return undefined;
-  }
+  return <SignInInstruction onBack={onBack} onClose={onClose} />;
 }
 
 function SignInInstruction({

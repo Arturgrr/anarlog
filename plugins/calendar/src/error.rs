@@ -2,8 +2,8 @@
 pub enum Error {
     #[error(transparent)]
     Calendar(#[from] anlg_calendar::Error),
-    #[error("auth error: {0}")]
-    Auth(String),
+    #[error("permissions error: {0}")]
+    Permissions(String),
 }
 
 impl serde::Serialize for Error {

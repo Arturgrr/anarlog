@@ -8,7 +8,6 @@ import {
 import { open as selectFiles } from "@tauri-apps/plugin-dialog";
 import { type ReactNode, useEffect, useRef } from "react";
 
-import type { ConnectionItem } from "@anlg/api-client";
 import { commands as importerCommands } from "@anlg/plugin-importer";
 import {
   ArrowsClockwise,
@@ -38,18 +37,12 @@ import { cn } from "@anlg/utils";
 import {
   cancelConnectedImport,
   connectConnectedImport,
-  connectNangoImport,
   connectedImportCredentialsQueryKey,
   connectedImportCredentialsQueryOptions,
   connectedImportSyncQueryKey,
   connectedImportSyncQueryOptions,
   disconnectConnectedImport,
-  disconnectNangoImport,
   isDirectMeetingImport,
-  isLocalConnectedImport,
-  isNangoMeetingImport,
-  nangoConnectionIsReady,
-  nangoImportSyncQueryOptions,
 } from "./connected-import";
 import { detectImportSources } from "./detection";
 import { providerIconOpticalClass, providerIconSrc } from "./icons";
@@ -64,7 +57,6 @@ import {
 } from "./queries";
 
 import { useAuth } from "~/auth";
-import { useConnections } from "~/auth/useConnections";
 import { ConnectButtonGroup } from "~/shared/connect-button-group";
 
 const IMPORT_EXTENSIONS = [
@@ -122,8 +114,6 @@ export function MeetingImportScreen({
   const queryClient = useQueryClient();
   const connectAbortController = useRef<AbortController | null>(null);
   const signedIn = Boolean(auth.session);
-  const headers = auth.getHeaders();
-  const connectionsQuery = useConnections(signedIn);
   const detectionQuery = useQuery({
     queryKey: ["meeting-import-sources"],
     queryFn: detectImportSources,
@@ -135,8 +125,6 @@ export function MeetingImportScreen({
   const connectedProviders = detectedProviders
     .filter((provider) => isDirectMeetingImport(provider))
     .sort((left, right) => left.name.localeCompare(right.name));
-  const mcpProviders = connectedProviders.filter(isLocalConnectedImport);
-  const nangoProviders = connectedProviders.filter(isNangoMeetingImport);
   const fileProviders = detectedProviders
     .filter((provider) => !provider.directImport)
     .sort((left, right) => left.name.localeCompare(right.name));
@@ -160,38 +148,21 @@ export function MeetingImportScreen({
     onNoSourcesDetected,
   ]);
 
-  const connectedProvidersForQueries = mcpProviders;
   const credentialQueries = useQueries({
-    queries: connectedProvidersForQueries.map((provider) =>
+    queries: connectedProviders.map((provider) =>
       connectedImportCredentialsQueryOptions(provider.id),
     ),
   });
   const syncQueries = useQueries({
-    queries: connectedProvidersForQueries.map((provider, index) =>
+    queries: connectedProviders.map((provider, index) =>
       connectedImportSyncQueryOptions(
         provider,
         signedIn && Boolean(credentialQueries[index]?.data),
       ),
     ),
   });
-  const nangoSyncQueries = useQueries({
-    queries: nangoProviders.map((provider) => {
-      const connection = connectionsQuery.data?.find(
-        (item) => item.integration_id === provider.nangoIntegrationId,
-      );
-      return nangoImportSyncQueryOptions(
-        provider,
-        connection?.connection_id,
-        headers,
-        signedIn && nangoConnectionIsReady(connection),
-      );
-    }),
-  });
   const connectedProviderIndexes = new Map(
-    connectedProvidersForQueries.map((provider, index) => [provider.id, index]),
-  );
-  const nangoProviderIndexes = new Map(
-    nangoProviders.map((provider, index) => [provider.id, index]),
+    connectedProviders.map((provider, index) => [provider.id, index]),
   );
 
   const fileImportMutation = useMutation({
@@ -226,17 +197,6 @@ export function MeetingImportScreen({
       const controller = new AbortController();
       connectAbortController.current = controller;
       try {
-        if (isNangoMeetingImport(provider)) {
-          const sessionHeaders = auth.getHeaders();
-          if (!sessionHeaders) {
-            throw new Error("No authentication session is available");
-          }
-          return await connectNangoImport(
-            provider,
-            sessionHeaders,
-            controller.signal,
-          );
-        }
         return await connectConnectedImport(provider, controller.signal);
       } catch (error) {
         if (controller.signal.aborted) return null;
@@ -249,18 +209,6 @@ export function MeetingImportScreen({
     },
     onSuccess: async (result) => {
       if (!result) return;
-      if ("connection_id" in result) {
-        const queryKey = ["integration-status", auth.session?.user.id];
-        await queryClient.cancelQueries({ queryKey });
-        queryClient.setQueryData<ConnectionItem[]>(queryKey, (connections) => [
-          result,
-          ...(connections ?? []).filter(
-            (connection) => connection.connection_id !== result.connection_id,
-          ),
-        ]);
-        await queryClient.invalidateQueries({ queryKey, refetchType: "none" });
-        return;
-      }
       queryClient.setQueryData(
         connectedImportCredentialsQueryKey(result.providerId),
         result,
@@ -277,33 +225,9 @@ export function MeetingImportScreen({
   });
 
   const disconnectMutation = useMutation({
-    mutationFn: async (input: {
-      providerId: string;
-      nangoIntegrationId?: string;
-      connectionId?: string;
-    }) => {
-      if (input.nangoIntegrationId && input.connectionId) {
-        await disconnectNangoImport(
-          input.nangoIntegrationId,
-          input.connectionId,
-        );
-        return;
-      }
-      await disconnectConnectedImport(input.providerId);
-    },
+    mutationFn: (input: { providerId: string }) =>
+      disconnectConnectedImport(input.providerId),
     onSuccess: async (_, input) => {
-      if (input.nangoIntegrationId) {
-        await queryClient.invalidateQueries({
-          queryKey: ["integration-status"],
-        });
-        await queryClient.cancelQueries({
-          queryKey: connectedImportSyncQueryKey(input.providerId),
-        });
-        queryClient.removeQueries({
-          queryKey: connectedImportSyncQueryKey(input.providerId),
-        });
-        return;
-      }
       queryClient.setQueryData(
         connectedImportCredentialsQueryKey(input.providerId),
         null,
@@ -317,11 +241,10 @@ export function MeetingImportScreen({
     },
   });
 
-  const connectedError = connectionsQuery.error ?? signInMutation.error;
+  const connectedError = signInMutation.error;
   const latestResult =
     fileImportMutation.data ??
     syncQueries.find((query) => query.data)?.data?.result ??
-    nangoSyncQueries.find((query) => query.data)?.data?.result ??
     null;
 
   return (
@@ -360,34 +283,19 @@ export function MeetingImportScreen({
                   fileImportMutation.isPending &&
                   fileImportMutation.variables.id === provider.id;
                 const connectedProvider = isDirectMeetingImport(provider);
-                const nangoProvider = isNangoMeetingImport(provider);
                 const connectedIndex = connectedProviderIndexes.get(
                   provider.id,
                 );
-                const nangoIndex = nangoProviderIndexes.get(provider.id);
                 const credentialsQuery =
                   connectedIndex === undefined
                     ? undefined
                     : credentialQueries[connectedIndex];
-                const nangoConnection = nangoProvider
-                  ? connectionsQuery.data?.find(
-                      (item) =>
-                        item.integration_id === provider.nangoIntegrationId,
-                    )
-                  : undefined;
-                const syncQuery = nangoProvider
-                  ? nangoIndex === undefined
-                    ? undefined
-                    : nangoSyncQueries[nangoIndex]
-                  : connectedIndex === undefined
+                const syncQuery =
+                  connectedIndex === undefined
                     ? undefined
                     : syncQueries[connectedIndex];
-                const connected = nangoProvider
-                  ? signedIn && nangoConnectionIsReady(nangoConnection)
-                  : signedIn && Boolean(credentialsQuery?.data);
-                const checkingConnection = nangoProvider
-                  ? signedIn && connectionsQuery.isPending
-                  : Boolean(credentialsQuery?.isPending);
+                const connected = signedIn && Boolean(credentialsQuery?.data);
+                const checkingConnection = Boolean(credentialsQuery?.isPending);
                 const connecting =
                   connectMutation.isPending &&
                   connectMutation.variables.id === provider.id;
@@ -519,11 +427,6 @@ export function MeetingImportScreen({
                                       onClick={() =>
                                         disconnectMutation.mutate({
                                           providerId: provider.id,
-                                          nangoIntegrationId: nangoProvider
-                                            ? provider.nangoIntegrationId
-                                            : undefined,
-                                          connectionId:
-                                            nangoConnection?.connection_id,
                                         })
                                       }
                                     >
@@ -574,9 +477,7 @@ export function MeetingImportScreen({
                                   }
                                   if (connecting) {
                                     connectAbortController.current?.abort();
-                                    if (!nangoProvider) {
-                                      cancelConnectMutation.mutate(provider.id);
-                                    }
+                                    cancelConnectMutation.mutate(provider.id);
                                     return;
                                   }
                                   connectMutation.mutate(provider);

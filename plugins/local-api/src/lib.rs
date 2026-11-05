@@ -19,9 +19,6 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             commands::test_webhook::<tauri::Wry>,
             commands::dispatch_event::<tauri::Wry>,
             commands::export_meeting_markdown::<tauri::Wry>,
-            commands::prepare_drive_markdown::<tauri::Wry>,
-            commands::get_cloud_snapshot::<tauri::Wry>,
-            commands::list_cloud_snapshot_ids::<tauri::Wry>,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }
@@ -84,39 +81,6 @@ mod test {
         .await
         .unwrap();
         db.pool().clone()
-    }
-
-    #[tokio::test]
-    async fn drive_export_requires_summary_and_preserves_transcript_and_metadata() {
-        let pool = seeded_pool().await;
-        let mut export = anlg_agent_access::get_meeting_export(&pool, "meeting-1".to_string())
-            .await
-            .unwrap();
-        assert!(commands::drive_markdown(export.clone()).is_err());
-        let mut summary = export.meeting.note.clone().unwrap();
-        summary.markdown = "결정 사항".to_string();
-        summary.title = "Summary".to_string();
-        export.meeting.summaries.push(summary);
-        assert_eq!(
-            commands::drive_markdown(export.clone()).unwrap().filename,
-            "2026-07-13 Planning.md"
-        );
-        export.meeting.title = "회의 / 프로젝트".repeat(100);
-        let prepared = commands::drive_markdown(export.clone()).unwrap();
-        assert!(prepared.markdown.contains("결정 사항"));
-        assert!(prepared.markdown.contains("hello world"));
-        assert!(prepared.markdown.contains("- ID: `meeting-1`"));
-        assert!(prepared.markdown.contains("- Date: 2026-07-13"));
-        assert!(!prepared.markdown.contains("Launch decision"));
-        assert!(!prepared.filename.contains('/'));
-        assert!(prepared.filename.len() < 512);
-        export.transcripts.clear();
-        assert!(
-            commands::drive_markdown(export)
-                .unwrap()
-                .markdown
-                .contains("No transcript is available")
-        );
     }
 
     #[tokio::test]
@@ -730,86 +694,5 @@ mod test {
         .await
         .unwrap();
         assert!(row.is_none());
-    }
-
-    #[tokio::test]
-    async fn oversized_cloud_snapshot_keeps_text_and_drops_word_payloads() {
-        let pool = seeded_pool().await;
-        let mut export = anlg_agent_access::get_meeting_export(&pool, "meeting-1".to_string())
-            .await
-            .unwrap();
-        export.transcripts[0].words =
-            vec![serde_json::json!({ "text": "x".repeat(2 * 1024 * 1024) })];
-        export.transcripts[0].speaker_hints = vec![serde_json::json!({ "name": "x".repeat(1024) })];
-
-        let snapshot = commands::prepare_cloud_snapshot(export).unwrap();
-
-        assert_eq!(snapshot["id"], "meeting-1");
-        assert!(snapshot.get("meeting").is_none());
-        assert_eq!(snapshot["transcripts"][0]["text"], "hello world");
-        assert_eq!(snapshot["transcripts"][0]["words"], serde_json::json!([]));
-        assert_eq!(
-            snapshot["transcripts"][0]["speaker_hints"],
-            serde_json::json!([])
-        );
-    }
-
-    #[tokio::test]
-    async fn cloud_snapshot_accounts_for_jsonb_spacing_at_the_size_limit() {
-        let pool = seeded_pool().await;
-        let mut export = anlg_agent_access::get_meeting_export(&pool, "meeting-1".to_string())
-            .await
-            .unwrap();
-        export.transcripts[0].words = vec![serde_json::json!({ "text": "word" }); 110_000];
-        let compact_len = serde_json::to_vec(&export).unwrap().len();
-        assert!(compact_len < 2 * 1024 * 1024);
-        let padding = 2 * 1024 * 1024 - compact_len - 1;
-        export.transcripts[0].words[0]["text"] =
-            serde_json::json!("word".to_string() + &"x".repeat(padding));
-        assert_eq!(
-            serde_json::to_vec(&export).unwrap().len(),
-            2 * 1024 * 1024 - 1
-        );
-
-        let snapshot = commands::prepare_cloud_snapshot(export).unwrap();
-
-        assert_eq!(snapshot["transcripts"][0]["text"], "hello world");
-        assert!(
-            snapshot["transcripts"][0]["words"]
-                .as_array()
-                .unwrap()
-                .is_empty()
-        );
-    }
-
-    #[test]
-    fn cloud_snapshot_size_matches_jsonb_separators_and_expanded_numbers() {
-        for (value, expected) in [
-            (serde_json::json!({"a": [1, true, "한글"]}), 26),
-            (serde_json::json!({"empty": [], "object": {}}), 27),
-            (serde_json::json!(1e20), 21),
-            (serde_json::json!(1.23e-20), 24),
-            (serde_json::json!(-1.23e20), 22),
-            (serde_json::json!(1.0), 3),
-            (serde_json::json!(1e-308), 310),
-            (serde_json::json!(1e308), 309),
-        ] {
-            assert_eq!(
-                commands::cloud_snapshot_jsonb_len(&value).unwrap(),
-                expected,
-                "{value}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn cloud_snapshot_within_the_jsonb_limit_preserves_word_metadata() {
-        let pool = seeded_pool().await;
-        let export = anlg_agent_access::get_meeting_export(&pool, "meeting-1".to_string())
-            .await
-            .unwrap();
-        let expected = serde_json::to_value(&export).unwrap();
-
-        assert_eq!(commands::prepare_cloud_snapshot(export).unwrap(), expected);
     }
 }

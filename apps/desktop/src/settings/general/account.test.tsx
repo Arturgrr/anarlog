@@ -20,11 +20,6 @@ const mocks = vi.hoisted(() => ({
   session: { user: { id: "user-1", email: "john@example.com" } } as {
     user: { id: string; email: string };
   } | null,
-  workspaces: {
-    data: [] as Array<{ workspaceId: string }>,
-    isPending: false,
-  },
-  getWorkspaceAccess: vi.fn(),
 }));
 
 vi.mock("@anlg/plugin-analytics", () => ({
@@ -51,15 +46,6 @@ vi.mock("~/auth", () => ({
     signIn: mocks.signIn,
     signOut: mocks.signOut,
   }),
-}));
-
-vi.mock("~/settings/team/client", () => ({
-  getWorkspaceAccess: mocks.getWorkspaceAccess,
-  requireTeamContext: (auth: unknown) => auth,
-}));
-
-vi.mock("~/settings/team/mirror", () => ({
-  useMyWorkspacesWithMirror: () => mocks.workspaces,
 }));
 
 vi.mock("~/shared/utils", () => ({
@@ -91,12 +77,6 @@ describe("SettingsAccount", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.session = { user: { id: "user-1", email: "john@example.com" } };
-    mocks.workspaces.data = [];
-    mocks.workspaces.isPending = false;
-    mocks.getWorkspaceAccess.mockResolvedValue({
-      tier: "free",
-      capabilities: [],
-    });
     globalThis.ResizeObserver = class {
       observe() {}
       unobserve() {}

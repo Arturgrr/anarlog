@@ -32,12 +32,7 @@ import { isLockedFlag } from "~/lock/flag";
 import { revealLockedNote } from "~/lock/notes";
 import { NoteLockScreen } from "~/lock/screen";
 import { useAppLock } from "~/lock/store";
-import {
-  isCanonicalSessionImportLocked,
-  subscribeCanonicalSessionImportLocks,
-} from "~/session-sharing/editor-activity";
 import { useSession } from "~/session/queries";
-import { useSessionSharedNoteIds } from "~/shared-notes/event-keys";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
 import { useListener } from "~/stt/contexts";
 import { ScheduledSessionAutoStart } from "~/stt/scheduled-session-auto-start";
@@ -49,14 +44,6 @@ export function TabContentNote({
   standaloneWindow?: boolean;
   tab: Extract<Tab, { type: "sessions" }>;
 }) {
-  const importLocked = React.useSyncExternalStore(
-    subscribeCanonicalSessionImportLocks,
-    () => isCanonicalSessionImportLocked(tab.id),
-    () => isCanonicalSessionImportLocked(tab.id),
-  );
-
-  if (importLocked) return <SessionContentLoading />;
-
   return <LockedNoteGate tab={tab} standaloneWindow={standaloneWindow} />;
 }
 
@@ -188,15 +175,13 @@ function TabContentNoteInner({
   const { skipReason } = useAutoEnhance(tab);
   const isTranscribing = shouldShowTranscriptTabSpinner(sessionMode);
   const isLiveSessionActive = sessionMode === "active";
-  const sharedNoteIds = useSessionSharedNoteIds(sessionId);
   const editorTabs = React.useMemo(
     () =>
       createEditorTabs({
         enhancedNoteIds,
         canShowTranscript,
-        sharedNoteIds,
       }),
-    [enhancedNoteIds, canShowTranscript, sharedNoteIds],
+    [enhancedNoteIds, canShowTranscript],
   );
   const currentView = React.useMemo(() => {
     return computeCurrentNoteTab(
@@ -204,15 +189,8 @@ function TabContentNoteInner({
       isLiveSessionActive,
       enhancedNoteIds,
       canShowTranscript,
-      sharedNoteIds,
     );
-  }, [
-    tab.state.view,
-    isLiveSessionActive,
-    enhancedNoteIds,
-    canShowTranscript,
-    sharedNoteIds,
-  ]);
+  }, [tab.state.view, isLiveSessionActive, enhancedNoteIds, canShowTranscript]);
   useAutoFocusEditor({
     sessionId,
     noteInputRef,

@@ -22,21 +22,6 @@ export type CalendarEventSearchResult = {
   linkedSessionId: string | null;
 };
 
-type WebSearchResult = {
-  title: string;
-  url: string;
-  snippet: string;
-  publishedDate?: string | null;
-  author?: string | null;
-};
-
-export type WebSearchResponse = {
-  status: "ok" | "error";
-  message?: string;
-  query: string;
-  results: WebSearchResult[];
-};
-
 export interface ToolDependencies {
   search: (
     query: string,
@@ -54,6 +39,4 @@ export interface ToolDependencies {
   getFolderFilter?: () => string | null;
   getEnhancedNoteId: () => string | undefined;
   openEditTab: (requestId: string) => void;
-  getAuthHeaders: () => Record<string, string> | null | undefined;
-  fetch?: typeof fetch;
 }

@@ -4,7 +4,6 @@ import {
   ArrowsClockwise,
   Bell,
   BookOpen,
-  Buildings,
   CalendarDots,
   ChartLineUp,
   Code,
@@ -21,7 +20,6 @@ import {
   Sun,
   User,
   Users,
-  UsersThree,
   VideoCamera,
   Waveform,
 } from "@anlg/ui/components/icons";
@@ -54,7 +52,6 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
         { id: "app", label: t`General`, icon: Gear },
         { id: "account", label: t`Account`, icon: User },
         { id: "insights", label: t`Insights`, icon: ChartLineUp },
-        { id: "team", label: t`Teams`, icon: UsersThree },
         { id: "sync", label: t`Sync`, icon: ArrowsClockwise },
         { id: "appearance", label: t`Appearance`, icon: Sun },
         { id: "notifications", label: t`Notifications`, icon: Bell },
@@ -107,10 +104,7 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
     },
     {
       label: t`Data`,
-      items: [
-        { id: "imports", label: t`Imports`, icon: DownloadSimple },
-        { id: "crm", label: t`CRM`, icon: Buildings },
-      ],
+      items: [{ id: "imports", label: t`Imports`, icon: DownloadSimple }],
     },
     {
       label: t`Advanced`,

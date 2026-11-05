@@ -21,12 +21,11 @@ import { SearchBar } from "./search/bar";
 import { useSearch } from "./search/context";
 import { Transcript } from "./transcript";
 
+import { useCurrentNoteTab } from "~/session/components/shared";
 import {
   registerCanonicalSessionEditor,
   unregisterCanonicalSessionEditor,
-} from "~/session-sharing/editor-activity";
-import { useCurrentNoteTab } from "~/session/components/shared";
-import { SharedNoteSummary } from "~/shared-notes";
+} from "~/session/editor-activity";
 import { useScrollPreservation } from "~/shared/hooks/useScrollPreservation";
 import type { SessionMode } from "~/store/zustand/listener/general";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
@@ -177,8 +176,7 @@ const NoteInputContent = forwardRef<
       shouldShowTranscriptTabSpinner(sessionMode);
 
     const { scrollRef, onBeforeTabChange } = useScrollPreservation(
-      renderedCurrentTab.type === "enhanced" ||
-        renderedCurrentTab.type === "shared"
+      renderedCurrentTab.type === "enhanced"
         ? `${renderedCurrentTab.type}-${renderedCurrentTab.id}`
         : renderedCurrentTab.type,
     );
@@ -399,9 +397,6 @@ const NoteInputContent = forwardRef<
                 onViewDisposed={handleSessionViewDisposed}
               />
             )}
-            {renderedCurrentTab.type === "shared" && (
-              <SharedNoteSummary shareId={renderedCurrentTab.id} />
-            )}
             {renderedCurrentTab.type === "transcript" && (
               <Transcript
                 sessionId={sessionId}
@@ -423,9 +418,6 @@ function isSameEditorView(left: TabEditorView, right: TabEditorView): boolean {
   }
 
   if (left.type === "enhanced" && right.type === "enhanced") {
-    return left.id === right.id;
-  }
-  if (left.type === "shared" && right.type === "shared") {
     return left.id === right.id;
   }
 

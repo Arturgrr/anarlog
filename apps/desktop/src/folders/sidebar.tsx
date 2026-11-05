@@ -2,7 +2,6 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { useMemo, useState } from "react";
 
 import {
-  Buildings,
   FolderSimple,
   MagnifyingGlass,
   Plus,
@@ -14,49 +13,17 @@ import { cn } from "@anlg/utils";
 
 import { useActiveFolderPath, useFolderSelection } from "./selection";
 
-import { useOptionalAuth } from "~/auth";
-import {
-  importSharedFolder,
-  parseSharedFolderPayload,
-  SharedResourceLibrarySection,
-} from "~/resource-sharing";
-import {
-  folderDefaultAccessRule,
-  useFolderDefaultAccessRules,
-} from "~/session-sharing/folder-default-access";
-import { useAvailableShareWorkspaces } from "~/session-sharing/source";
 import { createNamedFolder } from "~/session/folder-catalog";
 import { resolvedFolderIcon } from "~/session/folder-icon";
-import {
-  useFolderIcons,
-  useFolderPaths,
-  useFolderWorkspaces,
-} from "~/session/queries";
+import { useFolderIcons, useFolderPaths } from "~/session/queries";
 import { CustomSidebarHeader } from "~/sidebar/custom-sidebar-header";
 import { FolderNameDialog } from "~/sidebar/folder-name-dialog";
 import { TemplateIconGlyph } from "~/templates/template-icon";
 
 export function FoldersSidebar() {
   const { t } = useLingui();
-  const auth = useOptionalAuth();
   const folders = useFolderPaths();
   const persistedIcons = useFolderIcons();
-  const folderWorkspaces = useFolderWorkspaces();
-  const folderAccessRules = useFolderDefaultAccessRules();
-  const shareWorkspaces = useAvailableShareWorkspaces(
-    auth?.session?.user.id ?? null,
-  );
-  const folderShareLabel = (folder: string): string | null => {
-    const rule = folderDefaultAccessRule(folderAccessRules, folder);
-    if (rule?.access === "participants") return t`People in the meeting`;
-    const workspaceId =
-      rule?.workspace_id ?? folderWorkspaces[folder]?.workspaceId;
-    if (!workspaceId) return null;
-    const name =
-      shareWorkspaces.find((workspace) => workspace.id === workspaceId)?.name ??
-      folderWorkspaces[folder]?.name;
-    return name ? t`Everyone in ${name}` : "";
-  };
   const iconOverrides = useFolderSelection((state) => state.iconOverrides);
   const setSelectedPath = useFolderSelection((state) => state.setSelectedPath);
   const activeFolder = useActiveFolderPath(folders);
@@ -172,14 +139,6 @@ export function FoldersSidebar() {
                         className="size-4 text-sm"
                       />
                       <span className="min-w-0 truncate">{folder}</span>
-                      {folderShareLabel(folder) !== null ? (
-                        <span
-                          className="text-muted-foreground shrink-0"
-                          title={folderShareLabel(folder) || undefined}
-                        >
-                          <Buildings className="size-3.5" aria-hidden="true" />
-                        </span>
-                      ) : null}
                     </span>
                   </button>
                 </li>
@@ -187,19 +146,6 @@ export function FoldersSidebar() {
             })}
           </ul>
         )}
-        <SharedResourceLibrarySection
-          resourceType="folder"
-          search={search}
-          onImport={async (resource) => {
-            const userId = auth?.session?.user.id;
-            if (!userId) throw new Error(t`Sign in to add this folder`);
-            const path = await importSharedFolder(
-              parseSharedFolderPayload(resource.payload),
-              userId,
-            );
-            setSelectedPath(path);
-          }}
-        />
       </div>
 
       <FolderNameDialog

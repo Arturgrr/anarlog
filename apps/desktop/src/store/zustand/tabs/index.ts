@@ -39,7 +39,7 @@ import { createStateUpdaterSlice, type StateBasicActions } from "./state";
 
 import { wrapSliceWithLogging } from "~/store/zustand/shared";
 
-export type { SettingsTab, Tab, TabInput, TaskResource } from "./schema";
+export type { SettingsTab, Tab, TabInput } from "./schema";
 export { isTabInputSupported, uniqueIdfromTab } from "./schema";
 export { RETURN_ORIGIN_TAB_TYPES } from "./basic";
 export { restorePinnedTabsToStore, restoreRecentlyOpenedToStore };

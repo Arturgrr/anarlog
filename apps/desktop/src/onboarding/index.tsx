@@ -114,11 +114,6 @@ function OnboardingScreenContent({
     if (prev) setCurrentStep(prev);
   }, [currentStep]);
 
-  const handleCalendarSignIn = useCallback(() => {
-    setCurrentStep("login");
-    void auth.signIn();
-  }, [auth]);
-
   useEffect(() => {
     trackAnalyticsEvent("onboarding_step_viewed", {
       step: currentStep,
@@ -287,10 +282,7 @@ function OnboardingScreenContent({
             onNext={goNext}
             onSkip={skipCurrentStep}
           >
-            <CalendarSection
-              onContinue={goNext}
-              onSignIn={handleCalendarSignIn}
-            />
+            <CalendarSection onContinue={goNext} />
           </OnboardingSection>
 
           <OnboardingSection

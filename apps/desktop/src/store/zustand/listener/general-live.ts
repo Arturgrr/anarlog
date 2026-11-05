@@ -48,7 +48,6 @@ import {
 
 import { prepareSessionPeaks } from "~/audio-player/waveform";
 import { runMeetingCompletedAutomations } from "~/automations/engine";
-import { syncCloudApiSnapshotBestEffort } from "~/cloud-api/client";
 import { getSessionResourcePath } from "~/session/resource-path";
 import { isAppStoreBuild } from "~/shared/app-store";
 import { fromResult } from "~/stt/fromResult";
@@ -1079,8 +1078,6 @@ export const stopLiveSession = <T extends GeneralState>(
         if (!sessionId) {
           return;
         }
-
-        syncCloudApiSnapshotBestEffort(sessionId);
 
         if (isAppStoreBuild()) {
           return;

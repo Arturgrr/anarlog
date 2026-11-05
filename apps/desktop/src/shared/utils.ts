@@ -31,12 +31,7 @@ export const getScheme = async (): Promise<DesktopScheme> => {
   return schemes[id] ?? "anarlog";
 };
 
-type DesktopFlowPath =
-  | "/app/google-drive-picker"
-  | "/auth"
-  | "/app/account"
-  | "/app/integration"
-  | "/app/team-checkout";
+type DesktopFlowPath = "/auth" | "/app/account";
 
 export const buildWebAppUrl = async (
   path: DesktopFlowPath,
@@ -46,16 +41,6 @@ export const buildWebAppUrl = async (
   const url = new URL(path, env.VITE_APP_URL);
   url.searchParams.set("flow", "desktop");
   url.searchParams.set("scheme", scheme);
-  if (
-    import.meta.env.DEV &&
-    scheme === "anarlog-dev" &&
-    (path === "/app/integration" || path === "/app/google-drive-picker")
-  ) {
-    const { commands } = await import("@anlg/plugin-deeplink2");
-    const callback = await commands.startCallbackServer(scheme, null);
-    if (callback.status === "error") throw new Error(callback.error);
-    url.searchParams.set("callback_port", String(callback.data));
-  }
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       url.searchParams.set(key, value);

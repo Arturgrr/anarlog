@@ -792,23 +792,6 @@ describe("EventListeners notification events", () => {
     });
   });
 
-  test.each(["notification_confirm", "notification_accept"])(
-    "%s opens Team settings for an invitation without creating a session",
-    async (type) => {
-      const handler = await renderNotificationHandler();
-
-      handler({
-        payload: { type, key: "team-invitation:inv-1", source: null },
-      });
-
-      expect(createSessionMock).not.toHaveBeenCalled();
-      expect(openNewMock).toHaveBeenCalledWith({
-        type: "settings",
-        state: { tab: "team" },
-      });
-    },
-  );
-
   test.each([
     ["notification_confirm", "cloudsync-initial-sync-complete-user-1"],
     ["notification_accept", "unknown-informational-notification"],

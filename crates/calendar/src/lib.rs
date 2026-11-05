@@ -1,9 +1,7 @@
 mod apple_identity;
 mod convert;
 mod error;
-mod fetch;
 pub mod runtime;
-mod windows_tz;
 
 pub use anlg_calendar_interface::{
     CalendarEvent, CalendarListItem, CalendarProviderType, CreateEventInput, EventFilter,
@@ -34,130 +32,51 @@ pub struct ProviderConnectionIds {
 }
 
 pub fn available_providers() -> Vec<CalendarProviderType> {
-    #[cfg(target_os = "macos")]
-    let providers = vec![
-        CalendarProviderType::Apple,
-        CalendarProviderType::Google,
-        CalendarProviderType::Outlook,
-    ];
-
-    #[cfg(not(target_os = "macos"))]
-    let providers = vec![CalendarProviderType::Google, CalendarProviderType::Outlook];
-
-    providers
+    if cfg!(target_os = "macos") {
+        vec![CalendarProviderType::Apple]
+    } else {
+        Vec::new()
+    }
 }
 
-pub async fn list_connection_ids(
-    api_base_url: &str,
-    access_token: Option<&str>,
-    apple_authorized: bool,
-) -> Result<Vec<ProviderConnectionIds>, Error> {
-    use std::collections::HashMap;
-
-    let mut map: HashMap<CalendarProviderType, Vec<String>> = HashMap::new();
-
-    #[cfg(target_os = "macos")]
-    {
-        // empty vec = provider is available but has no connections (vs absent = unavailable)
-        map.entry(CalendarProviderType::Apple).or_default();
-        if apple_authorized {
-            map.insert(CalendarProviderType::Apple, vec!["apple".to_string()]);
-        }
+pub fn list_connection_ids(apple_authorized: bool) -> Vec<ProviderConnectionIds> {
+    if !cfg!(target_os = "macos") {
+        return Vec::new();
     }
 
-    #[cfg(not(target_os = "macos"))]
-    let _ = apple_authorized;
-
-    if let Some(token) = access_token.filter(|t| !t.is_empty()) {
-        match fetch::list_all_connection_ids(api_base_url, token).await {
-            Ok(all) => {
-                for provider in [CalendarProviderType::Google, CalendarProviderType::Outlook] {
-                    // empty vec = provider is available but has no connections (vs absent = unavailable)
-                    map.entry(provider).or_default();
-                }
-                for (integration_id, connection_ids) in all {
-                    let provider = match integration_id.as_str() {
-                        "google-calendar" => CalendarProviderType::Google,
-                        "outlook" => CalendarProviderType::Outlook,
-                        _ => continue,
-                    };
-                    map.insert(provider, connection_ids);
-                }
-            }
-            Err(e) => {
-                if is_local_api_base_url(api_base_url) {
-                    tracing::debug!(
-                        "failed to fetch remote connection ids from local API: {e}; continuing with local providers only"
-                    );
-                } else {
-                    tracing::warn!(
-                        "failed to fetch remote connection ids: {e}; continuing with local providers only"
-                    );
-                }
-            }
-        }
-    }
-
-    Ok(map
-        .into_iter()
-        .map(|(provider, connection_ids)| ProviderConnectionIds {
-            provider,
-            connection_ids,
-        })
-        .collect())
+    // empty vec = provider is available but has no connections (vs absent = unavailable)
+    let connection_ids = if apple_authorized {
+        vec!["apple".to_string()]
+    } else {
+        Vec::new()
+    };
+    vec![ProviderConnectionIds {
+        provider: CalendarProviderType::Apple,
+        connection_ids,
+    }]
 }
 
-fn is_local_api_base_url(api_base_url: &str) -> bool {
-    reqwest::Url::parse(api_base_url)
-        .ok()
-        .and_then(|url| {
-            url.host_str()
-                .map(|host| matches!(host, "localhost" | "127.0.0.1" | "::1" | "[::1]"))
-        })
-        .unwrap_or(false)
-}
-
-pub async fn is_provider_enabled(
-    api_base_url: &str,
-    access_token: Option<&str>,
-    apple_authorized: bool,
-    provider: CalendarProviderType,
-) -> Result<bool, Error> {
-    let all = list_connection_ids(api_base_url, access_token, apple_authorized).await?;
-    Ok(all
+pub fn is_provider_enabled(apple_authorized: bool, provider: CalendarProviderType) -> bool {
+    list_connection_ids(apple_authorized)
         .iter()
-        .any(|p| p.provider == provider && !p.connection_ids.is_empty()))
+        .any(|p| p.provider == provider && !p.connection_ids.is_empty())
 }
 
-pub async fn list_calendars(
-    api_base_url: &str,
-    access_token: &str,
-    provider: CalendarProviderType,
-    connection_id: &str,
-) -> Result<Vec<CalendarListItem>, Error> {
+pub fn list_calendars(provider: CalendarProviderType) -> Result<Vec<CalendarListItem>, Error> {
     match provider {
         CalendarProviderType::Apple => {
             let calendars = list_apple_calendars()?;
             Ok(convert::convert_apple_calendars(calendars))
         }
-        CalendarProviderType::Google => {
-            let calendars =
-                fetch::list_google_calendars(api_base_url, access_token, connection_id).await?;
-            Ok(convert::convert_google_calendars(calendars))
-        }
-        CalendarProviderType::Outlook => {
-            let calendars =
-                fetch::list_outlook_calendars(api_base_url, access_token, connection_id).await?;
-            Ok(convert::convert_outlook_calendars(calendars))
-        }
+        _ => Err(Error::UnsupportedOperation {
+            operation: "list_calendars",
+            provider,
+        }),
     }
 }
 
-pub async fn list_events(
-    api_base_url: &str,
-    access_token: &str,
+pub fn list_events(
     provider: CalendarProviderType,
-    connection_id: &str,
     filter: EventFilter,
 ) -> Result<Vec<CalendarEvent>, Error> {
     match provider {
@@ -165,20 +84,10 @@ pub async fn list_events(
             let events = list_apple_events(filter)?;
             Ok(convert::convert_apple_events(events))
         }
-        CalendarProviderType::Google => {
-            let calendar_id = filter.calendar_tracking_id.clone();
-            let events =
-                fetch::list_google_events(api_base_url, access_token, connection_id, filter)
-                    .await?;
-            Ok(convert::convert_google_events(events, &calendar_id))
-        }
-        CalendarProviderType::Outlook => {
-            let calendar_id = filter.calendar_tracking_id.clone();
-            let events =
-                fetch::list_outlook_events(api_base_url, access_token, connection_id, filter)
-                    .await?;
-            Ok(convert::convert_outlook_events(events, &calendar_id))
-        }
+        _ => Err(Error::UnsupportedOperation {
+            operation: "list_events",
+            provider,
+        }),
     }
 }
 
@@ -390,15 +299,6 @@ fn create_apple_event(_input: CreateEventInput) -> Result<String, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn detects_local_api_base_urls() {
-        assert!(is_local_api_base_url("http://localhost:3001"));
-        assert!(is_local_api_base_url("http://127.0.0.1:3001"));
-        assert!(is_local_api_base_url("http://[::1]:3001"));
-        assert!(!is_local_api_base_url("https://api.example.com"));
-        assert!(!is_local_api_base_url("not a url"));
-    }
 
     #[test]
     fn parse_meeting_link_real_world() {

@@ -15,42 +15,22 @@ const mocks = vi.hoisted(() => ({
   detectImportSources: vi.fn(),
   cancelConnectedImport: vi.fn(),
   connectConnectedImport: vi.fn(),
-  connectNangoImport: vi.fn(),
   disconnectConnectedImport: vi.fn(),
-  disconnectNangoImport: vi.fn(),
   sync: vi.fn(),
   selectFiles: vi.fn(),
   readTextFiles: vi.fn(),
   importMeetingFiles: vi.fn(),
   signIn: vi.fn(),
   signedIn: true,
-  connections: [] as Array<{
-    connection_id: string;
-    integration_id: string;
-    status?: string | null;
-  }>,
+  credentials: {} as Record<string, unknown>,
 }));
 
 vi.mock("~/auth", () => ({
   useAuth: () => ({
     session: mocks.signedIn ? { user: { id: "user-1" } } : null,
     signIn: mocks.signIn,
-    getHeaders: () =>
-      mocks.signedIn ? { Authorization: "Bearer test" } : null,
   }),
 }));
-
-vi.mock("~/auth/useConnections", async () => {
-  const { useQuery } = await import("@tanstack/react-query");
-  return {
-    useConnections: () =>
-      useQuery({
-        queryKey: ["integration-status", "user-1"],
-        queryFn: async () => mocks.connections,
-        initialData: mocks.connections,
-      }),
-  };
-});
 
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: mocks.selectFiles }));
 vi.mock("@anlg/plugin-importer", () => ({
@@ -71,18 +51,9 @@ vi.mock("./queries", () => ({
 vi.mock("./connected-import", () => ({
   cancelConnectedImport: mocks.cancelConnectedImport,
   connectConnectedImport: mocks.connectConnectedImport,
-  connectNangoImport: mocks.connectNangoImport,
   disconnectConnectedImport: mocks.disconnectConnectedImport,
-  disconnectNangoImport: mocks.disconnectNangoImport,
   isDirectMeetingImport: (provider: { directImport?: string }) =>
     Boolean(provider.directImport),
-  isNangoMeetingImport: (provider: { directImport?: string }) =>
-    provider.directImport === "nango-oauth",
-  isLocalConnectedImport: (provider: { directImport?: string }) =>
-    provider.directImport === "mcp-oauth" || provider.directImport === "cli",
-  nangoConnectionIsReady: (
-    connection: { status?: string | null } | undefined,
-  ) => Boolean(connection) && connection?.status !== "reconnect_required",
   connectedImportCredentialsQueryKey: (providerId: string) => [
     "meeting-import",
     providerId,
@@ -95,7 +66,7 @@ vi.mock("./connected-import", () => ({
   ],
   connectedImportCredentialsQueryOptions: (providerId: string) => ({
     queryKey: ["meeting-import", providerId, "credentials"],
-    queryFn: async () => null,
+    queryFn: async () => mocks.credentials[providerId] ?? null,
     staleTime: Infinity,
   }),
   connectedImportSyncQueryOptions: (
@@ -103,26 +74,6 @@ vi.mock("./connected-import", () => ({
     enabled: boolean,
   ) => ({
     queryKey: ["meeting-import", provider.id, "sync"],
-    queryFn: async () => ({
-      result: {
-        discovered: 0,
-        imported: 0,
-        matched: 0,
-        conflicts: 0,
-        errors: 0,
-      },
-      warnings: [],
-    }),
-    enabled,
-    retry: false,
-  }),
-  nangoImportSyncQueryOptions: (
-    provider: { id: string },
-    connectionId: string | undefined,
-    _headers: Record<string, string> | null,
-    enabled: boolean,
-  ) => ({
-    queryKey: ["meeting-import", provider.id, "sync", connectionId],
     queryFn: () => mocks.sync(provider.id),
     enabled,
     retry: false,
@@ -168,7 +119,7 @@ describe("MeetingImportScreen", () => {
     mocks.selectFiles.mockResolvedValue(["export.json"]);
     mocks.readTextFiles.mockResolvedValue({ status: "ok", data: [] });
     mocks.signedIn = true;
-    mocks.connections = [];
+    mocks.credentials = {};
     mocks.sync.mockResolvedValue({
       result: {
         discovered: 0,
@@ -180,10 +131,6 @@ describe("MeetingImportScreen", () => {
       warnings: [],
     });
     mocks.cancelConnectedImport.mockResolvedValue(true);
-    mocks.connectNangoImport.mockResolvedValue({
-      connection_id: "zoom-1",
-      integration_id: "zoom",
-    });
     mocks.signIn.mockResolvedValue(undefined);
   });
 
@@ -208,7 +155,7 @@ describe("MeetingImportScreen", () => {
     expect(screen.queryByText("Avoma")).toBeNull();
     expect(screen.queryByText("Fireflies.ai")).toBeNull();
     expect(screen.queryByText("Krisp")).toBeNull();
-    expect(screen.getAllByRole("button", { name: "Connect" })).toHaveLength(3);
+    expect(screen.getAllByRole("button", { name: "Connect" })).toHaveLength(2);
   });
 
   it("offers file import from the connected provider menu", async () => {
@@ -279,35 +226,12 @@ describe("MeetingImportScreen", () => {
     });
   });
 
-  it("connects Zoom through Nango OAuth instead of file-only import", async () => {
-    mockDetected(["zoom"]);
-
-    renderImports();
-
-    fireEvent.click(await screen.findByRole("button", { name: "Connect" }));
-
-    await waitFor(() => {
-      expect(mocks.connectNangoImport).toHaveBeenCalledOnce();
-    });
-    expect(mocks.connectConnectedImport).not.toHaveBeenCalled();
-    expect(
-      await screen.findByRole("button", { name: "Sync now" }),
-    ).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Connect" })).toBeNull();
-    expect(screen.getByText("Connected")).toBeTruthy();
-    expect(
-      screen.queryByText(/Direct connection is not available yet/i),
-    ).toBeNull();
-  });
-
   it("keeps each provider's sync warnings and errors in its own row", async () => {
-    mockDetected(["google-meet", "zoom"]);
-    mocks.connections = [
-      { connection_id: "meet-1", integration_id: "google-meet" },
-      { connection_id: "zoom-1", integration_id: "zoom" },
-    ];
+    mockDetected(["granola", "circleback"]);
+    mocks.credentials = { granola: {}, circleback: {} };
     mocks.sync.mockImplementation(async (providerId: string) => {
-      if (providerId === "zoom") throw new Error("Zoom sync failed");
+      if (providerId === "circleback")
+        throw new Error("Circleback sync failed");
       return {
         result: {
           discovered: 0,
@@ -316,27 +240,27 @@ describe("MeetingImportScreen", () => {
           conflicts: 0,
           errors: 0,
         },
-        warnings: ["Meet transcripts unavailable"],
+        warnings: ["Granola transcripts unavailable"],
       };
     });
     renderImports();
-    const meet = within(
-      await screen.findByRole("group", { name: "Google Meet" }),
-    );
-    const zoom = within(screen.getByRole("group", { name: "Zoom" }));
-    expect(meet.queryByText("Meet transcripts unavailable")).toBeNull();
-    const meetToggle = meet.getByRole("button", { name: "Google Meet" });
+    const meet = within(await screen.findByRole("group", { name: "Granola" }));
+    const zoom = within(screen.getByRole("group", { name: "Circleback" }));
+    expect(meet.queryByText("Granola transcripts unavailable")).toBeNull();
+    const meetToggle = meet.getByRole("button", { name: "Granola" });
     expect(meetToggle.getAttribute("aria-expanded")).toBe("false");
     fireEvent.click(meetToggle);
-    fireEvent.click(zoom.getByRole("button", { name: "Zoom" }));
+    fireEvent.click(zoom.getByRole("button", { name: "Circleback" }));
     expect(meetToggle.getAttribute("aria-expanded")).toBe("true");
-    expect(await meet.findByText("Meet transcripts unavailable")).toBeTruthy();
-    expect(await zoom.findByText("Zoom sync failed")).toBeTruthy();
-    expect(meet.queryByText("Zoom sync failed")).toBeNull();
-    expect(zoom.queryByText("Meet transcripts unavailable")).toBeNull();
+    expect(
+      await meet.findByText("Granola transcripts unavailable"),
+    ).toBeTruthy();
+    expect(await zoom.findByText("Circleback sync failed")).toBeTruthy();
+    expect(meet.queryByText("Circleback sync failed")).toBeNull();
+    expect(zoom.queryByText("Granola transcripts unavailable")).toBeNull();
     fireEvent.click(meetToggle);
     expect(meetToggle.getAttribute("aria-expanded")).toBe("false");
-    expect(meet.queryByText("Meet transcripts unavailable")).toBeNull();
+    expect(meet.queryByText("Granola transcripts unavailable")).toBeNull();
     expect(screen.queryByText("Everything is already here.")).toBeNull();
   });
 
@@ -377,8 +301,8 @@ describe("MeetingImportScreen", () => {
   });
 
   it("replaces file import counts when a newer sync finishes", async () => {
-    mockDetected(["zoom"]);
-    mocks.connections = [{ connection_id: "zoom-1", integration_id: "zoom" }];
+    mockDetected(["granola"]);
+    mocks.credentials = { granola: {} };
     mocks.importMeetingFiles.mockResolvedValue({
       discovered: 2,
       imported: 2,
@@ -391,7 +315,7 @@ describe("MeetingImportScreen", () => {
     await waitFor(() => expect(button.hasAttribute("disabled")).toBe(false));
     fireEvent.pointerDown(screen.getByRole("button", { name: "More options" }));
     fireEvent.click(await screen.findByRole("menuitem", { name: "Use files" }));
-    fireEvent.click(screen.getByRole("button", { name: "Zoom" }));
+    fireEvent.click(screen.getByRole("button", { name: "Granola" }));
     expect(
       await screen.findByText("Last import: 2 added, 0 unchanged"),
     ).toBeTruthy();
@@ -413,8 +337,8 @@ describe("MeetingImportScreen", () => {
   });
 
   it("shows sync progress and blocks repeat clicks until syncing finishes", async () => {
-    mockDetected(["zoom"]);
-    mocks.connections = [{ connection_id: "zoom-1", integration_id: "zoom" }];
+    mockDetected(["granola"]);
+    mocks.credentials = { granola: {} };
     renderImports();
     const button = await screen.findByRole("button", { name: "Sync now" });
     await waitFor(() => expect(button.hasAttribute("disabled")).toBe(false));
@@ -476,7 +400,6 @@ describe("MeetingImportScreen", () => {
     await waitFor(() => {
       expect(mocks.connectConnectedImport).toHaveBeenCalledOnce();
     });
-    expect(mocks.connectNangoImport).not.toHaveBeenCalled();
     expect(screen.getByText("Connected")).toBeTruthy();
     expect(
       screen.queryByText(/Direct connection is not available yet/i),
@@ -498,7 +421,6 @@ describe("MeetingImportScreen", () => {
     await waitFor(() => {
       expect(mocks.connectConnectedImport).toHaveBeenCalledOnce();
     });
-    expect(mocks.connectNangoImport).not.toHaveBeenCalled();
     expect(screen.getByText("Connected")).toBeTruthy();
   });
 

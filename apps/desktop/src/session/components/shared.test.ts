@@ -294,7 +294,3 @@ describe("computeCurrentNoteTab", () => {
     expect(computeCurrentNoteTab(...args)).toEqual(expected);
   });
 });
-
-vi.mock("~/shared-notes/event-keys", () => ({
-  useSessionSharedNoteIds: () => [],
-}));

@@ -167,9 +167,6 @@ vi.mock("@anlg/plugin-db", () => ({
   subscribe: vi.fn(async () => () => {}),
 }));
 
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ getSessionForRequest: vi.fn(async () => null) }),
-}));
 vi.mock("@anlg/plugin-transcription", () => ({
   commands: {
     acknowledgeStoppedCapture: acknowledgeStoppedCaptureMock,
@@ -182,7 +179,6 @@ vi.mock("@anlg/plugin-transcription", () => ({
       data: null,
     })),
     deleteTranscribedCaptureAudio: deleteTranscribedCaptureAudioMock,
-    updateCaptureCredentials: vi.fn(async () => ({ status: "ok", data: null })),
     getCaptureSnapshot: getCaptureSnapshotMock,
     listStoppedCaptures: vi.fn(async () => ({ status: "ok", data: [] })),
   },
@@ -327,7 +323,7 @@ vi.mock("~/session/queries", () => ({
   useSessionTranscriptExistence: useSessionHasTranscriptMock,
 }));
 
-vi.mock("~/session-sharing/editor-activity", () => ({
+vi.mock("~/session/editor-activity", () => ({
   flushCanonicalSessionEditorChanges: flushCanonicalSessionEditorChangesMock,
 }));
 
@@ -1706,66 +1702,6 @@ describe("useStartListening", () => {
       clearCaptureLifecycleMarkerMock.mock.invocationCallOrder[0]!,
     ).toBeLessThan(
       deleteProcessedAudioForRetentionMock.mock.invocationCallOrder[0]!,
-    );
-  });
-
-  test("refines complete multi-speaker Pro transcripts after stop", async () => {
-    succeedNextNativePersistenceFlush();
-    useSTTConnectionMock.mockReturnValue({
-      conn: {
-        provider: "anarlog",
-        model: "cloud",
-        baseUrl: "https://api.test/stt",
-        apiKey: "token",
-      },
-    });
-    useSessionParticipantHumanIdsMock.mockReturnValue([
-      "user-1",
-      "lex",
-      "george",
-    ]);
-    const { result } = renderHook(() => useStartListening("session-1"));
-
-    await act(async () => {
-      await result.current();
-    });
-
-    const callbacks = startMock.mock.calls[0]?.[1];
-    callbacks?.handlePersist?.({
-      new_words: [
-        {
-          id: "live-word",
-          text: "hello",
-          start_ms: 0,
-          end_ms: 500,
-          channel: 1,
-        },
-      ],
-      replaced_ids: [],
-      partials: [],
-    });
-    await act(async () => {
-      await callbacks?.onStopped?.("session-1", {
-        durationSeconds: 42,
-        audioPath: "/tmp/session.wav",
-        requestedLiveTranscription: true,
-        liveTranscriptionActive: true,
-        needsBatchRepair: false,
-      });
-    });
-
-    expect(runBatchMock).toHaveBeenCalledWith("/tmp/session.wav", {
-      deferAudioFinalization: true,
-      notifyOnCompletion: false,
-      promotion: {
-        scope: "current_capture",
-        audioOffsetMs: 0,
-        replaceTranscriptId: "generated-id",
-        startedAt: expect.any(Number),
-      },
-    });
-    expect(queueAutoEnhanceIfSummaryEmptyMock).toHaveBeenCalledWith(
-      "session-1",
     );
   });
 
@@ -3544,11 +3480,12 @@ describe("useStartListening", () => {
     ])("waits for repair of $reason before summarizing", async (details) => {
       useSTTConnectionMock.mockReturnValue({
         conn: {
-          provider: "anarlog",
-          model: "cloud",
-          baseUrl: "https://api.anarlog.so/stt",
-          apiKey: "test",
+          provider: "soniqo",
+          model: "soniqo-parakeet-streaming",
+          baseUrl: "soniqo://local",
+          apiKey: "",
         },
+        localBatchDiarizationAvailable: true,
       });
       useSessionParticipantHumanIdsMock.mockReturnValue([
         "user-1",

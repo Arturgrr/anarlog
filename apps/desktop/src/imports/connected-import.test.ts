@@ -12,14 +12,6 @@ const mocks = vi.hoisted(() => ({
   deleteSecret: vi.fn(),
   getImportedMeetingIds: vi.fn(),
   importConnectedMeetings: vi.fn(),
-  openIntegrationUrl: vi.fn(),
-  listConnections: vi.fn(),
-  zoomImportMeetings: vi.fn(),
-  fathomImportMeetings: vi.fn(),
-  googleMeetImportMeetings: vi.fn(),
-  microsoftTeamsImportMeetings: vi.fn(),
-  notionImportMeetings: vi.fn(),
-  webexImportMeetings: vi.fn(),
 }));
 
 vi.mock("@anlg/plugin-importer", () => ({
@@ -48,35 +40,9 @@ vi.mock("./queries", () => ({
   importConnectedMeetings: mocks.importConnectedMeetings,
 }));
 
-vi.mock("~/shared/integration", () => ({
-  openIntegrationUrl: mocks.openIntegrationUrl,
-  integrationSetupError: () =>
-    new Error("Could not start the integration setup. Try again."),
-}));
-
-vi.mock("@anlg/api-client", () => ({
-  listConnections: mocks.listConnections,
-  zoomImportMeetings: mocks.zoomImportMeetings,
-  fathomImportMeetings: mocks.fathomImportMeetings,
-  googleMeetImportMeetings: mocks.googleMeetImportMeetings,
-  microsoftTeamsImportMeetings: mocks.microsoftTeamsImportMeetings,
-  notionImportMeetings: mocks.notionImportMeetings,
-  webexImportMeetings: mocks.webexImportMeetings,
-}));
-
-vi.mock("@anlg/api-client/client", () => ({
-  createClient: () => ({}),
-}));
-
-vi.mock("~/env", () => ({
-  env: { VITE_API_URL: "https://api.test" },
-}));
-
 import {
   connectConnectedImport,
-  connectNangoImport,
   connectedImportSyncQueryOptions,
-  nangoImportSyncQueryOptions,
 } from "./connected-import";
 
 const provider = { id: "circleback", name: "Circleback" };
@@ -250,154 +216,5 @@ describe("connected meeting imports", () => {
       "plaud-cli",
       JSON.stringify(plaudCredentials),
     );
-  });
-});
-
-describe("nango meeting imports", () => {
-  const provider = {
-    id: "zoom",
-    name: "Zoom",
-    nangoIntegrationId: "zoom",
-  };
-  const headers = { Authorization: "Bearer test" };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.openIntegrationUrl.mockResolvedValue(true);
-  });
-
-  it("opens Zoom OAuth and waits for the Nango connection", async () => {
-    mocks.listConnections.mockResolvedValue({
-      data: {
-        connections: [
-          {
-            connection_id: "zoom-1",
-            integration_id: "zoom",
-            status: "ok",
-          },
-        ],
-      },
-      error: null,
-    });
-
-    await expect(connectNangoImport(provider, headers)).resolves.toEqual({
-      connection_id: "zoom-1",
-      integration_id: "zoom",
-      status: "ok",
-    });
-    expect(mocks.openIntegrationUrl).toHaveBeenCalledWith(
-      "zoom",
-      undefined,
-      "connect",
-      "imports",
-      headers,
-      false,
-      false,
-    );
-    expect(mocks.listConnections).toHaveBeenCalledOnce();
-  });
-
-  it.each([
-    { id: "zoom", name: "Zoom", nangoIntegrationId: "zoom" },
-    {
-      id: "google-meet",
-      name: "Google Meet",
-      nangoIntegrationId: "google-meet",
-    },
-  ])("stops when $name setup fails", async (provider) => {
-    mocks.openIntegrationUrl.mockResolvedValue(false);
-
-    await expect(connectNangoImport(provider, headers)).rejects.toThrow(
-      "Could not start the integration setup. Try again.",
-    );
-    expect(mocks.listConnections).not.toHaveBeenCalled();
-  });
-
-  it("imports Zoom meetings that are not already present", async () => {
-    mocks.getImportedMeetingIds.mockResolvedValue(["meeting-existing"]);
-    mocks.zoomImportMeetings.mockResolvedValue({
-      data: {
-        files: [
-          {
-            path: "oauth://zoom/meeting-new.json",
-            name: "meeting-new.json",
-            content: "{}",
-          },
-        ],
-        warnings: [],
-      },
-      error: null,
-    });
-    mocks.importConnectedMeetings.mockResolvedValue({
-      discovered: 1,
-      imported: 1,
-      matched: 0,
-      conflicts: 0,
-      errors: 0,
-    });
-
-    const queryClient = new QueryClient();
-    const result = await queryClient.fetchQuery(
-      nangoImportSyncQueryOptions(provider, "zoom-1", headers, true),
-    );
-
-    expect(mocks.zoomImportMeetings).toHaveBeenCalledWith({
-      client: {},
-      body: {
-        connection_id: "zoom-1",
-        known_meeting_ids: ["meeting-existing"],
-      },
-    });
-    expect(mocks.importConnectedMeetings).toHaveBeenCalledWith("zoom", [
-      {
-        path: "oauth://zoom/meeting-new.json",
-        name: "meeting-new.json",
-        content: "{}",
-      },
-    ]);
-    expect(result.result.imported).toBe(1);
-  });
-
-  it("imports Fathom meetings through the Fathom endpoint", async () => {
-    const fathomProvider = {
-      id: "fathom",
-      name: "Fathom",
-      nangoIntegrationId: "fathom",
-    };
-    mocks.getImportedMeetingIds.mockResolvedValue([]);
-    mocks.fathomImportMeetings.mockResolvedValue({
-      data: {
-        files: [
-          {
-            path: "oauth://fathom/meeting-new.json",
-            name: "meeting-new.json",
-            content: "{}",
-          },
-        ],
-        warnings: [],
-      },
-      error: null,
-    });
-    mocks.importConnectedMeetings.mockResolvedValue({
-      discovered: 1,
-      imported: 1,
-      matched: 0,
-      conflicts: 0,
-      errors: 0,
-    });
-
-    const queryClient = new QueryClient();
-    await queryClient.fetchQuery(
-      nangoImportSyncQueryOptions(fathomProvider, "fathom-1", headers, true),
-    );
-
-    expect(mocks.fathomImportMeetings).toHaveBeenCalledWith({
-      client: {},
-      body: {
-        connection_id: "fathom-1",
-        known_meeting_ids: [],
-      },
-    });
-    expect(mocks.zoomImportMeetings).not.toHaveBeenCalled();
   });
 });

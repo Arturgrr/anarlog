@@ -11,9 +11,6 @@ Default permissions for the plugin
 - `allow-test-webhook`
 - `allow-dispatch-event`
 - `allow-export-meeting-markdown`
-- `allow-prepare-drive-markdown`
-- `allow-get-cloud-snapshot`
-- `allow-list-cloud-snapshot-ids`
 
 ## Permission Table
 
@@ -131,58 +128,6 @@ Denies the export_meeting_markdown command without any pre-configured scope.
 <tr>
 <td>
 
-`local-api:allow-get-cloud-snapshot`
-
-</td>
-<td>
-
-Enables the get_cloud_snapshot command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`local-api:deny-get-cloud-snapshot`
-
-</td>
-<td>
-
-Denies the get_cloud_snapshot command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`local-api:allow-list-cloud-snapshot-ids`
-
-</td>
-<td>
-
-Enables the list_cloud_snapshot_ids command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`local-api:deny-list-cloud-snapshot-ids`
-
-</td>
-<td>
-
-Denies the list_cloud_snapshot_ids command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 `local-api:allow-list-webhooks`
 
 </td>
@@ -202,32 +147,6 @@ Enables the list_webhooks command without any pre-configured scope.
 <td>
 
 Denies the list_webhooks command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`local-api:allow-prepare-drive-markdown`
-
-</td>
-<td>
-
-Enables the prepare_drive_markdown command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`local-api:deny-prepare-drive-markdown`
-
-</td>
-<td>
-
-Denies the prepare_drive_markdown command without any pre-configured scope.
 
 </td>
 </tr>
