@@ -35,15 +35,6 @@ async fn consent_evidence_tables_stay_local_only() {
     .await
     .unwrap();
     assert_eq!(delivery, "sent");
-
-    assert!(
-        !cloudsync_table_registry()
-            .iter()
-            .any(|table| table.table_name == "session_disclosure_attempts"
-                || table.table_name == "session_participant_consent")
-    );
-    assert!(!E2EE_DOMAIN_TABLES.contains(&"session_disclosure_attempts"));
-    assert!(!E2EE_DOMAIN_TABLES.contains(&"session_participant_consent"));
 }
 
 #[tokio::test]

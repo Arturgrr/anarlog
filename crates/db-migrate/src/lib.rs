@@ -5,7 +5,7 @@ mod migrate;
 mod schema;
 
 pub use error::MigrateError;
-pub use schema::{DbSchema, MigrationScope, MigrationStep};
+pub use schema::{DbSchema, MigrationStep};
 
 use anlg_db_core::Db;
 
@@ -33,16 +33,12 @@ mod tests {
     use anlg_db_core::{DbOpenOptions, DbStorage};
 
     fn schema_of(steps: &'static [MigrationStep]) -> DbSchema {
-        DbSchema {
-            steps,
-            validate_cloudsync_table: |_table| false,
-        }
+        DbSchema { steps }
     }
 
     async fn open_memory_db() -> Db {
         Db::open(DbOpenOptions {
             storage: DbStorage::Memory,
-            cloudsync_enabled: false,
             journal_mode_wal: true,
             foreign_keys: true,
             max_connections: Some(1),
@@ -53,22 +49,18 @@ mod tests {
 
     const STEP_ONE: MigrationStep = MigrationStep {
         id: "10_one",
-        scope: MigrationScope::Plain,
         sql: "CREATE TABLE t_one (id INTEGER PRIMARY KEY);",
     };
     const STEP_TWO_ADDITIVE: MigrationStep = MigrationStep {
         id: "20_two",
-        scope: MigrationScope::Plain,
         sql: "CREATE TABLE t_two (id INTEGER PRIMARY KEY);",
     };
     const STEP_TWO_BREAKING: MigrationStep = MigrationStep {
         id: "20_two",
-        scope: MigrationScope::Plain,
         sql: "-- reworks t_one in a way older builds cannot read\n-- breaking\nCREATE TABLE t_two (id INTEGER PRIMARY KEY);",
     };
     const STEP_THREE_ADDITIVE: MigrationStep = MigrationStep {
         id: "30_three",
-        scope: MigrationScope::Plain,
         sql: "CREATE TABLE t_three (id INTEGER PRIMARY KEY);",
     };
 

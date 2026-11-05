@@ -43,7 +43,6 @@ ON shared_session_cache(workspace_id);
 async fn test_db() -> Db {
     let db = Db::open(anlg_db_core::DbOpenOptions {
         storage: anlg_db_core::DbStorage::Memory,
-        cloudsync_enabled: false,
         journal_mode_wal: true,
         foreign_keys: true,
         max_connections: Some(1),
@@ -52,21 +51,6 @@ async fn test_db() -> Db {
     .unwrap();
     prepare_schema(&db).await.unwrap();
     db
-}
-
-async fn initialize_enabled_cloudsync_tables(db: &Db) {
-    for table in cloudsync_table_registry()
-        .iter()
-        .filter(|table| table.enabled)
-    {
-        db.cloudsync_init(
-            &table.table_name,
-            table.crdt_algo.as_deref(),
-            table.init_flags,
-        )
-        .await
-        .unwrap();
-    }
 }
 
 fn migration_steps_before(id: &str) -> &'static [anlg_db_migrate::MigrationStep] {
@@ -97,7 +81,6 @@ fn schema_with_legacy_shared_session_cache(
 
     anlg_db_migrate::DbSchema {
         steps: Box::leak(steps.into_boxed_slice()),
-        validate_cloudsync_table: cloudsync_alter_guard_required,
     }
 }
 
@@ -127,7 +110,6 @@ fn schema_with_legacy_attachment_transfer_jobs() -> anlg_db_migrate::DbSchema {
 
     anlg_db_migrate::DbSchema {
         steps: Box::leak(steps.into_boxed_slice()),
-        validate_cloudsync_table: cloudsync_alter_guard_required,
     }
 }
 
@@ -143,7 +125,6 @@ async fn attachment_transfer_jobs_schema_checksum_for_test(db: &Db) -> String {
 async fn test_db_without_default_templates() -> Db {
     let db = Db::open(anlg_db_core::DbOpenOptions {
         storage: anlg_db_core::DbStorage::Memory,
-        cloudsync_enabled: false,
         journal_mode_wal: true,
         foreign_keys: true,
         max_connections: Some(1),
@@ -154,7 +135,6 @@ async fn test_db_without_default_templates() -> Db {
         &db,
         anlg_db_migrate::DbSchema {
             steps: &APP_MIGRATION_STEPS[..2],
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await
@@ -171,9 +151,9 @@ async fn test_db_without_default_templates() -> Db {
 mod attachments;
 mod capture_lifecycle;
 mod consent;
-mod encrypted_replica;
 mod entities;
 mod migrations;
+mod replica_migrations;
 mod search_index;
 mod session_audio;
 mod shared_session_cache;

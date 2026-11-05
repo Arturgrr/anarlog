@@ -87,8 +87,6 @@ jobs:
       - run: cargo check -p desktop --features app-store
       - run: cargo test -p desktop
       - run: cargo test --locked -p tauri-plugin-template --lib
-      - run: cargo test --locked -p cloudsync
-      - run: "cargo test --locked -p db-core 'cloudsync::' -- --test-threads=1"
       - run: |
           cargo test --workspace \
             --exclude desktop \
@@ -184,8 +182,6 @@ jobs:
       - run: cargo check --locked -p desktop
       - run: cargo test --locked -p desktop --no-run
       - run: cargo test --locked -p tauri-plugin-notification --lib
-      - run: cargo test --locked -p cloudsync
-      - run: "cargo test --locked -p db-core 'cloudsync::' -- --test-threads=1"
 
   linux_ci:
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
@@ -216,8 +212,6 @@ jobs:
           platform: ${{ matrix.rust_platform }}
       - run: cargo check --locked --target ${{ matrix.target }} -p desktop
       - run: cargo test --locked --target ${{ matrix.target }} -p desktop embedded_cli --lib
-      - run: cargo test --locked --target ${{ matrix.target }} -p cloudsync
-      - run: "cargo test --locked --target ${{ matrix.target }} -p db-core 'cloudsync::' -- --test-threads=1"
 
   desktop_i18n:
     if: ${{ !startsWith(github.head_ref || '', 'blog/') }}

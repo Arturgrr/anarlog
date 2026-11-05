@@ -239,7 +239,6 @@ async fn migrations_seed_default_templates_without_overwriting_existing_rows() {
         &db,
         anlg_db_migrate::DbSchema {
             steps: &APP_MIGRATION_STEPS[..1],
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await

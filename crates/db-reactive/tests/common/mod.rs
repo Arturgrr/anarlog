@@ -11,14 +11,12 @@ use serde_json::Value;
 const LIVE_QUERY_TEST_MIGRATION_STEPS: &[anlg_db_migrate::MigrationStep] =
     &[anlg_db_migrate::MigrationStep {
         id: "20260415000000_live_query_test_schema",
-        scope: anlg_db_migrate::MigrationScope::Plain,
         sql: include_str!("live_query_test_schema.sql"),
     }];
 
 fn live_query_test_schema() -> anlg_db_migrate::DbSchema {
     anlg_db_migrate::DbSchema {
         steps: LIVE_QUERY_TEST_MIGRATION_STEPS,
-        validate_cloudsync_table: |_| false,
     }
 }
 
@@ -211,7 +209,6 @@ pub async fn setup_runtime() -> (tempfile::TempDir, sqlx::SqlitePool, TestRuntim
     let db_path = dir.path().join("app.db");
     let db = anlg_db_core::Db::open(DbOpenOptions {
         storage: DbStorage::Local(&db_path),
-        cloudsync_enabled: false,
         journal_mode_wal: true,
         foreign_keys: true,
         max_connections: Some(4),

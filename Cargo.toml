@@ -45,7 +45,6 @@ anlg-api-zoom = { path = "crates/api-zoom", package = "api-zoom" }
 anlg-apple-calendar = { path = "crates/apple-calendar", package = "apple-calendar" }
 anlg-apple-todo = { path = "crates/apple-todo", package = "apple-todo" }
 anlg-askama-utils = { path = "crates/askama-utils", package = "askama-utils" }
-anlg-attachment-sync-core = { path = "crates/attachment-sync-core", package = "attachment-sync-core" }
 anlg-audacity = { path = "crates/audacity", package = "audacity" }
 anlg-audio = { path = "crates/audio", package = "audio" }
 anlg-audio-actual = { path = "crates/audio-actual", package = "audio-actual" }
@@ -64,7 +63,6 @@ anlg-calendar = { path = "crates/calendar", package = "calendar" }
 anlg-calendar-interface = { path = "crates/calendar-interface", package = "calendar-interface" }
 anlg-claude = { path = "crates/claude", package = "claude" }
 anlg-cli-process = { path = "crates/cli-process", package = "cli-process" }
-anlg-cloudsync = { path = "crates/cloudsync", package = "cloudsync" }
 anlg-codex = { path = "crates/codex", package = "codex" }
 anlg-data = { path = "crates/data", package = "data" }
 anlg-db-app = { path = "crates/db-app", package = "db-app" }
@@ -73,12 +71,10 @@ anlg-db-core = { path = "crates/db-core", package = "db-core" }
 anlg-db-execute = { path = "crates/db-execute", package = "db-execute" }
 anlg-db-migrate = { path = "crates/db-migrate", package = "db-migrate" }
 anlg-db-reactive = { path = "crates/db-reactive", package = "db-reactive" }
-anlg-db-sync = { path = "crates/db-sync", package = "db-sync" }
 anlg-detect = { path = "crates/detect", package = "detect" }
 anlg-device-monitor = { path = "crates/device-monitor", package = "device-monitor" }
 anlg-dictation-ui-macos = { path = "crates/dictation-ui-macos", package = "dictation-ui-macos" }
 anlg-download-interface = { path = "crates/download-interface", package = "download-interface" }
-anlg-e2ee = { path = "crates/e2ee", package = "e2ee" }
 anlg-embedding = { path = "crates/embedding", package = "embedding" }
 anlg-exa = { path = "crates/exa", package = "exa" }
 anlg-export-core = { path = "crates/export-core", package = "export-core" }
@@ -186,7 +182,6 @@ tauri-plugin-window-state = "2.4"
 
 tauri-plugin-agent = { path = "plugins/agent" }
 tauri-plugin-analytics = { path = "plugins/analytics" }
-tauri-plugin-attachment-sync = { path = "plugins/attachment-sync" }
 tauri-plugin-audio-priority = { path = "plugins/audio-priority" }
 tauri-plugin-auth = { path = "plugins/auth" }
 tauri-plugin-bedrock = { path = "plugins/bedrock" }
