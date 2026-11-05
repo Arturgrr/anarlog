@@ -28,6 +28,9 @@ on:
       - Cargo.toml
       - Cargo.lock
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
@@ -41,10 +44,11 @@ jobs:
         shard: [1, 2, 3]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive
-      - uses: ./.github/actions/pnpm_install
+          persist-credentials: false
+      - uses: $/.github/actions/pnpm_install
       - run: pnpm -F ui build
       - if: matrix.shard == 1
         run: pnpm -F desktop typecheck
@@ -66,19 +70,20 @@ jobs:
             runner: "macos-26"
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive
           fetch-depth: 0
-      - uses: ./.github/actions/pnpm_install
-      - uses: denoland/setup-deno@v2
+          persist-credentials: false
+      - uses: $/.github/actions/pnpm_install
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
       - run: pnpm -F ui build
       - run: pnpm -F desktop typecheck
       - run: pnpm -F desktop test
-      - uses: ./.github/actions/install_desktop_deps
+      - uses: $/.github/actions/install_desktop_deps
         with:
           target: ${{ matrix.platform }}
-      - uses: ./.github/actions/rust_install
+      - uses: $/.github/actions/rust_install
         with:
           platform: ${{ matrix.platform }}
       - if: matrix.platform == 'macos'
@@ -172,11 +177,12 @@ jobs:
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive
           fetch-depth: 0
-      - uses: ./.github/actions/rust_install
+          persist-credentials: false
+      - uses: $/.github/actions/rust_install
         with:
           platform: windows
       - run: cargo check --locked -p desktop
@@ -200,14 +206,15 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive
           fetch-depth: 0
-      - uses: ./.github/actions/install_desktop_deps
+          persist-credentials: false
+      - uses: $/.github/actions/install_desktop_deps
         with:
           target: linux
-      - uses: ./.github/actions/rust_install
+      - uses: $/.github/actions/rust_install
         with:
           platform: ${{ matrix.rust_platform }}
       - run: cargo check --locked --target ${{ matrix.target }} -p desktop
@@ -217,10 +224,11 @@ jobs:
     if: ${{ !startsWith(github.head_ref || '', 'blog/') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive
-      - uses: ./.github/actions/pnpm_install
+          persist-credentials: false
+      - uses: $/.github/actions/pnpm_install
       - run: pnpm -F desktop i18n:check
 
   desktop_swift:
@@ -230,10 +238,11 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive
           fetch-depth: 0
+          persist-credentials: false
       - run: swift build --package-path plugins/windows/swift-lib
 
   ci:

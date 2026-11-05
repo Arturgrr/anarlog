@@ -64,12 +64,12 @@ jobs:
           jq --arg version "$APP_VERSION" '.version = $version' "$config" > "$RUNNER_TEMP/tauri.conf.json"
           mv "$RUNNER_TEMP/tauri.conf.json" "$config"
 
-      - uses: ./.github/actions/install_desktop_deps
-      - uses: ./.github/actions/rust_install
+      - uses: $/.github/actions/install_desktop_deps
+      - uses: $/.github/actions/rust_install
         with:
           platform: macos
       - run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
-      - uses: ./.github/actions/pnpm_install
+      - uses: $/.github/actions/pnpm_install
       - run: pnpm -F @anlg/ui build
 
       - name: Prepare sidecars
