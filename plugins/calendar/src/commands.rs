@@ -116,7 +116,6 @@ macro_rules! contacts_command {
                 .try_state::<tauri_plugin_db::ManagedState>()
                 .map(|state| state.inner().clone())
                 .ok_or_else(|| "database is not ready yet".to_string())?;
-            let _guard = runtime.synced_write_guard().await;
             $call(runtime.pool(), request).await
         }
     };
@@ -228,7 +227,6 @@ pub async fn apply_calendar_inventory<R: tauri::Runtime>(
         .try_state::<tauri_plugin_db::ManagedState>()
         .map(|state| state.inner().clone())
         .ok_or_else(|| "database is not ready yet".to_string())?;
-    let _guard = runtime.synced_write_guard().await;
     crate::storage::apply_calendar_inventory(runtime.pool(), request).await
 }
 
@@ -242,7 +240,6 @@ pub async fn tombstone_calendar_connection<R: tauri::Runtime>(
         .try_state::<tauri_plugin_db::ManagedState>()
         .map(|state| state.inner().clone())
         .ok_or_else(|| "database is not ready yet".to_string())?;
-    let _guard = runtime.synced_write_guard().await;
     crate::storage::tombstone_calendar_connection(runtime.pool(), request).await
 }
 
@@ -256,7 +253,6 @@ pub async fn set_calendar_enabled<R: tauri::Runtime>(
         .try_state::<tauri_plugin_db::ManagedState>()
         .map(|state| state.inner().clone())
         .ok_or_else(|| "database is not ready yet".to_string())?;
-    let _guard = runtime.synced_write_guard().await;
     crate::storage::set_calendar_enabled(runtime.pool(), request).await
 }
 
@@ -270,7 +266,6 @@ pub async fn sync_calendar_connection_events<R: tauri::Runtime>(
         .try_state::<tauri_plugin_db::ManagedState>()
         .map(|state| state.inner().clone())
         .ok_or_else(|| "database is not ready yet".to_string())?;
-    let _guard = runtime.synced_write_guard().await;
     crate::storage::sync_calendar_connection_events(runtime.pool(), request).await
 }
 
@@ -284,6 +279,5 @@ pub async fn update_ignored_calendar_item<R: tauri::Runtime>(
         .try_state::<tauri_plugin_db::ManagedState>()
         .map(|state| state.inner().clone())
         .ok_or_else(|| "database is not ready yet".to_string())?;
-    let _guard = runtime.synced_write_guard().await;
     crate::storage::update_ignored_calendar_item(runtime.pool(), request).await
 }

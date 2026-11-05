@@ -74,10 +74,6 @@ vi.mock("~/auth", () => ({
   useAuth: () => ({ session: null, signIn: mocks.signIn }),
 }));
 
-vi.mock("~/auth/cloudsync-progress", () => ({
-  useCloudsyncInitialSyncProgress: () => ({ state: "idle" }),
-}));
-
 vi.mock("~/contexts/notifications", () => ({
   useNotifications: () => mocks.notifications,
 }));

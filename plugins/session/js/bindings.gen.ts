@@ -118,14 +118,6 @@ async markSessionAudioTranscriptionComplete(request: SessionAudioRequest) : Prom
     else return { status: "error", error: e  as any };
 }
 },
-async setAttachmentCloudSyncEnabled(request: SetAttachmentCloudSyncEnabledRequest) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:session|set_attachment_cloud_sync_enabled", { request }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async tombstoneSessionAudio(request: SessionAudioRequest) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:session|tombstone_session_audio", { request }) };
@@ -237,7 +229,6 @@ export type ResolveSessionConflictRequest = { conflict_id: string }
 export type ResolveSessionConflictsRequest = { session_id: string }
 export type RestoreDeletedSessionOutcome = "restored" | "alive" | "not_deleted"
 export type SessionAudioRequest = { session_id: string }
-export type SetAttachmentCloudSyncEnabledRequest = { session_id: string; attachment_id: string; enabled: boolean }
 export type SetSessionProposalStatusRequest = { proposal_id: string; status: string }
 export type TombstoneFolderMaterialRequest = { folder_path: string; attachment_id: string }
 export type TombstoneSessionRequest = { session_id: string; tombstone: string }

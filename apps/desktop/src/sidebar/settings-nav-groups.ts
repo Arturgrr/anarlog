@@ -1,7 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 
 import {
-  ArrowsClockwise,
   Bell,
   BookOpen,
   Buildings,
@@ -55,7 +54,6 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
         { id: "account", label: t`Account`, icon: User },
         { id: "insights", label: t`Insights`, icon: ChartLineUp },
         { id: "team", label: t`Teams`, icon: UsersThree },
-        { id: "sync", label: t`Sync`, icon: ArrowsClockwise },
         { id: "appearance", label: t`Appearance`, icon: Sun },
         { id: "notifications", label: t`Notifications`, icon: Bell },
       ],

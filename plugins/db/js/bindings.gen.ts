@@ -110,70 +110,6 @@ async applySessionIngest(workspaceId: string, envelope: JsonValue) : Promise<Res
     else return { status: "error", error: e  as any };
 }
 },
-async getE2eeIdentityStatus(accountUserId: string) : Promise<Result<E2eeIdentityStatus, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|get_e2ee_identity_status", { accountUserId }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async inspectE2eeRecoveryKey(recoveryKey: string) : Promise<Result<E2eeRecoveryKeyIdentity, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|inspect_e2ee_recovery_key", { recoveryKey }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async createE2eeIdentity(accountUserId: string) : Promise<Result<string, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|create_e2ee_identity", { accountUserId }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async importE2eeIdentity(accountUserId: string, recoveryKey: string) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|import_e2ee_identity", { accountUserId, recoveryKey }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async getOrCreateE2eeDeviceIdentity(accountUserId: string) : Promise<Result<E2eeDeviceIdentity, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|get_or_create_e2ee_device_identity", { accountUserId }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async sealE2eeRecoveryKeyForDevice(accountUserId: string, requestId: string, recipientPublicKey: string) : Promise<Result<E2eeDeviceEnrollmentPackage, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|seal_e2ee_recovery_key_for_device", { accountUserId, requestId, recipientPublicKey }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async sealWorkspaceE2eeKeyForRecipients(accountUserId: string, workspaceId: string, recipients: WorkspaceE2eeKeyRecipient[], rotate: boolean, sourceGrant: CloudsyncWorkspaceKeyGrant | null) : Promise<Result<SealedWorkspaceE2eeKey, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|seal_workspace_e2ee_key_for_recipients", { accountUserId, workspaceId, recipients, rotate, sourceGrant }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async importE2eeDeviceEnrollment(accountUserId: string, requestId: string, package: E2eeDeviceEnrollmentPackage) : Promise<Result<E2eeRecoveryKeyIdentity, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|import_e2ee_device_enrollment", { accountUserId, requestId, package }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async subscribe(sql: string, params: JsonValue[], onEvent: TAURI_CHANNEL<QueryEvent>) : Promise<Result<SubscriptionRegistration, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:db|subscribe", { sql, params, onEvent }) };
@@ -185,118 +121,6 @@ async subscribe(sql: string, params: JsonValue[], onEvent: TAURI_CHANNEL<QueryEv
 async unsubscribe(subscriptionId: string) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:db|unsubscribe", { subscriptionId }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async configureCloudsync(configJson: string) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|configure_cloudsync", { configJson }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async bindCloudsyncAccount(accountUserId: string) : Promise<Result<boolean, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|bind_cloudsync_account", { accountUserId }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async connectLocalLibrary(accountUserId: string, expectedLibraryWorkspaceId: string) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|connect_local_library", { accountUserId, expectedLibraryWorkspaceId }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async configureCloudsyncToken(databaseId: string, token: string, workspaceId: string, workspaceProjection: CloudsyncWorkspaceProjection | null, workspaceKeyGrants: CloudsyncWorkspaceKeyGrant[] | null, e2eeWitness: CloudsyncE2eeWitness) : Promise<Result<CloudsyncTokenConfigurationResult, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|configure_cloudsync_token", { databaseId, token, workspaceId, workspaceProjection, workspaceKeyGrants, e2eeWitness }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async configureE2eeReplica(workspaceId: string, e2eeWitness: CloudsyncE2eeWitness, workspaceProjection: CloudsyncWorkspaceProjection | null, workspaceKeyGrants: CloudsyncWorkspaceKeyGrant[] | null) : Promise<Result<CloudsyncTokenConfigurationResult, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|configure_e2ee_replica", { workspaceId, e2eeWitness, workspaceProjection, workspaceKeyGrants }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async startCloudsync() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|start_cloudsync") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async stopCloudsync() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|stop_cloudsync") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async suspendCloudsync() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|suspend_cloudsync") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async suspendCloudsyncForSignOut() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|suspend_cloudsync_for_sign_out") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async suspendCloudsyncAfterAuthLoss() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|suspend_cloudsync_after_auth_loss") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async getCloudsyncStatus() : Promise<Result<JsonValue, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|get_cloudsync_status") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async syncCloudsyncNow() : Promise<Result<JsonValue, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|sync_cloudsync_now") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async beginCloudsyncActivity(activity: string, key: string) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|begin_cloudsync_activity", { activity, key }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async endCloudsyncActivity(activity: string, key: string) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:db|end_cloudsync_activity", { activity, key }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -326,18 +150,9 @@ async waitUntilReady() : Promise<Result<null, string>> {
 /** user-defined types **/
 
 export type ActionItem = { id: string; assignee_human_id: string; status: string; text: string; due_at: string; completed_at: string | null }
-export type CloudsyncE2eeWitness = { endpoint: string; accessToken: string }
-export type CloudsyncTokenConfigurationResult = "configured" | "account_mismatch"
-export type CloudsyncWorkspaceKeyGrant = { workspaceId: string; keyId: string; ephemeralPublicKey: string; nonce: string; ciphertext: string; isActive: boolean }
-export type CloudsyncWorkspaceProjection = { accountUserId: string; personalWorkspaceId: string; workspaces: CloudsyncWorkspaceProjectionEntry[] }
-export type CloudsyncWorkspaceProjectionEntry = { id: string; ownerUserId: string; kind: string; name: string; membershipId: string; role: string; membershipCreatedAt: string; membershipUpdatedAt: string; createdAt: string; updatedAt: string }
 export type DependencyAnalysis = { kind: "reactive"; data: { targets: DependencyTarget[] } } | { kind: "non_reactive"; data: { reason: string } }
 export type DependencyTarget = { kind: "table"; data: string } | { kind: "virtual_table"; data: string }
 export type Document = { id: string; kind: string; template_id: string; title: string; markdown: string; sort_order: number; created_at: string; updated_at: string }
-export type E2eeDeviceEnrollmentPackage = { ephemeralPublicKey: string; nonce: string; ciphertext: string }
-export type E2eeDeviceIdentity = { publicKey: string }
-export type E2eeIdentityStatus = { configured: boolean; keyId: string | null; memberPublicKey: string | null }
-export type E2eeRecoveryKeyIdentity = { keyId: string }
 export type ExecuteProxyResult = { rows: JsonValue[] }
 export type GetMeetingInput = { meeting_id: string }
 export type GetMeetingTranscriptInput = { meeting_id: string; offset: number | null; limit: number | null }
@@ -364,17 +179,14 @@ export type MeetingPage = { meetings: MeetingListItem[]; pagination: Pagination 
 export type Pagination = { offset: number; limit: number; returned: number; total: number | null; next_offset: number | null }
 export type Participant = { human_id: string; display_name: string; email: string; role: string; job_title: string; organization_id: string; organization_name: string }
 export type QueryEvent = { event: "result"; data: JsonValue[] } | { event: "error"; data: string }
-export type SealedWorkspaceE2eeKey = { keyId: string; grants: WorkspaceE2eeKeyGrantUpload[] }
 export type SessionIngestApplyResult = "applied" | "already_applied" | "rejected"
-export type StartupPhase = "preparing_database" | "migrating_database" | "importing_legacy_data" | "configuring_cloudsync" | "ready" | "failed"
+export type StartupPhase = "preparing_database" | "migrating_database" | "importing_legacy_data" | "ready" | "failed"
 export type StartupStatus = { phase: StartupPhase; migrationCurrent: number | null; migrationTotal: number | null }
 export type StorageMigrationState = { phase: string; latestRunId: string; parityVerified: boolean; cutoverAt: string | null; rollbackUntil: string | null; lastError: string; updatedAt: string }
 export type SubscriptionRegistration = { id: string; analysis: DependencyAnalysis }
 export type TAURI_CHANNEL<TSend> = null
 export type TransactionStatement = { sql: string; params: JsonValue[]; expectedRowsAffected?: number | null }
 export type TranscriptPage = { meeting_id: string; text: string; words: JsonValue[]; pagination: Pagination }
-export type WorkspaceE2eeKeyGrantUpload = { userId: string; ephemeralPublicKey: string; nonce: string; ciphertext: string }
-export type WorkspaceE2eeKeyRecipient = { userId: string; publicKey: string }
 
 /** tauri-specta globals **/
 

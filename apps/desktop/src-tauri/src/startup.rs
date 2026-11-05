@@ -91,7 +91,7 @@ fn lock_launch_file(path: &Path) -> LaunchLockState {
 }
 
 // Nightly and stable open the same database. SQLite serializes their writes,
-// but live queries and CloudSync only see their own process, so the two
+// but live queries only see their own process, so the two
 // channels exclude each other for the whole app lifetime. Each channel holds
 // its own lock file; the peer's lock being held means the peer is running.
 // Same-channel relaunches keep working: an own lock that is already held is

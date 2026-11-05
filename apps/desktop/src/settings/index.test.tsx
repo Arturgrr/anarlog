@@ -25,7 +25,6 @@ vi.mock("~/settings/privacy", () => ({ SettingsPrivacy: () => null }));
 vi.mock("~/settings/stats", () => ({
   SettingsInsights: () => <div>Personal insights</div>,
 }));
-vi.mock("~/settings/sync", () => ({ SettingsSync: () => null }));
 vi.mock("~/settings/team", () => ({ SettingsTeam: () => null }));
 vi.mock("~/shared/main", () => ({
   StandardContentWrapper: ({ children }: { children: React.ReactNode }) =>

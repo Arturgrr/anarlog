@@ -7,7 +7,6 @@ import { commands as settingsCommands } from "@anlg/plugin-settings";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { executeTransaction, liveQueryClient } from "~/db";
-import { withCloudsyncActivity } from "~/db/cloudsync-activity";
 import { getEnhancerService } from "~/services/enhancer";
 import { catalogLocalSessionAudio } from "~/session/attachments";
 import { useSession } from "~/session/queries";
@@ -158,32 +157,26 @@ async function processImport(
   }, 10000);
   let phase = "importing";
   try {
-    await withCloudsyncActivity(
-      "transcription",
-      `recording-import:${job.id}`,
-      async () => {
-        const imported = await fsSyncCommands.audioImport(
-          job.meeting_id,
-          job.file_path,
-        );
-        if (imported.status === "error") throw new Error(imported.error);
-        await catalogLocalSessionAudio(job.meeting_id);
-        phase = "transcribing";
-        await update(phase);
-        await runBatch(imported.data, {
-          promotion: { scope: "whole_session" },
-        });
-        phase = "summarizing";
-        await update(phase);
-        const enhancer = getEnhancerService();
-        if (!enhancer)
-          throw new Error(
-            "Intelligence service is not ready. Transcript was preserved.",
-          );
-        const summary = await enhancer.enhanceAndWait(job.meeting_id);
-        await update("done", summary);
-      },
+    const imported = await fsSyncCommands.audioImport(
+      job.meeting_id,
+      job.file_path,
     );
+    if (imported.status === "error") throw new Error(imported.error);
+    await catalogLocalSessionAudio(job.meeting_id);
+    phase = "transcribing";
+    await update(phase);
+    await runBatch(imported.data, {
+      promotion: { scope: "whole_session" },
+    });
+    phase = "summarizing";
+    await update(phase);
+    const enhancer = getEnhancerService();
+    if (!enhancer)
+      throw new Error(
+        "Intelligence service is not ready. Transcript was preserved.",
+      );
+    const summary = await enhancer.enhanceAndWait(job.meeting_id);
+    await update("done", summary);
   } catch {
     // Provider errors may contain credentials; keep externally readable job errors bounded and generic.
     await update(

@@ -220,7 +220,7 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
       {
         label: "Seed recurring meeting notes",
         description:
-          "Create a recurring series with three past notes and key facts to exercise the Insights tab. Needs a CloudSync workspace.",
+          "Create a recurring series with three past notes and key facts to exercise the Insights tab.",
         action: "data:recurring-notes",
       },
     ],

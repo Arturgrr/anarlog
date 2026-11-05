@@ -3,9 +3,9 @@ import type { Session } from "@supabase/supabase-js";
 import type { JSONContent } from "@anlg/editor/note";
 import { uploadSharedAttachment } from "@anlg/supabase/storage";
 
-import { attachmentTransferNative } from "~/attachment-sync/native";
 import { liveQueryClient, useLiveQuery } from "~/db";
 import { flushDatabaseWrites } from "~/db/write-queue";
+import { attachmentTransferNative } from "~/shared-notes/attachment-transfer";
 import type { SharedNoteAttachment } from "~/shared-notes/cache";
 
 const MAX_RESPONSE_BYTES = 64 * 1024;

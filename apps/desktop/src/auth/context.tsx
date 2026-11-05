@@ -28,13 +28,6 @@ import {
 } from "./auth-analytics";
 import { AuthContext } from "./auth-context";
 import { persistAuthSession, supabase } from "./client";
-import {
-  bindCloudsyncAccountForAuth,
-  type CloudsyncAccountAdmission,
-  handleCloudsyncAuthChange,
-  prepareCloudsyncSignOut,
-  refreshCloudsyncForSession,
-} from "./cloudsync";
 import { installDesktopAuthSession } from "./deeplink";
 import { clearAuthStorage } from "./errors";
 import { loadInitialSession } from "./initial-session";
@@ -52,7 +45,6 @@ import {
 } from "./sign-out-coordination";
 
 import { trackAnalyticsEvent } from "~/analytics";
-import { ConnectLocalLibraryDialog } from "~/auth/connect-local-library-dialog";
 import { useLatestRef } from "~/shared/hooks/useLatestRef";
 import {
   buildWebAppUrl,
@@ -62,42 +54,13 @@ import {
   id,
 } from "~/shared/utils";
 
-const ACCOUNT_MISMATCH_TOAST_ID = "auth-account-mismatch";
 const SESSION_EXPIRED_TOAST_ID = "auth-session-expired";
-// Account admission runs behind the CloudSync plugin queue. If that queue is
-// jammed, auth must not stay hidden forever; admission finishes late instead.
-const ACCOUNT_ADMISSION_TIMEOUT_MS = 15_000;
-// A CloudSync refresh (e.g. on window focus) can preempt the bind before it
-// runs. Retry a few times; each attempt itself supersedes that refresh.
-const ACCOUNT_ADMISSION_MAX_ATTEMPTS = 3;
-
-async function settleWithin<T>(
-  operation: Promise<T>,
-  timeoutMs: number,
-): Promise<{ status: "settled"; value: T } | { status: "timed_out" }> {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  try {
-    return await Promise.race([
-      operation.then((value) => ({ status: "settled" as const, value })),
-      new Promise<{ status: "timed_out" }>((resolve) => {
-        timeout = setTimeout(() => resolve({ status: "timed_out" }), timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-  }
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [fingerprint, setFingerprint] = useState<string | null>(null);
   const [isFingerprintSettled, setIsFingerprintSettled] = useState(false);
-  const [connectLibraryOpen, setConnectLibraryOpen] = useState(false);
-  const promptedAccountRef = useRef<string | null>(null);
   const currentWindowLabel = getCurrentWebviewWindow().label;
-  const managesCloudsync = currentWindowLabel === "main";
+  const isMainWindow = currentWindowLabel === "main";
   // Prevents double initSession in React StrictMode, which can cause refresh token races
   const initStartedRef = useRef(false);
   const authTransitionRef = useRef(0);
@@ -107,8 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const authStorageRevisionRef = useRef(0);
   const coordinatedMainSignOutRef = useRef<Promise<boolean> | null>(null);
   // The committed session, readable synchronously so request headers never
-  // lag behind React state. Admission is the account id whose local database
-  // binding was verified; only admitted accounts get fast-path token refreshes.
+  // lag behind React state. Only admitted accounts get fast-path token refreshes.
   const sessionRef = useRef<Session | null>(null);
   const admittedUserIdRef = useRef<string | null>(null);
 
@@ -240,11 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // past this rejection.
       admittedUserIdRef.current = null;
 
-      if (
-        invalidateClientSession &&
-        !managesCloudsync &&
-        !mainSignOutCompleted
-      ) {
+      if (invalidateClientSession && !isMainWindow && !mainSignOutCompleted) {
         let completed: boolean;
         try {
           completed = await coordinateMainSignOut();
@@ -293,78 +251,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       resetTrackedAuthIdentity();
       await enqueueAuthAnalytics(clearAuthAnalyticsGroups);
       commitSession(null);
-      if (managesCloudsync) {
-        await handleCloudsyncAuthChange("SIGNED_OUT", null);
-      }
     },
-    [
-      commitSession,
-      coordinateMainSignOut,
-      enqueueAuthAnalytics,
-      managesCloudsync,
-    ],
-  );
-
-  const rejectAccountMismatch = useCallback(
-    async (transition: number) => {
-      if (transition !== authTransitionRef.current) {
-        return;
-      }
-
-      admittedUserIdRef.current = null;
-      if (managesCloudsync) {
-        await handleCloudsyncAuthChange("SIGNED_OUT", null);
-      }
-      if (transition !== authTransitionRef.current) return;
-      if (
-        !managesCloudsync ||
-        promptedAccountRef.current === sessionRef.current?.user.id
-      )
-        return;
-      promptedAccountRef.current = sessionRef.current?.user.id ?? null;
-      toast.info(
-        t`Your local notes are available. Connect this library to sync with your current account.`,
-        {
-          id: ACCOUNT_MISMATCH_TOAST_ID,
-          duration: Number.POSITIVE_INFINITY,
-          action: {
-            label: t`Connect library`,
-            onClick: () => setConnectLibraryOpen(true),
-          },
-        },
-      );
-      setConnectLibraryOpen(true);
-    },
-    [managesCloudsync],
-  );
-
-  const applyCloudsyncAuthChange = useCallback(
-    async (
-      event: AuthChangeEvent,
-      nextSession: Session | null,
-      transition: number,
-    ) => {
-      if (!managesCloudsync) {
-        return;
-      }
-
-      const rejectCurrentAccountMismatch = () =>
-        rejectAccountMismatch(transition);
-      const result = await handleCloudsyncAuthChange(
-        event,
-        nextSession,
-        rejectCurrentAccountMismatch,
-      );
-      if (
-        result !== "account_mismatch" ||
-        transition !== authTransitionRef.current
-      ) {
-        return;
-      }
-
-      await rejectCurrentAccountMismatch();
-    },
-    [managesCloudsync, rejectAccountMismatch],
+    [commitSession, coordinateMainSignOut, enqueueAuthAnalytics, isMainWindow],
   );
 
   // Runs once an account is admitted: write the session back if storage was
@@ -405,81 +293,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  const admitAccount = useCallback(
-    async (
-      accountUserId: string,
-      transition: number,
-    ): Promise<CloudsyncAccountAdmission> => {
-      let admission: CloudsyncAccountAdmission = "superseded";
-      for (
-        let attempt = 0;
-        attempt < ACCOUNT_ADMISSION_MAX_ATTEMPTS &&
-        transition === authTransitionRef.current;
-        attempt += 1
-      ) {
-        admission = await bindCloudsyncAccountForAuth(accountUserId);
-        if (admission !== "superseded") {
-          break;
-        }
-      }
-      return admission;
-    },
-    [],
-  );
-
-  const finishLateAdmission = useCallback(
-    (
-      event: AuthChangeEvent,
-      nextSession: Session,
-      transition: number,
-      storageRevision: number,
-      admission: Promise<CloudsyncAccountAdmission>,
-    ) => {
-      void admission
-        .then(
-          async (outcome) => {
-            if (transition !== authTransitionRef.current) {
-              return;
-            }
-            if (outcome === "mismatch") {
-              console.warn("[auth] local database belongs to another account");
-              commitSession(nextSession);
-              await rejectAccountMismatch(transition);
-              return;
-            }
-            if (outcome === "superseded") {
-              console.warn(
-                "[auth] local database account verification was superseded; keeping the local session unadmitted",
-              );
-              return;
-            }
-            toast.dismiss(ACCOUNT_MISMATCH_TOAST_ID);
-            if (
-              !(await restoreAdmittedSession(
-                nextSession,
-                transition,
-                storageRevision,
-              ))
-            ) {
-              return;
-            }
-            commitSession(nextSession, true);
-            await applyCloudsyncAuthChange(event, nextSession, transition);
-          },
-          () => {},
-        )
-        .catch(() => {
-          console.warn("[cloudsync] late admission could not start sync");
-        });
-    },
-    [
-      applyCloudsyncAuthChange,
-      commitSession,
-      rejectAccountMismatch,
-      restoreAdmittedSession,
-    ],
-  );
-
   const applyAuthChange = useCallback(
     async (
       event: AuthChangeEvent,
@@ -492,10 +305,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (event === "SIGNED_OUT") {
-        promptedAccountRef.current = null;
-        setConnectLibraryOpen(false);
         let mainSignOutCompleted = false;
-        if (event === "SIGNED_OUT" && !managesCloudsync) {
+        if (event === "SIGNED_OUT" && !isMainWindow) {
           resetTrackedAuthIdentity();
           commitSession(null);
 
@@ -523,63 +334,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (nextSession) {
-        const admission = admitAccount(nextSession.user.id, transition);
-        let outcome: CloudsyncAccountAdmission;
-        try {
-          const settled = await settleWithin(
-            admission,
-            ACCOUNT_ADMISSION_TIMEOUT_MS,
-          );
-          if (transition !== authTransitionRef.current) {
-            return;
-          }
-          if (settled.status === "timed_out") {
-            console.warn(
-              "[auth] local database account verification is stalled; preserving the local session",
-            );
-            commitSession(nextSession);
-            void enqueueAuthAnalytics(() => trackAuthEvent(event, nextSession));
-            void supabase?.auth.startAutoRefresh().catch(() => {
-              console.warn("[auth] session refresh could not be started");
-            });
-            finishLateAdmission(
-              event,
-              nextSession,
-              transition,
-              storageRevision,
-              admission,
-            );
-            return;
-          }
-          outcome = settled.value;
-        } catch {
-          if (transition !== authTransitionRef.current) {
-            return;
-          }
-          console.warn(
-            "[auth] local database account verification failed; preserving the local session",
-          );
-          commitSession(nextSession);
-          void enqueueAuthAnalytics(() => trackAuthEvent(event, nextSession));
-          return;
-        }
-        if (outcome === "mismatch") {
-          console.warn("[auth] local database belongs to another account");
-          commitSession(nextSession);
-          await rejectAccountMismatch(transition);
-          return;
-        }
-        if (outcome === "superseded") {
-          console.warn(
-            "[auth] local database account verification was superseded; preserving the local session",
-          );
-          commitSession(nextSession);
-          void enqueueAuthAnalytics(() => trackAuthEvent(event, nextSession));
-          return;
-        }
-        toast.dismiss(ACCOUNT_MISMATCH_TOAST_ID);
-        promptedAccountRef.current = null;
-        setConnectLibraryOpen(false);
         if (
           !(await restoreAdmittedSession(
             nextSession,
@@ -593,17 +347,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       commitSession(nextSession, true);
       void enqueueAuthAnalytics(() => trackAuthEvent(event, nextSession));
-      await applyCloudsyncAuthChange(event, nextSession, transition);
     },
     [
-      admitAccount,
-      applyCloudsyncAuthChange,
       commitSession,
       coordinateMainSignOut,
       enqueueAuthAnalytics,
-      finishLateAdmission,
-      managesCloudsync,
-      rejectAccountMismatch,
+      isMainWindow,
       rejectAuthChange,
       restoreAdmittedSession,
     ],
@@ -634,29 +383,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   // A new token for the already-admitted account is a credential update, not
-  // an identity change. It must never wait on the transition queue, account
-  // admission, or CloudSync: a stalled handshake would otherwise leave every
-  // hosted request signing with an expired token until the user re-logs in.
+  // an identity change. It must never wait on the transition queue: a stalled
+  // transition would otherwise leave every hosted request signing with an
+  // expired token until the user re-logs in.
   const applyAdmittedSessionRefresh = useCallback(
     (event: AuthChangeEvent, nextSession: Session) => {
-      const transition = beginAuthTransition(event);
+      beginAuthTransition(event);
       commitSession(nextSession, true);
       void enqueueAuthAnalytics(() => trackAuthEvent(event, nextSession));
-      void applyCloudsyncAuthChange(event, nextSession, transition).catch(
-        (error) => {
-          console.warn(
-            "[cloudsync] refreshed credentials could not be applied",
-            error,
-          );
-        },
-      );
     },
-    [
-      applyCloudsyncAuthChange,
-      beginAuthTransition,
-      commitSession,
-      enqueueAuthAnalytics,
-    ],
+    [beginAuthTransition, commitSession, enqueueAuthAnalytics],
   );
 
   // While an explicit sign-out is clearing storage, a refresh must queue behind
@@ -807,7 +543,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // check, recovering stale sessions after sleep/hibernate.
           console.log("[auth] startAutoRefresh: window regained focus");
           void client.auth.startAutoRefresh();
-          if (managesCloudsync) {
+          if (isMainWindow) {
             void (async () => {
               const transition = authTransitionRef.current;
               try {
@@ -834,38 +570,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   if (!cancelled && transition === authTransitionRef.current) {
                     handleRefreshFailure(refreshed.error, currentSession);
                   }
-                  if (cancelled || refreshed.error || !refreshed.data.session) {
-                    return;
-                  }
-                  return;
                 }
-
-                if (cancelled || transition !== authTransitionRef.current) {
-                  return;
-                }
-
-                const rejectCurrentAccountMismatch = async () => {
-                  if (cancelled || transition !== authTransitionRef.current) {
-                    return;
-                  }
-
-                  await rejectAccountMismatch(transition);
-                };
-                const result = await refreshCloudsyncForSession(
-                  currentSession,
-                  rejectCurrentAccountMismatch,
-                );
-                if (
-                  cancelled ||
-                  result !== "account_mismatch" ||
-                  transition !== authTransitionRef.current
-                ) {
-                  return;
-                }
-
-                await rejectCurrentAccountMismatch();
               } catch {
-                console.warn("[cloudsync] session recovery failed");
+                console.warn("[auth] session recovery failed");
               }
             })();
           }
@@ -885,7 +592,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unlisten?.();
       void client.auth.stopAutoRefresh();
     };
-  }, [handleRefreshFailure, managesCloudsync, rejectAccountMismatch]);
+  }, [handleRefreshFailure, isMainWindow]);
 
   const signOutFromMain = useCallback(async (): Promise<boolean> => {
     if (!supabase) {
@@ -893,14 +600,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const transition = authTransitionRef.current;
-    const currentSession = session;
-    const rejectCurrentAccountMismatch = () =>
-      rejectAccountMismatch(transition);
-    await prepareCloudsyncSignOut(currentSession, rejectCurrentAccountMismatch);
-
-    if (transition !== authTransitionRef.current) {
-      return authTransitionEventRef.current === "SIGNED_OUT";
-    }
 
     let shouldCleanUp = false;
     let signOutError: unknown = null;
@@ -939,17 +638,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (signOutError) {
-      if (currentSession) {
-        const result = await handleCloudsyncAuthChange(
-          "TOKEN_REFRESHED",
-          currentSession,
-          rejectCurrentAccountMismatch,
-        );
-        if (result === "account_mismatch") {
-          await rejectCurrentAccountMismatch();
-          return true;
-        }
-      }
       throw signOutError;
     }
 
@@ -970,11 +658,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn("[auth] sign-out could not be synchronized");
     }
     return true;
-  }, [currentWindowLabel, enqueueAuthChange, rejectAccountMismatch, session]);
+  }, [currentWindowLabel, enqueueAuthChange]);
   const signOutFromMainRef = useLatestRef(signOutFromMain);
 
   useMountEffect(() => {
-    if (!managesCloudsync) {
+    if (!isMainWindow) {
       return;
     }
 
@@ -1065,7 +753,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const signOut = useCallback(async () => {
-    if (managesCloudsync) {
+    if (isMainWindow) {
       await signOutFromMain();
       return;
     }
@@ -1076,12 +764,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     await rejectAuthChange(transition, true, true);
-  }, [
-    coordinateMainSignOut,
-    managesCloudsync,
-    rejectAuthChange,
-    signOutFromMain,
-  ]);
+  }, [coordinateMainSignOut, isMainWindow, rejectAuthChange, signOutFromMain]);
 
   const refreshSessionMutation = useMutation({
     mutationFn: async (): Promise<Session | null> => {
@@ -1220,22 +903,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ],
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-      {managesCloudsync && session && (
-        <ConnectLocalLibraryDialog
-          key={session.user.id}
-          open={connectLibraryOpen}
-          onOpenChange={setConnectLibraryOpen}
-          accountUserId={session.user.id}
-          email={session.user.email ?? session.user.id}
-          onConnected={async () => {
-            if (sessionRef.current?.user.id !== session.user.id) return;
-            await enqueueAuthChange("SIGNED_IN", sessionRef.current);
-          }}
-        />
-      )}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

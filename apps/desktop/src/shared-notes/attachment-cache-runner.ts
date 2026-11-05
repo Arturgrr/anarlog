@@ -9,7 +9,7 @@ import { SharedAttachmentGatewayError } from "./attachment-client";
 import {
   attachmentTransferNative,
   NativeAttachmentTransferError,
-} from "~/attachment-sync/native";
+} from "~/shared-notes/attachment-transfer";
 
 const MAX_JOBS_PER_PASS = 4;
 const PASS_INTERVAL_MS = 20_000;

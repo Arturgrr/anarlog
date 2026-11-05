@@ -810,7 +810,7 @@ describe("EventListeners notification events", () => {
   );
 
   test.each([
-    ["notification_confirm", "cloudsync-initial-sync-complete-user-1"],
+    ["notification_confirm", "informational-notification"],
     ["notification_accept", "unknown-informational-notification"],
   ])(
     "%s for %s leaves the current note and recording alone",

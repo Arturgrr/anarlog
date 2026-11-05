@@ -20,7 +20,6 @@ import { SettingsHydrationBoundary } from "~/settings/hydration-boundary";
 import { SettingsImports } from "~/settings/imports";
 import { SettingsPrivacy } from "~/settings/privacy";
 import { SettingsInsights } from "~/settings/stats";
-import { SettingsSync } from "~/settings/sync";
 import { SettingsTeam } from "~/settings/team";
 import { StandardContentWrapper } from "~/shared/main";
 import { type Tab } from "~/store/zustand/tabs";
@@ -65,8 +64,6 @@ function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
         return <SettingsAppearance />;
       case "notifications":
         return <SettingsNotifications />;
-      case "sync":
-        return <SettingsSync />;
       case "team":
         return <SettingsTeam />;
       case "imports":

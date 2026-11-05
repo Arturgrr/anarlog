@@ -99,7 +99,7 @@ export async function populateRecurringMeetingNotes({
   userId: string | null | undefined;
   now?: Date;
 }): Promise<string> {
-  const workspaceId = await loadCloudsyncWorkspaceId();
+  const workspaceId = await loadLocalWorkspaceId();
   const ownerUserId = normalizeUserId(userId, workspaceId);
   const currentSessionId = namespacedId(workspaceId, CURRENT_SESSION_ID);
   const participants = PARTICIPANTS.map((participant) => ({
@@ -424,7 +424,7 @@ function buildSessionEvent(startedAt: Date): SessionEvent {
   };
 }
 
-async function loadCloudsyncWorkspaceId(): Promise<string> {
+async function loadLocalWorkspaceId(): Promise<string> {
   const [binding] = await liveQueryClient.execute<{
     workspace_id: string | null;
   }>(
@@ -436,7 +436,7 @@ async function loadCloudsyncWorkspaceId(): Promise<string> {
     `,
   );
   if (!binding?.workspace_id) {
-    throw new Error("CloudSync workspace binding is missing");
+    throw new Error("Local workspace binding is missing");
   }
   return binding.workspace_id;
 }

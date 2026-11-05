@@ -14,9 +14,6 @@ vi.mock("./default-share-access", () => ({
     <span>Default sharing selector</span>
   ),
 }));
-vi.mock("./primary-recording-device", () => ({
-  PrimaryRecordingDeviceSelector: () => null,
-}));
 
 import { MeetingSettingsView } from "./meeting-settings";
 

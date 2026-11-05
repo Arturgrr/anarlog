@@ -235,9 +235,6 @@ const baseNodeViews = {
 
 const COMPOSITION_SYNC_GRACE_MS = 500;
 
-// Stretching this delay does not reduce upload volume -- CloudSync stages a
-// row's current value, not one entry per write, so a sync tick ships the note
-// once however often it was written (crates/db-core/tests/write_coalescing.rs).
 // maxWait is the part that matters: trailing-only never fires while keystrokes
 // keep arriving under the delay, so a fluent burst could persist nothing for as
 // long as it lasted, losing all of it on an unclean exit and going stale for

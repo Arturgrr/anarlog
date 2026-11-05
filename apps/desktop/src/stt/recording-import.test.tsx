@@ -31,10 +31,6 @@ vi.mock("@anlg/plugin-fs-sync", () => ({
 vi.mock("@anlg/plugin-fs2", () => ({
   commands: { remove: async () => ({ status: "ok" }) },
 }));
-vi.mock("~/db/cloudsync-activity", () => ({
-  withCloudsyncActivity: (_kind: string, _id: string, run: () => unknown) =>
-    run(),
-}));
 vi.mock("~/session/attachments", () => ({
   catalogLocalSessionAudio: async () => {},
 }));

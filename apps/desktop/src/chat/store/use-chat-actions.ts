@@ -139,7 +139,7 @@ export function useChatActions({
 
       sendMessage(uiMessage, {
         chatGroupId: currentGroupId,
-        beforeSend: async (trackCompletion) => {
+        beforeSend: async () => {
           const persist = persistWithRetry(runPersist);
           trackPendingChatPersist(currentGroupId, persist);
           try {
@@ -147,14 +147,11 @@ export function useChatActions({
             if (fallbackTitle) {
               clearFailedChatGroupCreate(currentGroupId);
               onGroupCreated(currentGroupId);
-              const titleCompletion = queueChatTitleGeneration({
+              void queueChatTitleGeneration({
                 groupId: currentGroupId,
                 fallbackTitle,
                 initialRequest: content,
               });
-              if (titleCompletion) {
-                trackCompletion(titleCompletion);
-              }
             }
           } catch (error) {
             console.error("Failed to persist outgoing chat message", error);

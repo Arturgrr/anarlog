@@ -5,9 +5,9 @@ import { useCallback, useMemo } from "react";
 import { and, eq, sharedSessionAttachmentCache } from "@anlg/db";
 import type { AttachmentResolver } from "@anlg/editor/node-views";
 
-import { attachmentTransferNative } from "~/attachment-sync/native";
 import { db, useDrizzleLiveQuery } from "~/db";
 import { sharedAttachmentCacheStore } from "~/shared-notes/attachment-cache-store";
+import { attachmentTransferNative } from "~/shared-notes/attachment-transfer";
 
 type SharedAttachmentPathRow = {
   attachment_id: string;

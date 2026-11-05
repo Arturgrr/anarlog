@@ -1,5 +1,4 @@
 mod commands;
-mod e2ee_witness;
 mod error;
 mod import;
 mod runtime;
@@ -27,7 +26,6 @@ pub enum StartupPhase {
     PreparingDatabase,
     MigratingDatabase,
     ImportingLegacyData,
-    ConfiguringCloudsync,
     Ready,
     Failed,
 }
@@ -143,99 +141,6 @@ pub enum SessionIngestApplyResult {
     Rejected,
 }
 
-#[derive(Debug, Clone, serde::Serialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct E2eeIdentityStatus {
-    pub configured: bool,
-    pub key_id: Option<String>,
-    pub member_public_key: Option<String>,
-}
-
-#[derive(Debug, Clone, serde::Serialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct E2eeRecoveryKeyIdentity {
-    pub key_id: String,
-}
-
-#[derive(Debug, Clone, serde::Serialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct E2eeDeviceIdentity {
-    pub public_key: String,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct E2eeDeviceEnrollmentPackage {
-    pub ephemeral_public_key: String,
-    pub nonce: String,
-    pub ciphertext: String,
-}
-
-#[derive(Debug, Clone, serde::Deserialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct CloudsyncWorkspaceKeyGrant {
-    pub workspace_id: String,
-    pub key_id: String,
-    pub ephemeral_public_key: String,
-    pub nonce: String,
-    pub ciphertext: String,
-    pub is_active: bool,
-}
-
-#[derive(Debug, Clone, serde::Deserialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct WorkspaceE2eeKeyRecipient {
-    pub user_id: String,
-    pub public_key: String,
-}
-
-#[derive(Debug, Clone, serde::Serialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkspaceE2eeKeyGrantUpload {
-    pub user_id: String,
-    pub ephemeral_public_key: String,
-    pub nonce: String,
-    pub ciphertext: String,
-}
-
-#[derive(Debug, Clone, serde::Serialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct SealedWorkspaceE2eeKey {
-    pub key_id: String,
-    pub grants: Vec<WorkspaceE2eeKeyGrantUpload>,
-}
-
-impl From<CloudsyncWorkspaceKeyGrant> for anlg_e2ee::WorkspaceKeyGrant {
-    fn from(value: CloudsyncWorkspaceKeyGrant) -> Self {
-        Self {
-            key_id: value.key_id,
-            ephemeral_public_key: value.ephemeral_public_key,
-            nonce: value.nonce,
-            ciphertext: value.ciphertext,
-        }
-    }
-}
-
-impl From<anlg_e2ee::DeviceEnrollmentPackage> for E2eeDeviceEnrollmentPackage {
-    fn from(value: anlg_e2ee::DeviceEnrollmentPackage) -> Self {
-        Self {
-            ephemeral_public_key: value.ephemeral_public_key,
-            nonce: value.nonce,
-            ciphertext: value.ciphertext,
-        }
-    }
-}
-
-impl From<E2eeDeviceEnrollmentPackage> for anlg_e2ee::DeviceEnrollmentPackage {
-    fn from(value: E2eeDeviceEnrollmentPackage) -> Self {
-        Self {
-            ephemeral_public_key: value.ephemeral_public_key,
-            nonce: value.nonce,
-            ciphertext: value.ciphertext,
-        }
-    }
-}
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type, PartialEq)]
 pub struct ExecuteProxyResult {
     rows: Vec<serde_json::Value>,
@@ -248,77 +153,6 @@ pub enum QueryEvent {
     Result(Vec<serde_json::Value>),
     #[serde(rename = "error")]
     Error(String),
-}
-
-#[derive(Debug, Clone, Copy, serde::Serialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum CloudsyncTokenConfigurationResult {
-    Configured,
-    AccountMismatch,
-}
-
-#[derive(Debug, Clone, serde::Deserialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct CloudsyncWorkspaceProjection {
-    pub account_user_id: String,
-    pub personal_workspace_id: String,
-    pub workspaces: Vec<CloudsyncWorkspaceProjectionEntry>,
-}
-
-#[derive(Debug, Clone, serde::Deserialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct CloudsyncWorkspaceProjectionEntry {
-    pub id: String,
-    pub owner_user_id: String,
-    pub kind: String,
-    pub name: String,
-    pub membership_id: String,
-    pub role: String,
-    pub membership_created_at: String,
-    pub membership_updated_at: String,
-    pub created_at: String,
-    pub updated_at: String,
-}
-
-#[derive(Clone, serde::Deserialize, specta::Type, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct CloudsyncE2eeWitness {
-    pub endpoint: String,
-    pub access_token: String,
-}
-
-impl From<CloudsyncE2eeWitness> for anlg_db_sync::E2eeWitnessConfig {
-    fn from(value: CloudsyncE2eeWitness) -> Self {
-        Self {
-            endpoint: value.endpoint,
-            access_token: value.access_token,
-        }
-    }
-}
-
-impl From<CloudsyncWorkspaceProjection> for anlg_db_app::CloudsyncWorkspaceProjection {
-    fn from(projection: CloudsyncWorkspaceProjection) -> Self {
-        Self {
-            account_user_id: projection.account_user_id,
-            personal_workspace_id: projection.personal_workspace_id,
-            workspaces: projection
-                .workspaces
-                .into_iter()
-                .map(|workspace| anlg_db_app::CloudsyncWorkspaceProjectionEntry {
-                    id: workspace.id,
-                    owner_user_id: workspace.owner_user_id,
-                    kind: workspace.kind,
-                    name: workspace.name,
-                    membership_id: workspace.membership_id,
-                    role: workspace.role,
-                    membership_created_at: workspace.membership_created_at,
-                    membership_updated_at: workspace.membership_updated_at,
-                    created_at: workspace.created_at,
-                    updated_at: workspace.updated_at,
-                })
-                .collect(),
-        }
-    }
 }
 
 fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
@@ -338,30 +172,8 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::cleanup_legacy_files,
             commands::run_legacy_import,
             commands::apply_session_ingest,
-            commands::get_e2ee_identity_status<tauri::Wry>,
-            commands::inspect_e2ee_recovery_key,
-            commands::create_e2ee_identity<tauri::Wry>,
-            commands::import_e2ee_identity<tauri::Wry>,
-            commands::get_or_create_e2ee_device_identity<tauri::Wry>,
-            commands::seal_e2ee_recovery_key_for_device<tauri::Wry>,
-            commands::seal_workspace_e2ee_key_for_recipients<tauri::Wry>,
-            commands::import_e2ee_device_enrollment<tauri::Wry>,
             commands::subscribe::<tauri::Wry>,
             commands::unsubscribe,
-            commands::configure_cloudsync,
-            commands::bind_cloudsync_account,
-            commands::connect_local_library,
-            commands::configure_cloudsync_token<tauri::Wry>,
-            commands::configure_e2ee_replica<tauri::Wry>,
-            commands::start_cloudsync,
-            commands::stop_cloudsync,
-            commands::suspend_cloudsync,
-            commands::suspend_cloudsync_for_sign_out,
-            commands::suspend_cloudsync_after_auth_loss,
-            commands::get_cloudsync_status,
-            commands::sync_cloudsync_now,
-            commands::begin_cloudsync_activity,
-            commands::end_cloudsync_activity,
             commands::get_startup_status,
             commands::wait_until_ready,
         ])
@@ -372,7 +184,6 @@ async fn bootstrap_app_database<R: tauri::Runtime>(
     app: tauri::AppHandle<R>,
     db: std::sync::Arc<anlg_db_core::Db>,
     runtime: &runtime::PluginDbRuntime,
-    startup_config: Option<anlg_db_core::CloudsyncRuntimeConfig>,
 ) -> std::result::Result<(), String> {
     runtime
         .ensure_app_schema()
@@ -389,39 +200,7 @@ async fn bootstrap_app_database<R: tauri::Runtime>(
     import::import_legacy_data(&app, db.pool())
         .await
         .map_err(|error| error.to_string())?;
-    if let Some(config) = startup_config {
-        runtime.set_startup_status_if_running(StartupStatus::for_phase(
-            StartupPhase::ConfiguringCloudsync,
-        ));
-        let migration_ready = import::legacy_migration_ready(db.pool())
-            .await
-            .map_err(|error| error.to_string())?;
-        if !migration_ready {
-            tracing::warn!(
-                "startup CloudSync configuration skipped until legacy migration is ready"
-            );
-        } else if let Err(error) = db.cloudsync_configure(config).await {
-            tracing::warn!(%error, "failed to configure startup cloudsync");
-        } else {
-            let sync_db = std::sync::Arc::clone(&db);
-            tauri::async_runtime::spawn(async move {
-                if let Err(error) = sync_db.cloudsync_start().await {
-                    tracing::warn!(%error, "failed to start cloudsync");
-                    return;
-                }
-                if let Err(error) = sync_db.cloudsync_trigger_sync().await {
-                    tracing::warn!(%error, "initial cloudsync failed");
-                }
-            });
-        }
-    }
     Ok(())
-}
-
-pub fn init<R: tauri::Runtime>(
-    db: std::sync::Arc<anlg_db_core::Db>,
-) -> tauri::plugin::TauriPlugin<R> {
-    init_with_cloudsync(db, None)
 }
 
 pub fn close_webview_subscriptions<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) {
@@ -437,9 +216,8 @@ pub fn close_webview_subscriptions<R: tauri::Runtime>(app: &tauri::AppHandle<R>,
     });
 }
 
-pub fn init_with_cloudsync<R: tauri::Runtime>(
+pub fn init<R: tauri::Runtime>(
     db: std::sync::Arc<anlg_db_core::Db>,
-    startup_config: Option<anlg_db_core::CloudsyncRuntimeConfig>,
 ) -> tauri::plugin::TauriPlugin<R> {
     let specta_builder = make_specta_builder();
 
@@ -451,15 +229,9 @@ pub fn init_with_cloudsync<R: tauri::Runtime>(
             let startup_db = std::sync::Arc::clone(&db);
             let startup_runtime = std::sync::Arc::clone(&runtime);
             let startup_app = app.app_handle().clone();
-            let startup_config = startup_config.clone();
             tauri::async_runtime::spawn(async move {
-                let result = bootstrap_app_database(
-                    startup_app,
-                    startup_db,
-                    &startup_runtime,
-                    startup_config,
-                )
-                .await;
+                let result =
+                    bootstrap_app_database(startup_app, startup_db, &startup_runtime).await;
                 startup_runtime.finish_startup(result);
             });
             app.manage(runtime);
@@ -478,14 +250,6 @@ pub fn init_with_cloudsync<R: tauri::Runtime>(
             } = event
             {
                 close_webview_subscriptions(app, label);
-            }
-            if let tauri::RunEvent::WindowEvent {
-                event: tauri::WindowEvent::Focused(true),
-                ..
-            } = event
-                && let Some(runtime) = app.try_state::<ManagedState>()
-            {
-                runtime.nudge_cloudsync_on_focus();
             }
         })
         .build()

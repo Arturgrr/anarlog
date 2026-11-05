@@ -11,26 +11,16 @@ const mocks = vi.hoisted(() => ({
   session: null as any,
   downloadSharedAttachment: vi.fn(),
   clearSharedAttachmentScope: vi.fn().mockResolvedValue(0),
-  clearSharedAttachmentPreviewScopes: vi
-    .fn()
-    .mockResolvedValue({ status: "ok", data: false }),
 }));
 
 vi.mock("@tauri-apps/api/core", () => ({
   convertFileSrc: (path: string) => `asset:${path}`,
 }));
 
-vi.mock("~/attachment-sync/native", () => ({
+vi.mock("~/shared-notes/attachment-transfer", () => ({
   attachmentTransferNative: {
     downloadSharedAttachment: mocks.downloadSharedAttachment,
     clearSharedAttachmentScope: mocks.clearSharedAttachmentScope,
-  },
-}));
-
-vi.mock("@anlg/plugin-attachment-sync", () => ({
-  commands: {
-    clearSharedAttachmentPreviewScopes:
-      mocks.clearSharedAttachmentPreviewScopes,
   },
 }));
 
@@ -584,14 +574,6 @@ describe("ephemeral shared-note previews", () => {
     expect(mocks.clearSharedAttachmentScope).toHaveBeenNthCalledWith(
       2,
       `preview:${viewId}`,
-    );
-  });
-
-  it("clears crash-orphaned preview scopes on startup", async () => {
-    render(<SharedNotePreviewAuthLifecycle />);
-
-    await waitFor(() =>
-      expect(mocks.clearSharedAttachmentPreviewScopes).toHaveBeenCalledOnce(),
     );
   });
 

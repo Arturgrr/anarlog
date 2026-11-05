@@ -22,9 +22,9 @@ async doLog(level: Level, data: JsonValue[]) : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async logContent(cloudsyncOnly: boolean | null) : Promise<Result<string | null, string>> {
+async logContent() : Promise<Result<string | null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:tracing|log_content", { cloudsyncOnly }) };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tracing|log_content") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

@@ -64,12 +64,6 @@ export const SETTING_DEFINITIONS = {
     path: ["general", "auto_stop_meetings"],
     default: true as boolean,
   },
-  primary_recording_device: {
-    type: "string",
-    path: ["general", "primary_recording_device"],
-    synced: true,
-    default: "" as string,
-  },
   auto_start_scheduled_meetings: {
     type: "boolean",
     path: ["general", "auto_start_scheduled_meetings"],
@@ -195,11 +189,6 @@ export const SETTING_DEFINITIONS = {
     path: ["notification", "summary_complete"],
     default: true as boolean,
   },
-  notification_cloudsync_complete: {
-    type: "boolean",
-    path: ["notification", "cloudsync_complete"],
-    default: true as boolean,
-  },
   notification_recording: {
     type: "boolean",
     path: ["notification", "recording"],
@@ -265,11 +254,6 @@ export const SETTING_DEFINITIONS = {
     type: "boolean",
     path: ["general", "capture_shared_screens"],
     default: false as boolean,
-  },
-  cloud_sync_enabled: {
-    type: "boolean",
-    path: ["general", "cloud_sync_enabled"],
-    default: true as boolean,
   },
   ai_language: {
     type: "string",
@@ -470,8 +454,8 @@ export const SETTING_DEFINITIONS = {
 
 export type SettingKey = keyof typeof SETTING_DEFINITIONS;
 
-// Keys marked `synced` persist to the E2EE-replicated synced_preferences table
-// instead of the device-local app_settings table.
+// Keys marked `synced` persist to the synced_preferences table instead of the
+// app_settings table.
 export const SYNCED_SETTING_KEYS: ReadonlySet<SettingKey> = new Set(
   (Object.keys(SETTING_DEFINITIONS) as SettingKey[]).filter(
     (key) => "synced" in SETTING_DEFINITIONS[key],
