@@ -9,6 +9,7 @@ mod contact_ops;
 mod event_ops;
 mod event_types;
 mod folder_catalog_ops;
+mod legacy_cloudsync;
 mod legacy_import;
 mod managed_settings;
 mod pilot_usage_ops;
@@ -43,6 +44,7 @@ pub use contact_ops::*;
 pub use event_ops::*;
 pub use event_types::*;
 pub use folder_catalog_ops::*;
+pub use legacy_cloudsync::*;
 pub use legacy_import::*;
 pub use managed_settings::*;
 pub use pilot_usage_ops::*;
@@ -521,6 +523,7 @@ pub async fn prepare_schema_with_progress(
     db: &anlg_db_core::Db,
     mut on_migration_progress: impl FnMut(anlg_db_migrate::MigrationProgress) + Send,
 ) -> Result<(), AppSchemaError> {
+    detach_legacy_cloudsync(db.pool()).await?;
     let templates_missing_before_migration = !templates_table_exists(db.pool()).await?;
     adopt_legacy_mobile_schema_migration(db.pool()).await?;
     repair_legacy_shared_session_cache_migration(db.pool()).await?;
