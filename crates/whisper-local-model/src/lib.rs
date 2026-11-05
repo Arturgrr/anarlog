@@ -56,25 +56,25 @@ impl WhisperModel {
     pub fn model_url(&self) -> &str {
         match self {
             WhisperModel::QuantizedTiny => {
-                "https://models.anarlog.so/v0/ggerganov/whisper.cpp/main/ggml-tiny-q8_0.bin"
+                "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny-q8_0.bin"
             }
             WhisperModel::QuantizedTinyEn => {
-                "https://models.anarlog.so/v0/ggerganov/whisper.cpp/main/ggml-tiny.en-q8_0.bin"
+                "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en-q8_0.bin"
             }
             WhisperModel::QuantizedBase => {
-                "https://models.anarlog.so/v0/ggerganov/whisper.cpp/main/ggml-base-q8_0.bin"
+                "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base-q8_0.bin"
             }
             WhisperModel::QuantizedBaseEn => {
-                "https://models.anarlog.so/v0/ggerganov/whisper.cpp/main/ggml-base.en-q8_0.bin"
+                "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en-q8_0.bin"
             }
             WhisperModel::QuantizedSmall => {
-                "https://models.anarlog.so/v0/ggerganov/whisper.cpp/main/ggml-small-q8_0.bin"
+                "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q8_0.bin"
             }
             WhisperModel::QuantizedSmallEn => {
-                "https://models.anarlog.so/v0/ggerganov/whisper.cpp/main/ggml-small.en-q8_0.bin"
+                "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en-q8_0.bin"
             }
             WhisperModel::QuantizedLargeTurbo => {
-                "https://models.anarlog.so/v0/ggerganov/whisper.cpp/main/ggml-large-v3-turbo-q8_0.bin"
+                "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q8_0.bin"
             }
         }
     }
@@ -130,7 +130,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn model_urls_use_anarlog_domain() {
+    fn model_urls_use_hugging_face() {
         for model in [
             WhisperModel::QuantizedTiny,
             WhisperModel::QuantizedTinyEn,
@@ -143,7 +143,7 @@ mod tests {
             assert!(
                 model
                     .model_url()
-                    .starts_with("https://models.anarlog.so/v0/")
+                    .starts_with("https://huggingface.co/ggerganov/whisper.cpp/resolve/main/")
             );
         }
     }
