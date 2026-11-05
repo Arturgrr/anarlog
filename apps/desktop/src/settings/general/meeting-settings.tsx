@@ -1,7 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { platform } from "@tauri-apps/plugin-os";
 
-
 import { SettingSwitchRow } from "~/settings/setting-row";
 
 interface SettingItem {
