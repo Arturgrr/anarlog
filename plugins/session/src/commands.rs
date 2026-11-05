@@ -17,7 +17,6 @@ macro_rules! session_write_command {
                 .try_state::<tauri_plugin_db::ManagedState>()
                 .map(|state| state.inner().clone())
                 .ok_or_else(|| "database is not ready yet".to_string())?;
-            let _guard = runtime.synced_write_guard().await;
             $module::$function(runtime.pool(), request).await
         }
     };
@@ -120,13 +119,6 @@ session_write_command!(
     attachments,
     mark_session_audio_transcription_complete,
     attachments::SessionAudioRequest,
-    ()
-);
-session_write_command!(
-    set_attachment_cloud_sync_enabled,
-    attachments,
-    set_attachment_cloud_sync_enabled,
-    attachments::SetAttachmentCloudSyncEnabledRequest,
     ()
 );
 session_write_command!(

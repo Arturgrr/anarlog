@@ -66,7 +66,6 @@ const baseConfig = {
   notification_event: false,
   notification_detect: true,
   notification_summary_complete: true,
-  notification_cloudsync_complete: true,
   notification_recording: true,
   notification_completion_sound: true,
   notification_completion_sound_name: "ready",

@@ -18,7 +18,6 @@ Default permissions for the plugin
 - `allow-catalog-note-attachment`
 - `allow-catalog-session-audio`
 - `allow-mark-session-audio-transcription-complete`
-- `allow-set-attachment-cloud-sync-enabled`
 - `allow-tombstone-session-audio`
 - `allow-mark-session-audio-absent`
 - `allow-catalog-folder-material`
@@ -477,32 +476,6 @@ Enables the restore_deleted_session command without any pre-configured scope.
 <td>
 
 Denies the restore_deleted_session command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`session:allow-set-attachment-cloud-sync-enabled`
-
-</td>
-<td>
-
-Enables the set_attachment_cloud_sync_enabled command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`session:deny-set-attachment-cloud-sync-enabled`
-
-</td>
-<td>
-
-Denies the set_attachment_cloud_sync_enabled command without any pre-configured scope.
 
 </td>
 </tr>

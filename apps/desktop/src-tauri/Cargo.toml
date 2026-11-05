@@ -24,7 +24,6 @@ tauri = { workspace = true, features = ["specta", "protocol-asset"] }
 
 tauri-plugin-agent = { workspace = true }
 tauri-plugin-analytics = { workspace = true }
-tauri-plugin-attachment-sync = { workspace = true }
 tauri-plugin-audio-priority = { workspace = true }
 tauri-plugin-auth = { workspace = true }
 tauri-plugin-autostart = { workspace = true }
@@ -89,7 +88,6 @@ anlg-audio-actual = { workspace = true }
 anlg-audio-mock = { workspace = true, optional = true }
 anlg-db-app = { workspace = true }
 anlg-db-core = { workspace = true }
-anlg-db-sync = { workspace = true }
 anlg-host = { workspace = true }
 anlg-intercept = { workspace = true }
 anlg-storage = { workspace = true }

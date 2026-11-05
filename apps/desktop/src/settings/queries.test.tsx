@@ -165,13 +165,13 @@ describe("SQLite settings", () => {
 
   it.each([
     {
-      key: "primary_recording_device",
-      value: "work-device",
+      key: "theme",
+      value: "dark",
       table: "synced_preferences",
     },
     {
-      key: "primary_recording_device",
-      value: "",
+      key: "theme",
+      value: "light",
       table: "synced_preferences",
     },
     {

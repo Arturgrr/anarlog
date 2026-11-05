@@ -7,19 +7,11 @@ import { enhanceSuccess, runEnhanceSuccess } from "./enhance-success";
 import { useLiveTitle } from "~/store/zustand/live-title";
 
 const mocks = vi.hoisted(() => ({
-  beginCloudsyncActivity: vi.fn().mockResolvedValue(undefined),
-  endCloudsyncActivity: vi.fn().mockResolvedValue(undefined),
   loadSessionContentSnapshot: vi.fn(),
   playCompletionSound: vi.fn(),
   persistGeneratedEnhancedNote: vi.fn().mockResolvedValue(undefined),
   prepareGeneratedSummary: vi.fn(),
   composeGeneratedSummary: vi.fn(),
-}));
-
-vi.mock("@anlg/plugin-db", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@anlg/plugin-db")>()),
-  beginCloudsyncActivity: mocks.beginCloudsyncActivity,
-  endCloudsyncActivity: mocks.endCloudsyncActivity,
 }));
 
 vi.mock("@anlg/plugin-template", () => ({
@@ -122,8 +114,6 @@ function createParams(
 describe("enhanceSuccess.onSuccess", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.beginCloudsyncActivity.mockReset().mockResolvedValue(undefined);
-    mocks.endCloudsyncActivity.mockReset().mockResolvedValue(undefined);
     useLiveTitle.setState({ titles: {} });
     mocks.loadSessionContentSnapshot.mockResolvedValue(createSnapshot());
     mocks.persistGeneratedEnhancedNote.mockResolvedValue(undefined);
@@ -197,27 +187,6 @@ describe("enhanceSuccess.onSuccess", () => {
           enhancedNote: "# Summary\n\nDiscussed #Launch.\n\n#launch #prep",
         }),
       }),
-    );
-    const cloudsyncLeaseKey = mocks.beginCloudsyncActivity.mock.calls[0]?.[1];
-    expect(cloudsyncLeaseKey).toMatch(/^note-1-enhance:/);
-    expect(mocks.beginCloudsyncActivity).toHaveBeenCalledWith(
-      "enhance",
-      cloudsyncLeaseKey,
-    );
-    expect(mocks.beginCloudsyncActivity).toHaveBeenCalledBefore(
-      mocks.persistGeneratedEnhancedNote,
-    );
-    expect(
-      mocks.beginCloudsyncActivity.mock.invocationCallOrder[0],
-    ).toBeLessThan(
-      mocks.loadSessionContentSnapshot.mock.invocationCallOrder[1],
-    );
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledBefore(
-      mocks.endCloudsyncActivity,
-    );
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledWith(
-      "enhance",
-      cloudsyncLeaseKey,
     );
   });
 
@@ -297,10 +266,6 @@ describe("enhanceSuccess.onSuccess", () => {
         taskType: "title",
         args: expect.objectContaining({ skipPersist: true }),
       }),
-    );
-    expect(startTask).toHaveBeenCalledBefore(mocks.beginCloudsyncActivity);
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledBefore(
-      mocks.endCloudsyncActivity,
     );
     expect(startTask).toHaveBeenCalledWith(
       "session-1-title",
@@ -382,88 +347,6 @@ describe("enhanceSuccess.onSuccess", () => {
         }),
       ),
     ).rejects.toThrow("stale summary");
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledWith(
-      "enhance",
-      mocks.beginCloudsyncActivity.mock.calls[0]?.[1],
-    );
-  });
-
-  it("does not persist until the enhance activity lease is acquired", async () => {
-    let acquireActivity: (() => void) | undefined;
-    mocks.beginCloudsyncActivity.mockReturnValueOnce(
-      new Promise<void>((resolve) => {
-        acquireActivity = resolve;
-      }),
-    );
-
-    const persistence = enhanceSuccess.onSuccess?.(createParams());
-    await vi.waitFor(() =>
-      expect(mocks.beginCloudsyncActivity).toHaveBeenCalledOnce(),
-    );
-    expect(mocks.loadSessionContentSnapshot).toHaveBeenCalledOnce();
-    expect(mocks.persistGeneratedEnhancedNote).not.toHaveBeenCalled();
-
-    acquireActivity?.();
-    await persistence;
-
-    expect(mocks.loadSessionContentSnapshot).toHaveBeenCalledTimes(2);
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledOnce();
-  });
-
-  it("keeps the retryable summary untouched when activity acquisition fails", async () => {
-    const acquisitionError = new Error("cloudsync busy");
-    mocks.beginCloudsyncActivity.mockRejectedValueOnce(acquisitionError);
-
-    await expect(
-      enhanceSuccess.onSuccess?.(
-        createParams({
-          args: {
-            sessionId: "session-1",
-            enhancedNoteId: "note-1",
-            templateId: undefined,
-            pendingAutoEnhance: {
-              generation: "generation-1",
-              expectedBody: "old content",
-              expectedContentFormat: "markdown",
-            },
-          },
-        }),
-      ),
-    ).rejects.toBe(acquisitionError);
-
-    expect(mocks.persistGeneratedEnhancedNote).not.toHaveBeenCalled();
-    expect(mocks.loadSessionContentSnapshot).toHaveBeenCalledOnce();
-    expect(mocks.endCloudsyncActivity).not.toHaveBeenCalled();
-  });
-
-  it("keeps a persisted summary successful while release retries in the background", async () => {
-    vi.useFakeTimers();
-    mocks.endCloudsyncActivity
-      .mockRejectedValueOnce(new Error("failure 1"))
-      .mockRejectedValueOnce(new Error("failure 2"))
-      .mockRejectedValueOnce(new Error("failure 3"))
-      .mockRejectedValueOnce(new Error("failure 4"))
-      .mockResolvedValueOnce(undefined);
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-
-    const success = enhanceSuccess.onSuccess?.(createParams());
-    await vi.advanceTimersByTimeAsync(400);
-    await expect(success).resolves.toBeUndefined();
-
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledTimes(3);
-
-    await vi.advanceTimersByTimeAsync(5_000);
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledTimes(4);
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-
-    await vi.advanceTimersByTimeAsync(5_000);
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledTimes(5);
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-    consoleError.mockRestore();
   });
 
   it("retries a transient database lock while saving generated content", async () => {

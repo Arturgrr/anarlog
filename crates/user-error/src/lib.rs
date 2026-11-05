@@ -44,7 +44,6 @@ const IGNORED_ERROR_MARKERS: &[&str] = &[
     "samples_dropped",
     "mic_samples_dropped",
     "zoom_mic_usage_check_failed",
-    "e2ee recovery key setup is required",
     "couldn't find callback id",
     "[sessionpersister]",
     "update_check_failed",

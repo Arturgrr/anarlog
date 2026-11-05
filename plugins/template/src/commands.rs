@@ -74,7 +74,6 @@ pub async fn save_generated_summary<R: tauri::Runtime>(
         .try_state::<tauri_plugin_db::ManagedState>()
         .map(|state| state.inner().clone())
         .ok_or_else(|| "database is not ready yet".to_string())?;
-    let _guard = runtime.synced_write_guard().await;
     crate::generated_summary::save_generated_summary(runtime.pool(), request).await
 }
 
@@ -88,7 +87,6 @@ pub async fn save_generated_title<R: tauri::Runtime>(
         .try_state::<tauri_plugin_db::ManagedState>()
         .map(|state| state.inner().clone())
         .ok_or_else(|| "database is not ready yet".to_string())?;
-    let _guard = runtime.synced_write_guard().await;
     crate::session_content::save_generated_title(runtime.pool(), request).await
 }
 
@@ -102,7 +100,6 @@ pub async fn apply_session_content_corrections<R: tauri::Runtime>(
         .try_state::<tauri_plugin_db::ManagedState>()
         .map(|state| state.inner().clone())
         .ok_or_else(|| "database is not ready yet".to_string())?;
-    let _guard = runtime.synced_write_guard().await;
     crate::session_content::apply_session_content_corrections(runtime.pool(), request).await
 }
 

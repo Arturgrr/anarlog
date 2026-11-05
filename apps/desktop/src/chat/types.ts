@@ -48,9 +48,7 @@ export type AnlgUIMessage = UIMessage<
 
 export type ChatSendOptions = {
   chatGroupId?: string;
-  beforeSend?: (
-    trackCompletion: (completion: Promise<unknown>) => void,
-  ) => void | Promise<void>;
+  beforeSend?: () => void | Promise<void>;
 };
 
 export type ChatMessageSender = (

@@ -142,7 +142,6 @@ pub async fn save_batch_transcript<R: tauri::Runtime>(
         .try_state::<tauri_plugin_db::ManagedState>()
         .map(|state| state.inner().clone())
         .ok_or_else(|| "database is not ready yet".to_string())?;
-    let _guard = runtime.synced_write_guard().await;
     crate::batch_transcript::save_batch_transcript(runtime.pool(), request).await
 }
 

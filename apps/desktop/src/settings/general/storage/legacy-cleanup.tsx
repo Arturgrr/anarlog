@@ -38,9 +38,8 @@ export function useLegacyMigrationCleanup() {
       ]);
       return { status, report };
     },
-    // The status commands can fail transiently while the database is busy
-    // (e.g. during CloudSync enablement); keep retrying instead of parking
-    // the row in an error state.
+    // The status commands can fail transiently while the database is busy;
+    // keep retrying instead of parking the row in an error state.
     refetchInterval: (q) => (q.state.status === "error" ? 15_000 : false),
   });
 

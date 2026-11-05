@@ -1,40 +1,6 @@
 use super::*;
 
 #[test]
-fn attachment_local_state_is_plain_and_excluded_from_cloudsync() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260717140000_attachment_local_state")
-        .unwrap();
-
-    assert_eq!(migration.scope, anlg_db_migrate::MigrationScope::Plain);
-    assert!(
-        !cloudsync_table_registry()
-            .iter()
-            .any(|table| table.table_name == "attachment_local_state")
-    );
-    assert!(!E2EE_DOMAIN_TABLES.contains(&"attachment_local_state"));
-    assert!(!cloudsync_alter_guard_required("attachment_local_state"));
-}
-
-#[test]
-fn attachment_transfer_jobs_are_plain_and_excluded_from_cloudsync() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260717150000_attachment_transfer_jobs")
-        .unwrap();
-
-    assert_eq!(migration.scope, anlg_db_migrate::MigrationScope::Plain);
-    assert!(
-        !cloudsync_table_registry()
-            .iter()
-            .any(|table| table.table_name == "attachment_transfer_jobs")
-    );
-    assert!(!E2EE_DOMAIN_TABLES.contains(&"attachment_transfer_jobs"));
-    assert!(!cloudsync_alter_guard_required("attachment_transfer_jobs"));
-}
-
-#[test]
 fn attachment_transfer_jobs_migration_checksums_are_pinned() {
     assert_eq!(
         checksum_hex(&migration_checksum(&legacy_attachment_transfer_jobs_sql())),
@@ -294,65 +260,6 @@ async fn attachment_transfer_job_index_repair_rolls_back_when_checksum_update_fa
     .await
     .unwrap();
     assert_eq!(checksum, LEGACY_ATTACHMENT_TRANSFER_JOBS_CHECKSUM);
-}
-
-#[tokio::test]
-async fn attachment_cloud_sync_intent_is_a_synced_additive_column() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260717170000_attachment_cloud_sync_intent")
-        .unwrap();
-
-    assert_eq!(
-        migration.scope,
-        anlg_db_migrate::MigrationScope::CloudsyncAlter {
-            table_name: "session_attachments",
-        }
-    );
-
-    let db = test_db().await;
-    sqlx::query(
-        "INSERT INTO session_attachments (id, workspace_id, session_id)
-             VALUES ('attachment-intent', 'workspace-1', 'session-1')",
-    )
-    .execute(db.pool())
-    .await
-    .unwrap();
-    let enabled: i64 = sqlx::query_scalar(
-        "SELECT cloud_sync_enabled FROM session_attachments
-             WHERE id = 'attachment-intent'",
-    )
-    .fetch_one(db.pool())
-    .await
-    .unwrap();
-    assert_eq!(enabled, 0);
-
-    let invalid = sqlx::query(
-        "UPDATE session_attachments SET cloud_sync_enabled = 2
-             WHERE id = 'attachment-intent'",
-    )
-    .execute(db.pool())
-    .await;
-    assert!(invalid.is_err());
-}
-
-#[test]
-fn shared_attachment_cache_is_plain_and_excluded_from_cloudsync() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260717171000_shared_session_attachment_cache")
-        .unwrap();
-
-    assert_eq!(migration.scope, anlg_db_migrate::MigrationScope::Plain);
-    assert!(
-        !cloudsync_table_registry()
-            .iter()
-            .any(|table| table.table_name == "shared_session_attachment_cache")
-    );
-    assert!(!E2EE_DOMAIN_TABLES.contains(&"shared_session_attachment_cache"));
-    assert!(!cloudsync_alter_guard_required(
-        "shared_session_attachment_cache"
-    ));
 }
 
 #[tokio::test]

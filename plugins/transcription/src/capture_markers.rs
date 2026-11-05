@@ -222,7 +222,6 @@ pub(crate) async fn save_marker<R: tauri::Runtime>(
     replace_transcript_id: &str,
 ) -> Result<bool, String> {
     let runtime = database_runtime(app)?;
-    let _guard = runtime.synced_write_guard().await;
     anlg_db_app::upsert_capture_lifecycle_marker(
         runtime.pool(),
         session_id,
@@ -239,7 +238,6 @@ pub(crate) async fn clear_marker(
     transcript_id: &str,
 ) -> Result<bool, String> {
     let runtime = database_runtime(app)?;
-    let _guard = runtime.synced_write_guard().await;
     anlg_db_app::delete_capture_lifecycle_marker(runtime.pool(), session_id, transcript_id)
         .await
         .map_err(|error| error.to_string())
@@ -274,7 +272,6 @@ pub(crate) async fn mark_audio_saved(
     session_id: &str,
 ) -> Result<(), String> {
     let runtime = database_runtime(app)?;
-    let _guard = runtime.synced_write_guard().await;
     anlg_db_app::mark_capture_audio_saved(runtime.pool(), session_id)
         .await
         .map_err(|error| error.to_string())
@@ -285,7 +282,6 @@ pub(crate) async fn clear_audio_saved(
     session_id: &str,
 ) -> Result<(), String> {
     let runtime = database_runtime(app)?;
-    let _guard = runtime.synced_write_guard().await;
     anlg_db_app::clear_capture_audio_saved(runtime.pool(), session_id)
         .await
         .map_err(|error| error.to_string())

@@ -18,20 +18,6 @@ fn export_types() {
 }
 
 #[test]
-fn default_permissions_exclude_generic_cloudsync_control() {
-    let permissions = include_str!("../../permissions/default.toml");
-
-    assert!(permissions.contains("allow-configure-cloudsync-token"));
-    assert!(permissions.contains("allow-configure-e2ee-replica"));
-    assert!(permissions.contains("allow-suspend-cloudsync-for-sign-out"));
-    assert!(!permissions.contains("allow-begin-cloudsync-activity"));
-    assert!(!permissions.contains("allow-end-cloudsync-activity"));
-    assert!(!permissions.contains("\"allow-configure-cloudsync\""));
-    assert!(!permissions.contains("allow-start-cloudsync"));
-    assert!(!permissions.contains("allow-sync-cloudsync-now"));
-}
-
-#[test]
 fn default_permissions_include_legacy_migration_workflow() {
     let permissions = include_str!("../../permissions/default.toml");
 
@@ -40,20 +26,6 @@ fn default_permissions_include_legacy_migration_workflow() {
         "allow-get-legacy-import-report",
         "allow-cleanup-legacy-files",
         "allow-run-legacy-import",
-    ] {
-        assert!(permissions.contains(permission), "missing {permission}");
-    }
-}
-
-#[test]
-fn default_permissions_include_device_enrollment_workflow() {
-    let permissions = include_str!("../../permissions/default.toml");
-
-    for permission in [
-        "allow-get-or-create-e2ee-device-identity",
-        "allow-seal-e2ee-recovery-key-for-device",
-        "allow-seal-workspace-e2ee-key-for-recipients",
-        "allow-import-e2ee-device-enrollment",
     ] {
         assert!(permissions.contains(permission), "missing {permission}");
     }

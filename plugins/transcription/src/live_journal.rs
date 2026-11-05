@@ -282,7 +282,6 @@ impl<R: tauri::Runtime> JournalStore for AppJournalStore<R> {
                 .try_state::<tauri_plugin_db::ManagedState>()
                 .map(|state| state.inner().clone())
                 .ok_or_else(|| "database is not ready yet".to_string())?;
-            let _guard = runtime.synced_write_guard().await;
             append_live_transcript_deltas(runtime.pool(), &target, &delta_jsons)
                 .await
                 .map_err(|error| error.to_string())

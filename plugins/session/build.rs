@@ -13,7 +13,6 @@ const COMMANDS: &[&str] = &[
     "catalog_note_attachment",
     "catalog_session_audio",
     "mark_session_audio_transcription_complete",
-    "set_attachment_cloud_sync_enabled",
     "tombstone_session_audio",
     "mark_session_audio_absent",
     "catalog_folder_material",

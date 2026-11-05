@@ -15,7 +15,6 @@ permissions = [
   "allow-catalog-note-attachment",
   "allow-catalog-session-audio",
   "allow-mark-session-audio-transcription-complete",
-  "allow-set-attachment-cloud-sync-enabled",
   "allow-tombstone-session-audio",
   "allow-mark-session-audio-absent",
   "allow-catalog-folder-material",

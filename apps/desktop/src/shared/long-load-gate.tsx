@@ -95,8 +95,6 @@ function getStartupDetail(status: StartupStatus | undefined) {
     }
     case "importing_legacy_data":
       return "Importing your existing notes. This may take a few minutes.";
-    case "configuring_cloudsync":
-      return "Preparing sync. This should only take a moment.";
     case "ready":
     case "failed":
     case undefined:

@@ -37,7 +37,6 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::catalog_note_attachment::<Wry>,
             commands::catalog_session_audio::<Wry>,
             commands::mark_session_audio_transcription_complete::<Wry>,
-            commands::set_attachment_cloud_sync_enabled::<Wry>,
             commands::tombstone_session_audio::<Wry>,
             commands::mark_session_audio_absent::<Wry>,
             commands::catalog_folder_material::<Wry>,

@@ -14,11 +14,6 @@ pub enum MigrateError {
         first_step_id: &'static str,
         second_step_id: &'static str,
     },
-    #[error("cloudsync alter step {step_id} targets non-synced table {table_name}")]
-    InvalidCloudsyncStep {
-        step_id: &'static str,
-        table_name: &'static str,
-    },
     // The desktop startup dialog classifies this failure by matching
     // "created by a newer version of Anarlog" in the rendered message.
     #[error(

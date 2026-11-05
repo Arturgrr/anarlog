@@ -1,6 +1,5 @@
 import { useCallback, useRef } from "react";
 
-import { beginCloudsyncActivity } from "@anlg/plugin-db";
 import { commands as fsSyncCommands } from "@anlg/plugin-fs-sync";
 import {
   type RecoveryAudioChunk,
@@ -28,7 +27,6 @@ import { discardEmptyAutomaticCapture } from "./empty-automatic-capture";
 import { cancelMeetingRecordingDisclosure } from "./meeting-disclosure";
 import { createNativeTranscriptPersistence } from "./native-transcript-persistence";
 import { persistTranscriptWrite } from "./persist-retry";
-import { consumePrimaryDeviceYield } from "./primary-device";
 import {
   canRunBatchTranscription,
   isStoppedTranscriptionError,
@@ -40,7 +38,6 @@ import { useSTTConnection } from "./useSTTConnection";
 
 import { requestMainAutoEnhance } from "~/ai/task-window-sync";
 import { trackAnalyticsEvent } from "~/analytics";
-import { releaseCloudsyncActivityEventually } from "~/db/cloudsync-activity";
 import {
   deleteProcessedAudioForRetention,
   normalizeAudioRetention,
@@ -87,9 +84,6 @@ import {
   useSessionParticipantHumanIds,
 } from "~/stt/queries";
 import { waitForSessionSearchIndex } from "~/stt/search-index-consistency";
-
-const CLOUDSYNC_CAPTURE_ACTIVITY = "capture";
-export const CLOUDSYNC_CAPTURE_LEASE_ATTEMPTS = 3;
 
 export async function getAudioDurationMs(audioPath: string) {
   try {
@@ -314,7 +308,6 @@ export function useCaptureLifecycle(sessionId: string) {
         hasMultipleRemoteParticipants &&
         localBatchDiarizationAvailableRef.current &&
         isRealtimeLocalModel(model);
-      const cloudsyncLeaseKey = `${sessionId}:${transcriptId}`;
       let pendingSummaryMode = recoveredMarker?.summaryMode;
       const refreshSummaryAfterRepair =
         recoveredMarker?.refreshSummaryAfterRepair ?? false;
@@ -328,10 +321,6 @@ export function useCaptureLifecycle(sessionId: string) {
           ? getExistingAudioDurationMs(sessionId)
           : Promise.resolve(0);
       let transcriptWriteError: unknown;
-      let cloudsyncLeaseActive = false;
-      let cloudsyncLeaseAcquire: Promise<void> | null = null;
-      let cloudsyncLeaseRelease: Promise<void> | null = null;
-      let cloudsyncLeaseRetired = false;
       let recoveryPending = Boolean(recoveredMarker);
       let recoveryStateCleared = false;
       let batchTranscriptionPending = false;
@@ -341,102 +330,6 @@ export function useCaptureLifecycle(sessionId: string) {
         }
         batchTranscriptionPending = pending;
         setBatchTranscriptionPending(sessionId, pending);
-      };
-      const handoffCloudsyncLease = () => {
-        cloudsyncLeaseRetired = true;
-        cloudsyncLeaseActive = false;
-        cloudsyncLeaseAcquire = null;
-        cloudsyncLeaseRelease = null;
-      };
-      const endCloudsyncLease = () => {
-        if (cloudsyncLeaseRelease) {
-          return cloudsyncLeaseRelease;
-        }
-        if (!cloudsyncLeaseActive) {
-          return Promise.resolve();
-        }
-        // A release racing an in-flight acquisition would end the lease before
-        // the native side registers it and leave CloudSync paused for good.
-        const acquisitionSettled =
-          cloudsyncLeaseAcquire?.catch(() => undefined) ?? Promise.resolve();
-        cloudsyncLeaseRelease = acquisitionSettled
-          .then(() =>
-            releaseCloudsyncActivityEventually(
-              CLOUDSYNC_CAPTURE_ACTIVITY,
-              cloudsyncLeaseKey,
-            ),
-          )
-          .then(
-            () => {
-              cloudsyncLeaseActive = false;
-              cloudsyncLeaseAcquire = null;
-              cloudsyncLeaseRelease = null;
-            },
-            (error) => {
-              cloudsyncLeaseRelease = null;
-              console.warn(
-                "[listener] failed to release capture CloudSync deferral",
-                error,
-              );
-              throw error;
-            },
-          );
-        return cloudsyncLeaseRelease;
-      };
-      const releaseCloudsyncLease = () => {
-        cloudsyncLeaseRetired = true;
-        return endCloudsyncLease();
-      };
-      const acquireCloudsyncLease = async () => {
-        if (cloudsyncLeaseRelease) {
-          await cloudsyncLeaseRelease;
-        }
-        cloudsyncLeaseActive = true;
-        cloudsyncLeaseAcquire ??= beginCloudsyncActivity(
-          CLOUDSYNC_CAPTURE_ACTIVITY,
-          cloudsyncLeaseKey,
-        );
-        const acquisition = cloudsyncLeaseAcquire;
-        try {
-          await acquisition;
-        } catch (error) {
-          if (cloudsyncLeaseAcquire === acquisition) {
-            cloudsyncLeaseAcquire = null;
-            await endCloudsyncLease();
-          }
-          throw error;
-        }
-      };
-      // Deferring CloudSync is bookkeeping around the capture, not a
-      // prerequisite for it. The native drain is bounded and its first timeout
-      // is usually a sync round that is still yielding, so keep trying in the
-      // background while the capture is alive; recording never waits on this.
-      const deferCloudsync = async () => {
-        for (let attempt = 1; ; attempt += 1) {
-          if (cloudsyncLeaseRetired) {
-            return;
-          }
-          try {
-            await acquireCloudsyncLease();
-            return;
-          } catch (error) {
-            if (cloudsyncLeaseRetired) {
-              return;
-            }
-            if (attempt >= CLOUDSYNC_CAPTURE_LEASE_ATTEMPTS) {
-              console.error(
-                "[listener] failed to defer CloudSync for capture",
-                error,
-              );
-              trackAnalyticsEvent("capture_cloudsync_deferral_failed");
-              return;
-            }
-            console.warn(
-              `[listener] CloudSync capture deferral attempt ${attempt} failed, retrying`,
-              error,
-            );
-          }
-        }
       };
       const transcriptPersistence = createNativeTranscriptPersistence({
         sessionId,
@@ -845,36 +738,6 @@ export function useCaptureLifecycle(sessionId: string) {
         await stopMeetingChatTasks();
         await transcriptPersistence.flush();
         if (
-          consumePrimaryDeviceYield(sessionId) &&
-          !preserveExistingTranscript &&
-          inheritedCaptures.length === 0 &&
-          !(await existingAudioPromise)
-        ) {
-          try {
-            if (details.audioPath) {
-              const deleted = await enqueueSessionAudioOperation(
-                sessionId,
-                () => fsSyncCommands.audioDelete(sessionId),
-              );
-              if (deleted.status !== "ok") {
-                throw new Error(deleted.error);
-              }
-            }
-            if (await transcriptExists(transcriptId)) {
-              await softDeleteTranscript(transcriptId);
-            }
-            await releaseMarker();
-            recoveryPending = false;
-            recoveryStateCleared = true;
-            return;
-          } catch (error) {
-            console.error(
-              "[listener] failed to discard capture recorded on another device",
-              error,
-            );
-          }
-        }
-        if (
           details.audioPath &&
           (await discardEmptyAutomaticCapture({
             sessionId,
@@ -1239,13 +1102,6 @@ export function useCaptureLifecycle(sessionId: string) {
           if (!transcriptPersistence.hasPendingFailure())
             transcriptPersistence.dispose();
           updateBatchTranscriptionPending(false);
-          if (recoveryPending) {
-            if (requestRecoveryOnFailure) {
-              handoffCloudsyncLease();
-            }
-          } else {
-            await releaseCloudsyncLease();
-          }
         }
       };
       const trackSessionCompletion = (
@@ -1378,7 +1234,6 @@ export function useCaptureLifecycle(sessionId: string) {
           if (!service) await requestMainAutoEnhance(sessionId, "regenerate");
           else await service.requestAutoEnhance(sessionId, "regenerate");
           await clearCaptureLifecycleMarker(sessionId, transcriptId);
-          await releaseCloudsyncLease();
           return;
         }
         if (usesChunkedAudio) {
@@ -1418,8 +1273,6 @@ export function useCaptureLifecycle(sessionId: string) {
       };
 
       return {
-        acquireCloudsyncLease,
-        deferCloudsync,
         handlePersist,
         liveTranscript: {
           transcript_id: transcriptId,
@@ -1461,7 +1314,6 @@ export function useCaptureLifecycle(sessionId: string) {
             await softDeleteTranscript(transcriptId);
           }
         },
-        releaseCloudsyncLease,
       };
     },
     [

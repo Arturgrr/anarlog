@@ -806,7 +806,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn verified_file_import_survives_cloudsync_reopen_without_rerun() {
+    async fn verified_file_import_survives_reopen_without_rerun() {
         let dir = tempfile::tempdir().unwrap();
         let db_path = dir.path().join("app.db");
         let vault = dir.path().join("vault");
@@ -819,7 +819,6 @@ mod tests {
         .unwrap();
 
         let db = crate::runtime::open_app_db(Some(&db_path)).await.unwrap();
-        assert!(db.cloudsync_enabled());
         assert!(!legacy_migration_verified(db.pool()).await.unwrap());
         assert!(legacy_import_attempt_required(db.pool()).await.unwrap());
 
@@ -862,7 +861,6 @@ mod tests {
         .unwrap();
 
         let reopened = crate::runtime::open_app_db(Some(&db_path)).await.unwrap();
-        assert!(reopened.cloudsync_enabled());
 
         if legacy_import_attempt_required(reopened.pool())
             .await

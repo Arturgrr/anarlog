@@ -1,63 +1,7 @@
 use super::*;
 
 #[tokio::test]
-async fn cloud_authority_upgrade_preserves_pending_legacy_ciphertext() {
-    let db = Db::connect_memory_plain().await.unwrap();
-    anlg_db_migrate::migrate(
-        &db,
-        anlg_db_migrate::DbSchema {
-            steps: migration_steps_before("20261005090000_e2ee_cloud_authority"),
-            validate_cloudsync_table: cloudsync_alter_guard_required,
-        },
-    )
-    .await
-    .unwrap();
-    let key = anlg_e2ee::RecoveryKey::parse(
-        "anarlog-e2ee-v1:BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc",
-    )
-    .unwrap()
-    .workspace_key("user-a")
-    .unwrap();
-    let sealed = key
-        .seal_field(
-            "user-a",
-            "sessions",
-            "s",
-            "title",
-            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            1,
-            false,
-            serde_json::json!("Offline before upgrade"),
-        )
-        .unwrap();
-    let hash = anlg_e2ee::payload_hash(&sealed.payload);
-    sqlx::query("INSERT INTO e2ee_local_state(record_id,workspace_id,table_name,row_id,field_name,revision,writer_id,payload_hash,payload) VALUES(?,'user-a','sessions','s','title',1,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',?,?)")
-        .bind(&sealed.record_id).bind(&hash).bind(&sealed.payload)
-        .execute(db.pool()).await.unwrap();
-    sqlx::query("INSERT INTO e2ee_witness_pending(record_id,workspace_id) VALUES(?,'user-a')")
-        .bind(&sealed.record_id)
-        .execute(db.pool())
-        .await
-        .unwrap();
-
-    prepare_schema(&db).await.unwrap();
-    for _ in 0..2 {
-        crate::configure_e2ee_cloud_authority(db.pool(), "user-a", Some(0))
-            .await
-            .unwrap();
-    }
-    let batch = crate::pending_e2ee_cloud_batch(db.pool(), "user-a", false)
-        .await
-        .unwrap()
-        .unwrap();
-    assert_eq!(batch.events.len(), 1);
-    assert_eq!(batch.events[0].record_id, sealed.record_id);
-    assert_eq!(batch.events[0].payload_hash, hash);
-    assert_eq!(batch.events[0].payload, sealed.payload);
-}
-
-#[tokio::test]
-async fn schema_declares_legacy_migrations_and_cloudsync_registry() {
+async fn schema_declares_legacy_migrations() {
     let db = test_db().await;
 
     let tables: Vec<String> = sqlx::query_scalar(
@@ -217,27 +161,12 @@ async fn migrations_apply_cleanly() {
 }
 
 #[tokio::test]
-async fn event_attendance_migration_is_plain_and_downgrade_safe() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260930120000_event_attendance")
-        .unwrap();
-    assert!(matches!(
-        migration.scope,
-        anlg_db_migrate::MigrationScope::Plain
-    ));
-    assert!(
-        !cloudsync_table_registry()
-            .iter()
-            .any(|table| table.table_name == "events" && table.enabled)
-    );
-
+async fn event_attendance_migration_is_downgrade_safe() {
     let db = Db::connect_memory_plain().await.unwrap();
     anlg_db_migrate::migrate(
         &db,
         anlg_db_migrate::DbSchema {
             steps: migration_steps_before("20260930120000_event_attendance"),
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await
@@ -334,7 +263,6 @@ async fn personal_workspace_migration_preserves_existing_session_workspace_ids()
         &db,
         anlg_db_migrate::DbSchema {
             steps: migration_steps_before("20260716120000_personal_workspaces"),
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await
@@ -393,128 +321,6 @@ async fn personal_workspace_migration_preserves_existing_session_workspace_ids()
     assert!(duplicate.is_err());
 }
 
-#[cfg(any(
-    all(target_os = "macos", target_arch = "aarch64"),
-    all(target_os = "macos", target_arch = "x86_64"),
-    all(target_os = "linux", target_env = "gnu", target_arch = "aarch64"),
-    all(target_os = "linux", target_env = "gnu", target_arch = "x86_64"),
-    all(target_os = "linux", target_env = "musl", target_arch = "aarch64"),
-    all(target_os = "linux", target_env = "musl", target_arch = "x86_64"),
-    all(target_os = "windows", target_arch = "x86_64"),
-))]
-#[tokio::test]
-async fn workspace_tables_can_be_initialized_by_cloudsync() {
-    let db = Db::connect_memory().await.unwrap();
-    prepare_schema(&db).await.unwrap();
-
-    for table_name in ["workspaces", "workspace_memberships"] {
-        db.cloudsync_init(table_name, None, None).await.unwrap();
-        assert!(
-            anlg_db_core::cloudsync_is_enabled_on(db.pool(), table_name)
-                .await
-                .unwrap()
-        );
-    }
-}
-
-#[cfg(any(
-    all(target_os = "macos", target_arch = "aarch64"),
-    all(target_os = "macos", target_arch = "x86_64"),
-    all(target_os = "linux", target_env = "gnu", target_arch = "aarch64"),
-    all(target_os = "linux", target_env = "gnu", target_arch = "x86_64"),
-    all(target_os = "linux", target_env = "musl", target_arch = "aarch64"),
-    all(target_os = "linux", target_env = "musl", target_arch = "x86_64"),
-    all(target_os = "windows", target_arch = "x86_64"),
-))]
-#[tokio::test]
-async fn search_index_migrations_apply_before_cloudsync_initialization() {
-    let db = Db::connect_memory().await.unwrap();
-
-    prepare_schema(&db).await.unwrap();
-
-    let trigger_count: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM sqlite_master
-             WHERE type = 'trigger' AND name LIKE 'search_index_%'",
-    )
-    .fetch_one(db.pool())
-    .await
-    .unwrap();
-    assert_eq!(trigger_count, 15);
-
-    initialize_enabled_cloudsync_tables(&db).await;
-
-    sqlx::query("INSERT INTO sessions (id, title) VALUES ('session-1', 'Planning')")
-        .execute(db.pool())
-        .await
-        .unwrap();
-    let generation: i64 = sqlx::query_scalar(
-        "SELECT generation FROM search_index_dirty
-             WHERE entity_type = 'session' AND entity_id = 'session-1'",
-    )
-    .fetch_one(db.pool())
-    .await
-    .unwrap();
-    assert_eq!(generation, 1);
-}
-
-#[cfg(any(
-    all(target_os = "macos", target_arch = "aarch64"),
-    all(target_os = "macos", target_arch = "x86_64"),
-    all(target_os = "linux", target_env = "gnu", target_arch = "aarch64"),
-    all(target_os = "linux", target_env = "gnu", target_arch = "x86_64"),
-    all(target_os = "linux", target_env = "musl", target_arch = "aarch64"),
-    all(target_os = "linux", target_env = "musl", target_arch = "x86_64"),
-    all(target_os = "windows", target_arch = "x86_64"),
-))]
-#[tokio::test]
-async fn search_index_migrations_apply_to_initialized_cloudsync_tables() {
-    let db = Db::connect_memory().await.unwrap();
-    anlg_db_migrate::migrate(
-        &db,
-        anlg_db_migrate::DbSchema {
-            steps: migration_steps_before("20260714120000_search_index_queue"),
-            validate_cloudsync_table: cloudsync_alter_guard_required,
-        },
-    )
-    .await
-    .unwrap();
-    // Tables created after this point in the migration history cannot be
-    // initialized here; their migrations run below.
-    for table_name in E2EE_DOMAIN_TABLES
-        .iter()
-        .filter(|table_name| !matches!(**table_name, "synced_preferences" | "folders"))
-    {
-        db.cloudsync_init(table_name, None, None).await.unwrap();
-    }
-
-    prepare_schema(&db).await.unwrap();
-    initialize_enabled_cloudsync_tables(&db).await;
-
-    sqlx::query("INSERT INTO sessions (id, title) VALUES ('session-1', 'Planning')")
-        .execute(db.pool())
-        .await
-        .unwrap();
-    let generation: i64 = sqlx::query_scalar(
-        "SELECT generation FROM search_index_dirty
-             WHERE entity_type = 'session' AND entity_id = 'session-1'",
-    )
-    .fetch_one(db.pool())
-    .await
-    .unwrap();
-    assert_eq!(generation, 1);
-
-    for table in cloudsync_table_registry()
-        .iter()
-        .filter(|table| table.enabled)
-    {
-        assert!(
-            anlg_db_core::cloudsync_is_enabled_on(db.pool(), &table.table_name)
-                .await
-                .unwrap()
-        );
-    }
-}
-
 #[tokio::test]
 async fn migration_repairs_empty_titles_from_summary_headings() {
     let db = Db::connect_memory_plain().await.unwrap();
@@ -522,7 +328,6 @@ async fn migration_repairs_empty_titles_from_summary_headings() {
         &db,
         anlg_db_migrate::DbSchema {
             steps: migration_steps_before("20260713164500_repair_empty_session_titles"),
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await
@@ -573,7 +378,6 @@ async fn repair_migration_recreates_missing_templates_table() {
         &db,
         anlg_db_migrate::DbSchema {
             steps: &APP_MIGRATION_STEPS[..3],
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await
@@ -628,7 +432,6 @@ async fn synced_preferences_backfill_reads_legacy_documents() {
         &db,
         anlg_db_migrate::DbSchema {
             steps: migration_steps_before("20260810120000_synced_preferences"),
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await
@@ -691,7 +494,6 @@ async fn prepare_schema_seeds_templates_when_repair_migration_creates_missing_ta
         &db,
         anlg_db_migrate::DbSchema {
             steps: &APP_MIGRATION_STEPS[..3],
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await
@@ -713,12 +515,6 @@ async fn prepare_schema_seeds_templates_when_repair_migration_creates_missing_ta
 
 #[tokio::test]
 async fn enterprise_session_delivery_tables_are_registered() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260814090000_enterprise_session_delivery")
-        .unwrap();
-    assert_eq!(migration.scope, anlg_db_migrate::MigrationScope::Plain);
-
     let db = test_db().await;
     let tables: Vec<String> = sqlx::query_scalar(
         r#"SELECT name

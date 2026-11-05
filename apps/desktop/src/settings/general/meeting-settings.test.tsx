@@ -9,10 +9,6 @@ vi.mock("@tauri-apps/plugin-os", () => ({
   platform: mocks.platform,
 }));
 
-vi.mock("./primary-recording-device", () => ({
-  PrimaryRecordingDeviceSelector: () => null,
-}));
-
 import { MeetingSettingsView } from "./meeting-settings";
 
 function setting(value = true) {

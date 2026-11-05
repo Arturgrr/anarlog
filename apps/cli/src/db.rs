@@ -20,9 +20,15 @@ pub async fn open_write(args: &Args) -> Result<anlg_db_core::Db> {
         return Err(Error::DatabaseNotFound(path));
     }
 
-    anlg_db_core::Db::connect_local_read_write(&path)
+    let db = anlg_db_core::Db::connect_local_read_write(&path)
         .await
-        .map_err(|error| Error::operation("open database for writes", error.to_string()))
+        .map_err(|error| Error::operation("open database for writes", error.to_string()))?;
+    // Writes to a database last opened by a build with sync would hit triggers
+    // that call the removed sqlite-sync extension.
+    anlg_db_app::detach_legacy_cloudsync(db.pool())
+        .await
+        .map_err(|error| Error::operation("open database for writes", error.to_string()))?;
+    Ok(db)
 }
 
 pub(crate) fn resolve_path(args: &Args) -> Result<PathBuf> {
