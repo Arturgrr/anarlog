@@ -119,12 +119,6 @@ function HeaderViewTranscriptButton({
               isActive
                 ? "w-[98px] min-w-[98px] gap-1.5 px-2 @max-[480px]:w-10 @max-[480px]:min-w-10 @max-[480px]:gap-0"
                 : null,
-              isActive
-                ? [
-                    "bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600",
-                    "dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200",
-                  ]
-                : null,
             ]
           : null,
       ])}
@@ -147,7 +141,7 @@ function HeaderViewTranscriptLiveIcon({
       ) : (
         <DancingSticks
           amplitude={live.amplitude}
-          color="#ef4444"
+          color="currentColor"
           height={16}
           width={16}
         />

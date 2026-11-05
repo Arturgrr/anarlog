@@ -3,7 +3,7 @@ import { type ReactNode, useId } from "react";
 import { Switch } from "@anlg/ui/components/ui/switch";
 import { cn } from "@anlg/utils";
 
-export const SETTING_CONTROL_CLASS = "bg-card h-9 w-full shadow-none";
+export const SETTING_CONTROL_CLASS = "h-7 w-full";
 
 export function SettingRow({
   title,

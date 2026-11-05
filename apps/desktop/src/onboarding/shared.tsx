@@ -65,7 +65,7 @@ export function OnboardingSection({
         ])}
       >
         {isCompleted && (
-          <Check className="size-4 shrink-0 text-green-600" weight="bold" />
+          <Check className="text-foreground size-4 shrink-0" weight="bold" />
         )}
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex items-center gap-2">
@@ -152,11 +152,11 @@ export function OnboardingButton({
     <button
       {...props}
       className={cn([
-        "w-fit rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-200",
+        "w-fit rounded-lg px-6 py-2.5 text-sm font-medium transition-[background-color,color,opacity] duration-200 ease-out",
         variant === "primary" &&
-          "border-primary bg-primary text-primary-foreground hover:bg-primary/90 border-2 shadow-[0_2px_6px_rgba(87,83,78,0.22),0_10px_18px_-10px_rgba(87,83,78,0.65)]",
+          "bg-primary text-primary-foreground shadow-button-contrast hover:bg-primary/90 disabled:opacity-40",
         variant === "secondary" &&
-          "border-border/60 bg-card/55 text-muted-foreground hover:bg-card/75 hover:text-foreground border shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] backdrop-blur-sm disabled:opacity-50",
+          "bg-button-neutral text-foreground shadow-button-neutral hover:bg-layer-2 disabled:opacity-50",
         variant === "ghost" &&
           "text-muted-foreground hover:text-muted-foreground",
         className,
@@ -174,14 +174,14 @@ export function StepRow({
 }) {
   return (
     <div className="flex items-center gap-2 text-sm">
-      {status === "done" && <CheckCircle className="size-4 text-emerald-600" />}
+      {status === "done" && <CheckCircle className="text-foreground size-4" />}
       {status === "active" && (
         <CircleNotch className="text-muted-foreground size-4 animate-spin" />
       )}
-      {status === "failed" && <XCircle className="size-4 text-red-400" />}
+      {status === "failed" && <XCircle className="text-danger size-4" />}
       <span
         className={
-          status === "failed" ? "text-red-500" : "text-muted-foreground"
+          status === "failed" ? "text-danger" : "text-muted-foreground"
         }
       >
         {label}

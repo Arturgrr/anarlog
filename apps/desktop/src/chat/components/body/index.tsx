@@ -110,7 +110,7 @@ export function ChatBody({
             onClick={scrollToBottom}
             size="sm"
             className={cn([
-              "flex items-center gap-1 rounded-full border shadow-xs",
+              "shadow-floating flex items-center gap-1 rounded-md border",
               chatFloatingControlClassNames(),
             ])}
             variant="outline"

@@ -16,10 +16,10 @@ import {
 import { createPortal } from "react-dom";
 
 import { CheckCircle, Info, WarningCircle } from "@anlg/ui/components/icons";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { panelSquircle } from "@anlg/ui/lib/squircle";
 import { appToastSwipeDismissDirection } from "@anlg/ui/lib/toast-gesture";
 import { cn } from "@anlg/utils";
+
+import { buttonVariants } from "./button";
 
 export type AppToastTone = "info" | "success" | "warning" | "error";
 
@@ -110,8 +110,6 @@ type AppToastTimer = Readonly<{
 }>;
 
 const DEFAULT_APP_TOAST_DURATION_MS = 3_000;
-const APP_TOAST_CORNER_RADIUS = 20;
-const APP_TOAST_COMPACT_CORNER_RADIUS = 14;
 const APP_TOAST_EXIT_DURATION_MS = 220;
 const APP_TOAST_TICK_MS = 100;
 const APP_TOAST_DESKTOP_HOVER_QUERY = "(hover: hover) and (pointer: fine)";
@@ -429,10 +427,6 @@ type AppToastProps = Readonly<{
 
 function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
   const compact = size === "compact";
-  const squircleRef = useSquircleRef<HTMLDivElement>(undefined, {
-    ...panelSquircle,
-    radius: compact ? APP_TOAST_COMPACT_CORNER_RADIUS : APP_TOAST_CORNER_RADIUS,
-  });
   const reduceMotion = useReducedMotion() ?? false;
   const [expanded, setExpanded] = useState(true);
   const detailsId = useId();
@@ -536,8 +530,9 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
       className={cn([
         "no-drag pointer-events-auto col-start-1 row-start-1 mx-auto origin-top touch-pan-y self-start select-none",
         compact
-          ? "w-[min(20rem,calc(100vw-2rem))] rounded-[14px] shadow-md"
-          : "w-[min(32rem,calc(100vw-2rem))] rounded-[20px] shadow-lg",
+          ? "w-[min(20rem,calc(100vw-2rem))]"
+          : "w-[min(32rem,calc(100vw-2rem))]",
+        "rounded-lg",
         toast.dismissible && toast.phase === "visible"
           ? "cursor-grab active:cursor-grabbing"
           : null,
@@ -547,11 +542,7 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
       ])}
       style={{ zIndex: stackDepth === 0 ? 10 : 10 - stackDepth }}
     >
-      <div
-        ref={squircleRef}
-        data-slot="smooth-corners"
-        className="bg-popover text-popover-foreground ring-border/70 relative ring-1"
-      >
+      <div className="bg-layer-1 text-popover-foreground shadow-floating relative overflow-hidden rounded-lg">
         <button
           type="button"
           aria-label={
@@ -568,9 +559,7 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
           className={cn([
             "focus-visible:ring-ring flex w-full items-center text-left focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
             hasDetails ? "cursor-pointer" : "cursor-default",
-            compact
-              ? "min-h-11 gap-2 px-2.5 py-1.5"
-              : "min-h-16 gap-3 px-4 py-3",
+            compact ? "min-h-11 gap-3 px-3 py-2" : "min-h-14 gap-3 p-3",
           ])}
         >
           {/* The slot sizes the glyph, so callers only pass color. */}
@@ -578,7 +567,7 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
             data-slot="app-toast-leading"
             className={cn([
               "flex shrink-0 items-center justify-center",
-              compact ? "size-8 [&>svg]:size-4" : "size-7 [&>svg]:size-6",
+              compact ? "size-5 [&>svg]:size-4" : "size-6 [&>svg]:size-5",
             ])}
             aria-hidden
           >
@@ -587,8 +576,8 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
           <span
             data-slot="app-toast-message"
             className={cn([
-              "min-w-0 flex-1 font-semibold break-words whitespace-normal",
-              compact ? "text-[13px] leading-5" : "text-sm",
+              "font-ui-medium min-w-0 flex-1 break-words whitespace-normal",
+              compact ? "text-ui" : "text-body",
             ])}
           >
             {toast.message}
@@ -617,9 +606,7 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
               <div
                 className={cn([
                   "text-muted-foreground",
-                  compact
-                    ? "px-2.5 pb-2.5 text-xs leading-4"
-                    : "px-4 pb-3 text-sm leading-5",
+                  compact ? "px-3 pb-3 text-xs leading-4" : "text-ui px-3 pb-3",
                 ])}
               >
                 {toast.description}
@@ -630,10 +617,7 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
         {!stackedBehind && actions.length > 0 ? (
           <div
             data-slot="app-toast-actions"
-            className={cn([
-              "flex items-center gap-2",
-              compact ? "px-2.5 pb-2.5" : "px-4 pb-3",
-            ])}
+            className={cn(["flex items-center gap-2", "px-3 pb-3"])}
           >
             {actions.map((action, index) => (
               <button
@@ -651,13 +635,11 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
                   }
                 }}
                 className={cn([
-                  "focus-visible:ring-ring inline-flex min-w-0 items-center justify-center font-medium transition-[color,background-color,transform] focus-visible:ring-2 focus-visible:outline-none active:scale-[0.98]",
-                  action === toast.action
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "border-border bg-background text-foreground hover:bg-accent border",
-                  compact
-                    ? "min-h-7 rounded-md px-2.5 py-1 text-xs"
-                    : "min-h-9 rounded-lg px-3 py-1.5 text-sm",
+                  buttonVariants({
+                    variant: action === toast.action ? "default" : "secondary",
+                    size: compact ? "sm" : "default",
+                  }),
+                  "min-w-0",
                 ])}
               >
                 {action.label}
@@ -674,10 +656,10 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
             }
             onClick={() => toggleAppToastTimer(toast.id)}
             className={cn([
-              "border-border/60 bg-muted/50 text-muted-foreground hover:bg-muted focus-visible:ring-ring relative flex w-full items-center justify-between gap-3 border-t text-left transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
+              "border-border-muted text-muted-foreground hover:bg-hover active:bg-pressed focus-visible:ring-ring relative flex w-full items-center justify-between gap-3 border-t text-left focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
               compact
-                ? "min-h-8 px-2.5 py-1.5 text-[11px]"
-                : "min-h-10 px-4 py-2 text-xs",
+                ? "text-small min-h-8 px-3 py-1.5"
+                : "min-h-9 px-3 py-2 text-xs",
             ])}
           >
             <span aria-hidden>
@@ -697,11 +679,7 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
               data-slot="app-toast-progress"
               className={cn([
                 "absolute inset-x-0 bottom-0 h-0.5 origin-left",
-                toast.tone === "error"
-                  ? "bg-destructive"
-                  : toast.tone === "success"
-                    ? "bg-emerald-500"
-                    : "bg-blue-500",
+                toast.tone === "error" ? "bg-danger" : "bg-icon-muted",
               ])}
               initial={false}
               animate={{ scaleX: progress }}
@@ -721,12 +699,12 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
 function AppToastToneIcon({ tone }: Readonly<{ tone: AppToastTone }>) {
   switch (tone) {
     case "success":
-      return <CheckCircle className="text-emerald-600" />;
+      return <CheckCircle className="text-icon" />;
     case "warning":
-      return <WarningCircle className="text-amber-600" />;
+      return <WarningCircle className="text-icon" />;
     case "error":
-      return <WarningCircle className="text-destructive" />;
+      return <WarningCircle className="text-danger" />;
     case "info":
-      return <Info className="text-blue-600" />;
+      return <Info className="text-icon-muted" />;
   }
 }

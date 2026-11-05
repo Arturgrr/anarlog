@@ -29,8 +29,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@anlg/ui/components/ui/tooltip";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { chipSquircle } from "@anlg/ui/lib/squircle";
 import { cn } from "@anlg/utils";
 
 import type { ListModelsResult, ModelIgnoreReason } from "./list-common";
@@ -148,8 +146,8 @@ export function ModelCombobox({
           disabled={disabled || isLoadingModels}
           aria-expanded={open}
           className={cn([
-            "bg-card w-full justify-between font-normal shadow-none focus-visible:ring-0",
-            "rounded-full px-3",
+            "w-full justify-between font-normal",
+            "rounded-md px-2.5",
           ])}
         >
           <span className="flex w-full min-w-0 items-center justify-between gap-2">
@@ -175,7 +173,7 @@ export function ModelCombobox({
             {suffix}
           </span>
           {isConfigured ? (
-            <Check className="-mr-1 h-4 w-4 shrink-0 text-green-600" />
+            <Check className="text-foreground -mr-1 h-4 w-4 shrink-0" />
           ) : (
             <CaretDown className="-mr-1 h-4 w-4 shrink-0 opacity-50" />
           )}
@@ -357,13 +355,11 @@ export function ModelCombobox({
 }
 
 function DeprecatedBadge() {
-  const ref = useSquircleRef<HTMLSpanElement>(undefined, chipSquircle);
   return (
     <span
-      ref={ref}
       className={cn([
-        "shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium",
-        "bg-amber-50 text-amber-800",
+        "inline-flex h-[18px] shrink-0 items-center rounded-xs border-[0.5px] px-1.5",
+        "border-border bg-layer-2 text-small text-muted-foreground font-medium",
       ])}
     >
       <Trans>Deprecated</Trans>

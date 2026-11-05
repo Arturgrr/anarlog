@@ -49,7 +49,7 @@ function EmptyView() {
           shortcut={[primaryModifier, "⇧", "N"]}
           onClick={newNoteAndListen}
         />
-        <div className="bg-accent my-1 h-px" />
+        <div className="bg-border-muted mx-2.5 my-1 h-px" />
         <ActionItem
           label={<Trans>Settings</Trans>}
           shortcut={[primaryModifier, ","]}
@@ -78,9 +78,9 @@ function ActionItem({
       className={cn([
         "group",
         "flex items-center justify-between gap-8",
-        "text-foreground text-sm",
-        "rounded-full px-4 py-2",
-        "hover:bg-accent cursor-pointer transition-colors",
+        "text-foreground text-ui",
+        "rounded-md px-2.5 py-2",
+        "hover:bg-hover active:bg-pressed cursor-pointer",
       ])}
     >
       <span>{label}</span>
@@ -88,7 +88,7 @@ function ActionItem({
         <Kbd
           className={cn([
             "transition-all duration-100",
-            "group-hover:-translate-y-0.5 group-hover:shadow-[0_2px_0_0_var(--kbd-shadow-outer-hover),inset_0_1px_0_0_var(--kbd-shadow-inset)]",
+            "group-hover:shadow-keycap-hover group-hover:-translate-y-0.5",
             "group-active:translate-y-0.5 group-active:shadow-none",
           ])}
         >

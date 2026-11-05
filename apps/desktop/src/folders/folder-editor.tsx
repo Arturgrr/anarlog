@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
 import { Input } from "@anlg/ui/components/ui/input";
+import { focusRingClassName } from "@anlg/ui/lib/focus-ring";
 import { cn } from "@anlg/utils";
 
 import { useFolderSelection } from "./selection";
@@ -164,7 +165,7 @@ export function FolderEditor({ folderPath }: { folderPath: string }) {
                 <DropdownMenuItem
                   disabled={busy}
                   onClick={() => setDeleting(true)}
-                  className="cursor-pointer text-red-600 focus:text-red-600"
+                  className="text-danger focus:text-danger cursor-pointer"
                 >
                   <Trans>Delete</Trans>
                 </DropdownMenuItem>
@@ -245,9 +246,9 @@ export function FolderEditor({ folderPath }: { folderPath: string }) {
                       aria-label={t`Remove ${material.filename}`}
                       disabled={busy}
                       className={cn([
-                        "text-muted-foreground hover:bg-accent hover:text-foreground",
-                        "absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full",
-                        "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+                        "text-icon-muted hover:bg-hover active:bg-pressed hover:text-foreground",
+                        "absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-sm",
+                        focusRingClassName,
                         "disabled:opacity-50",
                       ])}
                       onClick={async () => {

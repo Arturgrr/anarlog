@@ -47,11 +47,6 @@ describe("merged insights page", () => {
     mocks.activity.isLoading = false;
     rerender(<SettingsInsights />);
     expect(screen.getByRole("region", { name: "Your badges" })).toBeTruthy();
-    expect(
-      screen
-        .getByRole("group", { name: "Date range" })
-        .getAttribute("data-slot"),
-    ).toBe("smooth-corners");
   });
 
   it("filters totals without filtering badge history or the yearly heatmap", async () => {
@@ -89,11 +84,6 @@ describe("merged insights page", () => {
     expect(
       await screen.findByText("August 1, 2026. Conversations: 1"),
     ).toBeTruthy();
-    expect(
-      screen
-        .getByText("August 1, 2026. Conversations: 1")
-        .getAttribute("data-slot"),
-    ).toBe("smooth-corners");
   });
 
   it("reports query errors without showing misleading totals", () => {

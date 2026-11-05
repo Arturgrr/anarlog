@@ -42,14 +42,14 @@ export function ChatCTA({
         data-chat-cta-surface
         aria-hidden="true"
         className={cn([
-          "rounded-pill border-border/70 pointer-events-none absolute bottom-0 left-1/2 inline-flex h-10 w-[min(640px,calc(100cqw_-_2rem))] -translate-x-1/2 items-center overflow-hidden border",
-          "dark:bg-card origin-bottom bg-white px-4 text-sm shadow-[0_6px_20px_rgba(0,0,0,0.10)] transition-[width,height,padding,background-color,border-color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.32)]",
-          "group-focus-visible/anarlog-chat-cta:ring-ring group-focus-visible/anarlog-chat-cta:ring-2 group-focus-visible/anarlog-chat-cta:ring-offset-2",
+          "pointer-events-none absolute bottom-0 left-1/2 inline-flex h-10 w-[min(640px,calc(100cqw_-_2rem))] -translate-x-1/2 items-center overflow-hidden rounded-lg",
+          "bg-card shadow-floating origin-bottom px-4 text-sm transition-[width,height,padding,background-color,box-shadow] duration-200 ease-out",
+          "group-focus-visible/anarlog-chat-cta:outline-ring group-focus-visible/anarlog-chat-cta:outline-2 group-focus-visible/anarlog-chat-cta:outline-offset-[2.5px]",
         ])}
       >
         <span
           aria-hidden="true"
-          className="text-muted-foreground min-w-0 flex-1 truncate text-left"
+          className="text-faint min-w-0 flex-1 truncate text-left"
         >
           {resolvedLabel}
         </span>

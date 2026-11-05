@@ -58,7 +58,7 @@ export function WorkflowBuilder({
 
   return (
     <section
-      className="border-border bg-background overflow-hidden rounded-2xl border"
+      className="bg-card shadow-raised overflow-hidden rounded-lg"
       aria-labelledby="workflow-builder-title"
     >
       <div className="border-border flex flex-wrap items-start justify-between gap-3 border-b px-5 py-4">
@@ -98,7 +98,7 @@ export function WorkflowBuilder({
               update({ trigger: value as WorkflowTrigger })
             }
           >
-            <SelectTrigger className="h-8 w-full max-w-xs text-xs">
+            <SelectTrigger className="h-7 w-full max-w-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -223,8 +223,8 @@ function WorkflowCard({
         className={cn([
           "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
           kind === "trigger"
-            ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-            : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+            ? "bg-contrast text-primary-foreground"
+            : "bg-layer-2 text-foreground",
         ])}
       >
         {kind === "trigger" ? "1" : "+"}

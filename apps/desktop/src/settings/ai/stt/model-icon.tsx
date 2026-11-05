@@ -64,7 +64,7 @@ function getLocalModelIcon(model: string): ModelIconSpec | null {
     return {
       label: "G",
       title: "GGML",
-      className: "rounded-md border-amber-200 bg-amber-50 text-amber-700",
+      className: "rounded-md border-border bg-muted text-muted-foreground",
     };
   }
 
@@ -72,7 +72,7 @@ function getLocalModelIcon(model: string): ModelIconSpec | null {
     return {
       label: "S",
       title: "Soniqo",
-      className: "rounded-md border-blue-200 bg-blue-50 text-blue-700",
+      className: "rounded-md border-border bg-muted text-muted-foreground",
     };
   }
 
@@ -86,7 +86,7 @@ function getLocalModelBackendBadge(model: string): ModelIconSpec | null {
     return {
       label: "NV",
       title: "NVIDIA",
-      className: "border-green-200 bg-green-50 text-green-700",
+      className: "border-border bg-muted text-muted-foreground",
     };
   }
 
@@ -106,7 +106,7 @@ function getLocalModelBackendBadge(model: string): ModelIconSpec | null {
     return {
       label: "GGML",
       title: "GGML runtime",
-      className: "border-amber-200 bg-amber-50 text-amber-700",
+      className: "border-border bg-muted text-muted-foreground",
     };
   }
 

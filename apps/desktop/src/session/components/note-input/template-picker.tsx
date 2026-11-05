@@ -202,7 +202,7 @@ export function TemplatePickerPopover({
           icon: {
             type: "icon",
             value: "sparkles",
-            color: "#9ca3af",
+            color: "#808080",
           } satisfies TemplateIcon,
           onClick: () =>
             handleUseTemplate({
@@ -231,7 +231,7 @@ export function TemplatePickerPopover({
       {
         key: "create",
         title: "Create new template",
-        icon: <Plus className="h-3.5 w-3.5 text-blue-500" />,
+        icon: <Plus className="text-icon-muted h-3.5 w-3.5" />,
         uppercase: false,
         items: [
           {
@@ -314,7 +314,7 @@ export function TemplatePickerPopover({
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent variant="app" className="w-80 pb-0" align="start">
         <div className="flex flex-col">
-          <AppFloatingPanel className="flex flex-col overflow-hidden rounded-[20px]">
+          <AppFloatingPanel className="flex flex-col overflow-hidden">
             <div className="border-border border-b py-1">
               <div
                 className={cn([
@@ -343,7 +343,7 @@ export function TemplatePickerPopover({
               </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-b-[20px]">
+            <div className="relative overflow-hidden rounded-b-[inherit]">
               <div
                 className={cn(["scroll-fade-y max-h-80 overflow-y-auto p-1"])}
               >
@@ -517,7 +517,7 @@ function TemplateResultButton({
   return (
     <div
       className={cn([
-        "hover:bg-accent focus-within:bg-muted h-8 w-full rounded-md px-2.5",
+        "hover:bg-hover focus-within:bg-hover h-7 w-full rounded-sm pr-1.5 pl-3",
         "flex items-center gap-1.5",
       ])}
     >
@@ -532,7 +532,7 @@ function TemplateResultButton({
           {title}
         </span>
         {isFavorite ? (
-          <Heart aria-hidden className="size-3.5 shrink-0 text-rose-500" />
+          <Heart aria-hidden className="text-icon size-3.5 shrink-0" />
         ) : null}
       </button>
       {regenerateLabel && onRegenerate ? (

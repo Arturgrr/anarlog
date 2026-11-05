@@ -1,9 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { type ComponentProps } from "react";
 
 import { ChartLineUp } from "@anlg/ui/components/icons";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { panelSquircle } from "@anlg/ui/lib/squircle";
 import { cn } from "@anlg/utils";
 
 import type { summarizeActivity } from "./activity";
@@ -45,8 +42,8 @@ export function ConversationPatterns({
         <Trans>Your conversation patterns</Trans>
       </h3>
 
-      <InsightPanel
-        className="border-border flex items-start gap-3 rounded-[20px] border p-5"
+      <section
+        className="bg-card shadow-raised flex items-start gap-3 rounded-lg p-5"
         aria-label={t`Busiest day`}
       >
         <ChartLineUp
@@ -81,7 +78,7 @@ export function ConversationPatterns({
             )}
           </p>
         </div>
-      </InsightPanel>
+      </section>
 
       {stats.conversations > 0 && (
         <>
@@ -130,7 +127,7 @@ export function ConversationPatterns({
 
           {hasPatterns && (
             <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
-              <InsightPanel className="border-border flex flex-col gap-2 rounded-[20px] border p-4">
+              <section className="bg-card shadow-raised flex flex-col gap-2 rounded-lg p-4">
                 <h3 className="text-muted-foreground text-xs">
                   <Trans>Typical conversation length</Trans>
                 </h3>
@@ -147,8 +144,8 @@ export function ConversationPatterns({
                     {number.format(stats.timedConversations)}.
                   </Trans>
                 </p>
-              </InsightPanel>
-              <InsightPanel className="border-border flex flex-col gap-2 rounded-[20px] border p-4">
+              </section>
+              <section className="bg-card shadow-raised flex flex-col gap-2 rounded-lg p-4">
                 <h3 className="text-muted-foreground text-xs">
                   <Trans>Conversations per active day</Trans>
                 </h3>
@@ -158,7 +155,7 @@ export function ConversationPatterns({
                 <p className="text-muted-foreground text-xs">
                   <Trans>Average across the capture days counted above.</Trans>
                 </p>
-              </InsightPanel>
+              </section>
             </div>
           )}
         </>
@@ -173,11 +170,4 @@ export function ConversationPatterns({
       </p>
     </section>
   );
-}
-
-function InsightPanel({ ref, ...props }: ComponentProps<"section">) {
-  const squircleRef = useSquircleRef<HTMLElement>(ref, panelSquircle, {
-    innerBorder: { width: 1, color: "var(--color-border)", opacity: 1 },
-  });
-  return <section {...props} ref={squircleRef} />;
 }

@@ -480,7 +480,7 @@ function ExportModalContent({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        overlayClassName="bg-black/20 backdrop-blur-xs"
+        overlayClassName="bg-scrim"
         className={cn([
           "w-full max-w-xs gap-0 border-0 bg-transparent p-4 shadow-none sm:rounded-none",
           "[&>button:last-child]:hidden",
@@ -488,8 +488,7 @@ function ExportModalContent({
       >
         <div
           className={cn([
-            "border-border/80 bg-background rounded-xl border",
-            "shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]",
+            "bg-layer-1 shadow-overlay rounded-md",
             "flex flex-col gap-4 p-5 text-center",
           ])}
         >
@@ -570,7 +569,7 @@ function ExportModalContent({
           </div>
 
           {error && (
-            <p role="alert" className="text-xs text-red-500">
+            <p role="alert" className="text-danger text-xs">
               <Trans>
                 Could not export. Check the export location in Settings and try
                 again.
@@ -584,7 +583,7 @@ function ExportModalContent({
             disabled={
               isPending || isTranscriptPending || !hasAnyContentSelected
             }
-            className="border-primary bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-full rounded-full border-2 text-sm font-medium shadow-[0_4px_14px_rgba(87,83,78,0.4)] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-primary text-primary-foreground shadow-button-contrast hover:bg-primary/90 h-9 w-full rounded-xl text-sm font-medium transition-[background-color,opacity] duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isPending
               ? t`Exporting...`

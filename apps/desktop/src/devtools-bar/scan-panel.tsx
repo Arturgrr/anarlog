@@ -21,7 +21,7 @@ import {
 import { RESIZE_HANDLES, useScanPanelLayout } from "./scan-panel-layout";
 
 const buttonClass =
-  "rounded-lg px-2 py-1 text-muted-foreground hover:bg-background/50 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring";
+  "rounded-sm px-2 py-1 text-muted-foreground hover:bg-hover hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring";
 type View = "ranked" | "overview" | "prompts" | "settings";
 type Selection = Readonly<{
   event: ScanEvent;
@@ -65,7 +65,7 @@ export function ScanPanel({
       data-devbar=""
       data-testid="react-scan-panel"
       aria-label="React Scan performance"
-      className="border-border bg-background text-foreground flex min-h-0 flex-col overflow-hidden rounded-[22px] border font-mono text-[11px] leading-snug shadow-xl"
+      className="bg-layer-1 text-foreground shadow-overlay flex min-h-0 flex-col overflow-hidden rounded-lg font-mono text-[11px] leading-snug"
     >
       <div className="flex min-h-0 flex-1">
         <aside
@@ -102,7 +102,7 @@ export function ScanPanel({
                 aria-pressed={event.id === selected?.id}
                 title={event.label}
                 className={cn([
-                  "hover:bg-background/50 mb-0.5 flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left",
+                  "hover:bg-background/50 mb-0.5 flex w-full items-center gap-2 rounded-md px-2 py-2 text-left",
                   event.id === selected?.id &&
                     "bg-background/60 ring-border/30 shadow-sm ring-1",
                 ])}
@@ -116,10 +116,10 @@ export function ScanPanel({
                   className={cn([
                     "size-1.5 shrink-0 rounded-full",
                     event.severity === "high"
-                      ? "bg-destructive"
+                      ? "bg-danger"
                       : event.severity === "needs-improvement"
-                        ? "bg-amber-500"
-                        : "bg-blue-500",
+                        ? "bg-foreground"
+                        : "bg-faint",
                   ])}
                 />
                 <span className="min-w-0 flex-1 truncate">{event.label}</span>
@@ -359,7 +359,7 @@ function Prompts({
         aria-label={`${mode} prompt`}
         readOnly
         value={prompt}
-        className="border-border/40 bg-background/55 focus:border-ring min-h-0 flex-1 resize-none rounded-xl border p-3 text-[11px] leading-relaxed outline-none"
+        className="border-border/40 bg-background/55 focus:border-ring min-h-0 flex-1 resize-none rounded-md border p-3 text-[11px] leading-relaxed outline-none"
       />
       <p role="status" className="text-muted-foreground shrink-0">
         {error
@@ -389,7 +389,7 @@ function Ranked({ event }: Readonly<{ event: ScanEvent }>) {
       {rows.map((row, index) => (
         <details
           key={`${row.label}-${index}`}
-          className="border-border/40 bg-background/25 overflow-hidden rounded-xl border"
+          className="border-border/40 bg-background/25 overflow-hidden rounded-md border"
           open={row.component ? undefined : false}
         >
           <summary
@@ -465,7 +465,7 @@ function Overview({ event }: Readonly<{ event: ScanEvent }>) {
           </div>
           <div className="bg-foreground/10 h-1.5 overflow-hidden rounded-full">
             <div
-              className="h-full rounded bg-blue-500"
+              className="bg-foreground h-full rounded"
               style={{
                 width: `${Math.min(100, (Math.max(0, timing.time) / Math.max(1, event.duration)) * 100)}%`,
               }}

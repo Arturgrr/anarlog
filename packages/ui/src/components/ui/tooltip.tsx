@@ -6,33 +6,29 @@ import * as React from "react";
 
 import { cn } from "@anlg/utils";
 
-const TooltipProvider = TooltipPrimitive.Provider;
+function TooltipProvider({
+  delayDuration = 500,
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
+  return <TooltipPrimitive.Provider delayDuration={delayDuration} {...props} />;
+}
 
 const Tooltip = TooltipPrimitive.Root;
 
 const TooltipTrigger = TooltipPrimitive.Trigger;
 
+const TOOLTIP_OFFSET = {
+  top: { y: 4 },
+  bottom: { y: -4 },
+  left: { x: 4 },
+  right: { x: -4 },
+};
+
 const TooltipContent = React.forwardRef<
   React.ComponentRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
 >(({ className, sideOffset = 4, side = "top", ...props }, ref) => {
-  // Determine animation direction based on tooltip side
-  const getInitialPosition = () => {
-    switch (side) {
-      case "top":
-        return { y: 10 }; // Sprout upward from button
-      case "bottom":
-        return { y: -10 }; // Sprout downward from button
-      case "left":
-        return { x: 10 }; // Sprout leftward from button
-      case "right":
-        return { x: -10 }; // Sprout rightward from button
-      default:
-        return { y: 10 };
-    }
-  };
-
-  const initialPosition = getInitialPosition();
+  const initialPosition = TOOLTIP_OFFSET[side];
 
   return (
     <TooltipPrimitive.Portal>
@@ -44,16 +40,13 @@ const TooltipContent = React.forwardRef<
         {...props}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, ...initialPosition }}
-          animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, ...initialPosition }}
-          transition={{
-            duration: 0.2,
-            ease: [0.16, 1, 0.3, 1],
-          }}
+          initial={{ opacity: 0, ...initialPosition }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          exit={{ opacity: 0, ...initialPosition }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
           className={cn([
-            "z-50 overflow-hidden rounded-md px-3 py-1.5 text-xs",
-            "border border-neutral-200/50 bg-white/80 text-neutral-700 shadow-lg backdrop-blur-sm",
+            "z-50 max-w-[300px] overflow-hidden rounded-[5px] px-[7px] py-1 text-xs",
+            "bg-tooltip text-tooltip-foreground border-tooltip-border border-[0.5px] shadow-md",
             "origin-(--radix-tooltip-content-transform-origin)",
             className,
           ])}

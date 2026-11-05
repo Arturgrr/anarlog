@@ -18,7 +18,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
 import { getTemplateCopyTitle, type UserTemplate } from "./queries";
@@ -39,7 +38,6 @@ export function TemplatesSidebarContent({
 }) {
   const { t } = useLingui();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const searchRef = useSquircleRef<HTMLDivElement>();
   const [search, setSearch] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("alphabetical");
   const autoPrompt = useConfigValue("auto_summary_prompt");
@@ -306,10 +304,9 @@ export function TemplatesSidebarContent({
 
         <div className="pb-2">
           <div
-            ref={searchRef}
             className={cn([
-              "border-border bg-accent/50 flex h-8 w-full shrink-0 items-center gap-2 rounded-lg border px-3",
-              "focus-within:bg-accent transition-colors",
+              "bg-card shadow-button-neutral flex h-7 w-full shrink-0 items-center gap-2 rounded-md px-2",
+              "focus-within:outline-ring focus-within:outline focus-within:outline-1",
             ])}
           >
             <MagnifyingGlass className="text-muted-foreground h-4 w-4 shrink-0" />
@@ -376,12 +373,12 @@ export function TemplatesSidebarContent({
                       onClick={() => setSelectedMineId(AUTO_TEMPLATE_ID)}
                       data-template-selected={item.selected}
                       className={cn([
-                        "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-                        item.selected ? "bg-accent" : "hover:bg-accent/50",
+                        "w-full rounded-md px-2.5 py-2 text-left text-sm select-none",
+                        item.selected ? "bg-layer-2" : "hover:bg-layer-2",
                       ])}
                     >
                       <div className="flex items-center gap-2">
-                        <Sparkle className="size-4 text-violet-500" />
+                        <Sparkle className="text-icon size-4" />
                         <div className="min-w-0 flex-1">
                           <div className="truncate font-medium">
                             {item.title}
@@ -462,8 +459,8 @@ function TemplateListItem({
       }}
       data-template-selected={selected}
       className={cn([
-        "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-        selected ? "bg-accent" : "hover:bg-accent/50",
+        "w-full rounded-md px-2.5 py-2 text-left text-sm select-none",
+        selected ? "bg-layer-2" : "hover:bg-layer-2",
       ])}
     >
       <div className="flex items-center gap-2">

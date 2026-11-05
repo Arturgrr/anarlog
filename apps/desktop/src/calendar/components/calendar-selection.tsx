@@ -140,8 +140,8 @@ function CalendarGroupHeader({
       onContextMenu={hasMenu ? showContextMenu : undefined}
       className={cn([
         "flex items-center justify-between gap-2 py-1",
-        hasMenu && "group -mx-2 rounded-full px-2",
-        hasMenu && !disableHoverTone && "hover:bg-accent",
+        hasMenu && "group -mx-2 rounded-md px-2",
+        hasMenu && !disableHoverTone && "hover:bg-hover",
       ])}
     >
       <span className="text-muted-foreground truncate text-xs font-medium">
@@ -165,9 +165,9 @@ function CalendarGroupMenuButton({
       type="button"
       onClick={onClick}
       className={cn([
-        "text-muted-foreground shrink-0 rounded-full p-1 transition-colors",
+        "text-icon-muted shrink-0 rounded-sm p-1",
         "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100",
-        "hover:bg-accent hover:text-muted-foreground",
+        "hover:bg-hover active:bg-pressed hover:text-foreground",
         className,
       ])}
       aria-label={t`Open calendar account actions`}

@@ -5,7 +5,7 @@ import { Separator } from "@anlg/ui/components/ui/separator";
 import { cn } from "@anlg/utils";
 
 const buttonGroupVariants = cva(
-  "flex w-fit items-stretch focus-visible:*:relative focus-visible:*:z-10 has-[>[data-slot=button-group]]:gap-2 [&>[data-slot=select-trigger]:last-of-type]:has-[select[aria-hidden=true]:last-child]:rounded-r-full [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
+  "flex w-fit items-stretch focus-visible:*:relative focus-visible:*:z-10 has-[>[data-slot=button-group]]:gap-2 [&>[data-slot=select-trigger]:last-of-type]:has-[select[aria-hidden=true]:last-child]:rounded-r-md [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
   {
     variants: {
       orientation: {
@@ -49,7 +49,7 @@ function ButtonGroupText({
   return (
     <Comp
       className={cn([
-        "bg-muted flex items-center gap-2 rounded-full border px-4 text-sm font-medium shadow-2xs [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+        "bg-layer-2 text-muted-foreground text-ui font-ui-medium flex items-center gap-2 rounded-md px-2.5 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
         className,
       ])}
       {...props}
@@ -67,7 +67,7 @@ function ButtonGroupSeparator({
       data-slot="button-group-separator"
       orientation={orientation}
       className={cn([
-        "bg-input relative m-0! self-stretch data-[orientation=vertical]:h-auto",
+        "bg-border relative m-0! self-stretch data-[orientation=vertical]:h-auto",
         className,
       ])}
       {...props}

@@ -40,7 +40,7 @@ function getProviderBadgeClassName(badge: string) {
     return "text-xs font-medium text-muted-foreground";
   }
 
-  return "rounded-full border border-border px-2 text-xs font-light text-muted-foreground";
+  return "inline-flex h-[18px] items-center rounded-xs border-[0.5px] border-border bg-layer-2 px-1.5 text-small text-muted-foreground";
 }
 
 function ProviderIcon({ provider }: { provider: CalendarProvider }) {
@@ -182,7 +182,7 @@ function ProviderAccordionItem({
           providerMenuItems.length > 0 ? showProviderMenu : undefined
         }
         className={cn([
-          "group/row hover:bg-accent relative -mx-2 grid items-center gap-1 rounded-full px-2",
+          "group/row hover:bg-hover relative -mx-2 grid items-center gap-1 rounded-md px-2",
           canDisconnectApple
             ? "grid-cols-[minmax(0,1fr)_auto_auto]"
             : "grid-cols-[minmax(0,1fr)_auto]",
@@ -214,7 +214,7 @@ function ProviderAccordionItem({
             type="button"
             onClick={handleAppleConnect}
             disabled={calendar.isPending}
-            className="text-muted-foreground hover:bg-accent hover:text-foreground shrink-0 rounded-full p-1 transition-colors disabled:opacity-50"
+            className="text-icon-muted hover:bg-hover active:bg-pressed hover:text-foreground shrink-0 rounded-sm p-1 disabled:opacity-50"
             aria-label={t`Connect ${provider.displayName}`}
           >
             {calendar.isPending ? (
@@ -228,9 +228,9 @@ function ProviderAccordionItem({
             type="button"
             onClick={showProviderMenu}
             className={cn([
-              "text-muted-foreground shrink-0 rounded-full p-1 transition-colors",
+              "text-icon-muted shrink-0 rounded-sm p-1",
               "pointer-events-none opacity-0 group-hover/row:pointer-events-auto group-hover/row:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100",
-              "hover:bg-accent hover:text-muted-foreground",
+              "hover:bg-hover active:bg-pressed hover:text-foreground",
             ])}
             aria-label={t`Open calendar account actions`}
           >

@@ -212,7 +212,7 @@ export function BadgeGallery({
               type="button"
               onClick={() => setSelectedId(badge.id)}
               aria-label={badge.name}
-              className="bg-background border-border hover:bg-muted focus-visible:outline-ring isolate flex h-full w-full cursor-pointer flex-col items-center gap-3 rounded-2xl border px-3 py-5 text-center focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="bg-card shadow-raised hover:bg-layer-2 focus-visible:outline-ring isolate flex h-full w-full cursor-pointer flex-col items-center gap-3 rounded-lg px-3 py-5 text-center focus-visible:outline-2 focus-visible:outline-offset-[2.5px]"
             >
               <BadgeEmblem id={badge.id} collected={!!badge.collectedAt} />
               <span className="flex flex-col gap-1">
@@ -243,7 +243,7 @@ export function BadgeGallery({
         }}
       >
         {selected && (
-          <DialogContent className="isolate max-w-sm rounded-2xl">
+          <DialogContent className="isolate max-w-sm">
             <div className="flex justify-center py-2">
               <BadgeEmblem
                 id={selected.id}
@@ -312,7 +312,7 @@ function BadgeEmblem({
         ])}
       />
       {collected && (
-        <span className="bg-background border-border rounded-pill absolute right-0 bottom-0 flex size-5 items-center justify-center border">
+        <span className="bg-card border-border absolute right-0 bottom-0 flex size-5 items-center justify-center rounded-full border">
           <Check className="size-3" />
         </span>
       )}

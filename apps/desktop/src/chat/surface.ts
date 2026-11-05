@@ -9,7 +9,7 @@ export function chatPanelClassNames(): string {
 }
 
 export function chatFloatingPanelClassNames(): string {
-  return "bg-[#f4f4f5] text-card-foreground dark:bg-[#202020]";
+  return "bg-layer-1 text-card-foreground";
 }
 
 export function chatPanelBorderClassNames(): string {
@@ -17,7 +17,7 @@ export function chatPanelBorderClassNames(): string {
 }
 
 export function chatFloatingPanelShellClassNames(): string {
-  return "bg-[#f4f4f5] text-card-foreground rounded-[24px] border border-border/70 border-t-app-floating-border shadow-[0_12px_32px_rgba(0,0,0,0.14)] dark:border-white/10 dark:border-t-app-floating-border dark:bg-[#202020] dark:shadow-[0_16px_40px_rgba(0,0,0,0.40)]";
+  return "bg-layer-1 text-card-foreground rounded-xl shadow-overlay";
 }
 
 export function chatElevatedSurfaceClassNames(): string {
@@ -41,5 +41,5 @@ export function chatToolbarSurface(): ChatToolbarSurface {
 }
 
 export function chatFloatingControlClassNames(): string {
-  return "border-border bg-accent text-accent-foreground hover:bg-accent/90";
+  return "border-border bg-layer-1 text-foreground hover:bg-layer-2";
 }

@@ -113,8 +113,8 @@ function AutomationsOverview() {
           </p>
         </div>
 
-        <section className="border-border bg-muted/20 flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-10 text-center">
-          <span className="bg-background border-border flex size-11 items-center justify-center rounded-2xl border">
+        <section className="border-border-strong flex min-h-56 flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center">
+          <span className="bg-card shadow-raised flex size-11 items-center justify-center rounded-lg">
             <Lightning className="text-muted-foreground" size={20} />
           </span>
           <h3 className="mt-4 text-sm font-semibold">
@@ -303,7 +303,7 @@ function CustomWorkflowDetails({
 
   return (
     <AutomationDetailsLayout
-      icon={<Lightning className="text-violet-500" size={16} />}
+      icon={<Lightning className="text-icon" size={16} />}
       title={title}
       description={description}
       actions={
@@ -446,13 +446,13 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
       }
     >
       <section
-        className="border-border bg-background overflow-hidden rounded-2xl border"
+        className="bg-card shadow-raised overflow-hidden rounded-lg"
         aria-labelledby="automation-draft-title"
       >
         <div className="border-border flex flex-wrap items-start justify-between gap-3 border-b px-5 py-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <Lightning className="text-primary" size={17} />
+              <Lightning className="text-icon" size={17} />
               <h3
                 id="automation-draft-title"
                 className="truncate text-sm font-semibold"
@@ -538,11 +538,9 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
                 <span
                   className={cn([
                     "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                    step.kind === "ai"
-                      ? "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300"
-                      : step.kind === "trigger"
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                        : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+                    step.kind === "trigger"
+                      ? "bg-contrast text-primary-foreground"
+                      : "bg-layer-2 text-foreground",
                   ])}
                 >
                   {step.kind === "ai" ? <Sparkle size={13} /> : index + 1}

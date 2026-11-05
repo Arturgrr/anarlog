@@ -132,7 +132,7 @@ function OnboardingScreenContent({
         >
           <video
             ref={onboardingVideoRef}
-            className="absolute inset-0 h-full w-full object-cover object-bottom opacity-28"
+            className="absolute inset-0 h-full w-full object-cover object-bottom opacity-28 grayscale"
             autoPlay
             loop
             muted
@@ -162,7 +162,7 @@ function OnboardingScreenContent({
         <button
           onClick={() => setIsMuted((prev) => !prev)}
           data-tauri-drag-region="false"
-          className="hover:bg-accent rounded-full p-1.5 transition-colors"
+          className="hover:bg-hover active:bg-pressed rounded-md p-1.5"
           aria-label={isMuted ? "Unmute" : "Mute"}
         >
           {isMuted ? (
@@ -180,7 +180,7 @@ function OnboardingScreenContent({
           headerClassName,
         ])}
       >
-        <h1 className="font-hand text-foreground text-4xl leading-none font-semibold tracking-normal">
+        <h1 className="text-foreground font-sans text-4xl leading-none font-medium tracking-normal">
           <Trans>Welcome to Anarlog</Trans>
         </h1>
       </div>

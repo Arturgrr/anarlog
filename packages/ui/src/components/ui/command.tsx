@@ -6,7 +6,6 @@ import { Dialog, DialogContent } from "@anlg/ui/components/ui/dialog";
 import { cn } from "@anlg/utils";
 
 import { MagnifyingGlass } from "../icons";
-import { appFloatingItemClassName } from "./floating-content";
 
 const Command = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive>,
@@ -15,7 +14,7 @@ const Command = React.forwardRef<
   <CommandPrimitive
     ref={ref}
     className={cn([
-      "bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-[18px]",
+      "bg-layer-1 text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md",
       className,
     ])}
     {...props}
@@ -39,12 +38,15 @@ const CommandInput = React.forwardRef<
   HTMLInputElement,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <MagnifyingGlass className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+  <div
+    className="border-border-muted flex items-center border-b px-3"
+    cmdk-input-wrapper=""
+  >
+    <MagnifyingGlass className="text-icon-muted mr-2 size-4 shrink-0" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn([
-        "placeholder:text-muted-foreground flex h-10 w-full rounded-full bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+        "placeholder:text-faint text-ui flex h-9 w-full bg-transparent py-2 outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
         className,
       ])}
       {...props}
@@ -76,7 +78,7 @@ const CommandEmpty = React.forwardRef<
 >((props, ref) => (
   <CommandPrimitive.Empty
     ref={ref}
-    className="py-6 text-center text-sm"
+    className="text-muted-foreground text-ui py-6 text-center"
     {...props}
   />
 ));
@@ -90,7 +92,7 @@ const CommandGroup = React.forwardRef<
   <CommandPrimitive.Group
     ref={ref}
     className={cn([
-      "text-foreground **:[[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium",
+      "text-foreground **:[[cmdk-group-heading]]:text-faint **:[[cmdk-group-heading]]:text-small **:[[cmdk-group-heading]]:font-ui-medium overflow-hidden p-0.5 **:[[cmdk-group-heading]]:px-3 **:[[cmdk-group-heading]]:pt-2 **:[[cmdk-group-heading]]:pb-1",
       className,
     ])}
     {...props}
@@ -105,7 +107,7 @@ const CommandSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Separator
     ref={ref}
-    className={cn(["bg-border -mx-1 h-px", className])}
+    className={cn(["bg-border-muted -mx-0.5 my-0.5 h-px", className])}
     {...props}
   />
 ));
@@ -118,8 +120,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn([
-      "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground relative flex cursor-default items-center gap-2 px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-      appFloatingItemClassName,
+      "data-[selected=true]:bg-hover text-ui relative flex min-h-7 cursor-default items-center gap-2 rounded-sm py-1 pr-1.5 pl-3 outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
       className,
     ])}
     {...props}
@@ -135,7 +136,7 @@ const CommandShortcut = ({
   return (
     <span
       className={cn([
-        "text-muted-foreground ml-auto text-xs tracking-widest",
+        "text-faint text-small font-ui-medium ml-auto",
         className,
       ])}
       {...props}

@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 
 import { ArrowLeft } from "@anlg/ui/components/icons";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
+import { focusRingClassName } from "@anlg/ui/lib/focus-ring";
 import { cn } from "@anlg/utils";
 
 import { useShell } from "~/contexts/shell";
@@ -117,9 +118,9 @@ function CustomSidebarHeaderButton({
       data-tauri-drag-region="false"
       disabled={disabled}
       className={cn([
-        "relative z-50 flex size-7 shrink-0 items-center justify-center rounded-full",
-        "text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
-        "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+        "relative z-50 flex size-7 shrink-0 items-center justify-center rounded-md",
+        "text-icon-muted hover:bg-hover active:bg-pressed hover:text-foreground",
+        focusRingClassName,
         "disabled:text-muted-foreground/70 disabled:hover:text-muted-foreground/70 disabled:hover:bg-transparent",
       ])}
       onClick={onClick}

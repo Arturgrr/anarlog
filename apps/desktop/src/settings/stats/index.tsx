@@ -1,8 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useState } from "react";
 
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { panelSquircle } from "@anlg/ui/lib/squircle";
 import { cn } from "@anlg/utils";
 
 import { summarizeActivity } from "./activity";
@@ -22,10 +20,6 @@ const ACTIVITY_COLORS = [
   "bg-foreground/60",
   "bg-foreground/80",
 ];
-
-const STATS_BORDER = {
-  innerBorder: { width: 1, color: "var(--color-border)", opacity: 1 },
-};
 
 export function SettingsInsights() {
   const { t, i18n } = useLingui();
@@ -200,13 +194,8 @@ export function SettingsInsights() {
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
-  const ref = useSquircleRef<HTMLDivElement>(
-    undefined,
-    panelSquircle,
-    STATS_BORDER,
-  );
   return (
-    <div ref={ref} className="border-border rounded-[20px] border p-4">
+    <div className="bg-card shadow-raised rounded-lg p-4">
       <dt className="text-muted-foreground text-xs">{label}</dt>
       <dd className="mt-2 text-3xl font-medium tracking-tight tabular-nums">
         {value}

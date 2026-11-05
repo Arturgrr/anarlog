@@ -186,12 +186,12 @@ export function DetailsColumn({
             </div>
 
             {!readOnly && duplicatesWithData.length > 0 && (
-              <div className="border-border border-b bg-red-50 px-6 py-4">
-                <h4 className="mb-1 text-sm font-semibold text-red-900">
+              <div className="border-border bg-layer-2 border-b px-6 py-4">
+                <h4 className="text-foreground mb-1 text-sm font-semibold">
                   Duplicate Contact
                   {duplicatesWithData.length > 1 ? "s" : ""} Found
                 </h4>
-                <p className="mb-3 text-sm text-red-800">
+                <p className="text-muted-foreground mb-3 text-sm">
                   {duplicatesWithData.length > 1
                     ? `${duplicatesWithData.length} contacts`
                     : "Another contact"}{" "}
@@ -203,7 +203,7 @@ export function DetailsColumn({
                   {duplicatesWithData.map((dup) => (
                     <div
                       key={dup.id}
-                      className="border-border bg-muted flex items-center justify-between rounded-md border p-2"
+                      className="bg-card shadow-raised flex items-center justify-between rounded-lg p-2"
                     >
                       <div className="flex items-center gap-2">
                         {dup.avatarDataUrl ? (
@@ -453,7 +453,7 @@ function ContactSummarySection({
                 />
                 <div
                   className={cn([
-                    "bg-muted-foreground/10 h-3 animate-pulse rounded-full",
+                    "bg-muted-foreground/10 h-3 animate-pulse rounded-xs",
                     width,
                   ])}
                   style={{ animationDelay: `${index * 150}ms` }}
@@ -752,7 +752,7 @@ export function ContactOrganizationSelector({
               <span className="text-base md:text-sm">{organization.name}</span>
               <span className="group text-muted-foreground ml-2">
                 <MinusCircle
-                  className="text-muted-foreground size-4 cursor-pointer hover:text-red-600"
+                  className="text-icon-muted hover:text-danger size-4 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRemoveOrganization();
@@ -880,7 +880,7 @@ function OrganizationControl({
                   onClick={() => selectOrganization(org.id)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                 >
-                  <span className="bg-muted mr-2 flex size-5 shrink-0 items-center justify-center rounded-full">
+                  <span className="bg-layer-2 mr-2 flex size-5 shrink-0 items-center justify-center rounded-sm">
                     <Buildings className="size-3" />
                   </span>
                   <span className="truncate font-medium">{org.name}</span>
@@ -899,7 +899,7 @@ function OrganizationControl({
                   onClick={() => void handleCreateOrganization()}
                   onMouseEnter={() => setHighlightedIndex(organizations.length)}
                 >
-                  <span className="bg-accent mr-2 flex size-5 shrink-0 items-center justify-center rounded-full">
+                  <span className="bg-layer-2 mr-2 flex size-5 shrink-0 items-center justify-center rounded-sm">
                     <span className="text-xs">+</span>
                   </span>
                   <span className="text-muted-foreground flex items-center gap-1 font-medium">
@@ -926,7 +926,7 @@ function OrganizationControl({
                   onClick={() => selectOrganization(org.id)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                 >
-                  <span className="bg-muted mr-2 flex size-5 shrink-0 items-center justify-center rounded-full">
+                  <span className="bg-layer-2 mr-2 flex size-5 shrink-0 items-center justify-center rounded-sm">
                     <Buildings className="size-3" />
                   </span>
                   <span className="truncate font-medium">{org.name}</span>

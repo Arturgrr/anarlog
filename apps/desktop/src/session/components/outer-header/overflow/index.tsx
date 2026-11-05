@@ -181,7 +181,7 @@ export function OverflowButton({
             variant="ghost"
             data-tauri-drag-region="false"
             aria-label="More"
-            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-full [&_svg]:size-4"
+            className="text-muted-foreground hover:text-foreground [&_svg]:size-4"
           >
             <DotsThree className="size-4" />
           </Button>

@@ -20,8 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@anlg/ui/components/ui/popover";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { squircleFocusVisibleClassName } from "@anlg/ui/lib/squircle";
+import { focusRingClassName } from "@anlg/ui/lib/focus-ring";
 import { cn } from "@anlg/utils";
 
 import { useFolderSelection } from "~/folders/selection";
@@ -52,7 +51,6 @@ export function FolderPicker({
   align?: "start" | "end";
 }) {
   const { t } = useLingui();
-  const triggerRef = useSquircleRef<HTMLButtonElement>();
   const [open, setOpen] = useState(false);
   const currentPath = normalizeFolderPath(
     useSession(sessionId)?.folder_id ?? "",
@@ -63,7 +61,6 @@ export function FolderPicker({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          ref={triggerRef}
           type="button"
           data-tauri-drag-region="false"
           role="combobox"
@@ -73,13 +70,13 @@ export function FolderPicker({
           }
           title={currentPath ? currentPath : t`Select folder`}
           className={cn([
-            "flex h-7 items-center rounded-full [&_svg]:size-4",
+            "flex h-7 items-center rounded-md [&_svg]:size-4",
             currentPath
               ? "max-w-36 min-w-0 gap-1 px-1.5 @max-[480px]:w-7 @max-[480px]:gap-0 @max-[480px]:px-0"
               : "w-7 justify-center",
-            "text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
-            squircleFocusVisibleClassName,
-            open && "bg-accent text-foreground",
+            "text-muted-foreground hover:bg-hover hover:text-foreground active:bg-pressed",
+            focusRingClassName,
+            open && "bg-pressed text-foreground",
           ])}
         >
           {currentPath ? (

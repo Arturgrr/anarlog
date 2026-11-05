@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { ArrowDown, ArrowUp, Sun } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
+import { focusRingClassName } from "@anlg/ui/lib/focus-ring";
 import { cn } from "@anlg/utils";
 
 export function UpcomingMeetingChip({
@@ -18,7 +19,7 @@ export function UpcomingMeetingChip({
       aria-live="polite"
       ariaLabel={ariaLabel}
       data-sidebar-upcoming-meeting-status
-      className="border-destructive bg-destructive text-destructive-foreground w-28 justify-center shadow-md"
+      className="bg-contrast text-primary-foreground shadow-button-contrast hover:bg-contrast/90 hover:text-primary-foreground active:bg-contrast/80 w-28 justify-center"
       icon={<ArrowUp aria-hidden className="size-3" weight="bold" />}
       onClick={onClick}
     >
@@ -44,9 +45,9 @@ export function TimelineTopChip({
   onClick?: () => void;
 }) {
   const className = cn([
-    "border-border bg-card text-muted-foreground flex h-6 items-center gap-1 rounded-full border px-2.5 text-xs font-medium shadow-xs",
-    onClick && "hover:bg-accent hover:text-foreground transition-colors",
-    "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+    "bg-button-neutral text-muted-foreground shadow-button-neutral flex h-6 items-center gap-1 rounded-sm border-0 px-2.5 text-xs font-medium",
+    onClick && "hover:bg-layer-2 active:bg-layer-3 hover:text-foreground",
+    focusRingClassName,
     props.className,
   ]);
 
@@ -98,15 +99,15 @@ export function TimelineNowChip({
       type="button"
       aria-label={ariaLabel}
       className={cn([
-        "border-border bg-card text-foreground flex h-6 items-center gap-1 rounded-full border px-2.5 text-xs font-semibold shadow-md",
-        "hover:border-border hover:bg-accent hover:text-foreground transition-colors",
-        "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+        "bg-button-neutral text-foreground shadow-floating flex h-6 items-center gap-1 rounded-sm px-2.5 text-xs font-semibold",
+        "hover:bg-layer-2 active:bg-layer-3 hover:text-foreground",
+        focusRingClassName,
         className,
       ])}
       onClick={onClick}
     >
       {direction === "up" ? <DirectionIcon size={12} /> : null}
-      <Sun size={13} className="shrink-0 text-yellow-400" />
+      <Sun size={13} className="text-icon shrink-0" />
       <span>{children}</span>
       {direction === "down" ? <DirectionIcon size={12} /> : null}
     </button>

@@ -4,7 +4,6 @@
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { type HTMLAttributes, useState } from "react";
 
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
 type TrackerBlockProps = {
@@ -31,7 +30,7 @@ function Block({ color, tooltip }: Omit<TrackerBlockProps, "key">) {
         >
           <div
             className={cn([
-              "size-full rounded-[3px] transition-opacity hover:opacity-60",
+              "size-full rounded-xs transition-opacity hover:opacity-60",
               color,
             ])}
           />
@@ -45,10 +44,8 @@ function Block({ color, tooltip }: Omit<TrackerBlockProps, "key">) {
 }
 
 function Tooltip({ children }: { children: string }) {
-  const ref = useSquircleRef<HTMLDivElement>();
   return (
     <HoverCard.Content
-      ref={ref}
       sideOffset={10}
       side="top"
       align="center"

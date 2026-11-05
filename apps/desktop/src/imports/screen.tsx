@@ -253,7 +253,7 @@ export function MeetingImportScreen({
       ) : null}
 
       {displayedProviders.length > 0 || detectionSettled ? (
-        <div className="border-border bg-card overflow-hidden rounded-2xl border">
+        <div className="bg-card shadow-raised overflow-hidden rounded-lg">
           <Accordion
             type="multiple"
             className={cn([
@@ -354,7 +354,6 @@ export function MeetingImportScreen({
                               <Button
                                 type="button"
                                 size="sm"
-                                smoothCorners={false}
                                 aria-label={t`Sync now`}
                                 className="group/sync hover:bg-primary-foreground/10 rounded-none border-0 bg-transparent shadow-none"
                                 disabled={
@@ -386,7 +385,6 @@ export function MeetingImportScreen({
                                   <Button
                                     type="button"
                                     size="sm"
-                                    smoothCorners={false}
                                     aria-label={t`More options`}
                                     disabled={
                                       syncQuery?.isFetching || disconnecting
@@ -438,7 +436,6 @@ export function MeetingImportScreen({
                               <Button
                                 type="button"
                                 size="sm"
-                                smoothCorners={false}
                                 disabled={
                                   checkingConnection ||
                                   cancelConnectMutation.isPending ||
@@ -478,7 +475,6 @@ export function MeetingImportScreen({
                                   <Button
                                     type="button"
                                     size="sm"
-                                    smoothCorners={false}
                                     aria-label={t`Use files`}
                                     disabled={fileImportMutation.isPending}
                                     className={cn([
@@ -600,11 +596,7 @@ export function MeetingImportScreen({
       {secondaryAction || (onContinue && latestResult) ? (
         <div className="flex items-center gap-3">
           {onContinue && latestResult ? (
-            <Button
-              type="button"
-              className="w-fit rounded-full"
-              onClick={onContinue}
-            >
+            <Button type="button" className="w-fit" onClick={onContinue}>
               <Trans>Continue</Trans>
             </Button>
           ) : null}

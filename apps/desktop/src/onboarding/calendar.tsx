@@ -41,7 +41,7 @@ function AppleCalendarList() {
       onRefresh={handleRefresh}
       isLoading={isLoading}
       disableHoverTone
-      className="border-border/45 bg-card/28 rounded-xl border p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_8px_24px_-20px_rgba(87,83,78,0.35)] backdrop-blur-md backdrop-saturate-150"
+      className="bg-card shadow-raised rounded-lg p-4"
     />
   );
 }
@@ -79,13 +79,14 @@ function AppleCalendarProvider({
             onRequest();
           }}
           disabled={isPending}
-          className="border-border bg-card text-foreground hover:bg-accent flex h-full w-full items-center justify-center gap-3 border px-6 shadow-[0_2px_6px_rgba(87,83,78,0.08),0_10px_18px_-10px_rgba(87,83,78,0.22)] transition-all duration-150"
+          variant="secondary"
+          className="flex h-full w-full items-center justify-center gap-3 px-6"
         >
           <img
             src="/assets/apple-calendar.png"
             alt=""
             aria-hidden="true"
-            className="size-6 rounded-[4px] object-cover"
+            className="size-6 rounded-sm object-cover"
           />
           <Trans>Connect calendar</Trans>
         </OnboardingButton>

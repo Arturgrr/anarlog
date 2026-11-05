@@ -5,7 +5,7 @@ type Outline = {
   alpha: number;
 };
 
-const OUTLINE_RGB = "115, 97, 230";
+const OUTLINE_RGB = "92, 92, 92";
 const FADE_PER_FRAME = 1 / 40;
 const LABEL_HEIGHT = 12;
 const LABEL_FONT = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
