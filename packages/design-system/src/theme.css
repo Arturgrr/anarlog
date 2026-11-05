@@ -1,0 +1,181 @@
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: calc(infinity * 1px);
+
+  --font-sans:
+    "Inter Variable", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-sans--font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+  --font-mono:
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-ui: 0.8125rem;
+  --text-ui--line-height: 1.25rem;
+  --text-ui--letter-spacing: -0.04px;
+  --text-ui--font-weight: 440;
+  --text-ui-compact: 0.8125rem;
+  --text-ui-compact--line-height: 1rem;
+  --text-ui-compact--letter-spacing: -0.04px;
+  --text-small: 0.6875rem;
+  --text-small--line-height: 0.75rem;
+  --text-small--letter-spacing: 0.05px;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.3125rem;
+
+  --font-weight-ui: 440;
+  --font-weight-ui-medium: 530;
+
+  --ease-control: cubic-bezier(0.25, 1, 0.5, 1);
+
+  --animate-overlay-in: overlay-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-overlay-out: overlay-out 150ms ease-in forwards;
+  --animate-scrim-in: scrim-in 240ms ease-out;
+  --animate-scrim-out: scrim-out 150ms ease-in forwards;
+  --animate-toast-in: toast-in 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-status-pulse: status-pulse 2s ease-in-out infinite;
+
+  @keyframes overlay-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+
+  @keyframes overlay-out {
+    to {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+
+  @keyframes scrim-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes scrim-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  @keyframes status-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.45;
+    }
+  }
+}
+
+@theme inline {
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-deep: var(--bg-deep);
+  --color-page: var(--bg-page);
+  --color-layer-1: var(--layer-1);
+  --color-layer-2: var(--layer-2);
+  --color-layer-3: var(--layer-3);
+  --color-layer-4: var(--layer-4);
+  --color-contrast: var(--bg-contrast);
+  --color-button-neutral: var(--bg-button-neutral);
+  --color-raised: var(--surface-raised);
+  --color-raised-base: var(--surface-raised-base);
+
+  --color-strong: var(--text-strong);
+  --color-faint: var(--text-faint);
+  --color-icon: var(--icon-base);
+  --color-icon-muted: var(--icon-muted);
+  --color-icon-faint: var(--icon-faint);
+
+  --color-border-muted: var(--border-muted);
+  --color-border-strong: var(--border-strong);
+  --color-border-weak: var(--border-weak);
+  --color-border-std: var(--border-std);
+
+  --color-hover: var(--overlay-hover);
+  --color-pressed: var(--overlay-pressed);
+  --color-contrast-hover: var(--overlay-contrast-hover);
+  --color-contrast-pressed: var(--overlay-contrast-pressed);
+  --color-scrim: var(--scrim);
+
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-border: var(--danger-border);
+
+  --color-tooltip: var(--tooltip-bg);
+  --color-tooltip-foreground: var(--tooltip-fg);
+  --color-tooltip-border: var(--tooltip-border);
+
+  --color-switch-knob: var(--switch-knob);
+  --color-switch-knob-on: var(--switch-knob-on);
+
+  --color-sidebar-accent: var(--layer-2);
+
+  --shadow-raised: var(--elevation-raised);
+  --shadow-floating: var(--elevation-floating);
+  --shadow-overlay: var(--elevation-overlay);
+  --shadow-button-neutral: var(--elevation-button-neutral);
+  --shadow-button-contrast: var(--elevation-button-contrast);
+  --shadow-elements: var(--elevation-elements);
+  --shadow-switch-knob: var(--elevation-switch-knob);
+  --shadow-keycap: var(--elevation-keycap);
+  --shadow-keycap-hover: var(--elevation-keycap-hover);
+  --shadow-switch-on: var(--elevation-switch-on);
+  --shadow-switch-off: var(--elevation-switch-off);
+  --shadow-md: var(--elevation-md);
+  --shadow-lg: var(--elevation-floating);
+  --shadow-xl: var(--elevation-overlay);
+  --shadow-2xl: var(--elevation-overlay);
+}
+
+@layer base {
+  body {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    letter-spacing: -0.04px;
+    font-weight: 440;
+  }
+
+  ::selection {
+    background-color: var(--selection);
+  }
+}

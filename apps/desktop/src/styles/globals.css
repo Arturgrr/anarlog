@@ -3,11 +3,9 @@
 @import "./scrollbar.utilities.css";
 
 @import "tailwindcss";
+@import "@anlg/design-system/theme.css";
 @import "./dark-theme.css";
-@import "../../../../packages/ui/src/styles/corners.css";
 @import "../../../../packages/ui/src/styles/scroll-fade.css";
-
-@custom-variant dark (&:where(.dark, .dark *));
 
 html[data-floating-bar],
 html[data-floating-bar] body,
@@ -19,7 +17,7 @@ html[data-live-caption] #root {
 }
 
 html[data-rounded-window] #root {
-  border: 1px solid hsl(var(--border));
+  border: 1px solid var(--border);
 }
 
 .undo-delete-toast-gauge {
@@ -40,38 +38,6 @@ html[data-rounded-window] #root {
 @source "../../../../packages/editor/src";
 
 @theme {
-  --font-sans:
-    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-hand: "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
-
-  /* Capsule radii still read as pills/circles; remap to a control squircle. */
-  --radius-full: 0.5rem;
-  --radius-pill: calc(infinity * 1px);
-
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-
-  --color-sidebar-accent: hsl(var(--sidebar-accent));
-
-  --kbd-press-shadow-outer: rgba(0, 0, 0, 0.1);
-  --kbd-press-shadow-inset: rgba(255, 255, 255, 0.8);
-  --selection-overlay: rgba(59, 130, 246, 0.3);
-
   --animate-shimmer: shimmer 2s infinite;
   --animate-logo-shimmer-sweep: logo-shimmer-sweep 2.4s ease-in-out infinite;
   --animate-reveal-left: reveal-left 0.5s ease-out forwards;
@@ -151,9 +117,7 @@ html[data-rounded-window] #root {
     }
     100% {
       transform: translateY(0);
-      box-shadow:
-        0 1px 0 0 var(--kbd-press-shadow-outer),
-        inset 0 1px 0 0 var(--kbd-press-shadow-inset);
+      box-shadow: var(--elevation-keycap);
     }
   }
 }
@@ -271,38 +235,12 @@ html[data-rounded-window] #root {
   }
 }
 
-@layer components {
-  [data-settings-content] button,
-  [data-settings-content] button:hover,
-  [data-settings-content] [role="combobox"],
-  [data-settings-content] [role="combobox"]:hover,
-  [data-settings-content] [data-slot="select-trigger"],
-  [data-settings-content] [data-slot="select-trigger"]:hover {
-    box-shadow: none !important;
-  }
-}
-
-/* Search result highlighting styles — matches transcript's bg-yellow-200/50 and bg-yellow-500 */
 .ProseMirror-search-match {
-  background-color: rgb(254 240 138 / 0.5);
+  background-color: var(--search-match);
   border-radius: 2px;
 }
 
 .ProseMirror-active-search-match {
-  background-color: rgb(234 179 8) !important;
+  background-color: var(--search-match-active) !important;
   border-radius: 2px;
-}
-
-/*
- * Capsule radii still read as pills/circles even with corner-shape: squircle.
- * Keep this unlayered so it outranks Tailwind utilities from @anlg/ui.
- * Session view tabs opt out with .rounded-pill.
- */
-.rounded-full {
-  border-radius: 0.5rem;
-}
-
-.rounded-pill {
-  border-radius: calc(infinity * 1px);
-  corner-shape: round;
 }

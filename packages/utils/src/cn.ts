@@ -1,10 +1,34 @@
 import { type ClassValue, clsx } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
-// `rounded-pill` is a custom radius token (`--radius-pill`); register it so it
-// conflicts with the built-in `rounded-*` classes instead of stacking with them.
+// Register the design-system radius, type, weight, and elevation tokens so they merge
+// with their built-in groups; unknown `text-*`/`font-*`/`shadow-*` names would
+// otherwise be read as colors or font families and evict real ones.
 const twMerge = extendTailwindMerge({
-  extend: { theme: { borderRadius: ["pill"] } },
+  extend: {
+    theme: { borderRadius: ["pill"] },
+    classGroups: {
+      "font-size": [{ text: ["ui", "ui-compact", "small", "body"] }],
+      "font-weight": [{ font: ["ui", "ui-medium"] }],
+      shadow: [
+        {
+          shadow: [
+            "raised",
+            "floating",
+            "overlay",
+            "button-neutral",
+            "button-contrast",
+            "elements",
+            "switch-knob",
+            "keycap",
+            "keycap-hover",
+            "switch-on",
+            "switch-off",
+          ],
+        },
+      ],
+    },
+  },
 });
 
 /**
@@ -19,8 +43,8 @@ const twMerge = extendTailwindMerge({
  * @example
  * ```tsx
  * cn("px-2 py-1", "px-4") // => "py-1 px-4" (px-4 overrides px-2)
- * cn("text-red-500", condition && "text-blue-500") // Conditional classes
- * cn({ "bg-neutral-100": isActive, "bg-white": !isActive }) // Object syntax
+ * cn("text-muted-foreground", condition && "text-foreground") // Conditional classes
+ * cn({ "bg-layer-2": isActive, "bg-card": !isActive }) // Object syntax
  * ```
  */
 export function cn(...inputs: ClassValue[]) {
