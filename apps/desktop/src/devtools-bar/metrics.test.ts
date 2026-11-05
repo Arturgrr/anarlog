@@ -44,7 +44,7 @@ describe("installTrafficCounters", () => {
     void fetch("ipc://localhost/plugin%3Amisc%7Cget_git_hash", {
       method: "POST",
     });
-    void fetch("https://api.anarlog.so/v1");
+    void fetch("https://example.com/v1");
     callbacks.set(1, () => {});
     callbacks.get(1);
     callbacks.get(2);

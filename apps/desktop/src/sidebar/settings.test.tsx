@@ -14,9 +14,7 @@ const mocks = vi.hoisted(() => ({
     type: "templates";
     state: {
       showHomepage: boolean;
-      isWebMode: boolean;
       selectedMineId: string | null;
-      selectedWebIndex: number | null;
     };
   }>,
   openNew: vi.fn(),
@@ -115,7 +113,6 @@ describe("SettingsNav", () => {
 
   it.each([
     ["Permissions", "permissions"],
-    ["Account", "account"],
     ["Dictation", "dictation"],
   ])("opens %s inside settings", (label, tab) => {
     render(<SettingsNav />);

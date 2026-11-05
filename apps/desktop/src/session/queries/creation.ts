@@ -1,4 +1,3 @@
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { commands } from "@anlg/plugin-session";
 import { eventParticipantSchema, type EventParticipant } from "@anlg/store";
 
@@ -39,7 +38,6 @@ export async function createSession(
     await ensureFolderCatalog(folderPath);
   }
 
-  trackNoteCreated(false);
   return sessionId;
 }
 
@@ -76,7 +74,6 @@ export async function getOrCreateSessionForEventId(
   }
 
   if (result.data.created) {
-    trackNoteCreated(true);
     await applySeriesFolderRule(
       result.data.session_id,
       event.recurrence_series_id,
@@ -151,18 +148,4 @@ function parseEventParticipants(value: string | null): EventParticipant[] {
   } catch {
     return [];
   }
-}
-
-function trackNoteCreated(hasEventId: boolean): void {
-  void analyticsCommands
-    .eventFireAndForget({
-      event: "note_created",
-      has_event_id: hasEventId,
-    })
-    .catch((error) => {
-      console.error(
-        "[session] failed to record note creation analytics",
-        error,
-      );
-    });
 }

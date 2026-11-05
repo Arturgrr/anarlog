@@ -225,16 +225,6 @@ export const SETTING_DEFINITIONS = {
     path: ["notification", "bounce_transcript"],
     default: true as boolean,
   },
-  telemetry_consent: {
-    type: "boolean",
-    path: ["general", "telemetry_consent"],
-    default: true as boolean,
-  },
-  crash_reporting_consent: {
-    type: "boolean",
-    path: ["general", "crash_reporting_consent"],
-    default: true as boolean,
-  },
   lock_app: {
     type: "boolean",
     path: ["general", "lock_app"],

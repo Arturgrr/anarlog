@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { toast } from "@anlg/ui/components/ui/toast";
 
 import { useCaptureLifecycle } from "./capture-lifecycle";
@@ -24,10 +23,8 @@ import {
   type StartFailureStage,
 } from "./start-failure";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { useShell } from "~/contexts/shell";
 import { normalizeAudioRetention } from "~/services/audio-retention";
-import { getSessionEvent } from "~/session/utils";
 import { getBaseLanguageDisplayName } from "~/settings/general/language";
 import { useConfigValue } from "~/shared/config";
 import { useTabs } from "~/store/zustand/tabs";
@@ -152,9 +149,6 @@ export function useStartListeningState(
         "[listener] failed to prepare durable capture state",
         error,
       );
-      trackAnalyticsEvent("session_start_failed", {
-        failure_stage: "recovery_marker",
-      });
       try {
         await lifecycle.cleanupFailedStart();
       } catch (cleanupError) {
@@ -192,9 +186,6 @@ export function useStartListeningState(
       );
     } catch (error) {
       console.error("[listener] failed to start recording", error);
-      trackAnalyticsEvent("session_start_failed", {
-        failure_stage: "capture_start",
-      });
       try {
         await lifecycle.cleanupFailedStart();
       } catch (cleanupError) {
@@ -211,9 +202,6 @@ export function useStartListeningState(
     }
 
     if (!started) {
-      trackAnalyticsEvent("session_start_failed", {
-        failure_stage: "capture_rejected",
-      });
       await stopMeetingChatTasks();
       try {
         await lifecycle.cleanupFailedStart();
@@ -294,19 +282,6 @@ export function useStartListeningState(
         () => getSessionMode(sessionId) === "active",
       );
     }
-
-    void analyticsCommands.event({
-      event: "session_started",
-      has_calendar_event: Boolean(
-        getSessionEvent({ event_json: session?.event_json }),
-      ),
-      ...(conn
-        ? {
-            stt_provider: conn.provider,
-            stt_model: conn.model,
-          }
-        : {}),
-    });
   }, [
     automatic,
     aiLanguage,

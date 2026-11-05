@@ -10,7 +10,6 @@ import {
   shouldCheckOnboarding,
 } from "./-resolve-entry-path";
 
-import { useDeeplinkHandler } from "~/shared/hooks/useDeeplinkHandler";
 import { useRoundedWindowFrame } from "~/shared/hooks/useWindowControlsGutter";
 import { ListenerProvider } from "~/stt/contexts";
 
@@ -43,7 +42,6 @@ export const Route = createFileRoute("/app")({
 function Component() {
   const { listenerStore } = Route.useLoaderData();
 
-  useDeeplinkHandler();
   useRoundedWindowFrame();
 
   return (

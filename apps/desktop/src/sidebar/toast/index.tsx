@@ -14,7 +14,6 @@ import {
 import type { ToastType } from "./types";
 import { useDismissedToasts } from "./useDismissedToasts";
 
-import { useAuth } from "~/auth";
 import { useNotifications } from "~/contexts/notifications";
 import { useDesktopUpdateControl } from "~/main/update-banner";
 import { useConfigValues } from "~/shared/config";
@@ -25,7 +24,6 @@ import { isConfiguredSttModel } from "~/stt/capabilities";
 import { useListener } from "~/stt/contexts";
 
 export function ToastNotifications() {
-  const auth = useAuth();
   const { dismissToast, isDismissed } = useDismissedToasts();
   const [sessionDismissedToastIds, setSessionDismissedToastIds] = useState(
     () => new Set<string>(),
@@ -69,8 +67,6 @@ export function ToastNotifications() {
     }
   }
 
-  const isAuthenticated = !!auth?.session;
-  const isAuthLoading = auth.session === undefined;
   const {
     current_llm_provider,
     current_llm_model,
@@ -120,10 +116,6 @@ export function ToastNotifications() {
     (state) => state.updateSettingsTabState,
   );
 
-  const handleSignIn = useCallback(async () => {
-    await auth?.signIn();
-  }, [auth]);
-
   const openAiTab = useCallback(
     (tab: "intelligence" | "transcription") => {
       if (currentTab?.type === "settings") {
@@ -146,8 +138,6 @@ export function ToastNotifications() {
   const registry = useMemo(
     () =>
       createToastRegistry({
-        isAuthenticated,
-        isAuthLoading,
         hasLLMConfigured,
         hasSttConfigured,
         isAiTranscriptionTabActive,
@@ -160,13 +150,10 @@ export function ToastNotifications() {
         localSttStatus,
         isLocalSttModel,
         update,
-        onSignIn: handleSignIn,
         onOpenLLMSettings: handleOpenLLMSettings,
         onOpenSTTSettings: handleOpenSTTSettings,
       }),
     [
-      isAuthenticated,
-      isAuthLoading,
       hasLLMConfigured,
       hasSttConfigured,
       isAiTranscriptionTabActive,
@@ -179,7 +166,6 @@ export function ToastNotifications() {
       localSttStatus,
       isLocalSttModel,
       update,
-      handleSignIn,
       handleOpenLLMSettings,
       handleOpenSTTSettings,
     ],

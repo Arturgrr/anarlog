@@ -16,10 +16,6 @@ vi.mock("~/chat/hooks/use-chat-appearance", () => ({
   }),
 }));
 
-vi.mock("~/env", () => ({
-  env: { VITE_APP_URL: "http://localhost:3000" },
-}));
-
 import { ErrorMessage, getChatErrorText } from "./error";
 
 describe("ErrorMessage", () => {

@@ -16,7 +16,6 @@ import {
   type TemplateIcon,
 } from "./template-icon";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { db, useDrizzleLiveQuery } from "~/db";
 
 type TemplateRow = (typeof templates)["$inferSelect"];
@@ -174,9 +173,7 @@ export async function getTemplateById(
   return mapTemplateRows([row])[0] ?? null;
 }
 
-export function useCreateTemplate(
-  entryPoint: "templates" | "session_note" = "templates",
-) {
+export function useCreateTemplate() {
   const { mutateAsync } = useMutation({
     mutationFn: async (template: UserTemplateDraft) => {
       const id = crypto.randomUUID();
@@ -206,11 +203,6 @@ export function useCreateTemplate(
         updatedAt: sql`strftime('%Y-%m-%dT%H:%M:%SZ', 'now')`,
       });
 
-      trackAnalyticsEvent("template_created", {
-        entry_point: entryPoint,
-        section_count: sections.length,
-        target_count: targets?.length ?? 0,
-      });
       return id;
     },
     onError: (error) => {
@@ -262,9 +254,6 @@ export function useDeleteTemplate() {
   const { mutateAsync } = useMutation({
     mutationFn: async (id: string) => {
       await db.delete(templates).where(eq(templates.id, id));
-      trackAnalyticsEvent("template_deleted", {
-        entry_point: "templates",
-      });
     },
     onError: (error) => {
       console.error("[useDeleteTemplate]", error);

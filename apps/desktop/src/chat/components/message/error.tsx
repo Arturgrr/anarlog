@@ -8,9 +8,7 @@ import {
 
 import { ActionButton, MessageBubble, MessageContainer } from "./shared";
 
-import { env } from "~/env";
-
-const WEB_APP_BASE_URL = env.VITE_APP_URL ?? "http://localhost:3000";
+import { docsUrl } from "~/shared/links";
 
 // `useChat().error` is typed as Error but holds whatever the transport threw.
 export function getChatErrorText(error: unknown): string {
@@ -43,7 +41,7 @@ export function ErrorMessage({
 
   const handleOpenFaq = () => {
     void openerCommands.openUrl(
-      `${WEB_APP_BASE_URL}/docs/faq/local-llm-setup#context-length-error`,
+      docsUrl("models-and-providers", "on-device-models"),
       null,
     );
   };

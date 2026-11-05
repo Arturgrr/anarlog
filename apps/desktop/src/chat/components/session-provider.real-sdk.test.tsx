@@ -116,7 +116,7 @@ vi.mock("~/db/write-queue", () => ({
 }));
 
 vi.mock("~/shared/owner-user", () => ({
-  useOwnerUserId: () => "owner-1",
+  useLocalUserId: () => "owner-1",
 }));
 
 vi.mock("~/shared/utils", async (importOriginal) => ({

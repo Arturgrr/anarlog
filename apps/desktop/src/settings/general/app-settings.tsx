@@ -11,8 +11,6 @@ import { useTabs } from "~/store/zustand/tabs";
 
 export const privacyMessages = {
   title: msg`Privacy`,
-  posthogTitle: msg`Share usage data`,
-  posthogDescription: msg`Help improve Anarlog with anonymous usage data.`,
 };
 
 interface SettingItem {

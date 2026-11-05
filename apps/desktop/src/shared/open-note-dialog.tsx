@@ -4,7 +4,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -24,7 +23,6 @@ import {
 } from "@anlg/ui/components/ui/dialog";
 import { cn } from "@anlg/utils";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { useSessionSummaries } from "~/session/queries";
 import { useMainContentCenterOffset } from "~/shared/main/content-offset";
 import { useSettingsNavGroups } from "~/sidebar/settings-nav-groups";
@@ -226,34 +224,6 @@ export function OpenNoteDialog({
     filteredRecentSessions.length > 0 ||
     filteredOtherNotes.length > 0;
 
-  useEffect(() => {
-    if (!open || !query.trim()) return;
-    const timeout = setTimeout(() => {
-      trackAnalyticsEvent("search_performed", {
-        entry_point: "open_note_dialog",
-        result_count:
-          filteredPages.length +
-          filteredRecentSessions.length +
-          filteredOtherNotes.length,
-        entity_types: [
-          ...new Set([
-            ...[...filteredRecentSessions, ...filteredOtherNotes].map(
-              (note) => note.resourceType,
-            ),
-            ...(filteredPages.length > 0 ? ["page"] : []),
-          ]),
-        ].sort(),
-      });
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [
-    filteredOtherNotes.length,
-    filteredPages.length,
-    filteredRecentSessions.length,
-    open,
-    query,
-  ]);
-
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
@@ -270,11 +240,6 @@ export function OpenNoteDialog({
 
   const handleSelect = useCallback(
     (note: NoteResult) => {
-      trackAnalyticsEvent("search_result_opened", {
-        entry_point: "open_note_dialog",
-        result_type: note.resourceType,
-        had_query: Boolean(query.trim()),
-      });
       handleOpenChange(false);
       openCurrent({ type: "sessions", id: note.id });
     },
@@ -283,12 +248,6 @@ export function OpenNoteDialog({
 
   const handleSelectPage = useCallback(
     (page: PageResult) => {
-      trackAnalyticsEvent("search_result_opened", {
-        entry_point: "open_note_dialog",
-        result_type: "page",
-        page_id: page.id,
-        had_query: Boolean(query.trim()),
-      });
       handleOpenChange(false);
       openNew(page.destination);
     },

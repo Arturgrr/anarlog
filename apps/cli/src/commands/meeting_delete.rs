@@ -322,8 +322,6 @@ mod tests {
             "--db-path",
             path.to_str().unwrap(),
             "meetings",
-            "--source",
-            "local",
             "list",
         ])
         .unwrap();
@@ -466,8 +464,6 @@ mod tests {
             "--base",
             dir.path().to_str().unwrap(),
             "meetings",
-            "--source",
-            "local",
             "initialize-managed",
         ])
         .unwrap();

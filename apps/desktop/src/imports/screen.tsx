@@ -56,7 +56,6 @@ import {
   useMeetingImportHistory,
 } from "./queries";
 
-import { useAuth } from "~/auth";
 import { ConnectButtonGroup } from "~/shared/connect-button-group";
 
 const IMPORT_EXTENSIONS = [
@@ -110,10 +109,8 @@ export function MeetingImportScreen({
   secondaryAction?: ReactNode;
 }) {
   const { t } = useLingui();
-  const auth = useAuth();
   const queryClient = useQueryClient();
   const connectAbortController = useRef<AbortController | null>(null);
-  const signedIn = Boolean(auth.session);
   const detectionQuery = useQuery({
     queryKey: ["meeting-import-sources"],
     queryFn: detectImportSources,
@@ -157,7 +154,7 @@ export function MeetingImportScreen({
     queries: connectedProviders.map((provider, index) =>
       connectedImportSyncQueryOptions(
         provider,
-        signedIn && Boolean(credentialQueries[index]?.data),
+        Boolean(credentialQueries[index]?.data),
       ),
     ),
   });
@@ -216,10 +213,6 @@ export function MeetingImportScreen({
     },
   });
 
-  const signInMutation = useMutation({
-    mutationFn: () => auth.signIn(),
-  });
-
   const cancelConnectMutation = useMutation({
     mutationFn: cancelConnectedImport,
   });
@@ -241,7 +234,6 @@ export function MeetingImportScreen({
     },
   });
 
-  const connectedError = signInMutation.error;
   const latestResult =
     fileImportMutation.data ??
     syncQueries.find((query) => query.data)?.data?.result ??
@@ -258,10 +250,6 @@ export function MeetingImportScreen({
         <p className="text-destructive text-xs">
           {detectionQuery.error.message}
         </p>
-      ) : null}
-
-      {connectedError ? (
-        <p className="text-destructive text-sm">{connectedError.message}</p>
       ) : null}
 
       {displayedProviders.length > 0 || detectionSettled ? (
@@ -294,7 +282,7 @@ export function MeetingImportScreen({
                   connectedIndex === undefined
                     ? undefined
                     : syncQueries[connectedIndex];
-                const connected = signedIn && Boolean(credentialsQuery?.data);
+                const connected = Boolean(credentialsQuery?.data);
                 const checkingConnection = Boolean(credentialsQuery?.isPending);
                 const connecting =
                   connectMutation.isPending &&
@@ -446,35 +434,22 @@ export function MeetingImportScreen({
                               </DropdownMenu>
                             </ConnectButtonGroup>
                           ) : (
-                            <ConnectButtonGroup primary={signedIn}>
+                            <ConnectButtonGroup primary>
                               <Button
                                 type="button"
                                 size="sm"
-                                variant={signedIn ? "default" : "outline"}
                                 smoothCorners={false}
-                                aria-label={
-                                  signedIn ? undefined : t`Sign in to connect`
-                                }
                                 disabled={
-                                  signedIn
-                                    ? checkingConnection ||
-                                      cancelConnectMutation.isPending ||
-                                      connectionCancellationRequested ||
-                                      (connectMutation.isPending && !connecting)
-                                    : signInMutation.isPending
+                                  checkingConnection ||
+                                  cancelConnectMutation.isPending ||
+                                  connectionCancellationRequested ||
+                                  (connectMutation.isPending && !connecting)
                                 }
                                 className={cn([
                                   "rounded-none border-0 shadow-none",
-                                  signedIn &&
-                                    "hover:bg-primary-foreground/10 bg-transparent",
-                                  !signedIn &&
-                                    "group/sign-in bg-muted hover:bg-primary hover:text-primary-foreground focus-visible:bg-primary focus-visible:text-primary-foreground",
+                                  "hover:bg-primary-foreground/10 bg-transparent",
                                 ])}
                                 onClick={() => {
-                                  if (!signedIn) {
-                                    signInMutation.mutate();
-                                    return;
-                                  }
                                   if (connecting) {
                                     connectAbortController.current?.abort();
                                     cancelConnectMutation.mutate(provider.id);
@@ -483,35 +458,14 @@ export function MeetingImportScreen({
                                   connectMutation.mutate(provider);
                                 }}
                               >
-                                {!signedIn ? (
-                                  signInMutation.isPending ? (
-                                    <>
-                                      <CircleNotch className="size-3.5 animate-spin" />
-                                      <Trans>Opening…</Trans>
-                                    </>
-                                  ) : (
-                                    <span className="grid items-center overflow-hidden">
-                                      <span className="invisible col-start-1 row-start-1">
-                                        <Trans>Sign in to connect</Trans>
-                                      </span>
-                                      <span className="col-start-1 row-start-1 flex items-center justify-center gap-2 transition-transform duration-200 group-hover/sign-in:translate-y-full group-focus-visible/sign-in:translate-y-full">
-                                        <PlugsConnected className="size-3.5" />
-                                        <Trans>Connect</Trans>
-                                      </span>
-                                      <span className="col-start-1 row-start-1 flex -translate-y-full items-center justify-center transition-transform duration-200 group-hover/sign-in:translate-y-0 group-focus-visible/sign-in:translate-y-0">
-                                        <Trans>Sign in to connect</Trans>
-                                      </span>
-                                    </span>
-                                  )
-                                ) : checkingConnection ||
-                                  connecting ||
-                                  cancellingConnection ? (
+                                {checkingConnection ||
+                                connecting ||
+                                cancellingConnection ? (
                                   <CircleNotch className="size-3.5 animate-spin" />
                                 ) : (
                                   <PlugsConnected className="size-3.5" />
                                 )}
-                                {!signedIn ? null : connecting ||
-                                  cancellingConnection ? (
+                                {connecting || cancellingConnection ? (
                                   <Trans>Cancel</Trans>
                                 ) : checkingConnection ? (
                                   <Trans>Checking connection</Trans>
@@ -524,16 +478,13 @@ export function MeetingImportScreen({
                                   <Button
                                     type="button"
                                     size="sm"
-                                    variant={signedIn ? "default" : "outline"}
                                     smoothCorners={false}
                                     aria-label={t`Use files`}
                                     disabled={fileImportMutation.isPending}
                                     className={cn([
                                       "relative w-6 rounded-none border-0 px-0 shadow-none",
                                       "before:absolute before:inset-y-1.5 before:left-0 before:w-px",
-                                      signedIn
-                                        ? "hover:bg-primary-foreground/10 before:bg-primary-foreground/20 bg-transparent"
-                                        : "bg-muted before:bg-border",
+                                      "hover:bg-primary-foreground/10 before:bg-primary-foreground/20 bg-transparent",
                                     ])}
                                   >
                                     <CaretDown className="size-3.5" />

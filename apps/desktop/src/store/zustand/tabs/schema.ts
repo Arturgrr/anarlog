@@ -43,7 +43,6 @@ export const isTabInputSupported = (
 };
 
 export type SettingsTab =
-  | "account"
   | "stats"
   | "insights"
   | "app"
@@ -61,9 +60,7 @@ export type SettingsTab =
   | "intelligence"
   | "todo";
 
-const normalizeSettingsTab = (
-  tab: string | null | undefined,
-): Exclude<SettingsTab, "account"> => {
+const normalizeSettingsTab = (tab: string | null | undefined): SettingsTab => {
   switch (tab) {
     case "stats":
     case "insights":
@@ -87,7 +84,6 @@ const normalizeSettingsTab = (
       return "dictionary";
     case "data":
       return "imports";
-    case "account":
     default:
       return "app";
   }
@@ -179,9 +175,7 @@ export const getDefaultState = (tab: TabInput): Tab => {
         type: "templates",
         state: tab.state ?? {
           showHomepage: false,
-          isWebMode: false,
           selectedMineId: null,
-          selectedWebIndex: null,
         },
       };
     case "automations":
@@ -217,7 +211,7 @@ export const getDefaultState = (tab: TabInput): Tab => {
         ...base,
         type: "settings",
         state: {
-          tab: subtab === "account" ? "account" : normalizeSettingsTab(subtab),
+          tab: normalizeSettingsTab(subtab),
         },
       };
     }

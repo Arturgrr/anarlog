@@ -13,7 +13,6 @@ import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppOnboardingRouteImport } from './routes/app/onboarding'
 import { Route as AppLiveCaptionRouteImport } from './routes/app/live-caption'
-import { Route as AppInstructionRouteImport } from './routes/app/instruction'
 import { Route as AppFloatingBarRouteImport } from './routes/app/floating-bar'
 import { Route as AppComposerRouteImport } from './routes/app/composer'
 import { Route as AppNoteSessionIdRouteImport } from './routes/app/note.$sessionId'
@@ -38,11 +37,6 @@ const AppOnboardingRoute = AppOnboardingRouteImport.update({
 const AppLiveCaptionRoute = AppLiveCaptionRouteImport.update({
   id: '/live-caption',
   path: '/live-caption',
-  getParentRoute: () => AppRouteRoute,
-} as any)
-const AppInstructionRoute = AppInstructionRouteImport.update({
-  id: '/instruction',
-  path: '/instruction',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppFloatingBarRoute = AppFloatingBarRouteImport.update({
@@ -75,7 +69,6 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteRouteWithChildren
   '/app/composer': typeof AppComposerRoute
   '/app/floating-bar': typeof AppFloatingBarRoute
-  '/app/instruction': typeof AppInstructionRoute
   '/app/live-caption': typeof AppLiveCaptionRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/': typeof AppIndexRoute
@@ -86,7 +79,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/app/composer': typeof AppComposerRoute
   '/app/floating-bar': typeof AppFloatingBarRoute
-  '/app/instruction': typeof AppInstructionRoute
   '/app/live-caption': typeof AppLiveCaptionRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app': typeof AppIndexRoute
@@ -98,7 +90,6 @@ export interface FileRoutesById {
   '/app': typeof AppRouteRouteWithChildren
   '/app/composer': typeof AppComposerRoute
   '/app/floating-bar': typeof AppFloatingBarRoute
-  '/app/instruction': typeof AppInstructionRoute
   '/app/live-caption': typeof AppLiveCaptionRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/': typeof AppIndexRoute
@@ -112,7 +103,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/composer'
     | '/app/floating-bar'
-    | '/app/instruction'
     | '/app/live-caption'
     | '/app/onboarding'
     | '/app/'
@@ -123,7 +113,6 @@ export interface FileRouteTypes {
   to:
     | '/app/composer'
     | '/app/floating-bar'
-    | '/app/instruction'
     | '/app/live-caption'
     | '/app/onboarding'
     | '/app'
@@ -134,7 +123,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/composer'
     | '/app/floating-bar'
-    | '/app/instruction'
     | '/app/live-caption'
     | '/app/onboarding'
     | '/app/'
@@ -175,13 +163,6 @@ declare module '@tanstack/react-router' {
       path: '/live-caption'
       fullPath: '/app/live-caption'
       preLoaderRoute: typeof AppLiveCaptionRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
-    '/app/instruction': {
-      id: '/app/instruction'
-      path: '/instruction'
-      fullPath: '/app/instruction'
-      preLoaderRoute: typeof AppInstructionRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/floating-bar': {
@@ -237,7 +218,6 @@ const AppMainLayoutRouteWithChildren = AppMainLayoutRoute._addFileChildren(
 interface AppRouteRouteChildren {
   AppComposerRoute: typeof AppComposerRoute
   AppFloatingBarRoute: typeof AppFloatingBarRoute
-  AppInstructionRoute: typeof AppInstructionRoute
   AppLiveCaptionRoute: typeof AppLiveCaptionRoute
   AppOnboardingRoute: typeof AppOnboardingRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -248,7 +228,6 @@ interface AppRouteRouteChildren {
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppComposerRoute: AppComposerRoute,
   AppFloatingBarRoute: AppFloatingBarRoute,
-  AppInstructionRoute: AppInstructionRoute,
   AppLiveCaptionRoute: AppLiveCaptionRoute,
   AppOnboardingRoute: AppOnboardingRoute,
   AppIndexRoute: AppIndexRoute,

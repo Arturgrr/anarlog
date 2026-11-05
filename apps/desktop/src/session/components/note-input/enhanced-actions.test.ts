@@ -11,10 +11,6 @@ const mocks = vi.hoisted(() => ({
   snapshot: null as unknown,
 }));
 
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: { event: vi.fn() },
-}));
-
 vi.mock("@anlg/ui/components/ui/toast", () => ({
   toast: { error: mocks.toastError, warning: mocks.toastWarning },
 }));

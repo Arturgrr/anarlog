@@ -15,7 +15,7 @@ Without `--json`, CLI errors are written to standard error as human-readable tex
 
 Invalid arguments use the `invalid_arguments` error code with Clap's nonzero exit code.
 
-The legacy `auth` commands and `--source cloud` or `--source auto` can report hosted-service errors because this version of Anarlog has no hosted service. Use `--source local`, the default.
+Commands that only produce machine-readable output, such as `meetings hold-list`, report `invalid_request` when `--json` is missing.
 
 MCP maps missing meetings and proposals to invalid parameters. Validation and conflict failures—such as empty proposal content, multiple summaries without `target_id`, or declining a non-pending proposal—are reported as internal MCP errors. Database and serialization failures are also internal errors.
 

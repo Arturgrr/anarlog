@@ -14,10 +14,6 @@ const mocks = vi.hoisted(() => ({
   meetingSettingsProps: vi.fn(),
 }));
 
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: { event: vi.fn() },
-}));
-
 vi.mock("@tanstack/react-query", () => ({
   useQuery: () => ({
     data: { configured: true },
@@ -30,17 +26,13 @@ vi.mock("@tanstack/react-query", () => ({
   }),
 }));
 
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: null, signOut: vi.fn() }),
-}));
-
 vi.mock("~/settings/queries", () => ({
   setSettingValue: vi.fn(),
   useSetSettingValues: () => mocks.setSettingValues,
   useStoredSettingValuesQuery: mocks.useStoredSettingValuesQuery,
 }));
 
-vi.mock("./account", () => ({ SettingsAccount: () => null }));
+vi.mock("./account-profile", () => ({ AccountProfile: () => null }));
 vi.mock("./app-settings", () => ({ AppSettingsView: () => null }));
 vi.mock("./audio-settings", () => ({
   AudioSettingsView: () => <span>Audio settings</span>,

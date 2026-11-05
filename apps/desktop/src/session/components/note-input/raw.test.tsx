@@ -90,12 +90,6 @@ vi.mock("@anlg/editor/note", async () => {
   };
 });
 
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: {
-    event: vi.fn(),
-  },
-}));
-
 vi.mock("@anlg/plugin-opener2", () => ({
   commands: { openUrl: vi.fn() },
 }));
@@ -671,8 +665,6 @@ describe("RawEditor", () => {
     );
     expect(hoisted.openTemplatesTab).toHaveBeenCalledWith({
       selectedMineId: "new-template",
-      selectedWebIndex: null,
-      isWebMode: false,
       showHomepage: false,
     });
   });

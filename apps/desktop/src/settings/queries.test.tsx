@@ -4,27 +4,11 @@ const mocks = vi.hoisted(() => ({
   execute: vi.fn(),
   getPreferredLanguages: vi.fn(),
   getTemplateSource: vi.fn(),
-  setDisabled: vi.fn(async () => ({ status: "ok", data: null })),
-  setErrorReportingEnabled: vi.fn(async () => undefined),
-  setSessionReplayAnalyticsEnabled: vi.fn(),
   setAutomaticUpdatesEnabled: vi.fn(async () => undefined),
-  setProperties: vi.fn(async () => undefined),
   executeTransaction: vi.fn(
     (_statements: Array<{ sql: string; params: unknown[] }>) =>
       Promise.resolve([1]),
   ),
-}));
-
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: {
-    setDisabled: mocks.setDisabled,
-    setProperties: mocks.setProperties,
-  },
-}));
-
-vi.mock("~/error-reporting", () => ({
-  setErrorReportingEnabled: mocks.setErrorReportingEnabled,
-  setSessionReplayAnalyticsEnabled: mocks.setSessionReplayAnalyticsEnabled,
 }));
 
 vi.mock("@tauri-apps/plugin-os", () => ({
@@ -74,7 +58,6 @@ describe("SQLite settings", () => {
     vi.clearAllMocks();
     usePendingSttSelection.setState({ selection: null, queuedDownloads: [] });
     mocks.executeTransaction.mockResolvedValue([1]);
-    mocks.setDisabled.mockResolvedValue({ status: "ok", data: null });
     mocks.execute.mockResolvedValue([]);
     mocks.getPreferredLanguages.mockResolvedValue({
       status: "error",
@@ -331,48 +314,25 @@ describe("SQLite settings", () => {
     expect(mocks.setAutomaticUpdatesEnabled).toHaveBeenCalledWith(false);
   });
 
-  it("disables PostHog after persisting the analytics opt-out", async () => {
-    let resolveDisabled!: (value: { status: "ok"; data: null }) => void;
-    mocks.setDisabled.mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolveDisabled = resolve;
-      }),
-    );
-
-    await setSettingValues({ telemetry_consent: false });
-
-    expect(mocks.setDisabled).toHaveBeenCalledWith(true);
-
-    resolveDisabled({ status: "ok", data: null });
-  });
-
-  it("updates Sentry independently from PostHog", async () => {
-    await setSettingValues({ crash_reporting_consent: false });
-
-    expect(mocks.setErrorReportingEnabled).toHaveBeenCalledWith(false);
-    expect(mocks.setDisabled).not.toHaveBeenCalled();
-  });
-
-  it("preserves the legacy telemetry choice when splitting crash reporting", async () => {
+  it("ignores telemetry consent saved by older versions", async () => {
     mocks.execute.mockResolvedValue([
-      {
-        id: "telemetry_consent",
-        value_json: JSON.stringify(false),
-      },
+      { id: "telemetry_consent", value_json: JSON.stringify(false) },
+      { id: "crash_reporting_consent", value_json: JSON.stringify(true) },
     ]);
 
+    const result = await getStoredSettingValues();
     await initializeApplicationSettings();
 
-    const statements = mocks.executeTransaction.mock.calls[0][0];
-    expect(statements).toContainEqual(
-      expect.objectContaining({
-        params: [
-          "crash_reporting_consent",
-          JSON.stringify(false),
-          expect.any(String),
-        ],
-      }),
-    );
+    expect(result.hasValues.has("telemetry_consent" as never)).toBe(false);
+    expect(
+      mocks.executeTransaction.mock.calls
+        .flatMap(([statements]) => statements)
+        .some((statement) =>
+          ["telemetry_consent", "crash_reporting_consent"].includes(
+            String(statement.params[0]),
+          ),
+        ),
+    ).toBe(false);
   });
 
   it("initializes languages from OS preferences", async () => {

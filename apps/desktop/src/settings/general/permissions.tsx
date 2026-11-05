@@ -8,10 +8,6 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
 import {
-  trackPermissionRequested,
-  usePermissionAnalytics,
-} from "~/shared/hooks/usePermissionAnalytics";
-import {
   closePermissionAssistant,
   usePermission,
   usePermissionGuidance,
@@ -23,7 +19,6 @@ function PermissionRow({
   status,
   isPending,
   error,
-  permission,
   onRequest,
   onOpen,
   assisted = false,
@@ -34,7 +29,6 @@ function PermissionRow({
   status: PermissionStatus | undefined;
   isPending: boolean;
   error?: string | null;
-  permission: string;
   onRequest: () => void;
   onOpen: () => void;
   assisted?: boolean;
@@ -47,17 +41,14 @@ function PermissionRow({
   const handleButtonClick = () => {
     if (runtimeCapability) {
       if (!isAuthorized) {
-        trackPermissionRequested(permission, status, "settings", "request");
         onRequest();
       }
       return;
     }
 
     if (assisted || isAuthorized || isDenied) {
-      trackPermissionRequested(permission, status, "settings", "open_settings");
       onOpen();
     } else {
-      trackPermissionRequested(permission, status, "settings", "request");
       onRequest();
     }
   };
@@ -148,17 +139,10 @@ function AudioPermissions({
   const { t } = useLingui();
   const mic = usePermission("microphone");
   const systemAudio = usePermission("systemAudio");
-  usePermissionAnalytics("microphone", mic.confirmedStatus, "settings");
-  usePermissionAnalytics(
-    "system_audio",
-    systemAudio.confirmedStatus,
-    "settings",
-  );
 
   return (
     <PermissionGroup title={<Trans>Audio</Trans>}>
       <PermissionRow
-        permission="microphone"
         title={t`Microphone`}
         description={t`Record your voice in meetings and calls.`}
         status={mic.status}
@@ -169,7 +153,6 @@ function AudioPermissions({
         runtimeCapability={runtimeCapabilities}
       />
       <PermissionRow
-        permission="system_audio"
         title={t`System audio`}
         description={t`Record other participants in meetings.`}
         status={systemAudio.status}
@@ -188,12 +171,6 @@ function MacOSPermissions() {
   const calendar = usePermission("calendar");
   const accessibility = usePermission("accessibility");
   const accessibilityGuidance = usePermissionGuidance("accessibility");
-  usePermissionAnalytics("calendar", calendar.confirmedStatus, "settings");
-  usePermissionAnalytics(
-    "accessibility",
-    accessibility.confirmedStatus,
-    "settings",
-  );
 
   // Leaving settings while the assistant is up would strand its overlay on top
   // of System Settings with nothing left to dismiss it.
@@ -204,7 +181,6 @@ function MacOSPermissions() {
       <AudioPermissions />
 
       <PermissionRow
-        permission="accessibility"
         title={t`Accessibility`}
         description={
           accessibilityGuidance
@@ -220,7 +196,6 @@ function MacOSPermissions() {
 
       <PermissionGroup title={<Trans>Others</Trans>}>
         <PermissionRow
-          permission="calendar"
           title={t`Calendar`}
           description={t`Show Apple Calendar events in Anarlog.`}
           status={calendar.status}

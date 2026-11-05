@@ -93,7 +93,7 @@ vi.mock("~/contexts/shell", () => ({
 }));
 
 vi.mock("~/shared/owner-user", () => ({
-  useOwnerUserId: () => "user-1",
+  useLocalUserId: () => "user-1",
 }));
 
 vi.mock("~/session/queries", () => ({

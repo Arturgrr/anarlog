@@ -9,7 +9,6 @@ import { SpeakerHigh, SpeakerX } from "@anlg/ui/components/icons";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
-import { LoginSection } from "./account";
 import { CalendarSection } from "./calendar";
 import {
   getInitialStep,
@@ -22,8 +21,6 @@ import { ImportSection } from "./imports";
 import { PermissionsSection } from "./permissions";
 import { OnboardingSection } from "./shared";
 
-import { trackAnalyticsEvent } from "~/analytics";
-import { useAuth } from "~/auth";
 import { StandaloneWindowShell } from "~/shared/window-shell";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
 
@@ -84,42 +81,20 @@ function OnboardingScreenContent({
   headerDragRegion?: boolean;
 }) {
   const queryClient = useQueryClient();
-  const auth = useAuth();
   const [isMuted, setIsMuted] = useState(false);
   const [currentStep, setCurrentStep] = useState(getInitialStep);
-  const [didSkipLogin, setDidSkipLogin] = useState(false);
   const onboardingVideoRef = useRef<HTMLVideoElement>(null);
   const currentPlatform = platform();
 
   const goNext = useCallback(() => {
-    trackAnalyticsEvent("onboarding_step_completed", {
-      step: currentStep,
-      platform: currentPlatform,
-    });
     const next = getNextStep(currentStep);
     if (next) setCurrentStep(next);
-  }, [currentPlatform, currentStep]);
-
-  const skipCurrentStep = useCallback(() => {
-    trackAnalyticsEvent("onboarding_step_skipped", {
-      step: currentStep,
-      platform: currentPlatform,
-    });
-    const next = getNextStep(currentStep);
-    if (next) setCurrentStep(next);
-  }, [currentPlatform, currentStep]);
+  }, [currentStep]);
 
   const goBack = useCallback(() => {
     const prev = getPrevStep(currentStep);
     if (prev) setCurrentStep(prev);
   }, [currentStep]);
-
-  useEffect(() => {
-    trackAnalyticsEvent("onboarding_step_viewed", {
-      step: currentStep,
-      platform: currentPlatform,
-    });
-  }, [currentPlatform, currentStep]);
 
   useMountEffect(() => {
     sfxCommands.play("BGM").catch(console.error);
@@ -140,14 +115,10 @@ function OnboardingScreenContent({
 
   const handleFinish = useCallback(
     (sessionId: string) => {
-      trackAnalyticsEvent("onboarding_step_completed", {
-        step: "final",
-        platform: currentPlatform,
-      });
       void queryClient.invalidateQueries({ queryKey: ["onboarding-needed"] });
       onFinish(sessionId);
     },
-    [currentPlatform, onFinish, queryClient],
+    [onFinish, queryClient],
   );
 
   return (
@@ -242,34 +213,6 @@ function OnboardingScreenContent({
           </OnboardingSection>
 
           <OnboardingSection
-            title={<Trans>Create account</Trans>}
-            completedTitle={
-              auth.session ? (
-                <Trans>Signed in</Trans>
-              ) : didSkipLogin ? (
-                <Trans>Skipped</Trans>
-              ) : (
-                <Trans>Account</Trans>
-              )
-            }
-            status={getStepStatus("login", currentStep)}
-            onBack={goBack}
-            onNext={goNext}
-            onSkip={() => {
-              setDidSkipLogin(true);
-              trackAnalyticsEvent("onboarding_login_skipped");
-              trackAnalyticsEvent("onboarding_step_skipped", {
-                step: "login",
-                platform: currentPlatform,
-              });
-              const next = getNextStep("login");
-              if (next) setCurrentStep(next);
-            }}
-          >
-            <LoginSection onContinue={goNext} />
-          </OnboardingSection>
-
-          <OnboardingSection
             title={<Trans>Connect calendar</Trans>}
             description={
               <Trans>
@@ -280,7 +223,7 @@ function OnboardingScreenContent({
             status={getStepStatus("calendar", currentStep)}
             onBack={goBack}
             onNext={goNext}
-            onSkip={skipCurrentStep}
+            onSkip={goNext}
           >
             <CalendarSection onContinue={goNext} />
           </OnboardingSection>
@@ -297,9 +240,9 @@ function OnboardingScreenContent({
             status={getStepStatus("imports", currentStep)}
             onBack={goBack}
             onNext={goNext}
-            onSkip={skipCurrentStep}
+            onSkip={goNext}
           >
-            <ImportSection onContinue={goNext} onSkip={skipCurrentStep} />
+            <ImportSection onContinue={goNext} onSkip={goNext} />
           </OnboardingSection>
 
           <OnboardingSection

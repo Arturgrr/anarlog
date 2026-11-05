@@ -2,7 +2,6 @@ import { useRef } from "react";
 
 import { commands as calendarCommands } from "@anlg/plugin-calendar";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { liveQueryClient, useLiveQuery } from "~/db";
 import { enqueueDatabaseWrite } from "~/db/write-queue";
 import { DEFAULT_USER_ID, id } from "~/shared/utils";
@@ -438,12 +437,10 @@ export function createHuman({
   ownerUserId = DEFAULT_USER_ID,
   name,
   email = "",
-  entryPoint = "contacts",
 }: {
   ownerUserId?: string;
   name: string;
   email?: string;
-  entryPoint?: "contacts" | "session_participants" | "speaker_assignment";
 }): Promise<string> {
   const humanId = id();
 
@@ -457,10 +454,6 @@ export function createHuman({
     if (result.status === "error") {
       throw new Error(result.error);
     }
-    trackAnalyticsEvent("contact_created", {
-      entry_point: entryPoint,
-      has_email: Boolean(email),
-    });
     return humanId;
   });
 }
@@ -667,9 +660,6 @@ export function mergeHumans(
     if (result.status === "error") {
       throw new Error(result.error);
     }
-    trackAnalyticsEvent("contact_merged", {
-      entry_point: "contact_details",
-    });
   });
 }
 
@@ -692,12 +682,6 @@ export function applyContactEnhancement({
   createIfMissing?: boolean;
 }): Promise<void> {
   return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    if (createIfMissing) {
-      trackAnalyticsEvent("contact_created", {
-        entry_point: "session_participants",
-        has_email: Boolean(changes.email),
-      });
-    }
     const result = await calendarCommands.applyContactEnhancement({
       human_id: humanId,
       owner_user_id: ownerUserId,

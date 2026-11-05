@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { trackPendingSoftDelete } from "./pending-soft-deletes";
 
 const mocks = vi.hoisted(() => ({
-  analyticsEventFireAndForget: vi.fn(() => Promise.resolve()),
   execute: vi.fn(),
   executeTransaction: vi.fn(
     (_statements: Array<{ sql: string; params: unknown[] }>) =>
@@ -42,10 +41,6 @@ const mocks = vi.hoisted(() => ({
   setSessionProposalStatus: vi.fn(() =>
     Promise.resolve({ status: "ok", data: null }),
   ),
-}));
-
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: { eventFireAndForget: mocks.analyticsEventFireAndForget },
 }));
 
 vi.mock("@anlg/plugin-session", () => ({
@@ -174,7 +169,6 @@ describe("session SQLite operations", () => {
         participants: [expect.objectContaining({ email: "alice@example.com" })],
       }),
     );
-    expect(mocks.analyticsEventFireAndForget).not.toHaveBeenCalled();
   });
 
   it("does not attach malformed or self calendar participants", async () => {
@@ -547,21 +541,6 @@ describe("session SQLite operations", () => {
       "enhanced-note-1",
     ]);
   });
-
-  it("does not wait for analytics before returning a newly created event note", async () => {
-    mocks.analyticsEventFireAndForget.mockImplementationOnce(
-      () => new Promise<never>(() => {}),
-    );
-    mocks.execute.mockResolvedValueOnce([event]);
-
-    await expect(getOrCreateSessionForEventId("event-1")).resolves.toBe(
-      "session-created",
-    );
-    expect(mocks.analyticsEventFireAndForget).toHaveBeenCalledWith({
-      event: "note_created",
-      has_event_id: true,
-    });
-  }, 1_000);
 
   it("tombstones the session and returns its identity", async () => {
     vi.useFakeTimers();

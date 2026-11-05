@@ -16,9 +16,7 @@ import { hasLiveSessionTitleDraft } from "~/store/zustand/live-title";
 
 type EnhanceSuccessParams = Parameters<
   NonNullable<TaskConfig<"enhance">["onSuccess"]>
->[0] & {
-  onPersisted?: () => void;
-};
+>[0];
 
 export const runEnhanceSuccess = async ({
   text,
@@ -28,7 +26,6 @@ export const runEnhanceSuccess = async ({
   startTask,
   getTaskState,
   signal,
-  onPersisted,
 }: EnhanceSuccessParams) => {
   const preparedResult = await templateCommands.prepareGeneratedSummary({
     text,
@@ -152,7 +149,7 @@ export const runEnhanceSuccess = async ({
       ...(args.pendingAutoEnhance
         ? { pendingAutoEnhance: args.pendingAutoEnhance }
         : {}),
-    }).then(onPersisted);
+    });
   });
 
   if (!signal.aborted) {

@@ -20,16 +20,7 @@ const mocks = vi.hoisted(() => ({
   selectFiles: vi.fn(),
   readTextFiles: vi.fn(),
   importMeetingFiles: vi.fn(),
-  signIn: vi.fn(),
-  signedIn: true,
   credentials: {} as Record<string, unknown>,
-}));
-
-vi.mock("~/auth", () => ({
-  useAuth: () => ({
-    session: mocks.signedIn ? { user: { id: "user-1" } } : null,
-    signIn: mocks.signIn,
-  }),
 }));
 
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: mocks.selectFiles }));
@@ -118,7 +109,6 @@ describe("MeetingImportScreen", () => {
     vi.clearAllMocks();
     mocks.selectFiles.mockResolvedValue(["export.json"]);
     mocks.readTextFiles.mockResolvedValue({ status: "ok", data: [] });
-    mocks.signedIn = true;
     mocks.credentials = {};
     mocks.sync.mockResolvedValue({
       result: {
@@ -131,7 +121,6 @@ describe("MeetingImportScreen", () => {
       warnings: [],
     });
     mocks.cancelConnectedImport.mockResolvedValue(true);
-    mocks.signIn.mockResolvedValue(undefined);
   });
 
   afterEach(cleanup);
@@ -171,27 +160,6 @@ describe("MeetingImportScreen", () => {
     expect(
       await screen.findByRole("menuitem", { name: "Use files" }),
     ).toBeTruthy();
-  });
-
-  it("prompts signed-out users to sign in before connecting", async () => {
-    mocks.signedIn = false;
-    mockDetected(["granola"]);
-
-    renderImports();
-
-    const signInButton = await screen.findByRole("button", {
-      name: "Sign in to connect",
-    });
-    expect(screen.getByText("Connect")).toBeTruthy();
-    expect(screen.getAllByText("Sign in to connect")).toHaveLength(2);
-    expect(screen.getByRole("button", { name: "Use files" })).toBeTruthy();
-
-    fireEvent.click(signInButton);
-
-    await waitFor(() => {
-      expect(mocks.signIn).toHaveBeenCalledOnce();
-    });
-    expect(mocks.connectConnectedImport).not.toHaveBeenCalled();
   });
 
   it("lets the user cancel an abandoned browser connection and retry", async () => {

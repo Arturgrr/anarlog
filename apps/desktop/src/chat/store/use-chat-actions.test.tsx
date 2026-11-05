@@ -35,7 +35,7 @@ vi.mock("~/shared/utils", () => ({
 }));
 
 vi.mock("~/shared/owner-user", () => ({
-  useOwnerUserId: () => "user-1",
+  useLocalUserId: () => "user-1",
 }));
 
 import {

@@ -18,61 +18,6 @@ export const getCurrentWebviewWindowLabel = () => {
   return window.label as WindowLabel;
 };
 
-export async function openUrlWithInstruction(
-  url: string,
-  instructionType: string,
-  openUrl: (
-    url: string,
-  ) => Promise<{ status: "ok" | "error"; error?: unknown }>,
-  instructionSearch?: Record<string, string | undefined>,
-) {
-  const saved = await commands.windowSaveFrame({ type: "main" });
-  if (saved.status === "error") {
-    // Window-manager geometry failures must not prevent browser sign-in.
-    const result = await openUrl(url);
-    if (result.status === "error") {
-      throw new Error(String(result.error));
-    }
-    return;
-  }
-  const search = Object.fromEntries(
-    Object.entries({ type: instructionType, url, ...instructionSearch }).filter(
-      ([, value]) => value !== undefined,
-    ),
-  );
-  await commands.windowEmitNavigate(
-    { type: "main" },
-    { path: "/app/instruction", search },
-  );
-  await commands.windowSetFrameAnimated({ type: "main" }, "TopRight", 340, 500);
-
-  try {
-    const result = await openUrl(url);
-    if (result.status === "error") {
-      throw new Error(String(result.error));
-    }
-  } catch (error) {
-    await commands.windowEmitNavigate(
-      { type: "main" },
-      { path: "/app", search: null },
-    );
-    await commands.windowRestoreFrameAnimated({ type: "main" });
-    throw error;
-  }
-}
-
-export async function dismissInstruction() {
-  await commands.windowEmitNavigate(
-    { type: "main" },
-    { path: "/app", search: null },
-  );
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  const restored = await commands.windowRestoreFrameAnimated({ type: "main" });
-  if (restored.status === "error") {
-    console.warn("Failed to restore instruction window frame:", restored.error);
-  }
-}
-
 const DROP_PREVENTION_CLEANUP_KEY =
   "__ANARLOG_WINDOWS_DROP_PREVENTION_CLEANUP__";
 const HEALTH_CHECK_CLEANUP_KEY = "__ANARLOG_WINDOWS_HEALTH_CHECK_CLEANUP__";

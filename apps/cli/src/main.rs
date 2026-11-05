@@ -1,12 +1,8 @@
 use std::process::ExitCode;
-use std::time::Instant;
 
 use anarlog_cli::Args;
 use clap::Parser;
 use clap::error::ErrorKind;
-
-mod analytics;
-mod error_reporting;
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -39,21 +35,7 @@ async fn main() -> ExitCode {
         }
     };
 
-    let command = args.analytics_command_name();
-    let started_at = Instant::now();
-    let _sentry_guard = error_reporting::init();
-    let result = anarlog_cli::run(args).await;
-    let outcome = match &result {
-        Ok(0) => "succeeded",
-        Ok(_) | Err(_) => "failed",
-    };
-    analytics::capture_command_completed(command, outcome, started_at.elapsed());
-    if let Err(error) = &result {
-        error_reporting::capture_command_error(command, error.code());
-        error_reporting::flush();
-    }
-
-    match result {
+    match anarlog_cli::run(args).await {
         Ok(code) => ExitCode::from(code),
         Err(error) => {
             if json {

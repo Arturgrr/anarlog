@@ -37,41 +37,6 @@ pub struct Args {
 }
 
 impl Args {
-    pub fn analytics_command_name(&self) -> &'static str {
-        match &self.command {
-            Command::Auth { command } => match command {
-                AuthCommand::Login => "auth_login",
-                AuthCommand::Status => "auth_status",
-                AuthCommand::Logout => "auth_logout",
-            },
-            Command::Doctor => "doctor",
-            Command::Meetings { command, .. } => match command {
-                MeetingCommand::Delete { .. } => "meetings_delete",
-                MeetingCommand::Capabilities => "meetings_capabilities",
-                MeetingCommand::InitializeManaged => "meetings_initialize_managed",
-                MeetingCommand::HoldList { .. } => "meetings_hold_list",
-                MeetingCommand::HoldExport { .. } => "meetings_hold_export",
-                MeetingCommand::PilotUsage { .. } => "meetings_pilot_usage",
-                MeetingCommand::Import { .. } => "meetings_import",
-                MeetingCommand::ImportStatus { .. } => "meetings_import_status",
-                MeetingCommand::List { .. } => "meetings_list",
-                MeetingCommand::Folders { .. } => "meetings_folders",
-                MeetingCommand::Get { .. } => "meetings_get",
-                MeetingCommand::Note { .. } => "meetings_note",
-                MeetingCommand::Transcript { .. } => "meetings_transcript",
-                MeetingCommand::History { .. } => "meetings_history",
-                MeetingCommand::Export { .. } => "meetings_export",
-            },
-            Command::Proposals { command } => match command {
-                ProposalCommand::Create { .. } => "proposals_create",
-                ProposalCommand::List { .. } => "proposals_list",
-                ProposalCommand::Show { .. } => "proposals_show",
-                ProposalCommand::Decline { .. } => "proposals_decline",
-            },
-            Command::Mcp => "mcp",
-        }
-    }
-
     pub fn needs_write(&self) -> bool {
         matches!(
             self.command,
@@ -87,18 +52,10 @@ impl Args {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Sign in to an Anarlog account from a browser
-    Auth {
-        #[command(subcommand)]
-        command: AuthCommand,
-    },
     /// Check the local CLI and database connection without changing data
     Doctor,
     /// Browse and export meetings
     Meetings {
-        /// Choose local data, hosted Cloud snapshots, or Cloud only when no local database exists
-        #[arg(long, env = "ANARLOG_SOURCE", value_enum, default_value_t = MeetingSource::Local)]
-        source: MeetingSource,
         #[command(subcommand)]
         command: MeetingCommand,
     },
@@ -156,24 +113,6 @@ impl ProposalKind {
             Self::Memo => "memo",
         }
     }
-}
-
-#[derive(Debug, Subcommand)]
-pub enum AuthCommand {
-    /// Sign in through a browser on this or another device
-    Login,
-    /// Show the locally stored account session
-    Status,
-    /// Remove the locally stored account session
-    Logout,
-}
-
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, ValueEnum)]
-pub enum MeetingSource {
-    #[default]
-    Local,
-    Cloud,
-    Auto,
 }
 
 #[derive(Debug, Subcommand)]
@@ -239,7 +178,7 @@ pub enum MeetingCommand {
         #[arg(
             long,
             value_name = "PATH",
-            help = "Folder path, including its subfolders (local source only)"
+            help = "Folder path, including its subfolders"
         )]
         folder: Option<String>,
         #[arg(long, default_value_t = 20, value_parser = clap::value_parser!(u32).range(1..=200), help = "Maximum results (1-200)")]
@@ -247,7 +186,7 @@ pub enum MeetingCommand {
         #[arg(long, default_value_t = 0, help = "Number of results to skip")]
         offset: u32,
     },
-    /// List meeting folders, including empty and parent folders (local source only)
+    /// List meeting folders, including empty and parent folders
     Folders {
         #[arg(short, long, help = "Case-insensitive folder path substring")]
         query: Option<String>,
@@ -313,7 +252,7 @@ mod tests {
     use clap::CommandFactory;
 
     #[test]
-    fn parses_meeting_and_auth_arguments() {
+    fn parses_meeting_arguments() {
         let args = Args::parse_from([
             "anarlog", "--json", "meetings", "list", "--query", "planning", "--limit", "10",
         ]);
@@ -372,25 +311,6 @@ mod tests {
             }
         ));
 
-        assert!(matches!(
-            Args::parse_from(["anarlog", "auth", "login"]).command,
-            Command::Auth {
-                command: AuthCommand::Login
-            }
-        ));
-        assert!(matches!(
-            Args::parse_from(["anarlog", "auth", "status"]).command,
-            Command::Auth {
-                command: AuthCommand::Status
-            }
-        ));
-        assert!(matches!(
-            Args::parse_from(["anarlog", "auth", "logout"]).command,
-            Command::Auth {
-                command: AuthCommand::Logout
-            }
-        ));
-
         let Command::Meetings { command, .. } = Args::parse_from([
             "anarlog",
             "meetings",
@@ -430,26 +350,11 @@ mod tests {
             command,
             MeetingCommand::History { offset: 10, .. }
         ));
-
-        let Command::Meetings { source, .. } =
-            Args::parse_from(["anarlog", "meetings", "--source", "cloud", "list"]).command
-        else {
-            panic!("expected meetings command");
-        };
-        assert_eq!(source, MeetingSource::Cloud);
-
-        let Command::Meetings { source, .. } =
-            Args::parse_from(["anarlog", "meetings", "--source", "auto", "list"]).command
-        else {
-            panic!("expected meetings command");
-        };
-        assert_eq!(source, MeetingSource::Auto);
     }
 
     #[test]
     fn help_exposes_mcp_and_export() {
         let help = Args::command().render_long_help().to_string();
-        assert!(help.contains("auth"));
         assert!(help.contains("meetings"));
         assert!(help.contains("mcp"));
         assert!(help.contains("doctor"));

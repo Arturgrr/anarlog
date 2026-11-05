@@ -1,4 +1,3 @@
-import type { AccountInfo } from "@anlg/plugin-auth";
 import type { DeviceInfo } from "@anlg/plugin-misc";
 
 import type { AnlgUIMessage } from "../types";
@@ -75,11 +74,6 @@ export type ContextEntity =
       title?: string | null;
       removable?: boolean;
     })
-  | ({
-      kind: "account";
-      key: string;
-      source?: ContextEntitySource;
-    } & Partial<AccountInfo>)
   | ({
       kind: "device";
       key: string;

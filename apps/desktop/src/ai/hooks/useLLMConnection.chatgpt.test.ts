@@ -21,7 +21,6 @@ const config = vi.hoisted(() => ({
 
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
 vi.mock("~/settings/queries", () => ({ useSettingsReady: () => true }));
-vi.mock("~/analytics", () => ({ trackAnalyticsEvent: vi.fn() }));
 vi.mock("~/settings/providers", () => ({
   useAiProvider: () => ({
     type: "llm",

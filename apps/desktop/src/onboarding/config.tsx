@@ -2,21 +2,15 @@ import { platform } from "@tauri-apps/plugin-os";
 
 import type { SectionStatus } from "./shared";
 
-export type OnboardingStep =
-  | "permissions"
-  | "login"
-  | "calendar"
-  | "imports"
-  | "final";
+export type OnboardingStep = "permissions" | "calendar" | "imports" | "final";
 
 const STEPS_MACOS: OnboardingStep[] = [
   "permissions",
-  "login",
   "calendar",
   "imports",
   "final",
 ];
-const STEPS_OTHER: OnboardingStep[] = ["login", "imports", "final"];
+const STEPS_OTHER: OnboardingStep[] = ["imports", "final"];
 
 function getOnboardingSteps(): OnboardingStep[] {
   return platform() === "macos" ? STEPS_MACOS : STEPS_OTHER;

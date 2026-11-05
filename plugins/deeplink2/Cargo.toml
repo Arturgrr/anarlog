@@ -32,4 +32,3 @@ specta = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true }
-uuid = { workspace = true, features = ["v4"] }

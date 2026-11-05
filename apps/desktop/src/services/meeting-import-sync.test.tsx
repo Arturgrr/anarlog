@@ -2,14 +2,7 @@ import { cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  signedIn: false,
   connectedImportSyncQueryOptions: vi.fn(),
-}));
-
-vi.mock("~/auth", () => ({
-  useAuth: () => ({
-    session: mocks.signedIn ? { user: { id: "user-1" } } : null,
-  }),
 }));
 
 vi.mock("~/imports/connected-import", () => ({
@@ -36,7 +29,6 @@ import { MeetingImportSync } from "./meeting-import-sync";
 describe("MeetingImportSync", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.signedIn = false;
     mocks.connectedImportSyncQueryOptions.mockImplementation(
       (provider: { id: string }, enabled: boolean) => ({
         queryKey: ["sync", provider.id, String(enabled)],
@@ -46,20 +38,7 @@ describe("MeetingImportSync", () => {
 
   afterEach(cleanup);
 
-  it("pauses connected imports while signed out", () => {
-    render(<MeetingImportSync />);
-
-    expect(mocks.connectedImportSyncQueryOptions).toHaveBeenCalled();
-    expect(
-      mocks.connectedImportSyncQueryOptions.mock.calls.every(
-        ([, enabled]) => enabled === false,
-      ),
-    ).toBe(true);
-  });
-
-  it("enables connected imports after sign-in", () => {
-    mocks.signedIn = true;
-
+  it("syncs connected imports without an account", () => {
     render(<MeetingImportSync />);
 
     expect(mocks.connectedImportSyncQueryOptions).toHaveBeenCalled();

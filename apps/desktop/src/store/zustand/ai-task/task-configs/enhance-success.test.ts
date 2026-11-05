@@ -190,33 +190,6 @@ describe("enhanceSuccess.onSuccess", () => {
     );
   });
 
-  it("reports persistence only after generated content is saved", async () => {
-    const onPersisted = vi.fn();
-
-    await runEnhanceSuccess({
-      ...createParams(),
-      onPersisted,
-    });
-
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-    expect(onPersisted).toHaveBeenCalledOnce();
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledBefore(
-      onPersisted,
-    );
-  });
-
-  it("does not report persistence for empty generated content", async () => {
-    const onPersisted = vi.fn();
-
-    await runEnhanceSuccess({
-      ...createParams({ text: "" }),
-      onPersisted,
-    });
-
-    expect(mocks.persistGeneratedEnhancedNote).not.toHaveBeenCalled();
-    expect(onPersisted).not.toHaveBeenCalled();
-  });
-
   it("uses the durable auto-enhance baseline instead of a later user edit", async () => {
     const snapshot = createSnapshot("Meeting title");
     snapshot.enhancedNotes[0].content = "user edit";
@@ -381,19 +354,16 @@ describe("enhanceSuccess.onSuccess", () => {
 
   it("does not save after cancellation during title generation", async () => {
     const abortController = new AbortController();
-    const onPersisted = vi.fn();
     const startTask = vi.fn().mockImplementation(async (_taskId, config) => {
       abortController.abort();
       config.onComplete?.("Generated title");
     });
 
-    await runEnhanceSuccess({
-      ...createParams({ signal: abortController.signal, startTask }),
-      onPersisted,
-    });
+    await runEnhanceSuccess(
+      createParams({ signal: abortController.signal, startTask }),
+    );
 
     expect(mocks.persistGeneratedEnhancedNote).not.toHaveBeenCalled();
-    expect(onPersisted).not.toHaveBeenCalled();
   });
 
   it("rejects persistence when the target summary disappeared", async () => {

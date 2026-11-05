@@ -40,6 +40,7 @@ import {
   checkUnslothAvailability,
 } from "~/settings/ai/shared/local-provider-availability";
 import { sortProviders } from "~/settings/ai/shared/sort-providers";
+import { docsUrl } from "~/shared/links";
 
 export type Provider = {
   id: string;
@@ -165,7 +166,7 @@ const _PROVIDERS = [
       models: { label: "Available models", url: "https://lmstudio.ai/models" },
       setup: {
         label: "Setup guide",
-        url: "https://docs.anarlog.so/ai-setup#lm-studio",
+        url: docsUrl("ai-setup", "lm-studio"),
       },
     },
   },
@@ -185,7 +186,7 @@ const _PROVIDERS = [
       models: { label: "Available models", url: "https://ollama.com/library" },
       setup: {
         label: "Setup guide",
-        url: "https://docs.anarlog.so/ai-setup#ollama",
+        url: docsUrl("ai-setup", "ollama"),
       },
     },
   },
@@ -214,7 +215,7 @@ const _PROVIDERS = [
       },
       setup: {
         label: "Setup guide",
-        url: "https://docs.anarlog.so/ai-setup#unsloth",
+        url: docsUrl("ai-setup", "unsloth"),
       },
     },
   },

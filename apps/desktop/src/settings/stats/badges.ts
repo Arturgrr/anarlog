@@ -6,7 +6,6 @@ import type { ActivityRecord } from "./queries";
 
 // These IDs are persisted; keep them stable when badge names or artwork change.
 export const BADGES = [
-  { id: "hello", metric: "signup", target: 1 },
   { id: "all-set", metric: "onboarding", target: 1 },
   { id: "first-words", metric: "conversations", target: 1 },
   { id: "good-listener", metric: "conversations", target: 10 },
@@ -21,14 +20,12 @@ export type BadgeId = (typeof BADGES)[number]["id"];
 
 export function getBadgeProgress({
   records,
-  signedUp,
   onboardingComplete,
   now,
   timezone,
   weekStartsOn,
 }: {
   records: ActivityRecord[];
-  signedUp: boolean;
   onboardingComplete: boolean;
   now: Date;
   timezone?: string;
@@ -50,7 +47,6 @@ export function getBadgeProgress({
     weeks.add(format(startOfWeek(date, { weekStartsOn }), "yyyy-MM-dd"));
   }
   const metrics = {
-    signup: Number(signedUp),
     onboarding: Number(onboardingComplete),
     conversations: sessions.size,
     weeks: weeks.size,

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ChatEditorHandle, JSONContent } from "@anlg/editor/chat";
 import { EMPTY_DOC } from "@anlg/editor/markdown";
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
@@ -110,7 +109,6 @@ export function useSubmit({
       return;
     }
 
-    void analyticsCommands.event({ event: "message_sent" });
     onSendMessage(text, [{ type: "text", text }], mentionRefs);
     editorRef.current?.clearContent();
     draftCache.delete(draftKey);

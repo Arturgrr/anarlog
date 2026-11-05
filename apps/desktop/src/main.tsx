@@ -9,7 +9,6 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode, useMemo } from "react";
 import ReactDOM from "react-dom/client";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import {
   getCurrentWebviewWindowLabel,
   init as initWindowsPlugin,
@@ -18,13 +17,7 @@ import { Toaster } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { AITaskWindowSyncBridge } from "./ai/task-window-sync";
-import { trackAnalyticsEvent } from "./analytics";
 import { createToolRegistry } from "./contexts/tool-registry/core";
-import {
-  captureOperationalError,
-  initializeErrorReporting,
-  reportCaughtReactError,
-} from "./error-reporting";
 import { AppI18nProvider } from "./i18n/provider";
 import { AppLockGate } from "./lock/gate";
 import { FloatingMeetingWindowHost } from "./meeting-float/host";
@@ -95,8 +88,6 @@ function App() {
   );
 }
 
-initializeErrorReporting();
-
 function AppRoot() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -141,20 +132,8 @@ initWindowsPlugin();
 const isMainWindow = getCurrentWebviewWindowLabel() === "main";
 
 if (isMainWindow) {
-  void analyticsCommands.eventFireAndForget({ event: "app_started" });
-  try {
-    const firstOpenKey = "anarlog:analytics:first-opened";
-    if (localStorage.getItem(firstOpenKey) === null) {
-      localStorage.setItem(firstOpenKey, "1");
-      trackAnalyticsEvent("app_first_opened", {
-        first_open_marker: "local_install",
-      });
-    }
-  } catch {}
   void initializeAppExitFlush().catch((error) => {
-    captureOperationalError(error, {
-      operation: "app_exit_flush_initialize",
-    });
+    console.error("[app-exit] failed to initialize exit flush", error);
   });
 }
 
@@ -166,9 +145,7 @@ async function renderApp() {
   }
 
   await Promise.all([bootstrapThemeFromSettings(), initializeAppStoreBuild()]);
-  const root = ReactDOM.createRoot(rootElement, {
-    onCaughtError: reportCaughtReactError,
-  });
+  const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
       <AppRoot />
@@ -213,7 +190,7 @@ async function runStartupTask(
     void task().then(resolve, reject);
   })
     .catch((error) => {
-      captureOperationalError(error, { operation });
+      console.error(`[startup] ${operation} failed`, error);
     })
     .finally(() => {
       if (timeoutHandle) {

@@ -18,7 +18,7 @@ import {
 import { useLanguageModel } from "~/ai/hooks";
 import type { ContextRef } from "~/chat/context/entities";
 import type { ChatMessageSender, ChatScope, AnlgUIMessage } from "~/chat/types";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { useLocalUserId } from "~/shared/owner-user";
 import { id } from "~/shared/utils";
 
 // Local writes normally land in milliseconds; retries cover transient
@@ -53,7 +53,7 @@ export function useChatActions({
   onGroupCreated: (newGroupId: string) => void;
   onGroupCreateFailed?: (failedGroupId: string) => void;
 }) {
-  const ownerUserId = useOwnerUserId();
+  const ownerUserId = useLocalUserId();
   const titleModel = useLanguageModel();
 
   const queueChatTitleGeneration = useCallback(

@@ -22,7 +22,6 @@ anlg-aec = { path = "crates/aec", package = "aec" }
 anlg-afconvert = { path = "crates/afconvert", package = "afconvert" }
 anlg-agent-access = { path = "crates/agent-access", package = "agent-access" }
 anlg-agent-core = { path = "crates/agent-core", package = "agent-core" }
-anlg-analytics = { path = "crates/analytics", package = "analytics" }
 anlg-apple-calendar = { path = "crates/apple-calendar", package = "apple-calendar" }
 anlg-apple-todo = { path = "crates/apple-todo", package = "apple-todo" }
 anlg-askama-utils = { path = "crates/askama-utils", package = "askama-utils" }
@@ -92,7 +91,6 @@ anlg-session-ingest = { path = "crates/session-ingest", package = "session-inges
 anlg-shortcut-macos = { path = "crates/shortcut-macos", package = "shortcut-macos" }
 anlg-storage = { path = "crates/storage", package = "storage" }
 anlg-summary = { path = "crates/summary", package = "summary" }
-anlg-supabase-auth = { path = "crates/supabase-auth", package = "supabase-auth" }
 anlg-tcc = { path = "crates/tcc", package = "tcc" }
 anlg-template-app = { path = "crates/template-app", package = "template-app" }
 anlg-template-app-legacy = { path = "crates/template-app-legacy", package = "template-app-legacy" }
@@ -115,7 +113,6 @@ anlg-ws-client = { path = "crates/ws-client", package = "ws-client" }
 anlg-ws-utils = { path = "crates/ws-utils", package = "ws-utils" }
 anlg-zoom = { path = "crates/zoom", package = "zoom" }
 keyring = "4.1.4"
-posthog-rs = "0.5"
 
 openai-transcription = { path = "crates/openai-transcription", package = "openai-transcription" }
 owhisper-client = { path = "crates/owhisper-client", package = "owhisper-client" }
@@ -136,7 +133,6 @@ tauri-plugin-opener = "2.5"
 tauri-plugin-os = "2.3"
 tauri-plugin-prevent-default = "4"
 tauri-plugin-process = "2.3"
-tauri-plugin-sentry = "0.5"
 tauri-plugin-shell = "2.3"
 tauri-plugin-single-instance = "2.4"
 tauri-plugin-store = "2.4.3"
@@ -144,9 +140,7 @@ tauri-plugin-updater = "2.10"
 tauri-plugin-window-state = "2.4"
 
 tauri-plugin-agent = { path = "plugins/agent" }
-tauri-plugin-analytics = { path = "plugins/analytics" }
 tauri-plugin-audio-priority = { path = "plugins/audio-priority" }
-tauri-plugin-auth = { path = "plugins/auth" }
 tauri-plugin-bedrock = { path = "plugins/bedrock" }
 tauri-plugin-calendar = { path = "plugins/calendar" }
 tauri-plugin-db = { path = "plugins/db" }
@@ -226,7 +220,6 @@ lazy_static = "1.5.0"
 libloading = "0.8"
 open = "5"
 regex = "1.12"
-rpassword = "7.5.4"
 schemars = "1"
 semver = "1"
 serde = "1"
@@ -259,8 +252,6 @@ tower-http = "0.6"
 chrono = "0.4"
 chrono-tz = "0.10"
 
-jsonwebtoken = { version = "10", features = ["rust_crypto"] }
-sentry = "=0.42.0"
 vergen-gix = "9"
 
 askama = "0.15"
