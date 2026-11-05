@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
   setAppIcon: vi.fn(),
   applyAppIconPreference: vi.fn(),
   appIcon: "default",
-  theme: "system",
   appIdentifier: "com.hyprnote.stable" as string | undefined,
 }));
 
@@ -27,8 +26,7 @@ vi.mock("~/settings/queries", () => ({
 }));
 
 vi.mock("~/shared/config", () => ({
-  useConfigValue: (key: string) =>
-    key === "theme" ? mocks.theme : mocks.appIcon,
+  useConfigValue: () => mocks.appIcon,
 }));
 
 vi.mock("~/shared/theme/provider", () => ({
@@ -43,39 +41,35 @@ describe("AppIconSelector", () => {
     vi.clearAllMocks();
     mocks.platform.mockReturnValue("macos");
     mocks.appIcon = "default";
-    mocks.theme = "system";
     mocks.appIdentifier = "com.hyprnote.stable";
   });
 
-  it.each([["system"], ["dark"]])(
-    "applies and stores any icon for the %s theme without a paid plan",
-    (theme) => {
-      mocks.theme = theme;
-      render(<AppIconSelector />);
-
-      expect(
-        screen
-          .getByRole("radio", { name: "Default" })
-          .getAttribute("aria-checked"),
-      ).toBe("true");
-
-      fireEvent.click(screen.getByRole("radio", { name: "Blueprint" }));
-
-      expect(mocks.applyAppIconPreference).toHaveBeenCalledWith("dev", theme);
-      expect(mocks.setAppIcon).toHaveBeenCalledWith("dev");
-    },
-  );
-
-  it("selects default for an equivalent channel-specific preference", () => {
-    mocks.appIcon = "stable";
-
+  it("applies and stores the selected icon", () => {
     render(<AppIconSelector />);
 
     expect(
       screen
-        .getByRole("radio", { name: "Default" })
+        .getByRole("radio", { name: "Graphite" })
         .getAttribute("aria-checked"),
     ).toBe("true");
-    expect(screen.queryByRole("radio", { name: "Production" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("radio", { name: "Light" }));
+
+    expect(mocks.applyAppIconPreference).toHaveBeenCalledWith("light");
+    expect(mocks.setAppIcon).toHaveBeenCalledWith("light");
+  });
+
+  it.each([
+    ["a removed icon variant", "walnut", "com.hyprnote.stable", "Graphite"],
+    ["the dev channel default", "default", "com.hyprnote.dev", "Light"],
+  ])("selects the resolved icon for %s", (_, appIcon, identifier, label) => {
+    mocks.appIcon = appIcon;
+    mocks.appIdentifier = identifier;
+
+    render(<AppIconSelector />);
+
+    expect(
+      screen.getByRole("radio", { name: label }).getAttribute("aria-checked"),
+    ).toBe("true");
   });
 });

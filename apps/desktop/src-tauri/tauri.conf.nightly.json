@@ -27,7 +27,7 @@
     "macOS": {
       "files": {
         "Resources/mlx-swift_Cmlx.bundle/default.metallib": "resources/mlx.metallib",
-        "Resources/AppIcon.icns": "resources/staging/AppIcon.icns"
+        "Resources/AppIcon.icns": "resources/graphite/AppIcon.icns"
       },
       "dmg": {
         "background": "assets/dmg-background-staging.png"

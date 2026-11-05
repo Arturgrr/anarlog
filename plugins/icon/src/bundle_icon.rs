@@ -43,7 +43,7 @@ mod tests {
             let image = NSImage::initWithData(
                 NSImage::alloc(),
                 &NSData::with_bytes(include_bytes!(
-                    "../../../apps/desktop/src-tauri/icons/src/anarlog-anagram.png"
+                    "../../../apps/desktop/src-tauri/icons/src/librelog-light.png"
                 )),
             )
             .unwrap();
