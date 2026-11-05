@@ -37,10 +37,10 @@ class NotificationBackgroundView: NSView {
   }
 
   func makeBackgroundOpaque() {
-    bgLayer.backgroundColor = NSColor(calibratedWhite: 0.92, alpha: 1.0).cgColor
+    bgLayer.backgroundColor = Colors.notificationOpaqueBg
     applyCornerRadius()
-    borderLayer.borderWidth = 1.5
-    borderLayer.borderColor = NSColor(calibratedWhite: 0.75, alpha: 0.5).cgColor
+    borderLayer.borderWidth = 1.0
+    borderLayer.borderColor = Colors.notificationHairline
   }
 
   func makeBackgroundLiquidGlass() {

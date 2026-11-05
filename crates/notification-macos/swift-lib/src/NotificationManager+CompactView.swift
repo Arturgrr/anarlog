@@ -50,7 +50,7 @@ extension NotificationManager {
     menuButton.toolTip = actionMenu.label
     menuButton.setBackgroundColors(
       normal: NSColor.clear.cgColor,
-      pressed: NSColor.black.withAlphaComponent(0.08).cgColor
+      pressed: Colors.pressedOverlay
     )
     menuButton.contentTintColor = actionButton.contentTintColor
     menuButton.layer?.borderWidth = 0
@@ -59,7 +59,7 @@ extension NotificationManager {
     let divider = NSView()
     divider.translatesAutoresizingMaskIntoConstraints = false
     divider.wantsLayer = true
-    divider.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.12).cgColor
+    divider.layer?.backgroundColor = Colors.divider
 
     surface.addSubview(actionButton)
     surface.addSubview(menuButton)
