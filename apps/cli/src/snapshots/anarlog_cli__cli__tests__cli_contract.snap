@@ -40,60 +40,6 @@ expression: canonicalize_json(contract)
   ],
   "subcommands": [
     {
-      "about": "Sign in to an Anarlog account from a browser",
-      "name": "anarlog auth",
-      "options": [
-        {
-          "flags": "-h, --help",
-          "help": "Print help",
-          "is_flag": false,
-          "required": false
-        }
-      ],
-      "subcommands": [
-        {
-          "about": "Sign in through a browser on this or another device",
-          "name": "anarlog auth login",
-          "options": [
-            {
-              "flags": "-h, --help",
-              "help": "Print help",
-              "is_flag": false,
-              "required": false
-            }
-          ],
-          "synopsis": "anarlog auth login [-h]"
-        },
-        {
-          "about": "Show the locally stored account session",
-          "name": "anarlog auth status",
-          "options": [
-            {
-              "flags": "-h, --help",
-              "help": "Print help",
-              "is_flag": false,
-              "required": false
-            }
-          ],
-          "synopsis": "anarlog auth status [-h]"
-        },
-        {
-          "about": "Remove the locally stored account session",
-          "name": "anarlog auth logout",
-          "options": [
-            {
-              "flags": "-h, --help",
-              "help": "Print help",
-              "is_flag": false,
-              "required": false
-            }
-          ],
-          "synopsis": "anarlog auth logout [-h]"
-        }
-      ],
-      "synopsis": "anarlog auth [-h] <command>"
-    },
-    {
       "about": "Check the local CLI and database connection without changing data",
       "name": "anarlog doctor",
       "options": [
@@ -110,19 +56,6 @@ expression: canonicalize_json(contract)
       "about": "Browse and export meetings",
       "name": "anarlog meetings",
       "options": [
-        {
-          "default": "local",
-          "flags": "--source",
-          "help": "Choose local data, hosted Cloud snapshots, or Cloud only when no local database exists",
-          "is_flag": false,
-          "possible_values": [
-            "local",
-            "cloud",
-            "auto"
-          ],
-          "required": false,
-          "value_name": "SOURCE"
-        },
         {
           "flags": "-h, --help",
           "help": "Print help",
@@ -356,7 +289,7 @@ expression: canonicalize_json(contract)
             },
             {
               "flags": "--folder",
-              "help": "Folder path, including its subfolders (local source only)",
+              "help": "Folder path, including its subfolders",
               "is_flag": false,
               "required": false,
               "value_name": "PATH"
@@ -387,7 +320,7 @@ expression: canonicalize_json(contract)
           "synopsis": "anarlog meetings list [-q] [--series-id] [--folder] [--limit] [--offset] [-h]"
         },
         {
-          "about": "List meeting folders, including empty and parent folders (local source only)",
+          "about": "List meeting folders, including empty and parent folders",
           "name": "anarlog meetings folders",
           "options": [
             {
@@ -585,7 +518,7 @@ expression: canonicalize_json(contract)
           "synopsis": "anarlog meetings export [--format] [-o] [--force] [-h] <id>"
         }
       ],
-      "synopsis": "anarlog meetings [--source] [-h] <command>"
+      "synopsis": "anarlog meetings [-h] <command>"
     },
     {
       "about": "Propose meeting edits for desktop review",
