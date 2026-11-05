@@ -64,10 +64,6 @@ export const Enhanced = forwardRef<
           sessionId={sessionId}
           enhancedNoteId={enhancedNoteId}
           error={error}
-          isUnauthenticated={
-            llmStatus.status === "error" &&
-            llmStatus.reason === "unauthenticated"
-          }
         />
       );
     }

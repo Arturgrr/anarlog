@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 
 import { attributeAIError } from "./error-source";
 
-const HOSTED_URL = "https://api.anarlog.so/llm/chat/completions";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 function apiError(url: string, statusCode: number, responseBody: string) {
@@ -28,7 +27,7 @@ describe("attributeAIError", () => {
     [
       "OpenRouter relaying a provider failure",
       apiError(
-        HOSTED_URL,
+        OPENROUTER_URL,
         502,
         JSON.stringify({
           error: {
@@ -52,18 +51,6 @@ describe("attributeAIError", () => {
       ),
       "openrouter",
       { kind: "openrouter" },
-    ],
-    [
-      "the Anarlog proxy failing to reach OpenRouter",
-      apiError(HOSTED_URL, 502, "Upstream request failed"),
-      "openrouter",
-      { kind: "openrouter" },
-    ],
-    [
-      "an Anarlog API rejection",
-      apiError(HOSTED_URL, 401, "invalid_token"),
-      "openrouter",
-      { kind: "anarlog" },
     ],
     [
       "a mid-stream OpenRouter error naming the provider",

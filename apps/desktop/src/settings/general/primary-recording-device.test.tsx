@@ -30,9 +30,6 @@ vi.mock("~/auth", () => ({
 vi.mock("~/auth/cloudsync-credentials", () => ({
   getDeviceIdentity: mocks.getDeviceIdentity,
 }));
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ isPro: true }),
-}));
 vi.mock("~/auth/sync-devices", () => ({
   requestSyncDevices: mocks.requestSyncDevices,
 }));

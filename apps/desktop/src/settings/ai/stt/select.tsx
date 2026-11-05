@@ -60,7 +60,6 @@ import {
   sttModelQueries,
 } from "./shared";
 
-import { useBillingAccess } from "~/auth/billing-context";
 import { useNotifications } from "~/contexts/notifications";
 import {
   providerRowId,
@@ -68,10 +67,7 @@ import {
   requiresKeyVerification,
   useProviderAvailability,
 } from "~/settings/ai/shared";
-import {
-  getProviderSelectionBlockers,
-  requiresEntitlement,
-} from "~/settings/ai/shared/eligibility";
+import { getProviderSelectionBlockers } from "~/settings/ai/shared/eligibility";
 import { PersistAiSelection } from "~/settings/ai/shared/persist-selection";
 import {
   getConfiguredProviderIds,
@@ -108,10 +104,9 @@ export function SelectProviderAndModel() {
     "current_stt_provider",
     "current_stt_model",
   ] as const);
-  const billing = useBillingAccess();
   const { providers: configuredProviders, isReady: providerSettingsReady } =
     useConfiguredMapping();
-  const { startDownload, startTrial } = useSttSettings();
+  const { startDownload } = useSttSettings();
   const pendingSelection = usePendingSttSelection((state) => state.selection);
   const { activeDownloads } = useNotifications();
   const pendingDownload = activeDownloads.find(
@@ -292,36 +287,22 @@ export function SelectProviderAndModel() {
               {providerOptions.map((provider) => {
                 const configured =
                   configuredProviders[provider.id]?.configured ?? false;
-                const requiresPro = requiresEntitlement(
-                  provider.requirements,
-                  "pro",
-                );
-                const locked = requiresPro && !billing.isPaid;
                 return (
                   <SelectItem
                     key={provider.id}
                     value={provider.id}
-                    disabled={provider.disabled || locked}
+                    disabled={provider.disabled}
                     className={cn([
                       "data-disabled:text-muted-foreground data-disabled:!opacity-100",
-                      !configured && !locked && "text-muted-foreground",
+                      !configured && "text-muted-foreground",
                     ])}
                   >
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2">
                         <ProviderIconSlot>{provider.icon}</ProviderIconSlot>
                         <span>{provider.displayName}</span>
-                        {requiresPro ? (
-                          <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] tracking-wide uppercase">
-                            <Trans>Pro</Trans>
-                          </span>
-                        ) : null}
                       </div>
-                      {locked ? (
-                        <span className="text-muted-foreground text-[11px]">
-                          <Trans>Upgrade to Pro to use this provider.</Trans>
-                        </span>
-                      ) : "description" in provider && provider.description ? (
+                      {"description" in provider && provider.description ? (
                         <span className="text-muted-foreground text-[11px]">
                           {provider.description}
                         </span>
@@ -410,7 +391,6 @@ export function SelectProviderAndModel() {
                             visibleProvider,
                           );
                         }}
-                        onStartTrial={startTrial}
                       />
                     </span>
                   );
@@ -649,7 +629,7 @@ function formatLanguageList(languages: string[]) {
   return visibleLanguages.join(", ");
 }
 
-type ModelCategory = "hardware" | "latest" | null;
+type ModelCategory = "hardware" | null;
 type ModelEntry = {
   id: string;
   isDownloaded: boolean;
@@ -661,10 +641,6 @@ type ModelEntry = {
 };
 
 function getModelCategoryLabel(category?: ModelCategory) {
-  if (category === "latest") {
-    return "Recommended";
-  }
-
   if (category === "hardware") {
     return <Trans>Best for this Mac</Trans>;
   }
@@ -682,7 +658,6 @@ export function useConfiguredMapping(): {
   >;
   isReady: boolean;
 } {
-  const billing = useBillingAccess();
   const availability = useProviderAvailability("stt", PROVIDERS);
   const { providers: configuredProviders, isReady } =
     useAiProvidersState("stt");
@@ -735,8 +710,6 @@ export function useConfiguredMapping(): {
 
       const eligible =
         getProviderSelectionBlockers(provider.requirements, {
-          isAuthenticated: true,
-          isPaid: billing.isPaid,
           config: { base_url: baseUrl, api_key: apiKey },
         }).length === 0;
 
@@ -746,22 +719,6 @@ export function useConfiguredMapping(): {
           availability[provider.id] !== true)
       ) {
         return [provider.id, { configured: false, models: [] }];
-      }
-
-      if (provider.id === "anarlog") {
-        return [
-          provider.id,
-          {
-            configured: true,
-            models: [
-              {
-                id: "cloud",
-                isDownloaded: billing.isPaid,
-                category: "latest" as const,
-              },
-            ],
-          },
-        ];
       }
 
       if (provider.id === "soniqo") {
@@ -879,13 +836,10 @@ function buildOnDeviceModelEntries(
 function ModelSelectItem({
   model,
   onDownload,
-  onStartTrial,
 }: {
   model: ModelEntry;
   onDownload: () => void;
-  onStartTrial: () => void;
 }) {
-  const isCloud = model.id === "cloud";
   const { activeDownloads } = useNotifications();
   const { queuedDownloads } = useSttSettings();
   const downloadInfo = activeDownloads.find((d) => d.model === model.id);
@@ -902,9 +856,7 @@ function ModelSelectItem({
         "flex min-w-0 flex-1 items-center justify-between gap-3",
         !model.isDownloaded &&
           !isDownloading &&
-          (isCloud
-            ? "group-focus-within:pr-24 group-hover:pr-24"
-            : "group-focus-within:pr-16 group-hover:pr-16"),
+          "group-focus-within:pr-16 group-hover:pr-16",
         "transition-[padding] duration-150",
       ])}
     >
@@ -953,11 +905,7 @@ function ModelSelectItem({
     if (isDownloading) {
       return;
     }
-    if (isCloud) {
-      onStartTrial();
-    } else {
-      onDownload();
-    }
+    onDownload();
   };
 
   return (
@@ -965,7 +913,7 @@ function ModelSelectItem({
       className={cn([
         "relative flex items-center justify-between",
         "rounded-full py-1.5 text-sm outline-hidden",
-        isCloud ? "pr-1.5 pl-2" : "px-2",
+        "px-2",
         "cursor-pointer select-none",
         "hover:bg-accent hover:text-accent-foreground",
         "group",
@@ -996,13 +944,11 @@ function ModelSelectItem({
             "group-hover:pointer-events-auto group-hover:opacity-100",
             "group-focus-within:pointer-events-auto group-focus-within:opacity-100",
             "transition-opacity duration-150",
-            isCloud
-              ? "bg-primary text-primary-foreground hover:bg-primary/90 py-1 shadow-xs hover:shadow-md dark:!bg-white dark:!text-black dark:hover:!bg-white/90"
-              : "from-muted to-accent text-foreground bg-linear-to-t py-0.5 shadow-xs hover:shadow-md",
+            "from-muted to-accent text-foreground bg-linear-to-t py-0.5 shadow-xs hover:shadow-md",
           ])}
           onClick={handleAction}
         >
-          {isCloud ? <Trans>Upgrade to use</Trans> : <Trans>Download</Trans>}
+          <Trans>Download</Trans>
         </button>
       )}
     </div>

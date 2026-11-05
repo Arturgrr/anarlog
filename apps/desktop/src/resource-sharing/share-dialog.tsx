@@ -40,7 +40,6 @@ import {
 import { sharedResourcesQueryKey, useSharedResources } from "./hooks";
 
 import { useOptionalAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { useAvailableShareWorkspaces } from "~/session-sharing/source";
 import {
   GlassDialogCancelButton,
@@ -76,7 +75,6 @@ function AuthenticatedResourceShareButton({
 }) {
   const { t } = useLingui();
   const auth = useOptionalAuth()!;
-  const billing = useBillingAccess();
   const queryClient = useQueryClient();
   const openNew = useTabs((state) => state.openNew);
   const [open, setOpen] = useState(false);
@@ -231,15 +229,6 @@ function AuthenticatedResourceShareButton({
                 </Button>
               }
             />
-          ) : billing.isReady && !billing.isPaid && !owned ? (
-            <ShareGate
-              description={t`Folder access controls and reusable sharing are included with Pro.`}
-              action={
-                <Button type="button" size="sm" onClick={billing.upgradeToPro}>
-                  <Trans>Upgrade to Pro</Trans>
-                </Button>
-              }
-            />
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -269,7 +258,7 @@ function AuthenticatedResourceShareButton({
                     type="button"
                     variant="outline"
                     className="rounded-xl"
-                    disabled={publish.isPending || !billing.isPaid}
+                    disabled={publish.isPending}
                     onClick={() =>
                       publish.mutate(
                         selectedWorkspaceId === "personal"
@@ -319,7 +308,7 @@ function AuthenticatedResourceShareButton({
                     className="rounded-xl"
                     placeholder={t`guest@company.com`}
                     aria-label={t`Guest email`}
-                    disabled={invite.isPending || !billing.isPaid}
+                    disabled={invite.isPending}
                     onChange={(event) => {
                       setEmail(event.target.value);
                       setTeamUpsell(null);
@@ -329,9 +318,7 @@ function AuthenticatedResourceShareButton({
                   <Button
                     type="submit"
                     className="rounded-xl"
-                    disabled={
-                      !email.trim() || invite.isPending || !billing.isPaid
-                    }
+                    disabled={!email.trim() || invite.isPending}
                   >
                     {invite.isPending ? (
                       <CircleNotch className="size-4 animate-spin" />

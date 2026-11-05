@@ -3,8 +3,7 @@ import type { LanguageModel } from "ai";
 export type AIErrorSource =
   | { kind: "provider"; provider?: string }
   | { kind: "openrouter" }
-  | { kind: "upstream" }
-  | { kind: "anarlog" };
+  | { kind: "upstream" };
 
 const SOURCE_KEY = "aiErrorSource";
 
@@ -17,14 +16,6 @@ const PROVIDER_HOSTS: ReadonlyArray<[RegExp, string]> = [
   [/(^|\.)googleapis\.com$/, "Google"],
   [/(^|\.)azure\.com$/, "Azure OpenAI"],
 ];
-
-// Plain-text bodies the Anarlog LLM proxy returns when it cannot reach or
-// read from OpenRouter (crates/llm-proxy/src/handler/mod.rs).
-const PROXY_UPSTREAM_FAILURE_BODIES = new Set([
-  "Upstream request failed",
-  "Request timeout",
-  "Failed to read response",
-]);
 
 export function getModelProviderId(model: LanguageModel): string {
   const provider =
@@ -92,17 +83,6 @@ export function attributeAIError(
     return { kind: "provider", provider: providerName };
   }
 
-  if (apiError && isHostedProxyUrl(apiError.url)) {
-    const body = apiError.responseBody?.trim() ?? "";
-    if (
-      PROXY_UPSTREAM_FAILURE_BODIES.has(body) ||
-      isOpenRouterErrorPayload(payload)
-    ) {
-      return { kind: "openrouter" };
-    }
-    return { kind: "anarlog" };
-  }
-
   return { kind: "openrouter" };
 }
 
@@ -117,19 +97,6 @@ function asAPICallError(error: unknown): APICallErrorLike | undefined {
     return undefined;
   }
   return error as Error & APICallErrorLike;
-}
-
-// Hosted requests go to `${VITE_AI_API_URL}/llm/...`; BYOK OpenRouter goes to
-// openrouter.ai directly.
-function isHostedProxyUrl(url: string | undefined): boolean {
-  if (!url) {
-    return false;
-  }
-  try {
-    return new URL(url).pathname.startsWith("/llm/");
-  } catch {
-    return false;
-  }
 }
 
 function providerFromUrl(url: string | undefined): string | undefined {
@@ -150,10 +117,6 @@ function openRouterErrorBody(payload: unknown) {
   }
   const inner = isRecord(payload.error) ? payload.error : payload;
   return typeof inner.message === "string" ? inner : undefined;
-}
-
-function isOpenRouterErrorPayload(payload: unknown): boolean {
-  return isRecord(payload) && openRouterErrorBody(payload.error) !== undefined;
 }
 
 function openRouterProviderName(payload: unknown): string | undefined {
@@ -190,7 +153,6 @@ function isAIErrorSource(value: unknown): value is AIErrorSource {
       return value.provider === undefined || typeof value.provider === "string";
     case "openrouter":
     case "upstream":
-    case "anarlog":
       return true;
     default:
       return false;

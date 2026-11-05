@@ -23,10 +23,6 @@ vi.mock("~/auth", () => ({
   useAuth: () => ({ session: { user: { id: "viewer-1" } } }),
 }));
 
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ isPro: true }),
-}));
-
 vi.mock("~/settings/team/mirror", () => ({
   useMyWorkspacesWithMirror: () => ({ data: [], isLoading: false }),
 }));

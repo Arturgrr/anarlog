@@ -1,19 +1,17 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useState } from "react";
 
-import { Lock, MagnifyingGlass, X } from "@anlg/ui/components/icons";
+import { MagnifyingGlass, X } from "@anlg/ui/components/icons";
 import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
 import { CustomSidebarHeader } from "./custom-sidebar-header";
 import { useSettingsNavGroups } from "./settings-nav-groups";
 
-import { useBillingAccess } from "~/auth/billing-context";
 import { type SettingsTab, useTabs } from "~/store/zustand/tabs";
 
 export function SettingsNav() {
   const { t } = useLingui();
-  const { isPro } = useBillingAccess();
   const groups = useSettingsNavGroups();
   const [search, setSearch] = useState("");
   const searchRef = useSquircleRef<HTMLDivElement>();
@@ -115,49 +113,37 @@ export function SettingsNav() {
               <span className="text-muted-foreground/60 px-3 pb-1 text-[11px] font-medium tracking-wider uppercase">
                 {group.label}
               </span>
-              {group.items.map((item) => {
-                const requiresPro = Boolean(item.requiresPro && !isPro);
+              {group.items.map((item) => (
+                <div key={item.id} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if ("destination" in item) {
+                        openNew(item.destination);
+                        return;
+                      }
 
-                return (
-                  <div key={item.id} className="relative">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if ("destination" in item) {
-                          openNew(item.destination);
-                          return;
-                        }
-
-                        setActiveTab(item.id);
-                      }}
-                      className={cn([
-                        "flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-sm",
-                        "transition-colors",
-                        activeTab === item.id
-                          ? "bg-sidebar-accent text-foreground font-medium"
-                          : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
-                      ])}
-                    >
-                      <item.icon
-                        size={15}
-                        className="shrink-0"
-                        data-testid={`settings-nav-icon-${item.id}`}
-                      />
-                      <span className="flex min-w-0 flex-1 items-center gap-2">
-                        <span className="min-w-0 flex-1 truncate">
-                          {item.label}
-                        </span>
-                        {requiresPro ? (
-                          <Lock
-                            aria-label={t`Requires Anarlog Pro`}
-                            className="size-3.5 shrink-0"
-                          />
-                        ) : null}
-                      </span>
-                    </button>
-                  </div>
-                );
-              })}
+                      setActiveTab(item.id);
+                    }}
+                    className={cn([
+                      "flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-sm",
+                      "transition-colors",
+                      activeTab === item.id
+                        ? "bg-sidebar-accent text-foreground font-medium"
+                        : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                    ])}
+                  >
+                    <item.icon
+                      size={15}
+                      className="shrink-0"
+                      data-testid={`settings-nav-icon-${item.id}`}
+                    />
+                    <span className="min-w-0 flex-1 truncate">
+                      {item.label}
+                    </span>
+                  </button>
+                </div>
+              ))}
             </div>
           ))}
         </div>

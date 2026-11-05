@@ -8,7 +8,6 @@ import {
   CalendarDots,
   ChartLineUp,
   Code,
-  CreditCard,
   DownloadSimple,
   FileText,
   FolderSimple,
@@ -28,7 +27,6 @@ import {
 } from "@anlg/ui/components/icons";
 
 import { privacyMessages } from "~/settings/general/app-settings";
-import { useMyWorkspacesWithMirror } from "~/settings/team/mirror";
 import { type SettingsTab, type TabInput } from "~/store/zustand/tabs";
 
 type SettingsNavItem =
@@ -36,22 +34,18 @@ type SettingsNavItem =
       id: SettingsTab;
       label: string;
       icon: Icon;
-      requiresPro?: boolean;
     }
   | {
       id: "automations" | "calendar" | "contacts" | "folders" | "templates";
       label: string;
       icon: Icon;
       destination: TabInput;
-      requiresPro?: boolean;
     };
 
 export type SettingsNavGroup = { label: string; items: SettingsNavItem[] };
 
 export function useSettingsNavGroups(): SettingsNavGroup[] {
   const { i18n, t } = useLingui();
-  const workspaces = useMyWorkspacesWithMirror();
-  const hasExistingWorkspace = (workspaces.data?.length ?? 0) > 0;
 
   return [
     {
@@ -59,21 +53,9 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
       items: [
         { id: "app", label: t`General`, icon: Gear },
         { id: "account", label: t`Account`, icon: User },
-        { id: "billing", label: t`Billing`, icon: CreditCard },
-        { id: "referrals", label: t`Invite friends`, icon: Users },
         { id: "insights", label: t`Insights`, icon: ChartLineUp },
-        {
-          id: "team",
-          label: t`Teams`,
-          icon: UsersThree,
-          requiresPro: !workspaces.isLoading && !hasExistingWorkspace,
-        },
-        {
-          id: "sync",
-          label: t`Sync`,
-          icon: ArrowsClockwise,
-          requiresPro: true,
-        },
+        { id: "team", label: t`Teams`, icon: UsersThree },
+        { id: "sync", label: t`Sync`, icon: ArrowsClockwise },
         { id: "appearance", label: t`Appearance`, icon: Sun },
         { id: "notifications", label: t`Notifications`, icon: Bell },
       ],
@@ -82,19 +64,9 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
       label: "AI",
       items: [
         { id: "transcription", label: t`Transcription`, icon: Waveform },
-        {
-          id: "dictation",
-          label: t`Dictation`,
-          icon: Microphone,
-          requiresPro: true,
-        },
+        { id: "dictation", label: t`Dictation`, icon: Microphone },
         { id: "intelligence", label: t`Intelligence`, icon: Sparkle },
-        {
-          id: "dictionary",
-          label: t`Dictionary`,
-          icon: BookOpen,
-          requiresPro: true,
-        },
+        { id: "dictionary", label: t`Dictionary`, icon: BookOpen },
       ],
     },
     {
@@ -130,7 +102,6 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
           label: t`Automations`,
           icon: Lightning,
           destination: { type: "automations" },
-          requiresPro: true,
         },
       ],
     },

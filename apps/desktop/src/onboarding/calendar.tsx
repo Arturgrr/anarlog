@@ -10,7 +10,6 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { OnboardingButton } from "./shared";
 
 import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { useConnections } from "~/auth/useConnections";
 import { useAppleCalendarSelection } from "~/calendar/components/apple/calendar-selection";
 import { TroubleShootingLink } from "~/calendar/components/apple/permission";
@@ -312,7 +311,6 @@ function OAuthCalendarProviderAction({
   isHovered,
   isOpening,
   isPending,
-  isReady,
   isSignedIn,
   onConnect,
   onHoverChange,
@@ -323,7 +321,6 @@ function OAuthCalendarProviderAction({
   isHovered: boolean;
   isOpening: boolean;
   isPending: boolean;
-  isReady: boolean;
   isSignedIn: boolean;
   onConnect: () => void;
   onHoverChange: (hovered: boolean) => void;
@@ -336,7 +333,7 @@ function OAuthCalendarProviderAction({
         onMouseLeave={() => onHoverChange(false)}
         onFocus={() => onHoverChange(true)}
         onBlur={() => onHoverChange(false)}
-        disabled={isOpening || (isSignedIn && (isPending || !isReady))}
+        disabled={isOpening || (isSignedIn && isPending)}
         className={
           isSignedIn
             ? "border-border bg-card text-foreground hover:bg-accent disabled:hover:bg-card flex h-full w-full items-center justify-center gap-3 border shadow-[0_2px_6px_rgba(87,83,78,0.08),0_10px_18px_-10px_rgba(87,83,78,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
@@ -388,8 +385,7 @@ function OAuthCalendarProviderAction({
 
 function OutlookCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
   const auth = useAuth();
-  const { isPro, isReady, upgradeToPro, isUpgradingToPro } = useBillingAccess();
-  const { data: connections, isPending, isError } = useConnections(isPro);
+  const { data: connections, isPending, isError } = useConnections();
   const [isHovered, setHovered] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
   // State alone cannot gate re-entry: a second click can land before the
@@ -410,11 +406,6 @@ function OutlookCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
       return;
     }
 
-    if (!isPro) {
-      upgradeToPro();
-      return;
-    }
-
     if (openInFlightRef.current) {
       return;
     }
@@ -429,7 +420,7 @@ function OutlookCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
       openInFlightRef.current = false;
       setIsOpening(false);
     });
-  }, [auth.getHeaders, auth.session, isPro, onSignIn, upgradeToPro]);
+  }, [auth.getHeaders, auth.session, onSignIn]);
 
   if (!OUTLOOK_PROVIDER) {
     return null;
@@ -461,9 +452,8 @@ function OutlookCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
         connectLabel={<Trans>Connect Outlook</Trans>}
         isConnected={isConnected}
         isHovered={isHovered}
-        isOpening={isOpening || isUpgradingToPro}
+        isOpening={isOpening}
         isPending={isPending}
-        isReady={isReady}
         isSignedIn={isSignedIn}
         onConnect={handleConnect}
         onHoverChange={setHovered}
@@ -474,8 +464,7 @@ function OutlookCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
 
 function GoogleCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
   const auth = useAuth();
-  const { isPro, isReady, upgradeToPro, isUpgradingToPro } = useBillingAccess();
-  const { data: connections, isPending, isError } = useConnections(isPro);
+  const { data: connections, isPending, isError } = useConnections();
   const [isHovered, setHovered] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
   // State alone cannot gate re-entry: a second click can land before the
@@ -496,11 +485,6 @@ function GoogleCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
       return;
     }
 
-    if (!isPro) {
-      upgradeToPro();
-      return;
-    }
-
     if (openInFlightRef.current) {
       return;
     }
@@ -515,7 +499,7 @@ function GoogleCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
       openInFlightRef.current = false;
       setIsOpening(false);
     });
-  }, [auth.getHeaders, auth.session, isPro, onSignIn, upgradeToPro]);
+  }, [auth.getHeaders, auth.session, onSignIn]);
 
   if (!GOOGLE_PROVIDER) {
     return null;
@@ -547,9 +531,8 @@ function GoogleCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
         connectLabel={<Trans>Connect Google Calendar</Trans>}
         isConnected={isConnected}
         isHovered={isHovered}
-        isOpening={isOpening || isUpgradingToPro}
+        isOpening={isOpening}
         isPending={isPending}
-        isReady={isReady}
         isSignedIn={isSignedIn}
         onConnect={handleConnect}
         onHoverChange={setHovered}

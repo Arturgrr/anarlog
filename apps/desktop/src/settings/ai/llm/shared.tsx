@@ -31,12 +31,7 @@ import type { ReactNode } from "react";
 
 import { Shuffle } from "@anlg/ui/components/icons";
 
-import { env } from "~/env";
-import {
-  AnarlogProviderIcon,
-  ProviderBrandImage,
-  ProviderLobeIcon,
-} from "~/settings/ai/shared";
+import { ProviderBrandImage, ProviderLobeIcon } from "~/settings/ai/shared";
 import { type ProviderRequirement } from "~/settings/ai/shared/eligibility";
 import { checkAppleFoundationModelAvailability } from "~/settings/ai/shared/list-apple-foundation";
 import {
@@ -64,20 +59,6 @@ export type Provider = {
 };
 
 const _PROVIDERS = [
-  {
-    id: "anarlog",
-    displayName: "Anarlog",
-    badge: "Recommended",
-    icon: <AnarlogProviderIcon />,
-    baseUrl: new URL(
-      "/llm",
-      env.VITE_AI_API_URL ?? env.VITE_API_URL,
-    ).toString(),
-    requirements: [
-      { kind: "requires_auth" },
-      { kind: "requires_entitlement", entitlement: "pro" },
-    ],
-  },
   {
     id: "claude",
     displayName: "Claude",

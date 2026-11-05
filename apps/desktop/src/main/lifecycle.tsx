@@ -125,7 +125,7 @@ function EnhancerInit() {
     from: "__root__",
   });
 
-  const model = useLanguageModel("enhance");
+  const model = useLanguageModel();
   const { conn: llmConn } = useLLMConnection();
   const selectedTemplateId = useConfigValue("selected_template_id");
 

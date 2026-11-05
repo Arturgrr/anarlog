@@ -131,12 +131,6 @@ const mocks = vi.hoisted(() => ({
       Promise.resolve({ deliveredBy: "email" as const }),
     ),
   },
-  billing: {
-    isPro: true,
-    isReady: true,
-    upgradeToPro: vi.fn(),
-    isUpgradingToPro: false,
-  },
   toastWarning: vi.fn(),
 }));
 
@@ -154,10 +148,6 @@ vi.mock("@lingui/react/macro", () => ({
 
 vi.mock("~/auth", () => ({
   useAuth: () => ({ session: mocks.session, supabase: {} }),
-}));
-
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => mocks.billing,
 }));
 
 vi.mock("@anlg/ui/components/ui/toast", () => ({
@@ -342,8 +332,6 @@ describe("SettingsTeam", () => {
     mocks.billingCheckout.buildWebAppUrl.mockClear();
     mocks.billingCheckout.openUrl.mockClear();
     mocks.billingCheckout.openUrlWithInstruction.mockClear();
-    mocks.billing.isPro = true;
-    mocks.billing.upgradeToPro.mockClear();
     mocks.toastWarning.mockClear();
     mocks.createWorkspace.mockClear();
   });
@@ -460,28 +448,6 @@ describe("SettingsTeam", () => {
       }),
     ).toBeNull();
     expect(mocks.client.getWorkspaceEmailAutoJoin).not.toHaveBeenCalled();
-  });
-
-  it("shows the create workspace form on the free plan without creating", () => {
-    mocks.billing.isPro = false;
-    renderTeam();
-
-    expect(screen.getByText("Create a shared workspace")).toBeTruthy();
-    expect(screen.getByRole("textbox")).toBeTruthy();
-
-    fireEvent.click(screen.getByRole("textbox"));
-
-    expect(mocks.toastWarning).toHaveBeenCalledWith(
-      "This requires Anarlog Pro",
-      {
-        action: {
-          label: "Upgrade",
-          onClick: expect.any(Function),
-        },
-      },
-    );
-    expect(mocks.createWorkspace).not.toHaveBeenCalled();
-    expect(mocks.billing.upgradeToPro).not.toHaveBeenCalled();
   });
 
   it("keeps an unbilled workspace accessible and offers Team checkout", async () => {

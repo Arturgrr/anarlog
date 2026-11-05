@@ -7,10 +7,6 @@ const { useProviderAvailabilityMock } = vi.hoisted(() => ({
   useProviderAvailabilityMock: vi.fn(),
 }));
 
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ isPaid: true }),
-}));
-
 vi.mock("~/settings/ai/shared", async (importOriginal) => ({
   ...(await importOriginal<typeof import("~/settings/ai/shared")>()),
   useProviderAvailability: useProviderAvailabilityMock,
@@ -48,7 +44,6 @@ test.each([true, false])(
       ),
     });
 
-    expect(result.current.providers.anarlog.configured).toBe(true);
     expect(result.current.providers.deepgram.configured).toBe(false);
     expect(result.current.isReady).toBe(false);
 

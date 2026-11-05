@@ -11,7 +11,6 @@ import {
 import { toast } from "@anlg/ui/components/ui/toast";
 
 import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { getDeviceIdentity } from "~/auth/cloudsync-credentials";
 import { requestSyncDevices } from "~/auth/sync-devices";
 import { setSettingValue } from "~/settings/queries";
@@ -21,13 +20,12 @@ import { useConfigValue } from "~/shared/config";
 export function PrimaryRecordingDeviceSelector() {
   const { t } = useLingui();
   const { session } = useAuth();
-  const { isPro } = useBillingAccess();
   const value = useConfigValue("primary_recording_device");
   // eslint-disable-next-line @tanstack/query/exhaustive-deps -- Cache by account; rotating access tokens must not become cache keys.
   const devicesQuery = useQuery({
     queryKey: ["sync-devices", session?.user.id],
     queryFn: ({ signal }) => requestSyncDevices(session!.access_token, signal),
-    enabled: Boolean(session && isPro),
+    enabled: Boolean(session),
   });
   const identityQuery = useQuery({
     queryKey: ["local-recording-device"],
@@ -36,7 +34,7 @@ export function PrimaryRecordingDeviceSelector() {
       if (!identity.fingerprint) throw new Error("Device identity unavailable");
       return identity;
     },
-    enabled: Boolean(session && isPro),
+    enabled: Boolean(session),
   });
   const saveMutation = useMutation({
     mutationFn: (fingerprint: string) =>
@@ -61,10 +59,6 @@ export function PrimaryRecordingDeviceSelector() {
         description={
           !session ? (
             <Trans>Sign in to choose a primary recording device.</Trans>
-          ) : !isPro ? (
-            <Trans>
-              Anarlog Pro coordinates recording across your devices.
-            </Trans>
           ) : (
             <Trans>
               Prefer this device when multiple devices record the same meeting.
@@ -82,10 +76,7 @@ export function PrimaryRecordingDeviceSelector() {
               {...labelProps}
               className={SETTING_CONTROL_CLASS}
               disabled={
-                !session ||
-                !isPro ||
-                devicesQuery.isPending ||
-                saveMutation.isPending
+                !session || devicesQuery.isPending || saveMutation.isPending
               }
             >
               <SelectValue placeholder={t`Choose a device`} />

@@ -16,18 +16,9 @@ type ModelIconSpec = {
 };
 
 const MODEL_ICON_ASSET_BASE = "/assets/model-icons";
-const ANARLOG_ICON_SRC = "/assets/anarlog-icon.png";
 
 function getLocalModelIcon(model: string): ModelIconSpec | null {
   const value = model.toLowerCase();
-
-  if (value === "cloud") {
-    return {
-      label: "A",
-      title: "Anarlog Pro",
-      imageSrc: ANARLOG_ICON_SRC,
-    };
-  }
 
   if (value === "apple-speech") {
     return {

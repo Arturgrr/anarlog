@@ -23,7 +23,7 @@ export function useEnhancedNoteActions({
   enhancedNoteId: string | null;
   sessionId: string;
 }) {
-  const model = useLanguageModel("enhance");
+  const model = useLanguageModel();
   const taskId = enhancedNoteId
     ? createTaskId(enhancedNoteId, "enhance")
     : null;

@@ -6,9 +6,6 @@ import { toast } from "@anlg/ui/components/ui/toast";
 
 import { populateRecurringMeetingNotes } from "./recurring-notes";
 
-import { useBillingAccess } from "~/auth/billing-context";
-import { TrialEndedDialog } from "~/billing/trial-ended-dialog";
-import { TrialStartedDialog } from "~/billing/trial-started-dialog";
 import { executeTransaction } from "~/db";
 import { createSession, updateSession } from "~/session/queries";
 import { useOwnerUserId } from "~/shared/owner-user";
@@ -30,7 +27,6 @@ import {
 export type DevtoolsAction =
   | "navigation:onboarding"
   | "instruction:sign-in"
-  | "instruction:billing"
   | "instruction:integration"
   | `toasts:preview:${DevtoolsToastPreview}`
   | "toasts:clear"
@@ -41,8 +37,6 @@ export type DevtoolsAction =
   | "notifications:mic-options"
   | "notifications:auto-stop"
   | "notifications:clear"
-  | "billing:trial-started"
-  | "billing:trial-ended"
   | "countdown:note-60"
   | "countdown:note-300"
   | "countdown:zoom-60"
@@ -80,12 +74,6 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
         action: "instruction:sign-in",
       },
       {
-        label: "Instruction: billing",
-        description:
-          "Show the continue-in-browser instruction screen used for billing.",
-        action: "instruction:billing",
-      },
-      {
         label: "Instruction: integration",
         description:
           "Show the continue-in-browser instruction screen used for integrations.",
@@ -118,11 +106,6 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
         label: "Download",
         description: "Preview the model download progress toast.",
         action: "toasts:preview:download",
-      },
-      {
-        label: "Pro",
-        description: "Preview the Pro upsell toast.",
-        action: "toasts:preview:pro",
       },
       {
         label: "Clear all toasts",
@@ -202,22 +185,6 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
     ],
   },
   {
-    label: "Billing",
-    description: "Open the billing dialogs users see around a trial.",
-    items: [
-      {
-        label: "Trial started",
-        description: 'Open the "Your Pro trial just started" dialog.',
-        action: "billing:trial-started",
-      },
-      {
-        label: "Trial ended",
-        description: "Open the dialog shown when a trial ends without payment.",
-        action: "billing:trial-ended",
-      },
-    ],
-  },
-  {
     label: "Countdown",
     description:
       "Create a note for a meeting that starts soon, to exercise pre-meeting flows.",
@@ -276,7 +243,6 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
 export function useDevtoolsActions() {
   const openNew = useTabs((state) => state.openNew);
   const userId = useOwnerUserId() ?? undefined;
-  const { trialDaysRemaining, upgradeToPro } = useBillingAccess();
   const showToastPreview = useDevtoolsToastPreview(
     (state) => state.showPreview,
   );
@@ -285,8 +251,6 @@ export function useDevtoolsActions() {
   );
   const showOtaPreview = useDevtoolsOtaPreview((state) => state.showPreview);
   const clearOtaPreview = useDevtoolsOtaPreview((state) => state.clearPreview);
-  const [trialStartedOpen, setTrialStartedOpen] = useState(false);
-  const [trialEndedOpen, setTrialEndedOpen] = useState(false);
   const [shouldThrow, setShouldThrow] = useState(false);
 
   if (shouldThrow) {
@@ -510,9 +474,6 @@ export function useDevtoolsActions() {
         case "instruction:sign-in":
           showInstruction("sign-in");
           return;
-        case "instruction:billing":
-          showInstruction("billing");
-          return;
         case "instruction:integration":
           showInstruction("integration");
           return;
@@ -520,7 +481,6 @@ export function useDevtoolsActions() {
         case "toasts:preview:transcription-model":
         case "toasts:preview:transcription-error":
         case "toasts:preview:download":
-        case "toasts:preview:pro":
           showToastPreview(
             action.slice("toasts:preview:".length) as DevtoolsToastPreview,
           );
@@ -553,12 +513,6 @@ export function useDevtoolsActions() {
           return;
         case "notifications:clear":
           void clearNotifications();
-          return;
-        case "billing:trial-started":
-          setTrialStartedOpen(true);
-          return;
-        case "billing:trial-ended":
-          setTrialEndedOpen(true);
           return;
         case "countdown:note-60":
           void createWithCountdown(60);
@@ -597,22 +551,5 @@ export function useDevtoolsActions() {
     ],
   );
 
-  return {
-    run,
-    dialogs: (
-      <>
-        <TrialStartedDialog
-          open={trialStartedOpen}
-          onOpenChange={setTrialStartedOpen}
-          trialDaysRemaining={trialDaysRemaining}
-          hasPaymentMethod={false}
-        />
-        <TrialEndedDialog
-          open={trialEndedOpen}
-          onOpenChange={setTrialEndedOpen}
-          onUpgrade={upgradeToPro}
-        />
-      </>
-    ),
-  };
+  return run;
 }

@@ -17,15 +17,6 @@ const mocks = vi.hoisted(() => ({
   buildWebAppUrl: vi.fn((path: string) =>
     Promise.resolve(`https://anarlog.so${path}`),
   ),
-  billing: {
-    canStartTrial: { data: false, isPending: false },
-    hasPaymentMethod: false,
-    isPaid: false,
-    isTrialing: false,
-    isPaused: false,
-    plan: "free",
-    trialDaysRemaining: null as number | null,
-  },
   session: { user: { id: "user-1", email: "john@example.com" } } as {
     user: { id: string; email: string };
   } | null,
@@ -71,10 +62,6 @@ vi.mock("~/settings/team/mirror", () => ({
   useMyWorkspacesWithMirror: () => mocks.workspaces,
 }));
 
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => mocks.billing,
-}));
-
 vi.mock("~/shared/utils", () => ({
   buildWebAppUrl: mocks.buildWebAppUrl,
 }));
@@ -110,15 +97,6 @@ describe("SettingsAccount", () => {
       tier: "free",
       capabilities: [],
     });
-    mocks.billing = {
-      canStartTrial: { data: false, isPending: false },
-      hasPaymentMethod: false,
-      isPaid: false,
-      isTrialing: false,
-      isPaused: false,
-      plan: "free",
-      trialDaysRemaining: null,
-    };
     globalThis.ResizeObserver = class {
       observe() {}
       unobserve() {}
@@ -173,16 +151,9 @@ describe("SettingsAccount", () => {
     );
   });
 
-  it("keeps plans out of Account for members and guests", async () => {
-    const view = renderAccount();
-    expect(screen.queryByText("Plans")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Get Pro" })).toBeNull();
-    expect(screen.getByText("Profile editor")).toBeTruthy();
-    view.unmount();
+  it("keeps the profile editor available when signed out", async () => {
     mocks.session = null;
     renderAccount();
-    expect(screen.queryByText("Plans")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Get Pro" })).toBeNull();
     expect(screen.getByText("Profile editor")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Get started" }));
     await waitFor(() => expect(mocks.signIn).toHaveBeenCalledOnce());

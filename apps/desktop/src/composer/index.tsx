@@ -32,7 +32,7 @@ import { useOwnerUserId } from "~/shared/owner-user";
 
 export function ComposerScreen() {
   const { chat } = useShell();
-  const model = useLanguageModel("chat");
+  const model = useLanguageModel();
   const userId = useOwnerUserId();
   const currentChatGroup = useChatGroup(chat.groupId, chat.scope);
   const { handleSendMessage } = useChatActions({

@@ -54,7 +54,7 @@ export function useChatActions({
   onGroupCreateFailed?: (failedGroupId: string) => void;
 }) {
   const ownerUserId = useOwnerUserId();
-  const titleModel = useLanguageModel("title");
+  const titleModel = useLanguageModel();
 
   const queueChatTitleGeneration = useCallback(
     (params: {

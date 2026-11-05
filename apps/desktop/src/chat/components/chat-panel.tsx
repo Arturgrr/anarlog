@@ -110,7 +110,7 @@ export function ChatPanelFrame({
   const { groupId, setGroupId, rollbackFailedGroup } = chat;
   const { panelClassName, toolbarSurface } = useChatAppearance();
   const isFloating = layout === "floating";
-  const model = useLanguageModel("chat");
+  const model = useLanguageModel();
   const { currentSessionId, currentNoteView } = useSessionTab();
   const hasSummary = useHasEditableSummary(
     chat.scope === "automations" ? undefined : currentSessionId,

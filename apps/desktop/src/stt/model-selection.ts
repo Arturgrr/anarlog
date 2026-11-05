@@ -113,6 +113,11 @@ export function normalizeStoredSttSelection(
     return { provider: "apple_speech", model: normalizedModel };
   }
 
+  // The hosted cloud model and Argmax models no longer exist.
+  if (provider === "anarlog") {
+    return { provider: "", model: "" };
+  }
+
   return { provider, model: normalizedModel };
 }
 

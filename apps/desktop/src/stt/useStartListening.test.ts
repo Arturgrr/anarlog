@@ -645,8 +645,8 @@ describe("useStartListening", () => {
     leftSidebarExpanded.value = true;
     useSTTConnectionMock.mockReturnValue({
       conn: {
-        provider: "anarlog",
-        model: "am-test",
+        provider: "soniqo",
+        model: "soniqo-parakeet-batch",
         baseUrl: "http://localhost:8080",
         apiKey: "",
       },
@@ -1231,15 +1231,20 @@ describe("useStartListening", () => {
   });
 
   test.each([
-    ["batch-only with retained audio", "am-test", undefined, true],
+    [
+      "batch-only with retained audio",
+      "soniqo-parakeet-batch",
+      undefined,
+      true,
+    ],
     ["live", "soniqo-parakeet-streaming", undefined, false],
-    ["batch-only with zero retention", "am-test", "none", false],
+    ["batch-only with zero retention", "soniqo-parakeet-batch", "none", false],
   ])(
     "persists the post-stop batch mode on the first marker: %s",
     async (_label, model, retention, expected) => {
       useSTTConnectionMock.mockReturnValue({
         conn: {
-          provider: "anarlog",
+          provider: "soniqo",
           model,
           baseUrl: "http://localhost:8080",
           apiKey: "",
@@ -2143,8 +2148,8 @@ describe("useStartListening", () => {
       preserveExistingTranscript: true,
       ownerUserId: "user-1",
       memo: "Existing memo",
-      provider: "anarlog",
-      model: "am-test",
+      provider: "soniqo",
+      model: "soniqo-parakeet-batch",
     });
     const { result } = renderHook(() =>
       useResumeListeningLifecycle("session-1"),
@@ -2602,8 +2607,8 @@ describe("useStartListening", () => {
       preserveExistingTranscript: false,
       ownerUserId: "user-1",
       memo: "",
-      provider: "anarlog",
-      model: "am-test",
+      provider: "soniqo",
+      model: "soniqo-parakeet-batch",
     };
     loadCaptureLifecycleMarkerMock
       .mockResolvedValueOnce(marker)
@@ -4079,7 +4084,7 @@ describe("useStartListening", () => {
   test("forces batch transcription for batch-only local models with realtime stored", async () => {
     useSTTConnectionMock.mockReturnValue({
       conn: {
-        provider: "anarlog",
+        provider: "soniqo",
         model: "soniqo-qwen3-small",
         baseUrl: "http://localhost:8080",
         apiKey: "",

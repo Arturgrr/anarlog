@@ -13,7 +13,6 @@ import { useHotkeys } from "react-hotkeys-hook";
 import {
   FileText,
   Gear,
-  Lock,
   MagnifyingGlass,
   Users,
   X,
@@ -28,7 +27,6 @@ import { cn } from "@anlg/utils";
 
 import { trackAnalyticsEvent } from "~/analytics";
 import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { useSessionSummaries } from "~/session/queries";
 import { useDurableSharedNotes } from "~/shared-notes/cache";
 import { useMainContentCenterOffset } from "~/shared/main/content-offset";
@@ -60,7 +58,6 @@ type PageResult = {
   hint: string | null;
   groupLabel: string;
   icon: Icon;
-  requiresPro: boolean;
   destination: TabInput;
 };
 
@@ -122,7 +119,6 @@ export function OpenNoteDialog({
   const recentlyOpenedSessionIds = useTabs(
     (state) => state.recentlyOpenedSessionIds,
   );
-  const { isPro } = useBillingAccess();
   const { session } = useAuth();
   const settingsNavGroups = useSettingsNavGroups();
 
@@ -141,7 +137,6 @@ export function OpenNoteDialog({
             hint: hasDestination ? null : t`Settings`,
             groupLabel: group.label,
             icon: item.icon,
-            requiresPro: Boolean(item.requiresPro),
             destination: hasDestination
               ? item.destination
               : { type: "settings", state: { tab: item.id } },
@@ -154,7 +149,6 @@ export function OpenNoteDialog({
         hint: null,
         groupLabel: t`Go to`,
         icon: Gear,
-        requiresPro: false,
         destination: { type: "settings", state: { tab: "app" } },
       },
     ],
@@ -367,12 +361,6 @@ export function OpenNoteDialog({
             <span className="text-muted-foreground ml-auto shrink-0 text-xs">
               {page.hint}
             </span>
-          ) : null}
-          {page.requiresPro && !isPro ? (
-            <Lock
-              aria-label={t`Requires Anarlog Pro`}
-              className="h-3.5 w-3.5 shrink-0"
-            />
           ) : null}
         </CommandPrimitive.Item>
       ))}

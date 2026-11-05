@@ -70,10 +70,6 @@ const formatIgnoreReason = (reason: ModelIgnoreReason): string => {
   }
 };
 
-const getDisplayName = (providerId: string, model: string): string => {
-  return displayLlmModelId(providerId, model);
-};
-
 export function ModelCombobox({
   providerId,
   value,
@@ -165,7 +161,7 @@ export function ModelCombobox({
                     isSelectedDeprecated && "text-muted-foreground",
                   ])}
                 >
-                  {getDisplayName(providerId, value)}
+                  {displayLlmModelId(value)}
                 </span>
                 {isSelectedDeprecated ? <DeprecatedBadge /> : null}
               </span>
@@ -228,7 +224,7 @@ export function ModelCombobox({
                   <CommandItem
                     key={option}
                     tabIndex={0}
-                    value={`${option} ${getDisplayName(providerId, option)}`}
+                    value={`${option} ${displayLlmModelId(option)}`}
                     onSelect={() => {
                       handleSelect(option);
                     }}
@@ -244,7 +240,7 @@ export function ModelCombobox({
                     ])}
                   >
                     <span className="truncate">
-                      {getDisplayName(providerId, option)}
+                      {displayLlmModelId(option)}
                     </span>
                   </CommandItem>
                 ))}
@@ -254,7 +250,7 @@ export function ModelCombobox({
                     <CommandItem
                       key={`ignored-${option.id}`}
                       tabIndex={0}
-                      value={`${option.id} ${getDisplayName(providerId, option.id)}`}
+                      value={`${option.id} ${displayLlmModelId(option.id)}`}
                       onSelect={() => {
                         handleSelect(option.id);
                       }}
@@ -275,7 +271,7 @@ export function ModelCombobox({
                         <TooltipTrigger asChild>
                           <span className="flex w-full min-w-0 items-center gap-2">
                             <span className="truncate">
-                              {getDisplayName(providerId, option.id)}
+                              {displayLlmModelId(option.id)}
                             </span>
                             {option.reasons.includes("old_model") ? (
                               <DeprecatedBadge />

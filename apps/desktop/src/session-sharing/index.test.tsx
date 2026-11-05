@@ -16,11 +16,6 @@ const mocks = vi.hoisted(() => ({
     supabase: {} as any,
     signIn: vi.fn().mockResolvedValue(undefined),
   },
-  billing: {
-    isReady: true,
-    isPaid: true,
-    upgradeToPro: vi.fn(),
-  },
   events: [] as string[],
   flushCanonicalSessionEditorChanges: vi.fn().mockResolvedValue(undefined),
   access: [] as any[],
@@ -74,10 +69,6 @@ vi.mock("./workspace-policy", () => ({
 
 vi.mock("~/auth", () => ({
   useAuth: () => mocks.auth,
-}));
-
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => mocks.billing,
 }));
 
 vi.mock("~/env", () => ({
@@ -448,8 +439,6 @@ describe("SessionShareButton", () => {
     mocks.defaultMeetingShareAccess = "me";
     mocks.auth.session = createSession();
     mocks.auth.supabase = {};
-    mocks.billing.isReady = true;
-    mocks.billing.isPaid = true;
     mocks.syncStatus = "clean";
     mocks.management = defaultManagement();
     mocks.loadManagedSharedNoteForSession.mockResolvedValue({
@@ -585,7 +574,6 @@ describe("SessionShareButton", () => {
 
   it("shows a locked share preview instead of starting sign-in for a signed-out user", async () => {
     mocks.auth.session = null;
-    mocks.billing.isReady = false;
     renderShareButton();
 
     fireEvent.click(screen.getByRole("button", { name: "Share note" }));
@@ -604,27 +592,6 @@ describe("SessionShareButton", () => {
 
     await waitFor(() => expect(mocks.auth.signIn).toHaveBeenCalledOnce());
     expect(mocks.loadSessionShareSource).not.toHaveBeenCalled();
-  });
-
-  it("shows an upgrade state before sharing for a free user", async () => {
-    mocks.billing.isPaid = false;
-    mocks.managedNote = null;
-    renderShareButton();
-
-    const trigger = screen.getByRole("button", { name: "Share note" });
-    expect((trigger as HTMLButtonElement).disabled).toBe(false);
-    fireEvent.click(trigger);
-
-    expect(
-      await screen.findByRole("heading", { name: "Share notes with others" }),
-    ).not.toBeNull();
-    expect(mocks.billing.upgradeToPro).not.toHaveBeenCalled();
-    expect(mocks.loadSessionShareSource).not.toHaveBeenCalled();
-    expect(mocks.publishSessionShareSnapshot).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole("button", { name: "Upgrade to Pro" }));
-
-    expect(mocks.billing.upgradeToPro).toHaveBeenCalledOnce();
   });
 
   it("shows existing share controls while access is still loading", async () => {
@@ -1115,7 +1082,6 @@ describe("SessionShareButton", () => {
   });
 
   it("keeps controls visible when existing access fails to load", async () => {
-    mocks.billing.isPaid = false;
     mocks.getSessionShareManagement.mockRejectedValueOnce(
       new Error("management unavailable"),
     );
@@ -1139,28 +1105,6 @@ describe("SessionShareButton", () => {
         screen.queryByText("Access settings could not be loaded."),
       ).toBeNull(),
     );
-  });
-
-  it("abandons a billing wait when the account changes", async () => {
-    mocks.managedNote = null;
-    mocks.billing.isReady = false;
-    const view = renderShareButtonView();
-
-    fireEvent.click(screen.getByRole("button", { name: "Share note" }));
-    expect(screen.queryByTestId("share-popover")).not.toBeNull();
-
-    mocks.auth.session = createSession(OTHER_USER_ID);
-    view.rerender();
-    expect(screen.queryByTestId("share-popover")).toBeNull();
-
-    mocks.auth.session = createSession();
-    mocks.billing.isReady = true;
-    view.rerender();
-
-    await act(async () => {});
-    expect(screen.queryByTestId("share-popover")).toBeNull();
-    expect(mocks.loadSessionShareSource).not.toHaveBeenCalled();
-    expect(mocks.publishSessionShareSnapshot).not.toHaveBeenCalled();
   });
 
   it("offers invited, workspace, and link access and can restrict a link share", async () => {
@@ -1638,29 +1582,5 @@ describe("SessionShareButton", () => {
     );
     expect(mocks.publishSessionShareSnapshot).not.toHaveBeenCalled();
     expect(mocks.events[0]).toBe("deny-request");
-  });
-
-  it("lets an expired Pro user reopen an existing share to revoke access", async () => {
-    mocks.billing.isPaid = false;
-    mocks.access = [
-      accessEntry({
-        capability: "editor",
-      }),
-    ];
-    renderShareButton();
-
-    await openSharePopover();
-
-    expect(mocks.publishSessionShareSnapshot).not.toHaveBeenCalled();
-    expect(
-      (screen.getByRole("button", { name: "Invite" }) as HTMLButtonElement)
-        .disabled,
-    ).toBe(true);
-
-    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
-
-    await waitFor(() =>
-      expect(mocks.revokeSessionAccessGrant).toHaveBeenCalledOnce(),
-    );
   });
 });

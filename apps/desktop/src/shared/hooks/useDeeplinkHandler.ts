@@ -83,9 +83,6 @@ export function useDeeplinkHandler() {
             );
           });
         }
-      } else if (payload.to === "/billing/refresh") {
-        void authRef.current.refreshSession();
-        void dismissInstruction();
       } else if (payload.to === "/onboarding-demo/complete") {
         void stopActiveWelcomeDemo().catch((error) => {
           console.error("[onboarding] failed to complete welcome demo", error);

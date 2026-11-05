@@ -9,8 +9,6 @@ const baseParams: RegistryParams = {
   isAuthLoading: false,
   hasLLMConfigured: true,
   hasSttConfigured: true,
-  hasProSttConfigured: false,
-  hasProLlmConfigured: false,
   isAiTranscriptionTabActive: false,
   isAiIntelligenceTabActive: false,
   isBatchTranscribingInActiveTranscriptTab: false,
@@ -77,41 +75,6 @@ describe("sidebar toast registry", () => {
     expect(toast?.id).toBe("sign-in-benefits");
     toast?.primaryAction?.onClick();
     expect(onSignIn).toHaveBeenCalledOnce();
-  });
-
-  it("asks for a usable transcription provider after sign-in is dismissed", () => {
-    const toast = showToast(
-      { isAuthenticated: false, hasProSttConfigured: true },
-      (toast) => toast.id === "sign-in-benefits",
-    );
-
-    expect(toast?.id).toBe("missing-stt");
-  });
-
-  it("promotes Pro after sign-in is dismissed, sharing one permanent dismissal", () => {
-    expect(
-      showToast(
-        { isAuthenticated: false },
-        (toast) => toast.id === "sign-in-benefits",
-      )?.id,
-    ).toBe("upgrade-to-pro");
-    expect(
-      showToast(
-        { isAuthenticated: false },
-        (toast) =>
-          toast.lifecycle.type === "persistent" &&
-          toast.lifecycle.dismissalId === "auth-promotion",
-      ),
-    ).toBeNull();
-  });
-
-  it.each([
-    ["STT", { hasProSttConfigured: true }],
-    ["LLM", { hasProLlmConfigured: true }],
-  ])("keeps Pro %s usable while authentication is loading", (_, overrides) => {
-    expect(
-      showToast({ isAuthenticated: false, isAuthLoading: true, ...overrides }),
-    ).toBeNull();
   });
 
   it("shows local STT loading unless the transcript tab shows batch progress", () => {

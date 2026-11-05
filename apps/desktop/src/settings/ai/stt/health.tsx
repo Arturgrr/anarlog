@@ -5,11 +5,7 @@ import { usesDeferredProviderAuthentication } from "@anlg/provider-validation";
 import { Spinner } from "@anlg/ui/components/ui/spinner";
 
 import { useConfigValues } from "~/shared/config";
-import {
-  isAnarlogCloudSttModel,
-  isLocalFileSttModel,
-  isOnDeviceSttModel,
-} from "~/stt/capabilities";
+import { isLocalFileSttModel, isOnDeviceSttModel } from "~/stt/capabilities";
 import { useSTTConnection } from "~/stt/useSTTConnection";
 
 export type HealthStatus = {
@@ -61,15 +57,10 @@ export function useConnectionHealth(): HealthStatus {
   const isLocalModel =
     isOnDeviceSttModel(current_stt_provider, current_stt_model) ||
     isLocalFileSttModel(current_stt_provider, current_stt_model);
-  const isManagedProvider = [
-    "anarlog",
-    "soniqo",
-    "apple_speech",
-    "local_file",
-  ].includes(current_stt_provider ?? "");
-  const isCloud =
-    isAnarlogCloudSttModel(current_stt_provider, current_stt_model) ||
-    !isManagedProvider;
+  const isManagedProvider = ["soniqo", "apple_speech", "local_file"].includes(
+    current_stt_provider ?? "",
+  );
+  const isCloud = !isManagedProvider;
   const isDeepgram = current_stt_provider === "deepgram";
 
   const deepgramHealth = useDeepgramHealth(isDeepgram && !!conn, conn?.apiKey);

@@ -6,8 +6,6 @@ import { commands as fsCommands } from "@anlg/plugin-fs2";
 import { commands as settingsCommands } from "@anlg/plugin-settings";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
-import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { executeTransaction, liveQueryClient } from "~/db";
 import { withCloudsyncActivity } from "~/db/cloudsync-activity";
 import { getEnhancerService } from "~/services/enhancer";
@@ -99,15 +97,7 @@ function ReadyImport({ job }: { job: ImportJob }) {
   const settingsReady = useSettingsReady();
   const stt = useAiProvidersState("stt");
   const llm = useAiProvidersState("llm");
-  const billing = useBillingAccess();
-  const auth = useAuth();
-  // Signed-out users have no billing claims to load; local providers still run.
-  const billingSettled = billing.isReady || auth.session === null;
-  return session &&
-    settingsReady &&
-    stt.isReady &&
-    llm.isReady &&
-    billingSettled ? (
+  return session && settingsReady && stt.isReady && llm.isReady ? (
     <RunImport job={job} />
   ) : null;
 }

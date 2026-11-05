@@ -17,7 +17,6 @@ describe("normalizeReasoningEffort", () => {
 describe("reasoningProviderOptions", () => {
   it.each([
     ["openai", "gpt-5", "default", null],
-    ["anarlog", "Auto", "high", null],
     ["apple_foundation", "default", "high", null],
     ["openai", "gpt-5", "low", { openai: { reasoningEffort: "low" } }],
     ["azure_openai", "gpt-5", "high", { azure: { reasoningEffort: "high" } }],

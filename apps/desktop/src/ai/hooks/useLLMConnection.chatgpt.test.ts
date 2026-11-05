@@ -21,10 +21,6 @@ const config = vi.hoisted(() => ({
 
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
 vi.mock("~/settings/queries", () => ({ useSettingsReady: () => true }));
-vi.mock("~/auth", () => ({ useAuth: () => ({ session: null }) }));
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ isPaid: false }),
-}));
 vi.mock("~/analytics", () => ({ trackAnalyticsEvent: vi.fn() }));
 vi.mock("~/settings/providers", () => ({
   useAiProvider: () => ({
@@ -186,7 +182,7 @@ function reload(message: AnlgUIMessage) {
 describe("ChatGPT subscription reasoning replay", () => {
   it("replays encrypted reasoning instead of item references across turns and reloads", async () => {
     const requests = captureRequests();
-    const { result, unmount } = renderHook(() => useLanguageModel("chat"));
+    const { result, unmount } = renderHook(() => useLanguageModel());
     const transport = new CustomChatTransport(result.current!, {});
     const history = [userMessage("hi")];
     history.push(await send(transport, history));
@@ -200,7 +196,7 @@ describe("ChatGPT subscription reasoning replay", () => {
     await send(transport, [...history, userMessage("continue")]);
     unmount();
 
-    const reopened = renderHook(() => useLanguageModel("chat"));
+    const reopened = renderHook(() => useLanguageModel());
     await send(new CustomChatTransport(reopened.result.current!, {}), [
       ...history.map(reload),
       userMessage("continue after reload"),
@@ -228,7 +224,7 @@ describe("ChatGPT subscription reasoning replay", () => {
 
   it("omits legacy reasoning without ciphertext while retaining the answer", async () => {
     const requests = captureRequests();
-    const { result, unmount } = renderHook(() => useLanguageModel("chat"));
+    const { result, unmount } = renderHook(() => useLanguageModel());
     await send(new CustomChatTransport(result.current!, {}), [
       userMessage("hi"),
       reload({
@@ -267,7 +263,7 @@ describe("ChatGPT subscription reasoning replay", () => {
   it("replays encrypted reasoning between tool-loop steps", async () => {
     const requests = captureRequests(true);
     const execute = vi.fn(async () => "Found it");
-    const { result, unmount } = renderHook(() => useLanguageModel("chat"));
+    const { result, unmount } = renderHook(() => useLanguageModel());
     await send(
       new CustomChatTransport(result.current!, {
         lookup: {

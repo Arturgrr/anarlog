@@ -38,14 +38,6 @@ vi.mock("~/auth", () => ({
   useOptionalAuth: () => mocks.auth,
 }));
 
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({
-    isReady: false,
-    isPaid: false,
-    upgradeToPro: vi.fn(),
-  }),
-}));
-
 vi.mock("@lingui/react/macro", () => ({
   Trans: ({ children }: { children?: ReactNode }) => <>{children}</>,
   useLingui: () => ({
