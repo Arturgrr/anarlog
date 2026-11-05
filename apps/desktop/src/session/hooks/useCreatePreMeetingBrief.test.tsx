@@ -165,7 +165,7 @@ describe("useCreatePreMeetingBrief", () => {
         humanId: "yujong",
         source: "manual",
         name: "Yujong Lee",
-        email: "yujonglee@fastrepl.com",
+        email: "yujong@example.com",
       },
     ];
     rerender();
