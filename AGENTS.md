@@ -16,7 +16,7 @@ Sessions are the core entity: all notes are backed by sessions. ProseMirror powe
 - Typecheck (Rust): `cargo check --locked -p <package>`; match the relevant workflow's features and target. A root `cargo check` does not cover every platform.
 - Build shared UI before desktop checks: `pnpm -F @anlg/ui build`.
 - Desktop dev: `pnpm dev:desktop` (`pnpm dev` runs the same stack). Process Compose 1.122.0+ owns process lifecycle and logs; Turbo owns the shared UI build. See `CONTRIBUTING.md` for control ports and headless use.
-- Dev docs: https://docs.anarlog.so
+- Docs: the Mintlify site in `docs/` (navigation in `docs/docs.json`).
 
 ## Pre-commit verification
 
