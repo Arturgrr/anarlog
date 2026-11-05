@@ -41,9 +41,7 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(
-    Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct ListMeetingsInput {
     #[schemars(description = "Case-insensitive title or meeting id substring")]
@@ -62,9 +60,7 @@ pub struct ListMeetingsInput {
     pub offset: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct ListFoldersInput {
     #[schemars(description = "Case-insensitive folder path substring")]
@@ -76,18 +72,14 @@ pub struct ListFoldersInput {
     pub offset: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct GetMeetingInput {
     #[schemars(description = "Anarlog meeting id")]
     pub meeting_id: String,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct GetMeetingTranscriptInput {
     #[schemars(description = "Anarlog meeting id")]
@@ -99,9 +91,7 @@ pub struct GetMeetingTranscriptInput {
     pub limit: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct GetRecurringMeetingHistoryInput {
     #[schemars(description = "A meeting id used to resolve its recurring series")]
@@ -113,9 +103,7 @@ pub struct GetRecurringMeetingHistoryInput {
     pub offset: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Pagination {
     pub offset: u32,
@@ -125,9 +113,7 @@ pub struct Pagination {
     pub next_offset: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct MeetingListItem {
     pub id: String,
@@ -144,18 +130,14 @@ pub struct MeetingListItem {
     pub folder_path: Option<String>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct MeetingPage {
     pub meetings: Vec<MeetingListItem>,
     pub pagination: Pagination,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Folder {
     /// Slash-separated folder path used for filtering, such as `Projects/Launch`.
@@ -166,16 +148,14 @@ pub struct Folder {
     pub parent_path: Option<String>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct FolderPage {
     pub folders: Vec<Folder>,
     pub pagination: Pagination,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct TranscriptPage {
     pub meeting_id: String,
@@ -184,9 +164,7 @@ pub struct TranscriptPage {
     pub pagination: Pagination,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Document {
     pub id: String,
@@ -199,9 +177,7 @@ pub struct Document {
     pub updated_at: String,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Participant {
     pub human_id: String,
@@ -213,9 +189,7 @@ pub struct Participant {
     pub organization_name: String,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct ActionItem {
     pub id: String,
@@ -226,9 +200,7 @@ pub struct ActionItem {
     pub completed_at: Option<String>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Meeting {
     pub id: String,
@@ -251,17 +223,7 @@ pub struct Meeting {
     pub action_items: Vec<ActionItem>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    JsonSchema,
-    Type,
-    utoipa::ToSchema,
-    sqlx::FromRow,
-)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, sqlx::FromRow)]
 pub struct RecordingAttachment {
     pub id: String,
     pub relative_path: String,
@@ -271,7 +233,7 @@ pub struct RecordingAttachment {
     pub sha256: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Transcript {
     pub id: String,
@@ -287,7 +249,7 @@ pub struct Transcript {
     pub speaker_hints: Vec<Value>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct MeetingExport {
     #[serde(flatten)]
@@ -304,7 +266,7 @@ pub struct MeetingExport {
     pub speaker_context: Option<Value>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Speaker {
     pub human_id: String,

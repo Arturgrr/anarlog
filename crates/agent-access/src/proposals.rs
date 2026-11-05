@@ -13,9 +13,7 @@ const KIND_SUMMARY: &str = "summary_replace";
 const STATUS_PENDING: &str = "pending";
 const STATUS_DECLINED: &str = "declined";
 
-#[derive(
-    Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct CreateProposalInput {
     #[schemars(description = "Anarlog meeting id")]
@@ -30,9 +28,7 @@ pub struct CreateProposalInput {
     pub source: Option<String>,
 }
 
-#[derive(
-    Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct ListProposalsInput {
     #[schemars(description = "Limit results to one meeting")]
@@ -46,27 +42,21 @@ pub struct ListProposalsInput {
     pub offset: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct GetProposalInput {
     #[schemars(description = "Proposal id")]
     pub proposal_id: String,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct DeclineProposalInput {
     #[schemars(description = "Proposal id")]
     pub proposal_id: String,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Proposal {
     pub id: String,
@@ -83,9 +73,7 @@ pub struct Proposal {
     pub diff: String,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct ProposalPage {
     pub proposals: Vec<Proposal>,
