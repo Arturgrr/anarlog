@@ -144,9 +144,8 @@ export const FileAttachmentView = forwardRef<
         contentEditable={false}
         suppressContentEditableWarning
         className={cn([
-          "group border-border bg-muted my-1 flex items-center gap-3 rounded-lg border px-3 py-2.5",
-          "hover:border-border hover:bg-accent",
-          "transition-colors",
+          "group bg-card shadow-raised my-1 flex items-center gap-3 rounded-lg px-3 py-2.5",
+          "hover:bg-layer-2",
         ])}
       >
         {isImage && src ? (
@@ -156,7 +155,7 @@ export const FileAttachmentView = forwardRef<
             className="h-10 w-10 shrink-0 rounded object-cover"
           />
         ) : (
-          <div className="bg-accent/60 flex h-10 w-10 shrink-0 items-center justify-center rounded">
+          <div className="bg-layer-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-md">
             <Icon size={20} className="text-muted-foreground" />
           </div>
         )}
@@ -179,7 +178,7 @@ export const FileAttachmentView = forwardRef<
                 e.stopPropagation();
                 handleOpen();
               }}
-              className="hover:bg-accent rounded p-1"
+              className="hover:bg-hover rounded-sm p-1"
               title="Open file"
             >
               <ArrowSquareOut size={14} className="text-muted-foreground" />
@@ -193,7 +192,7 @@ export const FileAttachmentView = forwardRef<
                 e.stopPropagation();
                 handleRemove();
               }}
-              className="hover:bg-accent rounded p-1"
+              className="hover:bg-hover rounded-sm p-1"
               title="Remove attachment"
             >
               <X size={14} className="text-muted-foreground" />
