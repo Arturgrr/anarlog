@@ -102,7 +102,7 @@ export function SpeakerAssignPopover({
           type="button"
           data-transcript-speaker-assign
           className={cn([
-            "-my-0.5 cursor-pointer rounded-full py-0.5 pr-2",
+            "-my-0.5 cursor-pointer rounded-sm py-0.5 pr-2",
             "underline-offset-2 hover:underline focus-visible:underline",
             open ? "underline" : null,
             className,
@@ -590,7 +590,7 @@ export function SpeakerParticipantPicker({
         <button
           type="button"
           className={cn([
-            "bg-primary text-primary-foreground h-8 rounded-full px-3 text-xs font-medium",
+            "bg-primary text-primary-foreground shadow-button-contrast h-7 rounded-md px-3 text-xs font-medium",
             "hover:bg-primary/90",
             "disabled:pointer-events-none disabled:opacity-50",
           ])}
@@ -629,7 +629,7 @@ function ParticipantOptionButton({
       aria-pressed={selected}
       className={cn([
         "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm",
-        selected ? "bg-accent text-accent-foreground" : "hover:bg-accent",
+        selected ? "bg-layer-2 text-foreground" : "hover:bg-hover",
       ])}
       onClick={() => onSelect(option)}
     >

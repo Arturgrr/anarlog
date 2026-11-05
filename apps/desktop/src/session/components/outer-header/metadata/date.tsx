@@ -41,7 +41,7 @@ export function DateEditor({ sessionId }: { sessionId: string }) {
           type="button"
           variant="ghost"
           size="icon"
-          className="text-muted-foreground hover:bg-accent hover:text-foreground size-7 rounded-full"
+          className="text-muted-foreground hover:text-foreground size-7"
           onClick={() => setIsEditing(true)}
           aria-label={t`Edit date`}
         >
@@ -130,7 +130,7 @@ function EditableDateForm({
             <Input
               autoFocus
               type="datetime-local"
-              className="h-7 w-full min-w-0 border-0 px-0 py-0 shadow-none focus-visible:ring-0"
+              className="h-7 w-full min-w-0 border-0 bg-transparent bg-none px-0 py-0 shadow-none focus-visible:ring-0 focus-visible:outline-none"
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
               onKeyDown={(e) => {
@@ -152,7 +152,7 @@ function EditableDateForm({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground size-7 shrink-0 rounded-full hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                  className="text-muted-foreground hover:text-foreground size-7 shrink-0"
                   onClick={onCancel}
                   aria-label={t`Cancel date edit`}
                 >
@@ -166,7 +166,7 @@ function EditableDateForm({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground size-7 shrink-0 rounded-full hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950/50 dark:hover:text-green-300"
+                    className="text-muted-foreground hover:text-foreground size-7 shrink-0"
                     onClick={() => void form.handleSubmit()}
                     disabled={!canSubmit}
                     aria-label={t`Save date`}
@@ -183,7 +183,7 @@ function EditableDateForm({
       <form.Field name="createdAt">
         {(field) =>
           field.state.meta.errors[0] ? (
-            <div className="text-xs text-red-600">
+            <div className="text-danger text-xs">
               {field.state.meta.errors[0]}
             </div>
           ) : null

@@ -224,8 +224,8 @@ export function FormatToolbar({
       role="toolbar"
       aria-label="Format selection"
       className={cn([
-        "bg-popover ring-border fixed z-50 flex items-center gap-0.5 rounded-xl p-1 ring-1",
-        "shadow-lg",
+        "bg-layer-1 fixed z-50 flex items-center gap-0.5 rounded-md p-0.5",
+        "shadow-floating",
       ])}
       style={{ top: 0, left: 0 }}
       onMouseDown={(e) => e.preventDefault()}
@@ -238,11 +238,11 @@ export function FormatToolbar({
               key={button.id}
               aria-pressed={active}
               className={cn([
-                "flex size-7 items-center justify-center rounded-md",
-                "cursor-pointer border-none transition-colors",
+                "flex size-7 items-center justify-center rounded-sm",
+                "cursor-pointer border-none",
                 active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground bg-transparent",
+                  ? "bg-pressed text-foreground"
+                  : "text-icon-muted hover:bg-hover hover:text-foreground bg-transparent",
               ])}
               onClick={() => toggle(button.markType)}
             >
@@ -258,8 +258,8 @@ export function FormatToolbar({
           type="button"
           aria-label="Comment"
           className={cn([
-            "text-muted-foreground flex size-7 items-center justify-center rounded-md",
-            "hover:bg-accent hover:text-accent-foreground cursor-pointer border-none bg-transparent transition-colors",
+            "text-icon-muted flex size-7 items-center justify-center rounded-sm",
+            "hover:bg-hover hover:text-foreground cursor-pointer border-none bg-transparent",
           ])}
           onClick={onComment}
         >

@@ -59,7 +59,7 @@ function PermissionRow({
         <div
           className={cn([
             "mb-1 flex items-center gap-2",
-            !isAuthorized && "text-red-500",
+            !isAuthorized && "text-foreground",
           ])}
         >
           {!isAuthorized && <WarningCircle className="size-4" />}
@@ -67,7 +67,7 @@ function PermissionRow({
         </div>
         <p className="text-muted-foreground text-xs">{description}</p>
         {error && (
-          <p role="alert" className="mt-1 text-xs text-red-500">
+          <p role="alert" className="text-danger mt-1 text-xs">
             {error}
           </p>
         )}
@@ -80,7 +80,7 @@ function PermissionRow({
         className={cn([
           "size-8",
           isAuthorized &&
-            "text-green-600 hover:bg-transparent hover:text-green-600",
+            "text-foreground hover:text-foreground hover:bg-transparent",
         ])}
         aria-label={
           runtimeCapability

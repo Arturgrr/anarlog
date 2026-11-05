@@ -257,14 +257,8 @@ function HeaderViewEnhancedActive({
           "max-w-56 min-w-[62px] gap-1.5 px-2 @max-[480px]:max-w-12 @max-[480px]:min-w-12 @max-[480px]:gap-0 @max-[480px]:px-1.5",
           isGenerating ? "cursor-not-allowed opacity-70" : "cursor-pointer",
           isError
-            ? [
-                "text-red-600 hover:bg-red-50 hover:text-red-700 focus-visible:bg-red-50",
-                "dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300 dark:focus-visible:bg-red-950/50",
-              ]
-            : [
-                "focus-visible:text-foreground focus-visible:bg-white",
-                "dark:focus-visible:text-primary dark:focus-visible:bg-white",
-              ],
+            ? "text-danger hover:bg-danger-bg hover:text-danger focus-visible:bg-danger-bg"
+            : "focus-visible:bg-card focus-visible:text-foreground",
         ]),
       )}
     >

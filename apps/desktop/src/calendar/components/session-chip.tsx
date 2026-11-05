@@ -136,7 +136,7 @@ function SessionPopoverContent({
       <div className="text-foreground text-base font-medium">
         {session.title}
       </div>
-      <div className="bg-accent h-px" />
+      <div className="bg-border-muted h-px" />
       {createdAt && (
         <div className="text-muted-foreground text-sm">{createdAt}</div>
       )}

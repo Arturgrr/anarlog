@@ -24,7 +24,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: hsl(60 9% 98%);
+        background: #fafafa;
       }
       .boot-splash-content {
         display: flex;
@@ -35,7 +35,7 @@
         display: none;
       }
       html.dark #boot-splash {
-        background: hsl(24 10% 11%);
+        background: #080808;
       }
       .boot-splash-mark {
         position: relative;
@@ -51,15 +51,15 @@
         height: auto;
       }
       .boot-splash-base {
-        color: hsl(24 10% 10% / 0.2);
+        color: rgb(22 22 22 / 0.2);
       }
       html.dark .boot-splash-base {
-        color: hsl(60 9% 98% / 0.2);
+        color: rgb(250 250 250 / 0.2);
       }
       .boot-splash-highlight {
         position: absolute;
         inset: 0;
-        color: hsl(24 10% 10% / 0.75);
+        color: rgb(22 22 22 / 0.75);
         -webkit-mask-image: linear-gradient(
           105deg,
           transparent 36%,
@@ -77,22 +77,23 @@
         animation: boot-splash-shimmer 2.4s ease-in-out infinite;
       }
       html.dark .boot-splash-highlight {
-        color: hsl(60 9% 98% / 0.5);
+        color: rgb(250 250 250 / 0.5);
       }
       .boot-splash-detail {
         max-width: 16rem;
         margin: 1.25rem 0 0;
-        color: hsl(25 5% 45%);
+        color: #5c5c5c;
         font-family:
-          system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          "Inter Variable", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
         font-size: 0.75rem;
-        line-height: 1rem;
+        line-height: 1.125rem;
         text-align: center;
         opacity: 0;
         animation: boot-splash-detail-reveal 0s linear 2s forwards;
       }
       html.dark .boot-splash-detail {
-        color: hsl(25 5% 55%);
+        color: #aeaeae;
       }
       @keyframes boot-splash-shimmer {
         0% {

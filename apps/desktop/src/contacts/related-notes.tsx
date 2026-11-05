@@ -12,7 +12,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 
 import type { HumanSessionRecord } from "./queries";
 
@@ -25,7 +24,6 @@ export function RelatedNotesSection({
 }) {
   const { t } = useLingui();
   const [search, setSearch] = useState("");
-  const searchRef = useSquircleRef<HTMLDivElement>();
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const visibleSessions = sortAndFilterRelatedNotes(
     sessions,
@@ -71,11 +69,8 @@ export function RelatedNotesSection({
           </DropdownMenu>
         )}
 
-        <div
-          ref={searchRef}
-          className="border-border bg-muted/50 focus-within:bg-accent ml-auto flex h-8 w-52 max-w-[48%] items-center gap-2 rounded-lg border px-2.5 transition-colors"
-        >
-          <MagnifyingGlass className="text-muted-foreground size-3.5 shrink-0" />
+        <div className="bg-card shadow-button-neutral focus-within:outline-ring ml-auto flex h-7 w-52 max-w-[48%] items-center gap-2 rounded-md px-2 transition-[box-shadow,outline-color] duration-200 ease-out focus-within:shadow-none focus-within:outline-1">
+          <MagnifyingGlass className="text-icon-muted size-3.5 shrink-0" />
           <input
             type="text"
             value={search}
@@ -84,7 +79,7 @@ export function RelatedNotesSection({
               if (event.key === "Escape") setSearch("");
             }}
             placeholder={t`Search...`}
-            className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm focus:outline-hidden"
+            className="placeholder:text-faint text-ui-compact min-w-0 flex-1 bg-transparent focus:outline-hidden"
           />
           {search && (
             <button
@@ -106,7 +101,7 @@ export function RelatedNotesSection({
               <button
                 type="button"
                 onClick={() => onSessionClick(session.id)}
-                className="hover:bg-accent flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors"
+                className="hover:bg-layer-2 flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left"
               >
                 <span className="bg-muted-foreground size-1.5 shrink-0 rounded-full" />
                 <span className="min-w-0 flex-1 truncate text-sm">

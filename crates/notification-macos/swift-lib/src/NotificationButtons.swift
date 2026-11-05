@@ -50,7 +50,7 @@ class CloseButton: NSButton, TrackableButton {
     }
     contentTintColor = NSColor.black.withAlphaComponent(0.62)
 
-    layer?.cornerRadius = CloseButtonConfig.size / 2
+    layer?.cornerRadius = Layout.buttonCornerRadius
     layer?.backgroundColor = NSColor.clear.cgColor
 
     layer?.shadowColor = NSColor.black.cgColor
@@ -70,7 +70,7 @@ class CloseButton: NSButton, TrackableButton {
 
   override func layout() {
     super.layout()
-    layer?.cornerRadius = min(bounds.width, bounds.height) / 2
+    layer?.cornerRadius = Layout.buttonCornerRadius
   }
 
   override func updateTrackingAreas() {
@@ -119,7 +119,7 @@ class CloseButtonBackdropView: NSVisualEffectView {
     blendingMode = .behindWindow
     wantsLayer = true
 
-    layer?.cornerRadius = CloseButtonConfig.size / 2
+    layer?.cornerRadius = Layout.buttonCornerRadius
     layer?.masksToBounds = true
     if #available(macOS 11.0, *) {
       layer?.cornerCurve = .continuous
@@ -145,7 +145,7 @@ class CloseButtonBackdropView: NSVisualEffectView {
 
   override func layout() {
     super.layout()
-    let radius = min(bounds.width, bounds.height) / 2
+    let radius = Layout.buttonCornerRadius
     layer?.cornerRadius = radius
 
     CATransaction.begin()
@@ -185,19 +185,19 @@ class NotificationButton: NSButton {
     font = NSFont.systemFont(ofSize: Fonts.buttonSize, weight: Fonts.buttonWeight)
     focusRingType = .none
 
-    contentTintColor = NSColor(calibratedWhite: 0.1, alpha: 1.0)
+    contentTintColor = Colors.buttonText
     if #available(macOS 11.0, *) {
-      bezelColor = NSColor(calibratedWhite: 0.9, alpha: 1.0)
+      bezelColor = NSColor(calibratedWhite: 0.949, alpha: 1.0)
     }
 
-    layer?.cornerRadius = 14
+    layer?.cornerRadius = Layout.buttonCornerRadius
     layer?.backgroundColor = normalBackgroundColor
-    layer?.borderColor = NSColor.white.withAlphaComponent(0.55).cgColor
+    layer?.borderColor = Colors.buttonBorder
     layer?.borderWidth = 0.5
 
-    layer?.shadowColor = NSColor(calibratedWhite: 0.0, alpha: 0.5).cgColor
-    layer?.shadowOpacity = 0.2
-    layer?.shadowRadius = 2
+    layer?.shadowColor = NSColor.black.cgColor
+    layer?.shadowOpacity = 0.1
+    layer?.shadowRadius = 1.5
     layer?.shadowOffset = CGSize(width: 0, height: 1)
   }
 
@@ -214,7 +214,7 @@ class NotificationButton: NSButton {
 
   override func layout() {
     super.layout()
-    layer?.cornerRadius = bounds.height / 2
+    layer?.cornerRadius = Layout.buttonCornerRadius
   }
 
   func animatePress() {
@@ -244,7 +244,7 @@ class NotificationButton: NSButton {
       image = nil
     }
 
-    contentTintColor = NSColor.white
+    contentTintColor = Colors.actionButtonDestructiveText
     setBackgroundColors(
       normal: Colors.actionButtonDestructiveBg,
       pressed: Colors.actionButtonDestructivePressedBg
@@ -381,7 +381,7 @@ class CompactActionButton: ActionButton {
     super.layout()
     CATransaction.begin()
     CATransaction.setDisableActions(true)
-    gaugeView.layer?.cornerRadius = layer?.cornerRadius ?? bounds.height / 2
+    gaugeView.layer?.cornerRadius = layer?.cornerRadius ?? Layout.buttonCornerRadius
     syncProgressLayerFrame()
     CATransaction.commit()
   }

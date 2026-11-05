@@ -36,8 +36,6 @@ import {
   TooltipTrigger,
 } from "@anlg/ui/components/ui/tooltip";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { chipSquircle } from "@anlg/ui/lib/squircle";
 import { cn } from "@anlg/utils";
 
 import { useSttSettings } from "./context";
@@ -272,10 +270,7 @@ export function SelectProviderAndModel() {
       <div className="flex flex-row items-center gap-4">
         <div className="min-w-0 flex-2" data-stt-provider-selector>
           <Select value={visibleProvider} onValueChange={handleProviderChange}>
-            <SelectTrigger
-              corners={{ radius: 18, smoothing: 0 }}
-              className="bg-card rounded-[18px] shadow-none"
-            >
+            <SelectTrigger>
               <SelectValue placeholder={t`Select a provider`} />
             </SelectTrigger>
             <SelectContent>
@@ -338,9 +333,8 @@ export function SelectProviderAndModel() {
               disabled={selectedModels.length === 0}
             >
               <SelectTrigger
-                corners={{ radius: 18, smoothing: 0 }}
                 className={cn([
-                  "bg-card rounded-[18px] text-left shadow-none",
+                  "text-left",
                   "[&>span]:!flex [&>span]:w-full [&>span]:min-w-0 [&>span]:items-center [&>span]:justify-start [&>span]:gap-2 [&>span]:overflow-visible [&>span]:[-webkit-line-clamp:unset]",
                   (isConfigured || pendingSelection) &&
                     "[&>svg:last-child]:hidden",
@@ -363,7 +357,7 @@ export function SelectProviderAndModel() {
                 )}
                 {isConfigured && <HealthStatusIndicator />}
                 {isConfigured && health.status === "success" && (
-                  <Check className="-mr-1 h-4 w-4 shrink-0 text-green-600" />
+                  <Check className="text-foreground -mr-1 h-4 w-4 shrink-0" />
                 )}
               </SelectTrigger>
               <SelectContent align="end">
@@ -497,7 +491,7 @@ function TranscriptionLanguageWarningToastLifecycle({
     toast.warning(description, {
       id: TRANSCRIPTION_LANGUAGE_WARNING_TOAST_ID,
       duration: Infinity,
-      icon: <Warning className="size-4 shrink-0 text-amber-500" />,
+      icon: <Warning className="text-icon size-4 shrink-0" />,
       action: {
         label: actionLabel,
         onClick: () => {
@@ -879,7 +873,7 @@ function ModelSelectItem({
 
   if (model.isDownloaded) {
     return (
-      <div className="group/model-row relative overflow-hidden rounded-full has-[[data-model-actions-pending]]:[&>*:first-child>span:first-child]:opacity-0">
+      <div className="group/model-row relative overflow-hidden rounded-sm has-[[data-model-actions-pending]]:[&>*:first-child>span:first-child]:opacity-0">
         <SelectItem
           key={model.id}
           value={model.id}
@@ -912,10 +906,10 @@ function ModelSelectItem({
     <div
       className={cn([
         "relative flex items-center justify-between",
-        "rounded-full py-1.5 text-sm outline-hidden",
+        "rounded-sm py-1.5 text-sm outline-hidden",
         "px-2",
         "cursor-pointer select-none",
-        "hover:bg-accent hover:text-accent-foreground",
+        "hover:bg-hover",
         "group",
       ])}
     >
@@ -923,9 +917,8 @@ function ModelSelectItem({
       {isDownloading ? (
         <span
           className={cn([
-            "rounded-full px-2 py-0.5 text-[11px] font-medium",
-            "flex items-center gap-1",
-            "from-muted to-accent text-muted-foreground bg-linear-to-t",
+            "inline-flex h-[18px] items-center gap-1 rounded-xs border-[0.5px] px-1.5",
+            "border-border bg-layer-2 text-small text-muted-foreground font-medium",
           ])}
         >
           <CircleNotch className="size-3 animate-spin" />
@@ -939,12 +932,12 @@ function ModelSelectItem({
         <button
           type="button"
           className={cn([
-            "rounded-full px-2 text-[11px] font-medium",
+            "rounded-sm px-2 text-[11px] font-medium",
             "pointer-events-none absolute top-1/2 right-1.5 -translate-y-1/2 opacity-0",
             "group-hover:pointer-events-auto group-hover:opacity-100",
             "group-focus-within:pointer-events-auto group-focus-within:opacity-100",
             "transition-opacity duration-150",
-            "from-muted to-accent text-foreground bg-linear-to-t py-0.5 shadow-xs hover:shadow-md",
+            "bg-button-neutral text-foreground shadow-button-neutral hover:bg-layer-2 py-0.5",
           ])}
           onClick={handleAction}
         >
@@ -975,13 +968,11 @@ function ModelSelectedValue({ model }: { model: ModelEntry }) {
 }
 
 function DeprecatedBadge() {
-  const ref = useSquircleRef<HTMLSpanElement>(undefined, chipSquircle);
   return (
     <span
-      ref={ref}
       className={cn([
-        "shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium",
-        "bg-amber-50 text-amber-800",
+        "inline-flex h-[18px] shrink-0 items-center rounded-xs border-[0.5px] px-1.5",
+        "border-border bg-layer-2 text-small text-muted-foreground font-medium",
       ])}
     >
       <Trans>Deprecated</Trans>
@@ -990,7 +981,6 @@ function DeprecatedBadge() {
 }
 
 function ModelModeBadge({ mode }: { mode?: ModelEntry["mode"] }) {
-  const ref = useSquircleRef<HTMLSpanElement>(undefined, chipSquircle);
   if (!mode) {
     return null;
   }
@@ -1001,12 +991,10 @@ function ModelModeBadge({ mode }: { mode?: ModelEntry["mode"] }) {
     <Tooltip delayDuration={100}>
       <TooltipTrigger asChild>
         <span
-          ref={ref}
           className={cn([
-            "shrink-0 cursor-help rounded-md px-1.5 py-0.5 text-[11px] font-medium",
-            isRealtime
-              ? "bg-sky-50 text-sky-700"
-              : "bg-muted text-muted-foreground",
+            "inline-flex h-[18px] shrink-0 cursor-help items-center rounded-xs border-[0.5px] px-1.5",
+            "border-border bg-layer-2 text-small font-medium",
+            isRealtime ? "text-foreground" : "text-muted-foreground",
           ])}
         >
           {isRealtime ? <Trans>Live</Trans> : <Trans>After recording</Trans>}
@@ -1072,7 +1060,7 @@ function LocalModelDropdownActions({ model }: { model: LocalModel }) {
     <div
       data-model-actions-pending={deleteModel.isPending || undefined}
       className={cn([
-        "absolute top-0 right-0 bottom-0 flex items-center justify-end gap-1 rounded-r-full pl-6",
+        "absolute top-0 right-0 bottom-0 flex items-center justify-end gap-1 rounded-r-sm pl-6",
         "pointer-events-none opacity-0 transition-opacity duration-150",
         "group-hover/model-row:pointer-events-auto group-hover/model-row:opacity-100",
         "group-focus-within/model-row:pointer-events-auto group-focus-within/model-row:opacity-100",
@@ -1083,8 +1071,8 @@ function LocalModelDropdownActions({ model }: { model: LocalModel }) {
         type="button"
         aria-label={t`Show in Finder`}
         className={cn([
-          "flex size-6 items-center justify-center rounded-full",
-          "text-muted-foreground hover:text-foreground",
+          "flex size-5 items-center justify-center rounded-sm",
+          "text-muted-foreground hover:text-foreground hover:bg-hover",
         ])}
         onPointerDown={stopSelect}
         onClick={(event) => {
@@ -1099,8 +1087,8 @@ function LocalModelDropdownActions({ model }: { model: LocalModel }) {
         aria-label={t`Delete model`}
         disabled={deleteModel.isPending}
         className={cn([
-          "flex size-6 items-center justify-center rounded-full",
-          "text-red-500 hover:text-red-600",
+          "flex size-5 items-center justify-center rounded-sm",
+          "text-danger hover:bg-danger-bg",
           "disabled:opacity-70",
         ])}
         onPointerDown={stopSelect}

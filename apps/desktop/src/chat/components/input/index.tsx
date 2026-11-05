@@ -179,7 +179,7 @@ export function ChatMessageInput({
                 onClick={() => void dictation.start()}
                 disabled={Boolean(disabled)}
                 className={cn([
-                  "text-muted-foreground hover:bg-muted inline-flex size-7 shrink-0 items-center justify-center rounded-full transition-colors",
+                  "text-icon-muted hover:bg-hover hover:text-foreground active:bg-pressed inline-flex size-7 shrink-0 items-center justify-center rounded-md",
                   "disabled:cursor-default disabled:opacity-45",
                 ])}
               >
@@ -191,7 +191,7 @@ export function ChatMessageInput({
                 onClick={onStop}
                 size="icon"
                 variant="ghost"
-                className="h-7 w-7 rounded-full"
+                className="h-7 w-7 rounded-md"
                 aria-label={t`Stop response`}
               >
                 <Square size={14} />
@@ -235,11 +235,10 @@ function Container({
           "flex max-h-full border",
           isFloating
             ? [
-                "border-border/70 text-card-foreground max-h-40 min-h-10 flex-row overflow-hidden rounded-[20px] bg-white pr-[6px] pl-4 text-sm shadow-none",
-                "dark:bg-card dark:text-card-foreground",
+                "bg-card text-card-foreground shadow-button-neutral max-h-40 min-h-10 flex-row overflow-hidden rounded-lg border-transparent pr-[6px] pl-4 text-sm",
                 hasVoiceStatus ? "items-stretch py-2" : "items-center py-[3px]",
               ]
-            : [elevatedSurfaceClassName, "flex-col rounded-xl"],
+            : [elevatedSurfaceClassName, "flex-col rounded-lg"],
         ])}
       >
         {children}
@@ -265,11 +264,11 @@ function SendButton({
       disabled={disabled}
       className={cn([
         "chat-input-send",
-        "border-border text-muted-foreground/60 inline-flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-100",
+        "border-border text-muted-foreground/60 inline-flex size-7 shrink-0 items-center justify-center rounded-md border transition-[background-color,box-shadow,color] duration-200 ease-out",
         !disabled && [
-          "bg-primary text-primary-foreground border-stone-600",
+          "bg-primary text-primary-foreground shadow-button-contrast border-transparent",
           "hover:bg-primary/90",
-          "active:bg-primary/80 active:scale-[0.97]",
+          "active:bg-primary/80",
         ],
       ])}
     >
@@ -344,7 +343,7 @@ function VoiceStatus({
         }
         onClick={onStop}
         disabled={isProcessing}
-        className="bg-muted text-foreground inline-flex size-7 shrink-0 items-center justify-center rounded-full disabled:opacity-60"
+        className="bg-layer-2 text-foreground hover:bg-layer-3 inline-flex size-7 shrink-0 items-center justify-center rounded-md disabled:opacity-60"
       >
         {isProcessing ? (
           <CircleNotch className="size-3.5 animate-spin" />
@@ -357,7 +356,7 @@ function VoiceStatus({
           onClick={onStopResponse}
           size="icon"
           variant="ghost"
-          className="h-7 w-7 rounded-full"
+          className="h-7 w-7 rounded-md"
           aria-label={t`Stop response`}
         >
           <Square size={14} />

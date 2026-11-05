@@ -240,7 +240,7 @@ function HeaderMeetingAction({
       return {
         label: t`Stop`,
         title: t`Stop listening`,
-        icon: <Square className="size-3 text-red-500" />,
+        icon: <Square className="size-3" />,
         onClick: stopListening,
       };
     }
@@ -264,7 +264,6 @@ function HeaderMeetingAction({
     };
   })();
   const disabled = sessionMode === "finalizing" || joiningMeeting;
-  const isPrimaryCta = sessionMode === "inactive";
   const showCountdown =
     Boolean(countdown.label) &&
     sessionMode !== "active" &&
@@ -282,10 +281,7 @@ function HeaderMeetingAction({
         disabled={disabled}
         onClick={action.onClick}
         className={cn([
-          "max-w-56 shrink-0 gap-1.5 overflow-hidden border pr-2.5 pl-1.5 text-sm",
-          isPrimaryCta
-            ? "border-border text-foreground bg-transparent shadow-none"
-            : "border-border bg-card text-foreground",
+          "max-w-56 shrink-0 gap-1.5 overflow-hidden pr-2.5 pl-1.5 text-sm",
           disabled && "cursor-default opacity-60",
         ])}
       >

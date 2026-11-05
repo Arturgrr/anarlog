@@ -52,16 +52,16 @@ function resolveBuildChannel(identifier: string): BuildChannel {
 }
 
 const CHANNEL_DOT: Record<BuildChannel, string> = {
-  dev: "bg-sky-400",
-  staging: "bg-amber-400",
-  nightly: "bg-violet-400",
-  stable: "bg-neutral-400",
+  dev: "bg-neutral-100",
+  staging: "bg-neutral-300",
+  nightly: "bg-neutral-500",
+  stable: "bg-neutral-600",
 };
 
 const CHANNEL_TEXT: Record<BuildChannel, string> = {
-  dev: "text-sky-300",
-  staging: "text-amber-300",
-  nightly: "text-violet-300",
+  dev: "text-neutral-100",
+  staging: "text-neutral-100",
+  nightly: "text-neutral-100",
   stable: "text-neutral-200",
 };
 
@@ -80,7 +80,7 @@ type Tone = "ok" | "warn" | "bad";
 
 const TONE_CLASS: Record<Tone, string> = {
   ok: "text-neutral-100",
-  warn: "text-amber-400",
+  warn: "text-white font-semibold",
   bad: "text-red-400",
 };
 
@@ -302,7 +302,9 @@ function LiveMetrics() {
         chart={<Sparkline values={metrics.renders} />}
         trailing={
           <span
-            className={outlinesEnabled ? "text-violet-300" : "text-neutral-500"}
+            className={
+              outlinesEnabled ? "text-neutral-100" : "text-neutral-500"
+            }
           >
             {outlinesEnabled ? "◉" : "○"}
           </span>

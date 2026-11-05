@@ -66,7 +66,7 @@ export function ToolGeneric({ part }: { part: Record<string, unknown> }) {
         <div className="flex flex-col gap-2">
           <InputDisplay input={part.input} />
           {failed ? (
-            <p className="text-xs text-red-500">
+            <p className="text-danger text-xs">
               {String(part.errorText ?? "Unknown error")}
             </p>
           ) : null}

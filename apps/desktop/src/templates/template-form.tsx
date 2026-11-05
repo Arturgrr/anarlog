@@ -219,7 +219,7 @@ export function TemplateForm({
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder={t`Enter template title`}
-                  className="absolute inset-0 h-auto w-full max-w-full min-w-0 border-0 px-0 py-0 text-sm font-semibold shadow-none focus-visible:ring-0 md:text-sm"
+                  className="absolute inset-0 h-auto w-full max-w-full min-w-0 border-0 bg-transparent bg-none px-0 py-0 text-sm font-semibold shadow-none focus-visible:ring-0 focus-visible:outline-none md:text-sm"
                 />
               </div>
             )}
@@ -234,9 +234,9 @@ export function TemplateForm({
             aria-pressed={isDefault}
             title={isDefault ? "Remove as default" : "Set as default"}
             className={cn([
-              "text-muted-foreground shrink-0 hover:text-black",
+              "text-muted-foreground hover:text-foreground shrink-0",
               isDefault
-                ? "text-emerald-600 hover:bg-transparent hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                ? "text-foreground hover:text-foreground hover:bg-transparent"
                 : null,
             ])}
           >
@@ -256,7 +256,7 @@ export function TemplateForm({
             onClick={() => toggleTemplateFavorite(id)}
             className={cn([
               "text-muted-foreground hover:text-foreground",
-              template.pinned && "text-rose-500 hover:text-rose-600",
+              template.pinned && "text-foreground",
             ])}
             title={
               template.pinned ? "Unfavorite template" : "Favorite template"
@@ -295,7 +295,7 @@ export function TemplateForm({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleDeleteTemplate(id)}
-                  className="cursor-pointer text-red-600 focus:text-red-600"
+                  className="text-danger focus:text-danger cursor-pointer"
                 >
                   <Trans>Delete</Trans>
                 </DropdownMenuItem>
@@ -314,7 +314,7 @@ export function TemplateForm({
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder={t`Describe the template purpose...`}
-                  className="text-muted-foreground min-h-[24px] resize-none border-0 px-0 py-0 text-sm shadow-none focus-visible:ring-0"
+                  className="text-muted-foreground min-h-[24px] resize-none border-0 bg-transparent bg-none px-0 py-0 text-sm shadow-none focus-visible:ring-0 focus-visible:outline-none"
                   rows={1}
                 />
               )}

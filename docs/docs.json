@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "Librelog",
   "colors": {
-    "primary": "#74540F",
-    "light": "#946F25",
-    "dark": "#5D430D"
+    "primary": "#242424",
+    "light": "#EDEDED",
+    "dark": "#3A3A3A"
   },
   "favicon": "/favicon.png",
   "navigation": {

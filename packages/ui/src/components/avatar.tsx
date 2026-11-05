@@ -1,5 +1,4 @@
-import { generatePath } from "@lisse/core";
-import { useMemo, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import {
@@ -11,7 +10,6 @@ import {
   type AvatarRecipe,
   type AvatarRenderStyle,
 } from "@anlg/ui/lib/avatar";
-import { controlSquircle } from "@anlg/ui/lib/squircle";
 
 export type { AvatarRenderStyle } from "@anlg/ui/lib/avatar";
 
@@ -77,18 +75,12 @@ function AvatarImage({
   );
   const [imageFailed, setImageFailed] = useState(false);
   const dimension = Math.max(1, size);
-  // Fixed-size avatars need no DOM measurements or per-avatar SVG effects.
-  const outline = useMemo(
-    () => generatePath(dimension, dimension, controlSquircle),
-    [dimension],
-  );
   const containerStyle = {
     width: dimension,
     height: dimension,
     display: "inline-flex",
     position: "relative",
     flexShrink: 0,
-    filter: "drop-shadow(0 1px 2px rgb(0 0 0 / 0.08))",
   } satisfies CSSProperties;
   const initialsStyle = {
     position: "absolute",
@@ -128,7 +120,8 @@ function AvatarImage({
         style={{
           position: "absolute",
           inset: 0,
-          clipPath: `path('${outline}')`,
+          borderRadius: "50%",
+          overflow: "hidden",
           background: avatarFallbackGradient(recipe.seed),
         }}
       >
@@ -152,19 +145,6 @@ function AvatarImage({
             {avatarInitials(label)}
           </span>
         )}
-        <svg
-          width={dimension}
-          height={dimension}
-          aria-hidden="true"
-          style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-        >
-          <path
-            d={outline}
-            fill="none"
-            stroke="rgb(0 0 0 / 0.1)"
-            strokeWidth={2}
-          />
-        </svg>
       </span>
     </span>
   );

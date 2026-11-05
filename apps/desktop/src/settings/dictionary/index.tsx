@@ -82,7 +82,7 @@ export function DictionarySettings({
         void form.handleSubmit();
       }}
     >
-      <InputGroup className="border-border bg-card has-[[data-slot=input-group-control]:focus-visible]:border-border rounded-full shadow-none has-[[data-slot=input-group-control]:focus-visible]:ring-0">
+      <InputGroup>
         <form.Field name="term">
           {(field) => (
             <InputGroupInput
@@ -106,7 +106,7 @@ export function DictionarySettings({
                   type="submit"
                   variant="ghost"
                   size="xs"
-                  className="rounded-full bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black dark:hover:bg-white/90 dark:hover:text-black"
+                  className="bg-primary text-primary-foreground shadow-button-contrast hover:bg-primary/90 hover:text-primary-foreground rounded-sm"
                   disabled={!canAdd}
                   aria-label={t`Add`}
                 >
@@ -129,7 +129,7 @@ export function DictionarySettings({
 
           if (normalizedTerms.length === 0) {
             return (
-              <div className="border-border bg-card flex min-h-40 flex-col items-center justify-center rounded-2xl border px-6 text-center">
+              <div className="bg-card shadow-raised flex min-h-40 flex-col items-center justify-center rounded-lg px-6 text-center">
                 <BookOpen className="text-muted-foreground mb-3 size-5" />
                 <p className="text-sm font-medium">
                   <Trans>Your dictionary is empty</Trans>
@@ -153,7 +153,7 @@ export function DictionarySettings({
           }
 
           return (
-            <div className="border-border bg-card divide-border divide-y overflow-hidden rounded-2xl border">
+            <div className="bg-card shadow-raised divide-border-muted divide-y overflow-hidden rounded-lg">
               {visibleTerms.map((term) => (
                 <DictionaryTermRow
                   key={term}
@@ -198,7 +198,7 @@ function DictionaryTermRow({
       <div className="flex min-h-12 items-center gap-2 py-2 pr-3 pl-4">
         <Input
           autoFocus
-          className="h-8 min-w-0 flex-1"
+          className="h-7 min-w-0 flex-1"
           value={editValue}
           onChange={(event) => setEditValue(event.target.value)}
           onKeyDown={(event) => {

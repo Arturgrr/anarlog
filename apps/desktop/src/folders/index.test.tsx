@@ -278,13 +278,13 @@ describe("Folders workspace", () => {
       expect(mocks.updateFolderIcon).toHaveBeenCalledWith("Work", {
         type: "icon",
         value: "target",
-        color: "#9ca3af",
+        color: "#808080",
       });
     });
     expect(useFolderSelection.getState().iconOverrides.Work).toEqual({
       type: "icon",
       value: "target",
-      color: "#9ca3af",
+      color: "#808080",
     });
   });
 
@@ -304,7 +304,7 @@ describe("Folders workspace", () => {
       expect(mocks.updateFolderIcon).toHaveBeenCalledWith("Work", {
         type: "icon",
         value: "target",
-        color: "#9ca3af",
+        color: "#808080",
       });
       expect(useFolderSelection.getState().iconOverrides.Work).toBeUndefined();
     });

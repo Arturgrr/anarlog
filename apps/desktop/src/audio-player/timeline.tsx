@@ -94,10 +94,10 @@ export function Timeline({
           onClick={handleClick}
           className={cn([
             "flex items-center justify-center",
-            "h-7 w-7 rounded-full",
-            "border-border bg-card border",
-            "hover:bg-accent transition-all hover:scale-110",
-            "shrink-0 shadow-xs select-none",
+            "h-7 w-7 rounded-md",
+            "bg-button-neutral shadow-button-neutral",
+            "hover:bg-layer-2 active:bg-layer-3",
+            "shrink-0 select-none",
           ])}
         >
           {state === "playing" ? (

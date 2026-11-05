@@ -86,7 +86,7 @@ export function LocalFileModel({
   const isPending = chooseModel.isPending || clearModel.isPending;
 
   return (
-    <div className="border-input bg-card flex h-9 min-w-0 items-center gap-2 rounded-full border px-3 text-left shadow-none">
+    <div className="bg-card shadow-button-neutral flex h-7 min-w-0 items-center gap-2 rounded-md px-2 text-left">
       <button
         type="button"
         className="flex min-w-0 flex-1 items-center gap-2 text-left"
@@ -114,7 +114,7 @@ export function LocalFileModel({
         <button
           type="button"
           aria-label={t`Clear selected model`}
-          className="text-muted-foreground hover:text-foreground flex size-6 shrink-0 items-center justify-center rounded-full"
+          className="text-muted-foreground hover:text-foreground hover:bg-hover flex size-5 shrink-0 items-center justify-center rounded-sm"
           onClick={() => clearModel.mutate()}
         >
           <X className="size-3.5" />
@@ -125,7 +125,7 @@ export function LocalFileModel({
         <CircleNotch className="text-muted-foreground size-4 shrink-0 animate-spin" />
       ) : null}
       {modelPath && healthStatus === "success" ? (
-        <Check className="size-4 shrink-0 text-green-600" />
+        <Check className="text-foreground size-4 shrink-0" />
       ) : null}
     </div>
   );

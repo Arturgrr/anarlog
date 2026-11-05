@@ -66,8 +66,8 @@ export function PersonItem({
         }
       }}
       className={cn([
-        "group flex w-full items-center gap-2 overflow-hidden rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-        active ? "bg-accent" : "hover:bg-accent/50",
+        "group flex w-full items-center gap-2 overflow-hidden rounded-md px-2.5 py-2 text-left text-sm select-none",
+        active ? "bg-layer-2" : "hover:bg-hover active:bg-pressed",
       ])}
     >
       {person.avatarDataUrl ? (
@@ -76,11 +76,11 @@ export function PersonItem({
         <ContactFacehash name={facehashName} size={32} />
       )}
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1 truncate font-medium">
+        <div className="font-ui-medium flex items-center gap-1 truncate">
           {personName || personEmail || "Unnamed"}
         </div>
         {personEmail && personName && (
-          <div className="text-muted-foreground truncate text-xs">
+          <div className="text-muted-foreground text-small truncate">
             {personEmail}
           </div>
         )}
@@ -89,7 +89,7 @@ export function PersonItem({
         <span
           role="img"
           aria-label="Pinned contact"
-          className="shrink-0 p-1 text-blue-600"
+          className="text-icon shrink-0 p-1"
         >
           <PushPin className="size-3.5" weight="bold" />
         </span>
@@ -99,8 +99,8 @@ export function PersonItem({
           className={cn([
             "shrink-0 rounded-xs p-1 transition-colors",
             isPinned
-              ? "text-blue-600 hover:text-blue-700"
-              : "text-muted-foreground/70 hover:text-muted-foreground opacity-0 group-hover:opacity-100",
+              ? "text-icon hover:text-foreground"
+              : "text-icon-faint hover:text-icon-muted opacity-0 group-hover:opacity-100",
           ])}
           aria-label={isPinned ? "Unpin contact" : "Pin contact"}
         >

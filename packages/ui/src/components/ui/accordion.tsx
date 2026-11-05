@@ -14,7 +14,7 @@ const AccordionItem = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AccordionPrimitive.Item
     ref={ref}
-    className={cn(["border-b", className])}
+    className={cn(["border-border-muted border-b", className])}
     {...props}
   />
 ));
@@ -34,7 +34,7 @@ const AccordionTrigger = React.forwardRef<
       {...props}
     >
       {children}
-      <CaretDown className="text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-200" />
+      <CaretDown className="text-icon-muted size-4 shrink-0 transition-transform duration-300 ease-out" />
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ));

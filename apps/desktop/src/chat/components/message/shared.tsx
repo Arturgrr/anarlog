@@ -54,17 +54,17 @@ export function MessageBubble({
       className={cn([
         "select-text-deep overflow-wrap-anywhere max-w-full min-w-0 text-sm",
         variant === "user" &&
-          "w-fit rounded-2xl bg-blue-100 px-3 py-1 text-neutral-800 [&_p]:[text-wrap:wrap]",
+          "bg-layer-2 text-foreground w-fit rounded-lg px-3 py-1 [&_p]:[text-wrap:wrap]",
         variant === "assistant" &&
           (isDarkAppearance
-            ? "bg-accent text-accent-foreground rounded-2xl px-3 py-1"
+            ? "bg-accent text-accent-foreground rounded-lg px-3 py-1"
             : "text-foreground"),
         variant === "loading" &&
           (isDarkAppearance
-            ? "bg-accent text-accent-foreground w-fit rounded-2xl px-3 py-1"
+            ? "bg-accent text-accent-foreground w-fit rounded-lg px-3 py-1"
             : "text-foreground"),
         variant === "error" &&
-          "rounded-2xl border border-red-200 bg-red-50 px-3 py-1 text-red-600",
+          "border-danger-border bg-danger-bg text-danger rounded-lg border px-3 py-1",
         withActionButton && "group relative",
       ])}
     >
@@ -92,14 +92,14 @@ export function ActionButton({
         "absolute -top-1 -right-1",
         "opacity-0 group-hover:opacity-100",
         "transition-opacity",
-        "rounded-full p-1",
+        "rounded-sm p-1",
         variant === "default" && [
           "bg-accent hover:bg-accent",
           "text-muted-foreground hover:text-foreground",
         ],
         variant === "error" && [
-          "bg-red-100 hover:bg-red-200",
-          "text-red-600 hover:text-red-800",
+          "bg-danger-bg hover:bg-danger-bg",
+          "text-danger",
         ],
       ])}
     >

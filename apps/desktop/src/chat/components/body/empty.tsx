@@ -121,7 +121,7 @@ export function ChatBodyEmpty({
             >
               Librelog AI
             </span>
-            <BetaChip isDarkAppearance={isDarkAppearance} />
+            <BetaChip />
           </div>
           <p
             className={cn([
@@ -136,8 +136,8 @@ export function ChatBodyEmpty({
           <button
             onClick={handleGoToSettings}
             className={cn([
-              "border-primary bg-primary text-primary-foreground inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium",
-              "hover:bg-primary/90 shadow-[0_4px_14px_rgba(87,83,78,0.18)] transition-colors",
+              "bg-primary text-primary-foreground shadow-button-contrast inline-flex h-7 w-fit items-center gap-1.5 rounded-md px-3 text-xs font-medium",
+              "hover:bg-primary/90",
             ])}
           >
             <Sparkle size={12} />
@@ -157,11 +157,10 @@ export function ChatBodyEmpty({
               key={label}
               onClick={() => handleSuggestionClick(prompt)}
               className={cn([
-                "group grid w-full grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-1.5 rounded-lg py-2 pr-3 pl-0 text-left text-sm",
+                "group grid w-full grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-1.5 rounded-md py-2 pr-3 pl-0 text-left text-sm",
                 isDarkAppearance
                   ? "text-primary-foreground/85 hover:bg-primary-foreground/10"
-                  : "text-muted-foreground hover:bg-muted/55",
-                "transition-colors",
+                  : "text-muted-foreground hover:bg-hover",
               ])}
             >
               <span className="flex size-6 items-center justify-center">
@@ -184,14 +183,11 @@ export function ChatBodyEmpty({
   );
 }
 
-function BetaChip({ isDarkAppearance }: { isDarkAppearance: boolean }) {
+function BetaChip() {
   return (
     <span
       className={cn([
-        "rounded-full border px-1.5 py-0.5 text-[10px] font-medium",
-        isDarkAppearance
-          ? "border-border bg-accent text-accent-foreground"
-          : "border-sky-200 bg-sky-100 text-sky-900",
+        "border-border bg-layer-2 text-muted-foreground text-small inline-flex h-[18px] items-center rounded-xs border-[0.5px] px-1.5 font-medium",
       ])}
     >
       {t`Beta`}

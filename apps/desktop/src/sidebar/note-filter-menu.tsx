@@ -43,9 +43,9 @@ export function SidebarNoteFilterMenu() {
           title={t`Sort notes`}
           data-tauri-drag-region="false"
           className={cn([
-            "pointer-events-auto relative flex size-7 items-center justify-center rounded-full",
-            "text-muted-foreground hover:bg-accent hover:text-foreground transition-colors",
-            "focus-visible:bg-accent focus-visible:text-foreground focus-visible:outline-hidden",
+            "pointer-events-auto relative flex size-7 items-center justify-center rounded-md",
+            "text-icon-muted hover:bg-hover active:bg-pressed hover:text-foreground data-[state=open]:bg-pressed",
+            "focus-visible:bg-hover focus-visible:text-foreground focus-visible:outline-hidden",
             !isDefaultView && "text-foreground",
           ])}
         >

@@ -17,7 +17,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
-import { cn } from "@anlg/utils";
 
 export function ContactPageHeader({
   readOnly = false,
@@ -63,7 +62,7 @@ export function ContactPageHeader({
                 size="icon"
                 variant="ghost"
                 data-tauri-drag-region="false"
-                className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-full"
+                className="text-icon-muted hover:text-foreground"
                 aria-label={t`Contact options`}
               >
                 <DotsThree size={16} />
@@ -94,10 +93,7 @@ export function ContactPageHeader({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={onDelete}
-                  className={cn([
-                    "cursor-pointer text-red-600 dark:text-red-400",
-                    "hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/50 dark:hover:text-red-300",
-                  ])}
+                  className="text-danger focus:text-danger cursor-pointer"
                 >
                   <Trash />
                   <span>

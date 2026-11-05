@@ -227,21 +227,17 @@ const ItemBase = memo(function ItemBase({
         onDragStart={onDragStart}
         contextMenu={hasSelection ? undefined : contextMenu}
         className={cn([
-          "w-full rounded-lg px-3 py-2 text-left",
+          "w-full rounded-md px-3 py-2 text-left",
           showUpcomingGauge && "pl-4",
           showLiveStop && "pr-10",
           ignored ? "cursor-default" : "cursor-pointer",
-          multiSelected && "bg-accent",
-          !multiSelected && selected && "bg-accent",
-          !multiSelected && !selected && "hover:bg-accent/50",
-          isUpcoming &&
-            !isLive && [
-              "bg-destructive/8 text-foreground",
-              "focus-visible:ring-destructive/25",
-            ],
+          multiSelected && "bg-layer-2",
+          !multiSelected && selected && "bg-layer-2",
+          !multiSelected && !selected && "hover:bg-hover active:bg-pressed",
+          isUpcoming && !isLive && ["bg-layer-2 text-foreground"],
           isLive && [
-            "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-            "focus-visible:ring-destructive/40 focus-visible:ring-2 focus-visible:outline-hidden",
+            "bg-contrast text-primary-foreground shadow-button-contrast hover:bg-contrast/90",
+            "focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2",
           ],
           ignored && "opacity-40",
           !ignored && muted && !isLive && !isUpcoming && "opacity-65",
@@ -255,7 +251,7 @@ const ItemBase = memo(function ItemBase({
                 className={cn([
                   "pointer-events-none flex min-w-0 items-center gap-1 text-[11px] leading-4",
                   isLive
-                    ? "text-destructive-foreground/65"
+                    ? "text-primary-foreground/65"
                     : "text-muted-foreground",
                 ])}
               >
@@ -265,7 +261,7 @@ const ItemBase = memo(function ItemBase({
             ) : null}
             <div
               className={cn(
-                "pointer-events-none min-w-0 truncate text-sm font-normal",
+                "font-ui-medium pointer-events-none min-w-0 truncate text-sm",
                 ignored && "line-through",
               )}
             >
@@ -276,7 +272,7 @@ const ItemBase = memo(function ItemBase({
                 className={cn([
                   "font-mono text-xs",
                   isLive
-                    ? "text-destructive-foreground/65"
+                    ? "text-primary-foreground/65"
                     : "text-muted-foreground",
                 ])}
               >
@@ -288,7 +284,7 @@ const ItemBase = memo(function ItemBase({
                 className={cn([
                   "pointer-events-none min-w-0 truncate text-[11px] leading-4",
                   isLive
-                    ? "text-destructive-foreground/65"
+                    ? "text-primary-foreground/65"
                     : "text-muted-foreground",
                 ])}
               >
@@ -322,11 +318,11 @@ const ItemBase = memo(function ItemBase({
         <div
           aria-hidden
           data-sidebar-timeline-upcoming-gauge
-          className="bg-destructive/20 pointer-events-none absolute top-2 bottom-2 left-1.5 w-0.5 overflow-hidden rounded-full"
+          className="bg-foreground/15 pointer-events-none absolute top-2 bottom-2 left-1.5 w-0.5 overflow-hidden rounded-full"
         >
           <div
             data-sidebar-timeline-upcoming-gauge-fill
-            className="bg-destructive absolute bottom-0 left-0 w-full rounded-full transition-[height] duration-300 ease-linear"
+            className="bg-foreground absolute bottom-0 left-0 w-full rounded-full transition-[height] duration-300 ease-linear"
             style={{ height: `${upcomingGaugePercent}%` }}
           />
         </div>

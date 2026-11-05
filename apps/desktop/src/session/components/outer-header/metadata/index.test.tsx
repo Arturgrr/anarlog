@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Popover } from "@anlg/ui/components/ui/popover";
 
-import { DateEditor } from "./date";
 import { MetadataPopoverContent } from "./index";
 
 const mocks = vi.hoisted(() => ({
@@ -79,19 +78,6 @@ describe("Metadata controls", () => {
       .closest("[data-radix-popper-content-wrapper] > *");
 
     expect(content?.className.split(/\s+/) ?? []).toContain("w-72");
-  });
-
-  it("renders date edit action buttons as circles", () => {
-    render(<DateEditor sessionId="session-1" />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Edit date" }));
-
-    expect(
-      screen.getByRole("button", { name: "Cancel date edit" }).className,
-    ).toContain("rounded-full");
-    expect(
-      screen.getByRole("button", { name: "Save date" }).className,
-    ).toContain("rounded-full");
   });
 
   it("keeps date edit actions available in the narrow panel", () => {

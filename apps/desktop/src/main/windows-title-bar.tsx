@@ -221,20 +221,16 @@ function TitleBarMenu({
           data-tauri-drag-region="false"
           role="menuitem"
           className={cn([
-            "text-muted-foreground h-7 rounded-md px-2.5 text-sm",
-            "hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground",
-            "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+            "text-muted-foreground text-ui h-7 rounded-sm px-2.5",
+            "hover:bg-hover hover:text-foreground data-[state=open]:bg-pressed data-[state=open]:text-foreground",
+            "focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-[2.5px]",
           ])}
           onPointerDown={onPointerDown}
         >
           {label}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        sideOffset={1}
-        className="w-56 rounded-lg"
-      >
+      <DropdownMenuContent align="start" sideOffset={1} className="w-56">
         {children}
       </DropdownMenuContent>
     </DropdownMenu>

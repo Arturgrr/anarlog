@@ -54,10 +54,8 @@ export function ThemeSelector() {
               role="radio"
               aria-checked={selected}
               className={cn([
-                "group bg-background text-foreground focus-visible:ring-ring focus-visible:ring-offset-background relative cursor-pointer overflow-hidden rounded-2xl border text-left transition-[background-color,border-color,box-shadow,scale] duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-[0.98]",
-                selected
-                  ? "border-foreground/50 bg-accent/40 shadow-xs"
-                  : "border-border hover:border-foreground/30 hover:bg-accent/20",
+                "group bg-card text-foreground shadow-raised focus-visible:outline-ring relative cursor-pointer overflow-hidden rounded-lg text-left transition-[box-shadow,scale] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-[2.5px] active:scale-[0.98]",
+                selected && "ring-foreground ring-[1.5px]",
               ])}
               onClick={() => {
                 void applyThemePreference(option.value);
@@ -65,7 +63,7 @@ export function ThemeSelector() {
               }}
             >
               <ThemePreview theme={option.value} />
-              <div className="border-border flex items-center gap-2 border-t p-3">
+              <div className="border-border-muted flex items-center gap-2 border-t p-3">
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium">{option.label}</div>
                   <div className="text-muted-foreground text-xs">
@@ -106,50 +104,54 @@ function ThemePreview({ theme }: { theme: ThemePreference }) {
 }
 
 function PreviewCanvas({ dark }: { dark: boolean }) {
+  const line = dark ? "bg-[#aeaeae]/25" : "bg-[#5c5c5c]/25";
+
   return (
     <div
       className={cn([
-        "absolute inset-0 flex flex-col p-3",
-        dark ? "bg-neutral-950 text-neutral-100" : "bg-white text-neutral-900",
+        "absolute inset-0 flex flex-col p-2",
+        dark ? "bg-[#080808]" : "bg-[#fafafa]",
       ])}
     >
-      <div className="mb-3 flex gap-1">
-        <span className="size-1.5 rounded-full bg-red-400" />
-        <span className="size-1.5 rounded-full bg-amber-400" />
-        <span className="size-1.5 rounded-full bg-green-400" />
+      <div className="mb-2 flex gap-1 px-1 pt-1">
+        {[0, 1, 2].map((dot) => (
+          <span
+            key={dot}
+            className={cn([
+              "size-1.5 rounded-full",
+              dark ? "bg-[#2e2e2e]" : "bg-[#dbdbdb]",
+            ])}
+          />
+        ))}
       </div>
-      <div className="flex flex-1 gap-3">
+      <div className="flex flex-1 gap-2">
+        <div className="flex w-1/4 flex-col gap-1.5 pt-1">
+          <span
+            className={cn([
+              "h-2 w-full rounded-xs",
+              dark ? "bg-[#2e2e2e]" : "bg-[#f2f2f2]",
+            ])}
+          />
+          <span className={cn(["h-1 w-3/4 rounded-full", line])} />
+          <span className={cn(["h-1 w-2/3 rounded-full", line])} />
+        </div>
         <div
           className={cn([
-            "w-1/4 rounded-md",
-            dark ? "bg-neutral-800" : "bg-neutral-100",
+            "flex flex-1 flex-col gap-2 rounded-md border p-2",
+            dark
+              ? "border-[#282828] bg-[#161616]"
+              : "border-[#dbdbdb] bg-[#ffffff]",
           ])}
-        />
-        <div className="flex flex-1 flex-col gap-2 py-1">
+        >
           <span
             className={cn([
               "h-1.5 w-10 rounded-full",
-              dark ? "bg-neutral-300" : "bg-neutral-700",
+              dark ? "bg-[#fafafa]" : "bg-[#161616]",
             ])}
           />
-          <span
-            className={cn([
-              "h-1 w-4/5 rounded-full",
-              dark ? "bg-neutral-700" : "bg-neutral-200",
-            ])}
-          />
-          <span
-            className={cn([
-              "h-1 w-3/5 rounded-full",
-              dark ? "bg-neutral-700" : "bg-neutral-200",
-            ])}
-          />
-          <span
-            className={cn([
-              "h-1 w-2/3 rounded-full",
-              dark ? "bg-neutral-700" : "bg-neutral-200",
-            ])}
-          />
+          <span className={cn(["h-1 w-4/5 rounded-full", line])} />
+          <span className={cn(["h-1 w-3/5 rounded-full", line])} />
+          <span className={cn(["h-1 w-2/3 rounded-full", line])} />
         </div>
       </div>
     </div>

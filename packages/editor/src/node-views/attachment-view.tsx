@@ -73,7 +73,7 @@ export const AttachmentChipView = forwardRef<
       <span
         contentEditable={false}
         suppressContentEditableWarning
-        className="border-border bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs"
+        className="border-border bg-layer-2 text-muted-foreground inline-flex items-center gap-1 rounded-xs border-[0.5px] px-1.5 py-0.5 text-xs"
       >
         {isImage && url ? (
           <img
@@ -92,7 +92,7 @@ export const AttachmentChipView = forwardRef<
             e.stopPropagation();
             handleRemove();
           }}
-          className="hover:bg-accent shrink-0 rounded p-0.5"
+          className="hover:bg-hover shrink-0 rounded-xs p-0.5"
         >
           <X size={10} />
         </button>

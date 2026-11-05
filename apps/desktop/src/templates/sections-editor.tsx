@@ -177,7 +177,7 @@ export function SectionsList({
         <Button
           variant="outline"
           size="sm"
-          className="border-border bg-card text-foreground hover:bg-background h-auto w-fit rounded-full px-4 py-2.5 text-sm shadow-[0_2px_6px_rgba(87,83,78,0.08),0_10px_18px_-10px_rgba(87,83,78,0.22)]"
+          className="w-fit"
           onClick={addSection}
           disabled={disabled}
         >
@@ -272,7 +272,7 @@ function SectionItem({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDelete(item.key)}
-                  className="cursor-pointer text-red-600 focus:text-red-600"
+                  className="text-danger focus:text-danger cursor-pointer"
                 >
                   <Trans>Delete</Trans>
                 </DropdownMenuItem>
@@ -288,7 +288,7 @@ function SectionItem({
           value={item.title}
           onChange={(e) => onChange({ ...item, title: e.target.value })}
           placeholder={t`Untitled`}
-          className="placeholder:text-muted-foreground/60 border-0 bg-transparent p-0 font-medium shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="placeholder:text-muted-foreground/60 border-0 bg-transparent bg-none p-0 font-medium shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
         />
 
         <textarea
@@ -299,13 +299,13 @@ function SectionItem({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn([
-            "min-h-[100px] w-full resize-y rounded-xl border p-3 text-sm transition-colors",
+            "bg-card min-h-[100px] w-full resize-y rounded-md p-3 text-sm",
             "focus-visible:outline-hidden",
             disabled
               ? "bg-muted"
               : isFocused
-                ? "ring-primary/20 border-blue-500 ring-2"
-                : "border-input",
+                ? "outline-ring outline-1"
+                : "shadow-button-neutral",
           ])}
         />
       </div>

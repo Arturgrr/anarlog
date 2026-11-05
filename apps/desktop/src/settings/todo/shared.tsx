@@ -16,7 +16,7 @@ export const TODO_PROVIDERS: TodoProvider[] = [
       <img
         src="/assets/apple-reminders.png"
         alt="Apple Reminders"
-        className="size-5 rounded-[4px] object-cover"
+        className="size-5 rounded-sm object-cover"
       />
     ),
     permission: "reminders",

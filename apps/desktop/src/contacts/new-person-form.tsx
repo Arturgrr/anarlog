@@ -47,14 +47,14 @@ export function NewPersonForm({
   return (
     <div className="px-2 py-2">
       <form onSubmit={handleSubmit}>
-        <div className="border-border bg-accent/50 focus-within:bg-accent flex h-8 w-full items-center gap-2 rounded-lg border px-3 transition-colors">
+        <div className="bg-card shadow-button-neutral focus-within:outline-ring flex h-7 w-full items-center gap-2 rounded-md px-2 transition-[box-shadow,outline-color] duration-200 ease-out focus-within:shadow-none focus-within:outline-1">
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t`Add person`}
-            className="placeholder:text-muted-foreground w-full bg-transparent text-sm focus:outline-hidden"
+            className="placeholder:text-faint text-ui-compact w-full bg-transparent focus:outline-hidden"
             autoFocus
           />
           {name.trim() && (

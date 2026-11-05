@@ -23,7 +23,6 @@ export function ConfigError() {
         </p>
       </div>
       <Button
-        className="shadow-none"
         onClick={() =>
           openNew({ type: "settings", state: { tab: "intelligence" } })
         }

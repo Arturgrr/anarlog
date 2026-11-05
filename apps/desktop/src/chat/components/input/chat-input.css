@@ -1,12 +1,12 @@
 [data-chat-input-surface="elevated"] {
-  background-color: hsl(var(--card));
-  color: hsl(var(--card-foreground));
+  background-color: var(--card);
+  color: var(--card-foreground);
 }
 
 [data-chat-input-surface="floating"] .chat-input-editor.prosemirror-editor,
 [data-chat-input-surface="floating"] .chat-input-editor.prosemirror-editor p {
-  caret-color: hsl(var(--card-foreground));
-  color: hsl(var(--card-foreground)) !important;
+  caret-color: var(--card-foreground);
+  color: var(--card-foreground) !important;
   line-height: 20px;
   margin-bottom: 0;
   min-height: 20px !important;
@@ -15,7 +15,8 @@
 
 [data-chat-input-surface="floating"] .chat-input-editor.prosemirror-editor {
   padding-right: 42px !important;
-  scrollbar-color: hsl(var(--muted-foreground) / 0.22) transparent;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 22%, transparent)
+    transparent;
 }
 
 [data-chat-input-surface="floating"]
@@ -56,13 +57,13 @@
 
 [data-chat-input-surface="floating"]
   .chat-input-editor.prosemirror-editor::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.22);
+  background: color-mix(in srgb, var(--muted-foreground) 22%, transparent);
   border-radius: 999px;
 }
 
 [data-chat-input-surface="floating"]
   .chat-input-editor.prosemirror-editor::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.32);
+  background: color-mix(in srgb, var(--muted-foreground) 32%, transparent);
 }
 
 [data-chat-input-surface="floating"]
@@ -71,7 +72,7 @@
 [data-chat-input-surface="floating"]
   .chat-input-editor.prosemirror-editor
   .is-empty::before {
-  color: hsl(var(--muted-foreground)) !important;
+  color: var(--text-faint) !important;
 }
 
 [data-chat-input-surface="elevated"] .chat-input-editor.prosemirror-editor {
@@ -87,8 +88,8 @@
   p,
 [data-chat-input-surface="elevated"] .chat-input-editor.prosemirror-editor,
 [data-chat-input-surface="elevated"] .chat-input-editor.prosemirror-editor p {
-  color: hsl(var(--card-foreground)) !important;
-  caret-color: hsl(var(--card-foreground));
+  color: var(--card-foreground) !important;
+  caret-color: var(--card-foreground);
 }
 
 [data-chat-input-surface="elevated"]
@@ -97,17 +98,19 @@
 [data-chat-input-surface="elevated"]
   .chat-input-editor.prosemirror-editor
   .is-empty::before {
-  color: hsl(var(--muted-foreground)) !important;
+  color: var(--text-faint) !important;
 }
 
 [data-chat-input-surface="elevated"] .chat-input-send:disabled {
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--muted-foreground) / 0.6) !important;
+  border-color: var(--border) !important;
+  color: color-mix(in srgb, var(--muted-foreground) 60%, transparent)
+    !important;
   cursor: default;
 }
 
 [data-chat-input-surface="elevated"]
   .chat-input-send:disabled
   .chat-input-send-shortcut {
-  color: hsl(var(--muted-foreground) / 0.6) !important;
+  color: color-mix(in srgb, var(--muted-foreground) 60%, transparent)
+    !important;
 }

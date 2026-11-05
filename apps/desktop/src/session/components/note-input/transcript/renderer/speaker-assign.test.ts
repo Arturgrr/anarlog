@@ -247,7 +247,6 @@ describe("SpeakerAssignPopover", () => {
     );
 
     const trigger = screen.getByRole("button", { name: "Speaker 2" });
-    expect(trigger.className).toContain("rounded-full");
     expect(trigger.className).toContain("pr-2");
     expect(trigger.className).toContain("hover:underline");
     expect(trigger.className).toContain("focus-visible:underline");

@@ -487,8 +487,10 @@ export function ProviderCard({
       disabled={config.disabled}
       value={config.id}
       className={cn([
-        "bg-muted rounded-[22px] border-2",
-        looksReady ? "border-border border-solid" : "border-dashed",
+        "bg-card rounded-lg border",
+        looksReady
+          ? "border-border border-solid"
+          : "border-border-strong border-dashed",
       ])}
     >
       <SettingsAlertToast
@@ -712,10 +714,8 @@ function ProviderBadge({ badge }: { badge: string }) {
   const badgeNode = (
     <span
       className={cn([
-        "text-muted-foreground normal-case",
-        isAfterRecording
-          ? "bg-background/40 cursor-help rounded-md px-1.5 py-0.5 text-[11px] font-medium"
-          : "border-border rounded-full border px-2 text-xs font-light",
+        "text-muted-foreground border-border bg-layer-2 text-small inline-flex h-[18px] items-center rounded-xs border-[0.5px] px-1.5 font-medium normal-case",
+        isAfterRecording && "cursor-help",
       ])}
     >
       {badge}

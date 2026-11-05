@@ -108,15 +108,10 @@ function rgbString([red, green, blue]: AvatarRgb) {
 
 function createPalette(random: () => number, colorCount: number): AvatarRgb[] {
   const count = clamp(Math.round(colorCount), 2, 5);
-  const baseHue = random() * 360;
-  const hueSpreads = [32, 52, 138, 208] as const;
-  const spread = hueSpreads[Math.floor(random() * hueSpreads.length)] ?? 52;
 
-  return Array.from({ length: count }, (_, index) => {
-    const hue = (baseHue + spread * index + (random() - 0.5) * 18) % 360;
-    const saturation = 58 + random() * 24;
-    const lightness = 48 + random() * 24;
-    return hslToRgb(hue, saturation, lightness);
+  return Array.from({ length: count }, () => {
+    const level = (24 + random() * 60) * 2.55;
+    return [level, level, level];
   });
 }
 
@@ -170,32 +165,6 @@ function interpolatePalette(
     left[1] + (right[1] - left[1]) * amount,
     left[2] + (right[2] - left[2]) * amount,
   ];
-}
-
-function hslToRgb(
-  hue: number,
-  saturation: number,
-  lightness: number,
-): AvatarRgb {
-  const s = saturation / 100;
-  const l = lightness / 100;
-  const chroma = (1 - Math.abs(2 * l - 1)) * s;
-  const segment = (((hue % 360) + 360) % 360) / 60;
-  const secondary = chroma * (1 - Math.abs((segment % 2) - 1));
-  const [red, green, blue]: AvatarRgb =
-    segment < 1
-      ? [chroma, secondary, 0]
-      : segment < 2
-        ? [secondary, chroma, 0]
-        : segment < 3
-          ? [0, chroma, secondary]
-          : segment < 4
-            ? [0, secondary, chroma]
-            : segment < 5
-              ? [secondary, 0, chroma]
-              : [chroma, 0, secondary];
-  const match = l - chroma / 2;
-  return [(red + match) * 255, (green + match) * 255, (blue + match) * 255];
 }
 
 function quantize(value: number, steps: number) {

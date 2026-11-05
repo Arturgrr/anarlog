@@ -51,7 +51,7 @@ export function DestructiveConfirmationDialog({
           </GlassDialogCancelButton>
           <Button
             variant="destructive"
-            className="h-8 rounded-full px-4 text-xs font-medium shadow-sm"
+            className="h-7 px-3"
             disabled={isPending}
             onClick={onConfirm}
           >

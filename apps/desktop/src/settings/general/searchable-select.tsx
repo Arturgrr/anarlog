@@ -87,10 +87,7 @@ export function SearchableSelect({
           aria-expanded={open}
           aria-labelledby={ariaLabelledBy}
           aria-describedby={ariaDescribedBy}
-          className={cn([
-            "bg-card justify-between px-3 font-normal shadow-none focus-visible:ring-0",
-            className,
-          ])}
+          className={cn(["justify-between px-2.5 font-normal", className])}
         >
           <span className="truncate">
             {selectedOption

@@ -1,6 +1,6 @@
 .prosemirror-editor {
   .hashtag {
-    color: var(--color-violet-600, #7c3aed);
+    color: var(--foreground, #161616);
     display: inline;
     padding: 0 2px;
     border-radius: 0;

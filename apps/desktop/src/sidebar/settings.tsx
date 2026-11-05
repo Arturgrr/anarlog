@@ -2,7 +2,6 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useState } from "react";
 
 import { MagnifyingGlass, X } from "@anlg/ui/components/icons";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
 import { CustomSidebarHeader } from "./custom-sidebar-header";
@@ -14,7 +13,6 @@ export function SettingsNav() {
   const { t } = useLingui();
   const groups = useSettingsNavGroups();
   const [search, setSearch] = useState("");
-  const searchRef = useSquircleRef<HTMLDivElement>();
   const currentTab = useTabs((state) => state.currentTab);
   const updateSettingsTabState = useTabs(
     (state) => state.updateSettingsTabState,
@@ -60,13 +58,12 @@ export function SettingsNav() {
       <CustomSidebarHeader />
       <div className="pb-2">
         <div
-          ref={searchRef}
           className={cn([
-            "border-border bg-accent/50 flex h-8 w-full shrink-0 items-center gap-2 rounded-lg border px-3",
-            "focus-within:bg-accent transition-colors",
+            "bg-card shadow-button-neutral flex h-7 w-full shrink-0 items-center gap-2 rounded-md px-2",
+            "focus-within:outline-ring transition-[box-shadow,outline-color] duration-200 ease-out focus-within:shadow-none focus-within:outline-1",
           ])}
         >
-          <MagnifyingGlass className="text-muted-foreground h-4 w-4 shrink-0" />
+          <MagnifyingGlass className="text-icon-muted h-4 w-4 shrink-0" />
           <input
             type="text"
             value={search}
@@ -77,7 +74,7 @@ export function SettingsNav() {
               }
             }}
             placeholder={t`Search settings...`}
-            className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm placeholder:text-sm focus:outline-hidden"
+            className="placeholder:text-faint text-ui-compact min-w-0 flex-1 bg-transparent focus:outline-hidden"
           />
           {search ? (
             <button
@@ -110,7 +107,7 @@ export function SettingsNav() {
           ) : null}
           {visibleGroups.map((group) => (
             <div key={group.label} className="flex flex-col gap-0.5">
-              <span className="text-muted-foreground/60 px-3 pb-1 text-[11px] font-medium tracking-wider uppercase">
+              <span className="text-faint text-small font-ui-medium px-1.5 pt-1 pb-1.5">
                 {group.label}
               </span>
               {group.items.map((item) => (
@@ -126,16 +123,20 @@ export function SettingsNav() {
                       setActiveTab(item.id);
                     }}
                     className={cn([
-                      "flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-sm",
-                      "transition-colors",
+                      "group/nav text-ui flex h-7 w-full items-center gap-2 rounded-sm px-1.5 text-left",
                       activeTab === item.id
-                        ? "bg-sidebar-accent text-foreground font-medium"
-                        : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                        ? "bg-layer-2 text-foreground"
+                        : "text-muted-foreground hover:bg-hover active:bg-pressed hover:text-foreground",
                     ])}
                   >
                     <item.icon
-                      size={15}
-                      className="shrink-0"
+                      size={16}
+                      className={cn([
+                        "shrink-0",
+                        activeTab === item.id
+                          ? "text-icon"
+                          : "text-icon-muted group-hover/nav:text-icon",
+                      ])}
                       data-testid={`settings-nav-icon-${item.id}`}
                     />
                     <span className="min-w-0 flex-1 truncate">

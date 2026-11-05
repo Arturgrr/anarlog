@@ -96,7 +96,7 @@ export function ExportLocationRow() {
         </Button>
       )}
       {(settings.error || downloads.error || changeMutation.error) && (
-        <p role="alert" className="mt-1 px-2 text-xs text-red-500">
+        <p role="alert" className="text-danger mt-1 px-2 text-xs">
           <Trans>Could not update the export folder</Trans>
         </p>
       )}

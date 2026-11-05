@@ -27,7 +27,7 @@ export function BatchState({
       <div className="mb-5">
         <DancingSticks
           amplitude={Math.min(Math.hypot(amplitude.mic, amplitude.speaker), 1)}
-          color="#a3a3a3"
+          color="var(--icon-faint)"
           height={36}
           width={80}
           stickWidth={3}

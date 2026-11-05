@@ -66,7 +66,7 @@ function MeetingChatText({ record }: { record: MeetingChatRecord }) {
       <a
         key={`${segment.text}-${index}`}
         href={segment.link}
-        className="text-primary underline underline-offset-2"
+        className="text-foreground underline underline-offset-2"
         onClick={(event) => {
           event.preventDefault();
           void openerCommands.openUrl(segment.link!, null);
