@@ -61,23 +61,17 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Icon<'a, R, M> {
             use tauri::path::BaseDirectory;
 
             let icon_path = if cfg!(debug_assertions) {
-                let desktop_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                     .parent()
                     .unwrap()
                     .parent()
                     .unwrap()
                     .join("apps")
                     .join("desktop")
-                    .join("src-tauri");
-                let source_icon = desktop_dir.join("icons").join(&name).join("icon.icns");
-                if source_icon.exists() {
-                    source_icon
-                } else {
-                    desktop_dir
-                        .join("resources")
-                        .join(&name)
-                        .join("AppIcon.icns")
-                }
+                    .join("src-tauri")
+                    .join("resources")
+                    .join(&name)
+                    .join("AppIcon.icns")
             } else {
                 self.manager
                     .path()

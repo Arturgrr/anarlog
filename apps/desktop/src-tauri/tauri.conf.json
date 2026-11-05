@@ -57,19 +57,8 @@
     "resources": {
       "../../../plugins/windows/swift-lib/src/Resources/CabinSketch-Regular.ttf": "CabinSketch-Regular.ttf",
       "../../../plugins/windows/swift-lib/src/Resources/OFL.txt": "CabinSketch-OFL.txt",
-      "resources/anagram/AppIcon.icns": "icons/anagram.icns",
-      "resources/anagram-dark/AppIcon.icns": "icons/anagram-dark.icns",
-      "resources/dev/AppIcon.icns": "icons/dev.icns",
-      "resources/dev-dark/AppIcon.icns": "icons/dev-dark.icns",
-      "resources/journal/AppIcon.icns": "icons/journal.icns",
-      "resources/notepad/AppIcon.icns": "icons/notepad.icns",
-      "resources/stone/AppIcon.icns": "icons/stone.icns",
-      "resources/staging/AppIcon.icns": "icons/staging.icns",
-      "resources/staging-dark/AppIcon.icns": "icons/staging-dark.icns",
-      "icons/stable/icon.icns": "icons/stable.icns",
-      "resources/stable-dark/AppIcon.icns": "icons/stable-dark.icns",
-      "resources/typewriter-key/AppIcon.icns": "icons/typewriter-key.icns",
-      "resources/walnut/AppIcon.icns": "icons/walnut.icns",
+      "resources/graphite/AppIcon.icns": "icons/graphite.icns",
+      "resources/light/AppIcon.icns": "icons/light.icns",
       "resources/notification-icons": "notification-icons",
       "../../../LICENSE": "licenses/LICENSE",
       "../../../THIRD_PARTY_NOTICES.md": "licenses/THIRD_PARTY_NOTICES.md",
@@ -99,7 +88,7 @@
       },
       "files": {
         "Resources/mlx-swift_Cmlx.bundle/default.metallib": "resources/mlx.metallib",
-        "Resources/AppIcon.icns": "resources/dev/AppIcon.icns"
+        "Resources/AppIcon.icns": "resources/light/AppIcon.icns"
       }
     }
   },

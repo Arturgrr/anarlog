@@ -345,10 +345,6 @@ msgstr ""
 msgid "An unexpected error occurred."
 msgstr ""
 
-#: src/settings/appearance/app-icon.tsx
-msgid "Anagram"
-msgstr ""
-
 #: src/session/components/note-input/enhanced/streaming.tsx
 msgid "Analyzing structure..."
 msgstr ""
@@ -585,10 +581,6 @@ msgstr ""
 
 #: src/settings/general/notification.tsx
 msgid "Bloom"
-msgstr ""
-
-#: src/settings/appearance/app-icon.tsx
-msgid "Blueprint"
 msgstr ""
 
 #: src/settings/general/notification.tsx
@@ -1234,7 +1226,6 @@ msgid "Decline"
 msgstr ""
 
 #: src/settings/ai/llm/select.tsx
-#: src/settings/appearance/app-icon.tsx
 msgid "Default"
 msgstr ""
 
@@ -1555,10 +1546,6 @@ msgstr ""
 msgid "Familiar Face"
 msgstr ""
 
-#: src/settings/appearance/app-icon.tsx
-msgid "Field Journal"
-msgstr ""
-
 #: src/main/windows-title-bar.tsx
 msgid "File"
 msgstr ""
@@ -1710,6 +1697,10 @@ msgstr ""
 
 #: src/settings/ai/stt/select.tsx
 msgid "Got it"
+msgstr ""
+
+#: src/settings/appearance/app-icon.tsx
+msgid "Graphite"
 msgstr ""
 
 #: src/sidebar/note-filter-menu.tsx
@@ -1998,6 +1989,7 @@ msgstr "空欄の場合は会議の日付とタイトルを使用します。"
 msgid "Less"
 msgstr ""
 
+#: src/settings/appearance/app-icon.tsx
 #: src/settings/appearance/theme.tsx
 msgid "Light"
 msgstr ""
@@ -2522,10 +2514,6 @@ msgstr ""
 msgid "Note is Locked"
 msgstr ""
 
-#: src/settings/appearance/app-icon.tsx
-msgid "Notepad"
-msgstr ""
-
 #: src/sidebar/toast/undo-delete-toast.tsx
 msgid "notes"
 msgstr ""
@@ -2804,10 +2792,6 @@ msgstr ""
 
 #: src/settings/general/app-settings.tsx
 msgid "Privacy"
-msgstr ""
-
-#: src/settings/appearance/app-icon.tsx
-msgid "Production"
 msgstr ""
 
 #: src/session/components/note-input/transcript/screens/empty.tsx
@@ -3428,10 +3412,6 @@ msgstr ""
 msgid "Signing secret copied"
 msgstr ""
 
-#: src/settings/appearance/app-icon.tsx
-msgid "Sketch"
-msgstr ""
-
 #: src/settings/developers/skills.tsx
 msgid "Skill installed"
 msgstr ""
@@ -3577,10 +3557,6 @@ msgstr ""
 
 #: src/settings/automations/index.tsx
 msgid "Steps run from top to bottom."
-msgstr ""
-
-#: src/settings/appearance/app-icon.tsx
-msgid "Stone"
 msgstr ""
 
 #: src/composer/index.tsx
@@ -3872,10 +3848,6 @@ msgstr ""
 msgid "Turn on Anarlog in System Settings → Privacy & Security → Calendars, then return here."
 msgstr ""
 
-#: src/settings/appearance/app-icon.tsx
-msgid "Typewriter Key"
-msgstr ""
-
 #: src/settings/stats/insights.tsx
 msgid "Typical conversation length"
 msgstr ""
@@ -4047,10 +4019,6 @@ msgstr ""
 
 #: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Waiting for authorization in your browser…"
-msgstr ""
-
-#: src/settings/appearance/app-icon.tsx
-msgid "Walnut"
 msgstr ""
 
 #: src/settings/developers/webhooks.tsx
