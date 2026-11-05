@@ -6,33 +6,9 @@
 
 
 export const commands = {
-async show() : Promise<Result<null, string>> {
+async hud(event: HudEvent) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|show") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async hide() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|hide") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async setPhase(phase: Phase) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|set_phase", { phase }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async updateAmplitude(amplitude: number) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|update_amplitude", { amplitude }) };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|hud", { event }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -46,6 +22,10 @@ async startRecording(microphoneDevice: string | null, owner: string) : Promise<R
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Records for system-wide dictation: the HUD follows the microphone, and the
+ * live preview's words arrive over `updates`.
+ */
 async startSystemRecording(microphoneDevice: string | null, owner: string, preview: PreviewConfig | null, updates: TAURI_CHANNEL<RecordingUpdate>) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|start_system_recording", { microphoneDevice, owner, preview, updates }) };
@@ -106,11 +86,31 @@ async insertText(target: string, text: string) : Promise<Result<null, string>> {
 
 /** user-defined types **/
 
+/**
+ * What the dictation HUD is told, as Hex's indicator events: the HUD keeps
+ * its own clock for how long each look shows.
+ */
+export type HudEvent = 
+/**
+ * A recording starts: the HUD appears and follows the microphone.
+ */
+{ type: "started" } | 
+/**
+ * The recording ended and its text is on the way.
+ */
+{ type: "processing" } | 
+/**
+ * The text arrived; the HUD clears and folds away.
+ */
+{ type: "completed" } | { type: "failed" } | { type: "cancelled" } | 
+/**
+ * The live preview's words so far, shown beside the HUD while recording.
+ */
+{ type: "preview"; stable: string; tentative: string }
 export type ListenParams = { model?: string | null; channels?: number; sample_rate?: number; languages?: string[]; keywords?: string[]; num_speakers?: number | null; min_speakers?: number | null; max_speakers?: number | null; mic_num_speakers?: number | null; custom_query?: Partial<{ [key in string]: string }> | null }
-export type Phase = "recording" | "processing"
 export type PreviewConfig = { provider: string; baseUrl: string; apiKey: string; params: ListenParams }
 export type RecordedAudio = { filePath: string; durationMs: number; transcript: string | null }
-export type RecordingUpdate = { type: "amplitude"; amplitude: number } | { type: "transcript"; text: string; partial: string } | { type: "previewUnavailable" }
+export type RecordingUpdate = { type: "transcript"; text: string; partial: string } | { type: "previewUnavailable" }
 export type TAURI_CHANNEL<TSend> = null
 
 /** tauri-specta globals **/

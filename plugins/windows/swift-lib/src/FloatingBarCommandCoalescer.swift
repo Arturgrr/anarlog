@@ -135,7 +135,6 @@ extension FloatingBarStatePayload {
     }
 
     return FloatingBarStatePayload(
-      dictation: dictation,
       amplitude: amplitude,
       title: title,
       status: status,
@@ -153,7 +152,6 @@ extension FloatingBarStatePayload {
 
   fileprivate func replacingAmplitude(with amplitude: Double) -> FloatingBarStatePayload {
     FloatingBarStatePayload(
-      dictation: dictation,
       amplitude: amplitude,
       title: title,
       status: status,

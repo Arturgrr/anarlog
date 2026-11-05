@@ -17,7 +17,6 @@ pub struct PreviewConfig {
 #[derive(Clone, serde::Serialize, specta::Type)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum RecordingUpdate {
-    Amplitude { amplitude: f64 },
     Transcript { text: String, partial: String },
     PreviewUnavailable,
 }
@@ -158,10 +157,10 @@ async fn listen<A: RealtimeSttAdapter>(
     let mut receiver = receiver;
     let audio = futures_util::stream::poll_fn(move |cx| {
         let result = receiver.poll_recv(cx);
-        if matches!(result, std::task::Poll::Ready(None)) {
-            if let Some(sender) = ended_tx.take() {
-                let _ = sender.send(());
-            }
+        if matches!(result, std::task::Poll::Ready(None))
+            && let Some(sender) = ended_tx.take()
+        {
+            let _ = sender.send(());
         }
         result
     });

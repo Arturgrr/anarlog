@@ -38,7 +38,7 @@ pub fn run_app(f: impl FnOnce() + Send + 'static) {
     }
 
     let delegate = AppDelegate::new(mtm);
-    app.setDelegate(Some(&ProtocolObject::from_ref(&*delegate)));
+    app.setDelegate(Some(ProtocolObject::from_ref(&*delegate)));
 
     std::thread::spawn(f);
 

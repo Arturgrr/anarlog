@@ -4,6 +4,7 @@ import { useRef } from "react";
 
 import {
   commands as dictation,
+  type HudEvent,
   type RecordingUpdate,
 } from "@anlg/plugin-dictation";
 import { commands as permissions } from "@anlg/plugin-permissions";
@@ -13,7 +14,6 @@ import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { DictationController } from "./controller";
-import { waitForDictationPanel } from "./panel";
 import { useDictationStatus } from "./state";
 
 import { useSettingsReady } from "~/settings/queries";
@@ -110,6 +110,18 @@ function ActiveDictation({
     let unlisten: (() => void) | undefined;
     let abort = new AbortController();
     let presentation: Promise<void> = Promise.resolve();
+    // Whether this dictation's HUD is up, and how it ended; anything that
+    // ends without completing or cancelling failed.
+    let hudShown = false;
+    let outcome: "completed" | "cancelled" | null = null;
+    // One at a time, so the HUD sees events in the order they happened.
+    let hudEvents: Promise<unknown> = Promise.resolve();
+    const hud = (event: HudEvent) => {
+      if (!hudShown) return;
+      hudEvents = hudEvents.then(async () => {
+        await dictation.hud(event);
+      });
+    };
     const onError = (error: unknown) => {
       if (disposed) return;
       const message = error instanceof Error ? error.message : String(error);
@@ -121,21 +133,11 @@ function ActiveDictation({
       start: async () => {
         abort = new AbortController();
         finalTranscript = null;
+        outcome = null;
         const recordingAbort = abort;
-        const owner = `${id}:${crypto.randomUUID()}`;
         const { microphone, livePreview, conn, languages, dictionary } =
           current.current;
-        useDictationStatus.setState({
-          owner,
-          error: null,
-          text: "",
-          partial: "",
-          amplitude: 0,
-          microphone: microphone || "Default microphone",
-          previewEnabled: livePreview,
-          previewUnavailable: livePreview && !conn,
-          expanded: livePreview,
-        });
+        useDictationStatus.setState({ error: null });
         if (platform() === "macos") {
           const permission = unwrap(
             await permissions.checkPermission("microphone"),
@@ -170,11 +172,14 @@ function ActiveDictation({
               },
             }
           : null;
-        useDictationStatus.setState({
-          previewUnavailable: livePreview && !preview,
-        });
         abort.signal.throwIfAborted();
-        await waitForDictationPanel(owner, abort.signal);
+        // The HUD is on screen before the microphone opens.
+        const shown = await dictation.hud({ type: "started" });
+        if (shown.status === "error")
+          throw new Error(
+            "Could not show the dictation indicator. Please try again.",
+          );
+        hudShown = true;
         abort.signal.throwIfAborted();
         unwrap(
           await dictation.startSystemRecording(
@@ -184,29 +189,23 @@ function ActiveDictation({
             new Channel<RecordingUpdate>((update) => {
               if (
                 disposed ||
+                !livePreview ||
+                update.type !== "transcript" ||
                 recordingAbort.signal.aborted ||
-                recordingAbort !== abort
-              )
-                return;
-              if (
+                recordingAbort !== abort ||
                 !["starting", "recording"].includes(
                   useDictationStatus.getState().phase,
                 )
               )
                 return;
-              if (update.type === "amplitude")
-                useDictationStatus.setState({ amplitude: update.amplitude });
-              else if (!livePreview) return;
-              else if (update.type === "transcript")
-                useDictationStatus.setState({
-                  text: update.text,
-                  partial: update.partial,
-                });
-              else
-                useDictationStatus.setState({
-                  previewUnavailable: true,
-                  partial: "",
-                });
+              hud({
+                type: "preview",
+                stable: update.text,
+                tentative:
+                  update.text && update.partial
+                    ? ` ${update.partial}`
+                    : update.partial,
+              });
             }),
           ),
         );
@@ -240,7 +239,9 @@ function ActiveDictation({
         return text;
       },
       insert: async (text) => {
-        if (!disposed) unwrap(await dictation.insertText(target, text));
+        if (disposed) return;
+        unwrap(await dictation.insertText(target, text));
+        outcome = "completed";
       },
       discard: async (path) => {
         unwrap(await dictation.discardRecording(path));
@@ -250,23 +251,12 @@ function ActiveDictation({
       },
       onError,
       onPhase: (phase) => {
-        if (!disposed)
-          useDictationStatus.setState({
-            phase,
-            ...(phase === "idle"
-              ? {
-                  owner: null,
-                  presentedOwner: null,
-                  text: "",
-                  partial: "",
-                  amplitude: 0,
-                }
-              : {}),
-            ...(phase === "starting" &&
-            useDictationStatus.getState().phase === "idle"
-              ? { owner: null }
-              : {}),
-          });
+        if (!disposed) useDictationStatus.setState({ phase });
+        if (phase === "transcribing") hud({ type: "processing" });
+        if (phase === "idle") {
+          hud({ type: outcome ?? "failed" });
+          hudShown = false;
+        }
         presentation = presentation
           .then(async () => {
             try {
@@ -279,6 +269,7 @@ function ActiveDictation({
       },
     });
     const cancel = () => {
+      outcome ??= "cancelled";
       abort.abort();
       void controller.cancel();
       void stopTranscription(id).catch(onError);
@@ -305,12 +296,7 @@ function ActiveDictation({
         unwrap(await shortcuts.configure(shortcut));
         armed = !disposed;
         if (!disposed)
-          useDictationStatus.setState({
-            ready: true,
-            error: null,
-            cancel,
-            finish: () => controller.release(true),
-          });
+          useDictationStatus.setState({ ready: true, error: null, cancel });
       })
       .catch(onError);
 
@@ -324,10 +310,6 @@ function ActiveDictation({
         phase: "idle",
         lastTranscript: useDictationStatus.getState().lastTranscript,
         cancel: null,
-        finish: null,
-        owner: null,
-        text: "",
-        partial: "",
       });
       lifecycle = lifecycle
         .then(async () => {
