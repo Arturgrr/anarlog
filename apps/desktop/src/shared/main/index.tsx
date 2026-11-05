@@ -1,5 +1,3 @@
-import { platform } from "@tauri-apps/plugin-os";
-
 import {
   ResizablePanel,
   ResizablePanelGroup,
@@ -50,8 +48,6 @@ function MainPanel({
   floatingButton?: React.ReactNode;
   noBorder: boolean;
 }) {
-  const isMacos = platform() === "macos";
-
   return (
     <div
       className={cn([
@@ -62,9 +58,8 @@ function MainPanel({
       <div
         data-chat-floating-anchor
         className={cn([
-          "bg-card @container relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
-          isMacos && "rounded-xl",
-          !noBorder && "border-border border",
+          "bg-card @container relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg",
+          !noBorder && "border-border-weak border",
         ])}
       >
         {children}
