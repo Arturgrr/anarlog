@@ -7,7 +7,6 @@ import { createTaskId, type TaskConfig } from ".";
 import { getPersistableGeneratedTitle } from "./title-success";
 
 import { runNoteEnhancedAutomations } from "~/automations/engine";
-import { syncCloudApiSnapshotBestEffort } from "~/cloud-api/client";
 import { releaseCloudsyncActivityEventually } from "~/db/cloudsync-activity";
 import { retryDatabaseLock } from "~/db/retry";
 import { showSummaryReadyNotification } from "~/services/enhancer/summary-notification";
@@ -167,7 +166,6 @@ export const runEnhanceSuccess = async ({
     if (!signal.aborted) {
       void localApiCommands.dispatchEvent("note.enhanced", args.sessionId);
       void runNoteEnhancedAutomations(args.sessionId);
-      syncCloudApiSnapshotBestEffort(args.sessionId);
       void showSummaryReadyNotification(args.sessionId, trimmedTitle);
       void playCompletionSound();
       void requestAppAttention();

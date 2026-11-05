@@ -12,7 +12,6 @@ import { SettingsTodo } from "./todo";
 import { LLM } from "~/settings/ai/llm";
 import { STT } from "~/settings/ai/stt";
 import { SettingsAppearance } from "~/settings/appearance";
-import { SettingsCrm } from "~/settings/crm";
 import { SettingsDevelopers } from "~/settings/developers";
 import { SettingsDictation } from "~/settings/dictation";
 import { SettingsDictionary } from "~/settings/dictionary";
@@ -21,7 +20,6 @@ import { SettingsImports } from "~/settings/imports";
 import { SettingsPrivacy } from "~/settings/privacy";
 import { SettingsInsights } from "~/settings/stats";
 import { SettingsSync } from "~/settings/sync";
-import { SettingsTeam } from "~/settings/team";
 import { StandardContentWrapper } from "~/shared/main";
 import { type Tab } from "~/store/zustand/tabs";
 
@@ -67,12 +65,8 @@ function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
         return <SettingsNotifications />;
       case "sync":
         return <SettingsSync />;
-      case "team":
-        return <SettingsTeam />;
       case "imports":
         return <SettingsImports />;
-      case "crm":
-        return <SettingsCrm />;
       case "permissions":
         return <SettingsPermissions />;
       case "privacy":

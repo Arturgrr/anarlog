@@ -113,7 +113,7 @@ vi.mock("~/session/components/shared", () => ({
   useCurrentNoteTab: () => ({ type: "raw" }),
 }));
 
-vi.mock("~/session-sharing/editor-activity", () => ({
+vi.mock("~/session/editor-activity", () => ({
   registerCanonicalSessionEditor: hoisted.registerCanonicalSessionEditor,
   unregisterCanonicalSessionEditor: hoisted.unregisterCanonicalSessionEditor,
 }));

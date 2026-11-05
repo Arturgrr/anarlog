@@ -27,7 +27,6 @@ import {
 export type DevtoolsAction =
   | "navigation:onboarding"
   | "instruction:sign-in"
-  | "instruction:integration"
   | `toasts:preview:${DevtoolsToastPreview}`
   | "toasts:clear"
   | `ota:${DevtoolsOtaPreviewStatus}`
@@ -72,12 +71,6 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
         description:
           "Show the continue-in-browser instruction screen used for signing in.",
         action: "instruction:sign-in",
-      },
-      {
-        label: "Instruction: integration",
-        description:
-          "Show the continue-in-browser instruction screen used for integrations.",
-        action: "instruction:integration",
       },
     ],
   },
@@ -473,9 +466,6 @@ export function useDevtoolsActions() {
           return;
         case "instruction:sign-in":
           showInstruction("sign-in");
-          return;
-        case "instruction:integration":
-          showInstruction("integration");
           return;
         case "toasts:preview:language-model":
         case "toasts:preview:transcription-model":

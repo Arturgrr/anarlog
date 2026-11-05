@@ -722,7 +722,3 @@ describe("useEditorTabs", () => {
     },
   );
 });
-
-vi.mock("~/shared-notes/event-keys", () => ({
-  useSessionSharedNoteIds: () => [],
-}));

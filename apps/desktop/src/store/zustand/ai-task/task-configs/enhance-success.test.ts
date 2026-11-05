@@ -41,10 +41,6 @@ vi.mock("~/shared/notification-policy", () => ({
   shouldShowNotification: vi.fn().mockResolvedValue(true),
 }));
 
-vi.mock("~/cloud-api/client", () => ({
-  syncCloudApiSnapshotBestEffort: vi.fn(),
-}));
-
 vi.mock("~/session/content-mutations", () => ({
   persistGeneratedEnhancedNote: mocks.persistGeneratedEnhancedNote,
 }));

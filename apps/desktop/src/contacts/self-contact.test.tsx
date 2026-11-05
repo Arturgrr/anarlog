@@ -20,9 +20,6 @@ vi.mock("~/auth", () => ({
   }),
   useAuth: () => null,
 }));
-vi.mock("~/auth/useConnections", () => ({
-  useConnections: () => ({ data: [] }),
-}));
 vi.mock("~/shared/owner-user", () => ({ useOwnerUserId: () => mocks.ownerId }));
 vi.mock("~/shared/hooks/useNativeContextMenu", () => ({
   useNativeContextMenu: () => mocks.contextMenu,
@@ -54,12 +51,6 @@ vi.mock("./contact-summary", () => ({
 }));
 vi.mock("./related-notes", () => ({ RelatedNotesSection: () => null }));
 vi.mock("./new-person-form", () => ({ NewPersonForm: () => null }));
-vi.mock("~/crm/connection", () => ({
-  crmProvidersQueryOptions: () => ({
-    queryKey: ["crm", "providers"],
-    queryFn: () => Promise.resolve([{ id: "attio", name: "Attio" }]),
-  }),
-}));
 vi.mock("./shared", () => ({
   ContactFacehash: () => null,
   ColumnHeader: ({
@@ -141,7 +132,7 @@ it("prefers the signed-in identity over the local owner fallback", () => {
   ).toContain("Zoe");
 });
 
-it("renders your details without edit, photo, merge, enrich, or delete controls", async () => {
+it("renders your details without edit, photo, merge, or delete controls", () => {
   const queryClient = new QueryClient();
   const details = (human: HumanRecord) => (
     <QueryClientProvider client={queryClient}>
@@ -159,14 +150,8 @@ it("renders your details without edit, photo, merge, enrich, or delete controls"
   expect(screen.queryByRole("button", { name: "Change photo" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Contact options" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Merge" })).toBeNull();
-  expect(
-    screen.queryByRole("button", { name: "Enrich contact from CRM" }),
-  ).toBeNull();
   expect(screen.getByText("Engineer")).not.toBeNull();
   rerender(details(mocks.humans[0]));
-  expect(
-    await screen.findByRole("button", { name: "Enrich contact from CRM" }),
-  ).not.toBeNull();
   expect(screen.getAllByRole("textbox").length).toBeGreaterThan(0);
   expect(
     screen.getByRole("button", { name: "Contact options" }),

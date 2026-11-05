@@ -1,17 +1,8 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 
 import { DotsThree, File, Plus, X } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@anlg/ui/components/ui/dialog";
 import {
   AppFloatingPanel,
   appFloatingMenuPanelClassName,
@@ -21,37 +12,10 @@ import {
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
 import { Input } from "@anlg/ui/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@anlg/ui/components/ui/select";
 import { cn } from "@anlg/utils";
 
 import { useFolderSelection } from "./selection";
 
-import { useOptionalAuth } from "~/auth";
-import { ResourceShareButton, sharedFolderPayload } from "~/resource-sharing";
-import {
-  deleteSharedResource,
-  moveSharedResource,
-  requireResourceSharingContext,
-} from "~/resource-sharing/client";
-import {
-  sharedResourcesQueryKey,
-  useSharedResources,
-} from "~/resource-sharing/hooks";
-import {
-  folderDefaultAccessRule,
-  setFolderDefaultAccess,
-  useFolderDefaultAccessRules,
-} from "~/session-sharing/folder-default-access";
-import {
-  useAvailableShareWorkspaces,
-  usePersonalWorkspaceId,
-} from "~/session-sharing/source";
 import {
   deleteLocalFolderMaterial,
   diskAttachmentId,
@@ -61,8 +25,6 @@ import {
   deleteNamedFolder,
   renameNamedFolder,
   updateFolderIcon,
-  updateFolderWorkspace,
-  useFolderWorkspaceId,
 } from "~/session/folder-catalog";
 import { resolvedFolderIcon } from "~/session/folder-icon";
 import { FolderInstructionsField } from "~/session/folder-instructions";
@@ -72,22 +34,8 @@ import { useFolderMaterialUpload } from "~/shared/hooks/useFileUpload";
 import { DestructiveConfirmationDialog } from "~/shared/ui/destructive-confirmation-dialog";
 import { TemplateIconPicker } from "~/templates/template-icon-picker";
 
-const ONLY_ME_VALUE = "me";
-const PARTICIPANTS_VALUE = "participants";
-const WORKSPACE_VALUE_PREFIX = "workspace:";
-
 export function FolderEditor({ folderPath }: { folderPath: string }) {
   const { t } = useLingui();
-  const auth = useOptionalAuth();
-  const accountUserId = auth?.session?.user.id ?? null;
-  const availableWorkspaces = useAvailableShareWorkspaces(accountUserId);
-  const personalWorkspaceId = usePersonalWorkspaceId(accountUserId);
-  const queryClient = useQueryClient();
-  const sharedFolders = useSharedResources("folder");
-  const ownedShare = sharedFolders.data?.find(
-    (resource) =>
-      resource.accessKind === "owner" && resource.sourceId === folderPath,
-  );
   const setSelectedPath = useFolderSelection((state) => state.setSelectedPath);
   const markFolderDeleted = useFolderSelection(
     (state) => state.markFolderDeleted,
@@ -109,54 +57,6 @@ export function FolderEditor({ folderPath }: { folderPath: string }) {
   const [busy, setBusy] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [accessConfirmation, setAccessConfirmation] = useState<{
-    value: string;
-    label: string;
-  } | null>(null);
-  const folderWorkspaceId = useFolderWorkspaceId(folderPath);
-  const legacyTeamWorkspaceId = availableWorkspaces.some(
-    (workspace) => workspace.id === folderWorkspaceId,
-  )
-    ? folderWorkspaceId
-    : "";
-  const accessRule = folderDefaultAccessRule(
-    useFolderDefaultAccessRules(),
-    folderPath,
-  );
-  const selectedAccessValue =
-    accessRule?.access === "participants"
-      ? PARTICIPANTS_VALUE
-      : accessRule?.access === "workspace"
-        ? `${WORKSPACE_VALUE_PREFIX}${accessRule.workspace_id}`
-        : legacyTeamWorkspaceId
-          ? `${WORKSPACE_VALUE_PREFIX}${legacyTeamWorkspaceId}`
-          : ONLY_ME_VALUE;
-  const accessMutation = useMutation({
-    mutationFn: async (value: string) => {
-      if (legacyTeamWorkspaceId && personalWorkspaceId) {
-        await updateFolderWorkspace(folderPath, personalWorkspaceId);
-      }
-      await setFolderDefaultAccess(
-        folderPath,
-        value === PARTICIPANTS_VALUE
-          ? { access: "participants", workspaceId: "" }
-          : value.startsWith(WORKSPACE_VALUE_PREFIX)
-            ? {
-                access: "workspace",
-                workspaceId: value.slice(WORKSPACE_VALUE_PREFIX.length),
-              }
-            : null,
-      );
-    },
-    onSuccess: () => setAccessConfirmation(null),
-  });
-  const accessLabel = (value: string) => {
-    if (value === PARTICIPANTS_VALUE) return t`People in the meeting`;
-    const workspace = availableWorkspaces.find(
-      (candidate) => `${WORKSPACE_VALUE_PREFIX}${candidate.id}` === value,
-    );
-    return workspace ? t`Everyone in ${workspace.name}` : t`Only me`;
-  };
   const displayName = folderDisplayName(folderPath);
   const [draft, setDraft] = useState(displayName);
 
@@ -187,22 +87,6 @@ export function FolderEditor({ folderPath }: { folderPath: string }) {
     setBusy(true);
     try {
       const renamed = await renameNamedFolder(folderPath, renamedPath);
-      if (ownedShare && auth) {
-        try {
-          await moveSharedResource(requireResourceSharingContext(auth), {
-            shareId: ownedShare.shareId,
-            sourceId: renamed,
-            title: folderDisplayName(renamed),
-            payload: await sharedFolderPayload(renamed),
-          });
-        } catch (error) {
-          await renameNamedFolder(renamed, folderPath);
-          throw error;
-        }
-        void queryClient.invalidateQueries({
-          queryKey: sharedResourcesQueryKey(auth.session?.user.id, "folder"),
-        });
-      }
       rekeyIconOverride(folderPath, renamed);
       setSelectedPath(renamed);
     } catch {
@@ -210,16 +94,7 @@ export function FolderEditor({ folderPath }: { folderPath: string }) {
     } finally {
       setBusy(false);
     }
-  }, [
-    auth,
-    displayName,
-    draft,
-    folderPath,
-    ownedShare,
-    queryClient,
-    rekeyIconOverride,
-    setSelectedPath,
-  ]);
+  }, [displayName, draft, folderPath, rekeyIconOverride, setSelectedPath]);
 
   return (
     <section className="flex h-full flex-1 flex-col" aria-label={folderPath}>
@@ -268,12 +143,6 @@ export function FolderEditor({ folderPath }: { folderPath: string }) {
           </div>
         </div>
         <div className="flex items-center gap-0.5">
-          <ResourceShareButton
-            resourceType="folder"
-            sourceId={folderPath}
-            title={displayName}
-            buildPayload={() => sharedFolderPayload(folderPath)}
-          />
           <DropdownMenu open={actionsOpen} onOpenChange={setActionsOpen}>
             <DropdownMenuTrigger asChild>
               <Button
@@ -307,56 +176,6 @@ export function FolderEditor({ folderPath }: { folderPath: string }) {
 
       <div className="scrollbar-hide flex-1 overflow-y-auto px-3 pt-3 pb-6">
         <div className="flex max-w-2xl flex-col gap-6">
-          {auth?.session?.user.id ? (
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex flex-col gap-1.5">
-                <h4 className="text-sm font-medium">
-                  <Trans>Default access</Trans>
-                </h4>
-                <p className="text-muted-foreground text-xs">
-                  <Trans>
-                    Share new notes in this folder when their summary is ready.
-                    You can still change access on each note.
-                  </Trans>
-                </p>
-              </div>
-              <Select
-                value={selectedAccessValue}
-                disabled={accessMutation.isPending}
-                onValueChange={(value) => {
-                  if (value === ONLY_ME_VALUE) {
-                    accessMutation.mutate(value);
-                    return;
-                  }
-                  setAccessConfirmation({ value, label: accessLabel(value) });
-                }}
-              >
-                <SelectTrigger
-                  aria-label={t`Default access`}
-                  className="h-8 w-44 text-xs"
-                >
-                  <SelectValue placeholder={t`Only me`} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ONLY_ME_VALUE}>
-                    <Trans>Only me</Trans>
-                  </SelectItem>
-                  <SelectItem value={PARTICIPANTS_VALUE}>
-                    <Trans>People in the meeting</Trans>
-                  </SelectItem>
-                  {availableWorkspaces.map((workspace) => (
-                    <SelectItem
-                      key={workspace.id}
-                      value={`${WORKSPACE_VALUE_PREFIX}${workspace.id}`}
-                    >
-                      <Trans>Everyone in {workspace.name}</Trans>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : null}
-
           <div className="flex flex-col gap-1.5">
             <h4 className="text-sm font-medium">
               <Trans>Context</Trans>
@@ -455,49 +274,6 @@ export function FolderEditor({ folderPath }: { folderPath: string }) {
         </div>
       </div>
 
-      <Dialog
-        open={accessConfirmation !== null}
-        onOpenChange={(open) => {
-          if (!open && !accessMutation.isPending) {
-            setAccessConfirmation(null);
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              <Trans>Share new notes in this folder?</Trans>
-            </DialogTitle>
-            <DialogDescription>
-              <Trans>
-                New notes in this folder will be shared with{" "}
-                {accessConfirmation?.label} once their summary is ready. Notes
-                already in the folder are not changed.
-              </Trans>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              disabled={accessMutation.isPending}
-              onClick={() => setAccessConfirmation(null)}
-            >
-              <Trans>Cancel</Trans>
-            </Button>
-            <Button
-              disabled={accessMutation.isPending}
-              onClick={() => {
-                if (accessConfirmation) {
-                  accessMutation.mutate(accessConfirmation.value);
-                }
-              }}
-            >
-              <Trans>Confirm</Trans>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <DestructiveConfirmationDialog
         open={deleting}
         onOpenChange={setDeleting}
@@ -514,23 +290,9 @@ export function FolderEditor({ folderPath }: { folderPath: string }) {
           void (async () => {
             setBusy(true);
             try {
-              if (ownedShare && auth) {
-                await deleteSharedResource(
-                  requireResourceSharingContext(auth),
-                  ownedShare.shareId,
-                );
-              }
               await deleteNamedFolder(folderPath);
               setDeleting(false);
               markFolderDeleted(folderPath);
-              if (ownedShare) {
-                void queryClient.invalidateQueries({
-                  queryKey: sharedResourcesQueryKey(
-                    auth?.session?.user.id,
-                    "folder",
-                  ),
-                });
-              }
             } finally {
               setBusy(false);
             }

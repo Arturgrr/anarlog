@@ -52,10 +52,6 @@ vi.mock("~/sidebar/folders", () => ({
   FoldersNav: () => <div data-testid="folders-nav" />,
 }));
 
-vi.mock("~/sidebar/shared-notes", () => ({
-  SharedNotesNav: () => <div data-testid="shared-notes-nav" />,
-}));
-
 import { LeftSidebar } from "./index";
 
 describe("LeftSidebar", () => {
@@ -68,13 +64,6 @@ describe("LeftSidebar", () => {
     cleanup();
   });
 
-  it("shows received notes without the personal timeline", () => {
-    render(<LeftSidebar noteFilter="shared" />);
-
-    expect(screen.queryByTestId("timeline-view")).toBeNull();
-    expect(screen.getByTestId("shared-notes-nav")).toBeTruthy();
-  });
-
   it("keeps the personal timeline when filtering to a folder", () => {
     render(<LeftSidebar folderFilter="CS 101" />);
 
@@ -85,7 +74,6 @@ describe("LeftSidebar", () => {
     expect(
       screen.getByTestId("folder-materials").getAttribute("data-folder-path"),
     ).toBe("CS 101");
-    expect(screen.queryByTestId("shared-notes-nav")).toBeNull();
   });
 
   it("hides folder materials when viewing all notes", () => {

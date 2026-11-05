@@ -358,10 +358,7 @@ describe("ChatSession real SDK CloudSync activity", () => {
       "folders",
       "templates",
       "changelog",
-      "shared_sessions",
-      "shared_note_preview",
       "edit",
-      "task",
       "onboarding",
       "empty",
     ]) {

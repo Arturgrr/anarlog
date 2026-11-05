@@ -1,7 +1,6 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { useEffect, useRef } from "react";
 
-import { purgeSharedNotePreview } from "~/shared-notes/preview";
 import {
   restorePinnedTabsToStore,
   restoreRecentlyOpenedToStore,
@@ -46,18 +45,6 @@ export async function initializeDesktopTabs({
   onZeroTabs?.();
 }
 
-export function createDesktopTabCloseHandler({
-  purgePreview = purgeSharedNotePreview,
-}: {
-  purgePreview?: (viewId: string) => void;
-} = {}) {
-  return (tab: Tab) => {
-    // A locally empty meeting may still be receiving content from another device.
-    // Closing its tab must never mutate the persisted meeting.
-    if (tab.type === "shared_note_preview") purgePreview(tab.id);
-  };
-}
-
 export function useDesktopTabLifecycle({
   onEmpty,
   onInitialized,
@@ -67,8 +54,7 @@ export function useDesktopTabLifecycle({
   onInitialized?: (() => void) | null;
   onZeroTabs?: (() => void) | null;
 }) {
-  const { registerOnEmpty, registerCanClose, registerOnClose, openNew, pin } =
-    useTabs();
+  const { registerOnEmpty, registerCanClose, openNew, pin } = useTabs();
   const hasOpenedInitialTab = useRef(false);
 
   useEffect(() => {
@@ -98,8 +84,4 @@ export function useDesktopTabLifecycle({
   useEffect(() => {
     registerCanClose(() => true);
   }, [registerCanClose]);
-
-  useEffect(() => {
-    registerOnClose(createDesktopTabCloseHandler());
-  }, [registerOnClose]);
 }

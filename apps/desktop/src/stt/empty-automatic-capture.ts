@@ -1,8 +1,8 @@
 import { commands as fsSyncCommands } from "@anlg/plugin-fs-sync";
 
 import { liveQueryClient } from "~/db";
-import { flushCanonicalSessionEditorChanges } from "~/session-sharing/editor-activity";
 import { enqueueSessionAudioOperation } from "~/session/audio-operations";
+import { flushCanonicalSessionEditorChanges } from "~/session/editor-activity";
 import { isSessionEmpty } from "~/session/queries";
 
 export async function discardEmptyAutomaticCapture({

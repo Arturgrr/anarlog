@@ -14,7 +14,6 @@ import { OverflowButton } from "./overflow";
 import { useAudioPlayer } from "~/audio-player";
 import { useNow } from "~/calendar/hooks";
 import { useShell } from "~/contexts/shell";
-import { SessionShareButton } from "~/session-sharing";
 import { useEventCountdown } from "~/session/hooks/useEventCountdown";
 import { useMeetingMicInUse } from "~/session/hooks/useMeetingMicInUse";
 import {
@@ -140,20 +139,12 @@ function HeaderMeetingControl({
     ? safeParseDate(sessionEvent.ended_at)
     : null;
   const ended = !!endedAt && endedAt.getTime() <= now.getTime();
-  if (sessionMode === "finalizing" || sessionMode === "running_batch") {
+  if (
+    sessionMode === "finalizing" ||
+    sessionMode === "running_batch" ||
+    meetingOver
+  ) {
     return null;
-  }
-
-  if (meetingOver) {
-    return (
-      <div className="relative mr-1 ml-1 flex min-w-0 shrink-0 items-center">
-        <SessionShareButton
-          key={sessionId}
-          sessionId={sessionId}
-          variant="cta"
-        />
-      </div>
-    );
   }
 
   return (

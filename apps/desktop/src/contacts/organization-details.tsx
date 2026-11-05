@@ -1,6 +1,5 @@
 import { Icon } from "@iconify-icon/react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { commands as openerCommands } from "@anlg/plugin-opener2";
@@ -22,18 +21,6 @@ import {
 } from "./queries";
 import { ContactFacehash } from "./shared";
 
-import { useAuth } from "~/auth";
-import {
-  renameWorkspace,
-  requireTeamContext,
-  setWorkspaceLogo,
-} from "~/settings/team/client";
-import { isWorkspaceLogoDataUrl } from "~/settings/team/logo";
-import {
-  MY_WORKSPACES_QUERY_KEY,
-  useMyWorkspacesWithMirror,
-} from "~/settings/team/mirror";
-
 export function OrganizationDetailsColumn({
   organization,
   humans,
@@ -46,42 +33,10 @@ export function OrganizationDetailsColumn({
   onDelete: (id: string) => void;
 }) {
   const { t } = useLingui();
-  const auth = useAuth();
-  const queryClient = useQueryClient();
-  const workspaces = useMyWorkspacesWithMirror();
   const [showCompactIdentity, setShowCompactIdentity] = useState(false);
   const peopleInOrg = organization
     ? humans.filter((human) => human.organizationId === organization.id)
     : [];
-
-  // A workspace mirrors into contacts as an organization keyed by the
-  // workspace id, so managers can rename it or change its logo from here.
-  const linkedWorkspace = workspaces.data?.find(
-    (workspace) => workspace.workspaceId === organization?.id,
-  );
-  const canManageLinkedWorkspace =
-    linkedWorkspace !== undefined &&
-    (linkedWorkspace.role === "owner" || linkedWorkspace.role === "admin");
-
-  const pushToLinkedWorkspace = (
-    run: (context: ReturnType<typeof requireTeamContext>) => Promise<unknown>,
-  ) => {
-    if (!canManageLinkedWorkspace || !linkedWorkspace) return;
-    try {
-      const context = requireTeamContext(auth);
-      void run(context)
-        .then(() =>
-          queryClient.invalidateQueries({
-            queryKey: [MY_WORKSPACES_QUERY_KEY],
-          }),
-        )
-        .catch((error) => {
-          console.error("[contacts] failed to update workspace", error);
-        });
-    } catch {
-      // Signed out: the local contact edit still applies.
-    }
-  };
 
   return (
     <div className="flex h-full flex-1 flex-col">
@@ -114,12 +69,8 @@ export function OrganizationDetailsColumn({
             onDelete={() => onDelete(organization.id)}
             onRemoveAvatar={
               organization.avatarDataUrl
-                ? () => {
-                    persistContactAvatar("organization", organization.id, null);
-                    pushToLinkedWorkspace((context) =>
-                      setWorkspaceLogo(context, organization.id, null),
-                    );
-                  }
+                ? () =>
+                    persistContactAvatar("organization", organization.id, null)
                 : undefined
             }
           />
@@ -133,18 +84,9 @@ export function OrganizationDetailsColumn({
             <div className="border-border flex items-center justify-center border-b py-6">
               <AvatarUploadButton
                 label={t`Change photo`}
-                onUpload={(dataUrl) => {
-                  persistContactAvatar(
-                    "organization",
-                    organization.id,
-                    dataUrl,
-                  );
-                  if (isWorkspaceLogoDataUrl(dataUrl)) {
-                    pushToLinkedWorkspace((context) =>
-                      setWorkspaceLogo(context, organization.id, dataUrl),
-                    );
-                  }
-                }}
+                onUpload={(dataUrl) =>
+                  persistContactAvatar("organization", organization.id, dataUrl)
+                }
               >
                 {organization.avatarDataUrl ? (
                   <ContactImage src={organization.avatarDataUrl} size={64} />
@@ -165,12 +107,6 @@ export function OrganizationDetailsColumn({
                   <EditableOrganizationNameField
                     key={organization.id}
                     organization={organization}
-                    serverName={linkedWorkspace?.name}
-                    onNameCommit={(name) =>
-                      pushToLinkedWorkspace((context) =>
-                        renameWorkspace(context, organization.id, name),
-                      )
-                    }
                   />
                 </div>
               </div>
@@ -283,12 +219,8 @@ export function OrganizationDetailsColumn({
 
 function EditableOrganizationNameField({
   organization,
-  serverName,
-  onNameCommit,
 }: {
   organization: OrganizationRecord;
-  serverName?: string;
-  onNameCommit?: (name: string) => void;
 }) {
   const { t } = useLingui();
 
@@ -301,13 +233,6 @@ function EditableOrganizationNameField({
         }).catch((error) => {
           console.error("[contacts] failed to update organization", error);
         });
-      }}
-      onBlur={(event) => {
-        const name = event.target.value.trim();
-        // organization.name is live and already reflects the local edit, so
-        // the push decision compares against the server's workspace name.
-        const baseline = serverName ?? organization.name;
-        if (name && name !== baseline) onNameCommit?.(name);
       }}
       placeholder={t`Organization name`}
       className="h-7 border-none p-0 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"

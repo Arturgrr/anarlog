@@ -16,7 +16,6 @@ const mocks = vi.hoisted(() => ({
   folders: [] as string[],
   icons: {} as Record<string, { type: "icon"; value: string; color: string }>,
   instructions: "",
-  auth: null as { session: { user: { id: string } } } | null,
   materials: [] as Array<{
     id: string;
     filename: string;
@@ -27,15 +26,7 @@ const mocks = vi.hoisted(() => ({
   renameNamedFolder: vi.fn(),
   updateFolderIcon: vi.fn(),
   updateFolderInstructions: vi.fn(),
-  updateFolderWorkspace: vi.fn(),
   upload: vi.fn(),
-  workspaceId: "",
-  personalWorkspaceId: "",
-  workspaces: [] as Array<{ id: string; name: string }>,
-}));
-
-vi.mock("~/auth", () => ({
-  useOptionalAuth: () => mocks.auth,
 }));
 
 vi.mock("@lingui/react/macro", () => ({
@@ -53,7 +44,6 @@ vi.mock("@lingui/react/macro", () => ({
 vi.mock("~/session/queries", () => ({
   useFolderIcons: () => mocks.icons,
   useFolderPaths: () => mocks.folders,
-  useFolderWorkspaces: () => ({}),
 }));
 
 vi.mock("~/session/folder-catalog", () => ({
@@ -62,20 +52,7 @@ vi.mock("~/session/folder-catalog", () => ({
   renameNamedFolder: mocks.renameNamedFolder,
   updateFolderIcon: mocks.updateFolderIcon,
   updateFolderInstructions: mocks.updateFolderInstructions,
-  updateFolderWorkspace: mocks.updateFolderWorkspace,
-  useFolderWorkspaceId: () => mocks.workspaceId,
   useFolderInstructions: () => mocks.instructions,
-}));
-
-vi.mock("~/session-sharing/folder-default-access", () => ({
-  folderDefaultAccessRule: () => null,
-  setFolderDefaultAccess: vi.fn(),
-  useFolderDefaultAccessRules: () => [],
-}));
-
-vi.mock("~/session-sharing/source", () => ({
-  useAvailableShareWorkspaces: () => mocks.workspaces,
-  usePersonalWorkspaceId: () => mocks.personalWorkspaceId,
 }));
 
 vi.mock("~/session/folder-attachments", () => ({
@@ -129,22 +106,16 @@ describe("Folders workspace", () => {
     mocks.renameNamedFolder.mockReset();
     mocks.updateFolderIcon.mockReset();
     mocks.updateFolderInstructions.mockReset();
-    mocks.updateFolderWorkspace.mockReset();
     mocks.upload.mockReset();
     mocks.folders = [];
     mocks.icons = {};
     mocks.instructions = "";
     mocks.materials = [];
-    mocks.auth = null;
-    mocks.workspaceId = "";
-    mocks.personalWorkspaceId = "";
-    mocks.workspaces = [];
     mocks.createNamedFolder.mockResolvedValue("CS 101");
     mocks.deleteNamedFolder.mockResolvedValue(undefined);
     mocks.renameNamedFolder.mockResolvedValue("Algorithms");
     mocks.updateFolderIcon.mockResolvedValue(undefined);
     mocks.updateFolderInstructions.mockResolvedValue(undefined);
-    mocks.updateFolderWorkspace.mockResolvedValue(undefined);
     mocks.upload.mockResolvedValue({
       path: "/vault/sessions/CS 101/materials/syllabus.pdf",
       attachmentId: "syllabus.pdf",

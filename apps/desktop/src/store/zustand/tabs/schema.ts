@@ -30,9 +30,7 @@ export type SupportedWindowTabInput =
 export type TabInput =
   | SupportedWindowTabInput
   | { type: "automations" }
-  | { type: "folders" }
-  | { type: "shared_sessions"; id: string }
-  | { type: "shared_note_preview"; id: string };
+  | { type: "folders" };
 
 export const isTabInputSupported = (
   tab: WindowsTabInput,
@@ -53,10 +51,8 @@ export type SettingsTab =
   | "audio"
   | "appearance"
   | "sync"
-  | "team"
   | "notifications"
   | "imports"
-  | "crm"
   | "developers"
   | "privacy"
   | "permissions"
@@ -76,10 +72,8 @@ const normalizeSettingsTab = (
     case "meetings":
     case "appearance":
     case "sync":
-    case "team":
     case "notifications":
     case "imports":
-    case "crm":
     case "developers":
     case "privacy":
     case "permissions":
@@ -123,8 +117,6 @@ export type Tab =
       id: string;
       state: SessionsState;
     })
-  | (BaseTab & { type: "shared_sessions"; id: string })
-  | (BaseTab & { type: "shared_note_preview"; id: string })
   | (BaseTab & {
       type: "contacts";
       state: ContactsState;
@@ -150,19 +142,10 @@ export type Tab =
   | (BaseTab & { type: "onboarding" })
   | (BaseTab & { type: "edit"; requestId: string })
   | (BaseTab & {
-      type: "task";
-      id: string;
-      resources: TaskResource[];
-    })
-  | (BaseTab & {
       type: "daily_summary";
       id: string;
       state: DailySummaryState;
     });
-
-export type TaskResource =
-  | { type: "github_issue"; owner: string; repo: string; number: number }
-  | { type: "github_pr"; owner: string; repo: string; number: number };
 
 export const getDefaultState = (tab: TabInput): Tab => {
   const base = { active: false, slotId: "", pinned: false };
@@ -184,10 +167,6 @@ export const getDefaultState = (tab: TabInput): Tab => {
               scheduledAutoStart: null,
             },
       };
-    case "shared_sessions":
-      return { ...base, type: "shared_sessions", id: tab.id };
-    case "shared_note_preview":
-      return { ...base, type: "shared_note_preview", id: tab.id };
     case "contacts":
       return {
         ...base,
@@ -258,10 +237,6 @@ export const uniqueIdfromTab = (tab: Tab): string => {
   switch (tab.type) {
     case "sessions":
       return `sessions-${tab.id}`;
-    case "shared_sessions":
-      return `shared-sessions-${tab.id}`;
-    case "shared_note_preview":
-      return `shared-note-preview-${tab.id}`;
     case "humans":
       return `humans-${tab.id}`;
     case "organizations":
@@ -286,8 +261,6 @@ export const uniqueIdfromTab = (tab: Tab): string => {
       return `onboarding`;
     case "edit":
       return `edit-${tab.requestId}`;
-    case "task":
-      return `task-${tab.id}`;
     case "daily_summary":
       return `daily_summary-${tab.id}`;
   }
