@@ -2,7 +2,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/Arturgrr/anarlog/releases/latest/download/latest.json"
+        "https://github.com/Arturgrr/librelog/releases/latest/download/latest.json"
       ]
     }
   }

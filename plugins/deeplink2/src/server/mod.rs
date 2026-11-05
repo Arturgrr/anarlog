@@ -147,7 +147,7 @@ fn ui_content(deep_link: &DeepLink) -> (bool, &'static str, &'static str) {
             (
                 true,
                 "Connected successfully",
-                "Returning to Anarlog to finish connecting.",
+                "Returning to Librelog to finish connecting.",
             )
         }
         DeepLink::AuthCallback(_) => default_ui_content(),
@@ -315,14 +315,14 @@ mod tests {
     #[test]
     fn subscription_code_bounces_through_custom_scheme_deeplink() {
         assert_eq!(
-            subscription_auth_deeplink("anarlog", &subscription_search()).as_deref(),
-            Some("anarlog://auth/callback?code=ac_nf5hq&state=state-1")
+            subscription_auth_deeplink("librelog", &subscription_search()).as_deref(),
+            Some("librelog://auth/callback?code=ac_nf5hq&state=state-1")
         );
-        let html = render_html(&DeepLink::AuthCallback(subscription_search()), "anarlog");
-        assert!(html.contains("anarlog://auth/callback?code=ac_nf5hq"));
+        let html = render_html(&DeepLink::AuthCallback(subscription_search()), "librelog");
+        assert!(html.contains("librelog://auth/callback?code=ac_nf5hq"));
         assert!(html.contains("state=state-1"));
         assert!(html.contains(r#"document.getElementById("open-app")?.click()"#));
-        assert!(!html.contains("anarlog://focus"));
+        assert!(!html.contains("librelog://focus"));
     }
 
     #[test]
@@ -330,9 +330,9 @@ mod tests {
         let html = render_html_from_callback(
             "/auth/callback",
             "code=codex-code&state=s1&scope=openid",
-            "anarlog",
+            "librelog",
         );
-        assert!(html.contains("anarlog://auth/callback?code=codex-code"));
+        assert!(html.contains("librelog://auth/callback?code=codex-code"));
         assert!(html.contains("state=s1"));
     }
 }

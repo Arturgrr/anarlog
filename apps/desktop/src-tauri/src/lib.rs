@@ -21,7 +21,7 @@ use tauri_plugin_permissions::{Permission, PermissionsPluginExt};
 use tauri_plugin_windows::AppWindow;
 
 #[cfg(any(feature = "dev", feature = "devtools"))]
-const STAGING_BUNDLE_ID: &str = "com.hyprnote.staging";
+const STAGING_BUNDLE_ID: &str = "com.arturgrr.librelog.staging";
 
 const APP_EXIT_REQUESTED_EVENT: &str = "app-exit-requested";
 static EXIT_FLUSH_COMPLETE: AtomicBool = AtomicBool::new(false);
@@ -476,7 +476,7 @@ pub fn main() {
 }
 
 fn startup_failure_message(error: &impl std::fmt::Display) -> String {
-    format!("Anarlog failed to start: {error}")
+    format!("Librelog failed to start: {error}")
 }
 
 fn exit_after_startup_failure(identifier: &str, error: &impl std::fmt::Display) -> ! {
@@ -490,11 +490,11 @@ fn exit_after_startup_failure(identifier: &str, error: &impl std::fmt::Display) 
         // Startup can fail before the database is reachable, so the alert text
         // is fixed per failure class instead of embedding the error.
         let alert = if db::is_transient_lock_error(error) {
-            "display alert \"Anarlog is not ready yet\" message \"Another Anarlog process is still using your data, possibly finishing an update. Your existing data was left unchanged. Please wait a moment and open Anarlog again.\" as critical buttons {\"OK\"} default button \"OK\""
+            "display alert \"Librelog is not ready yet\" message \"Another Librelog process is still using your data, possibly finishing an update. Your existing data was left unchanged. Please wait a moment and open Librelog again.\" as critical buttons {\"OK\"} default button \"OK\""
         } else if db::is_newer_schema_error(error) {
-            "display alert \"Anarlog needs an update\" message \"Your data was updated by a newer version of Anarlog, such as Anarlog Nightly, and this version cannot open it yet. Your existing data was left unchanged. Install the latest version of Anarlog, or keep using the newer app until this version catches up.\" as critical buttons {\"OK\"} default button \"OK\""
+            "display alert \"Librelog needs an update\" message \"Your data was updated by a newer version of Librelog, such as Librelog Nightly, and this version cannot open it yet. Your existing data was left unchanged. Install the latest version of Librelog, or keep using the newer app until this version catches up.\" as critical buttons {\"OK\"} default button \"OK\""
         } else {
-            "display alert \"Anarlog could not start\" message \"Your existing data was left unchanged. Please restart the app. If the problem continues, contact support.\" as critical buttons {\"OK\"} default button \"OK\""
+            "display alert \"Librelog could not start\" message \"Your existing data was left unchanged. Please restart the app. If the problem continues, contact support.\" as critical buttons {\"OK\"} default button \"OK\""
         };
         let _ = std::process::Command::new("/usr/bin/osascript")
             .args(["-e", alert])

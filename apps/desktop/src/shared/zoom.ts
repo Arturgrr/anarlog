@@ -9,7 +9,7 @@ import {
 
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
-export const ZOOM_STORAGE_KEY = "anarlog-zoom-factor";
+export const ZOOM_STORAGE_KEY = "librelog-zoom-factor";
 export const ZOOM_CHANGED_EVENT = "anlg:zoom-factor-changed";
 
 export const ZOOM_STEPS = [

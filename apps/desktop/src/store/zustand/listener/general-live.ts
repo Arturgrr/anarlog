@@ -213,7 +213,7 @@ const notifyTranscriptionStalled = () => {
     id: "live-transcription-stalled",
     duration: Infinity,
     description:
-      "Anarlog keeps recording while live transcription reconnects. Missing text will be recovered from temporary audio while the meeting continues.",
+      "Librelog keeps recording while live transcription reconnects. Missing text will be recovered from temporary audio while the meeting continues.",
   });
 };
 
@@ -678,7 +678,7 @@ export const startLiveSession = <T extends LiveStore>(
           detectCommands
             .listMicUsingApplications()
             .then((r) => (r.status === "ok" ? r.data : null)),
-          getIdentifier().catch(() => "com.anarlog.stable"),
+          getIdentifier().catch(() => "com.arturgrr.librelog"),
         ]),
       catch: (error) => error,
     });
@@ -703,7 +703,7 @@ export const startLiveSession = <T extends LiveStore>(
             beforeListeningStarted: {
               args: {
                 resource_dir: sessionPath,
-                app_hyprnote: bundleId,
+                app_librelog: bundleId,
                 app_meeting,
               },
             },
@@ -1088,7 +1088,7 @@ export const stopLiveSession = <T extends GeneralState>(
             if (r.status === "error") throw new Error(r.error);
             return r.data;
           }),
-          getIdentifier().catch(() => "com.anarlog.stable"),
+          getIdentifier().catch(() => "com.arturgrr.librelog"),
         ])
           .then(([dataDirPath, bundleId]) => {
             const sessionPath = getSessionResourcePath(dataDirPath, sessionId);
@@ -1096,7 +1096,7 @@ export const stopLiveSession = <T extends GeneralState>(
               afterListeningStopped: {
                 args: {
                   resource_dir: sessionPath,
-                  app_hyprnote: bundleId,
+                  app_librelog: bundleId,
                   app_meeting: null,
                 },
               },

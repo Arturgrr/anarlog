@@ -35,24 +35,11 @@ fn validate_secret_coordinate(caller: SecretCaller, scope: &str, key: &str) -> R
 }
 
 fn secure_store_service(identifier: &str) -> String {
-    let identifier = match identifier {
-        "com.hyprnote.dev" => "com.anarlog.dev",
-        "com.hyprnote.staging" => "com.anarlog.staging",
-        "com.hyprnote.stable" | "com.hyprnote.Hyprnote" => "com.anarlog.stable",
-        identifier => identifier,
-    };
-
     format!("{identifier}.{SECURE_STORE_SUFFIX}")
 }
 
-fn secure_store_account(identifier: &str, scope: &str, key: &str) -> String {
-    let account = format!("{scope}:{key}");
-    if identifier == "com.hyprnote.dev" {
-        // Rotate away from dev items whose ACLs captured unstable ad-hoc signatures.
-        format!("v2:{account}")
-    } else {
-        account
-    }
+fn secure_store_account(scope: &str, key: &str) -> String {
+    format!("{scope}:{key}")
 }
 
 fn secure_store_error(error: keyring::Error) -> String {
@@ -121,36 +108,6 @@ fn repair_macos_keychain_access() -> Result<(), String> {
     Ok(())
 }
 
-fn legacy_secret_locations(identifier: &str, scope: &str, key: &str) -> Vec<(String, String)> {
-    let service = secure_store_service(identifier);
-    let account = format!("{scope}:{key}");
-    let current_account = secure_store_account(identifier, scope, key);
-    let legacy_service = format!("{identifier}.{SECURE_STORE_SUFFIX}");
-    let mut locations = Vec::new();
-
-    if account != current_account {
-        locations.push((service.clone(), account.clone()));
-    }
-    if legacy_service != service {
-        locations.push((legacy_service, account));
-    }
-
-    locations
-}
-
-fn legacy_secret_entries<R: tauri::Runtime>(
-    app: &tauri::AppHandle<R>,
-    scope: &str,
-    key: &str,
-) -> Result<Vec<keyring::Entry>, String> {
-    legacy_secret_locations(&app.config().identifier, scope, key)
-        .into_iter()
-        .map(|(service, account)| {
-            keyring::Entry::new(&service, &account).map_err(secure_store_error)
-        })
-        .collect()
-}
-
 struct SecretLocation {
     service: String,
     account: String,
@@ -196,7 +153,7 @@ fn secret_location<R: tauri::Runtime>(
     let identifier = &app.config().identifier;
     Ok(SecretLocation {
         service: secure_store_service(identifier),
-        account: secure_store_account(identifier, scope, key),
+        account: secure_store_account(scope, key),
     })
 }
 
@@ -363,21 +320,7 @@ fn read_secret_blocking_for<R: tauri::Runtime>(
     let location = secret_location(app, scope, key)?;
     match location.read() {
         Ok(secret) => Ok(Some(secret)),
-        Err(ChunkedError::Keyring(keyring::Error::NoEntry)) => {
-            for legacy_entry in legacy_secret_entries(app, scope, key)? {
-                match legacy_entry.get_password() {
-                    Ok(secret) => {
-                        if location.write(&secret).is_ok() {
-                            let _ = legacy_entry.delete_credential();
-                        }
-                        return Ok(Some(secret));
-                    }
-                    Err(keyring::Error::NoEntry | keyring::Error::PlatformFailure(_)) => {}
-                    Err(error) => return Err(secure_store_error(error)),
-                }
-            }
-            Ok(None)
-        }
+        Err(ChunkedError::Keyring(keyring::Error::NoEntry)) => Ok(None),
         Err(error) => Err(chunked_error(error)),
     }
 }
@@ -434,11 +377,7 @@ fn write_secret_blocking_for<R: tauri::Runtime>(
     value: &str,
 ) -> Result<(), String> {
     validate_secret_coordinate(caller, scope, key)?;
-    secret_location(app, scope, key)?.write(value)?;
-    for legacy_entry in legacy_secret_entries(app, scope, key)? {
-        let _ = legacy_entry.delete_credential();
-    }
-    Ok(())
+    secret_location(app, scope, key)?.write(value)
 }
 
 #[tauri::command]
@@ -480,12 +419,6 @@ fn delete_secret_blocking_for<R: tauri::Runtime>(
     key: &str,
 ) -> Result<(), String> {
     validate_secret_coordinate(caller, scope, key)?;
-    for legacy_entry in legacy_secret_entries(app, scope, key)? {
-        match legacy_entry.delete_credential() {
-            Ok(()) | Err(keyring::Error::NoEntry | keyring::Error::PlatformFailure(_)) => {}
-            Err(error) => return Err(secure_store_error(error)),
-        }
-    }
     secret_location(app, scope, key)?.delete()
 }
 
@@ -496,60 +429,23 @@ mod tests {
     #[test]
     fn maps_bundle_identifiers_to_secure_store_services() {
         for (identifier, expected) in [
-            ("com.hyprnote.dev", "com.anarlog.dev.secure-store"),
-            ("com.hyprnote.staging", "com.anarlog.staging.secure-store"),
-            ("com.hyprnote.stable", "com.anarlog.stable.secure-store"),
-            ("com.hyprnote.Hyprnote", "com.anarlog.stable.secure-store"),
-            ("com.example.app", "com.example.app.secure-store"),
+            (
+                "com.arturgrr.librelog",
+                "com.arturgrr.librelog.secure-store",
+            ),
+            (
+                "com.arturgrr.librelog.dev",
+                "com.arturgrr.librelog.dev.secure-store",
+            ),
+            (
+                "com.arturgrr.librelog.nightly",
+                "com.arturgrr.librelog.nightly.secure-store",
+            ),
         ] {
             assert_eq!(
                 secure_store_service(identifier),
                 expected,
                 "unexpected service for {identifier}"
-            );
-        }
-    }
-
-    #[test]
-    fn versions_dev_accounts_across_signing_changes() {
-        assert_eq!(
-            secure_store_account("com.hyprnote.dev", "provider", "deepgram"),
-            "v2:provider:deepgram"
-        );
-        assert_eq!(
-            secure_store_account("com.hyprnote.stable", "provider", "deepgram"),
-            "provider:deepgram"
-        );
-    }
-
-    #[test]
-    fn lists_legacy_secret_locations_without_duplicates() {
-        for (identifier, expected) in [
-            (
-                "com.hyprnote.dev",
-                vec![
-                    (
-                        "com.anarlog.dev.secure-store".to_string(),
-                        "provider:deepgram".to_string(),
-                    ),
-                    (
-                        "com.hyprnote.dev.secure-store".to_string(),
-                        "provider:deepgram".to_string(),
-                    ),
-                ],
-            ),
-            ("com.example.app", vec![]),
-        ] {
-            let locations = legacy_secret_locations(identifier, "provider", "deepgram");
-            assert_eq!(
-                locations, expected,
-                "unexpected legacy locations for {identifier}"
-            );
-            let unique: std::collections::HashSet<_> = locations.iter().collect();
-            assert_eq!(
-                locations.len(),
-                unique.len(),
-                "duplicate locations for {identifier}"
             );
         }
     }

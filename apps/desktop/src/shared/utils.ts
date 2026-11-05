@@ -7,25 +7,22 @@ import { getIdentifier } from "@tauri-apps/api/app";
 export const id = () => crypto.randomUUID() as string;
 
 export type DesktopScheme =
-  | "anarlog"
-  | "anarlog-staging"
-  | "anarlog-nightly"
-  | "anarlog-dev";
+  | "librelog"
+  | "librelog-staging"
+  | "librelog-nightly"
+  | "librelog-dev";
 
 export const getScheme = async (): Promise<DesktopScheme> => {
   const id = await getIdentifier();
   const schemes: Record<string, DesktopScheme> = {
-    "com.hyprnote.stable": "anarlog",
-    "com.hyprnote.Hyprnote": "anarlog",
-    "com.hyprnote.staging": "anarlog-staging",
-    "com.hyprnote.nightly": "anarlog-nightly",
-    "com.hyprnote.dev": "anarlog-dev",
-    "so.anarlog.Anarlog": "anarlog",
-    "com.anarlog.stable": "anarlog",
-    "com.anarlog.staging": "anarlog-staging",
-    "com.anarlog.dev": "anarlog-dev",
+    "com.arturgrr.librelog": "librelog",
+    "com.arturgrr.librelog.desktop": "librelog",
+    "com.arturgrr.librelog.staging": "librelog-staging",
+    "com.arturgrr.librelog.nightly": "librelog-nightly",
+    "com.arturgrr.librelog.dev": "librelog-dev",
+    "io.github.arturgrr.Librelog": "librelog",
   };
-  return schemes[id] ?? "anarlog";
+  return schemes[id] ?? "librelog";
 };
 
 // https://www.rfc-editor.org/rfc/rfc4122#section-4.1.7

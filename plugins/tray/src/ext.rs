@@ -46,7 +46,7 @@ static RECORDING_TITLE: Mutex<Option<String>> = Mutex::new(None);
 static AGENDA_SECTIONS: Mutex<Vec<TrayAgendaSection>> = Mutex::new(Vec::new());
 // muda 0.17 stores a raw MenuChild pointer on each NSMenuItem. Replacing the
 // tray menu while it is still visible frees those items and crashes on click
-// (HYPRNOTE2-2MTS). Defer set_menu until the next tray mouse-down instead.
+// Defer set_menu until the next tray mouse-down instead.
 #[cfg(target_os = "macos")]
 static MENU_DIRTY: AtomicBool = AtomicBool::new(false);
 

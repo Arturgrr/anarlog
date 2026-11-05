@@ -22,38 +22,26 @@ pub fn list_installed_apps() -> Vec<InstalledApp> {
 }
 
 const SELF_BUNDLE_IDS: &[&str] = &[
-    "com.anarlog.dev",
-    "com.anarlog.stable",
-    "com.anarlog.staging",
-    "com.anarlog.nightly",
-    "com.hyprnote.dev",
-    "com.hyprnote.stable",
-    "com.hyprnote.staging",
-    "com.hyprnote.nightly",
+    "com.arturgrr.librelog",
+    "com.arturgrr.librelog.dev",
+    "com.arturgrr.librelog.staging",
+    "com.arturgrr.librelog.nightly",
+    "com.arturgrr.librelog.desktop",
+    "io.github.arturgrr.librelog",
 ];
 
 const SELF_APP_NAMES: &[&str] = &[
-    "anarlog",
-    "anarlog staging",
-    "anarlog nightly",
-    "hyprnote",
-    "hyprnote staging",
-    "hyprnote nightly",
-    "char",
-    "char staging",
-    "char nightly",
+    "librelog",
+    "librelog dev",
+    "librelog staging",
+    "librelog nightly",
 ];
 
 const SELF_APP_PATH_SEGMENTS: &[&str] = &[
-    "/anarlog.app/",
-    "/anarlog staging.app/",
-    "/anarlog nightly.app/",
-    "/hyprnote.app/",
-    "/hyprnote staging.app/",
-    "/hyprnote nightly.app/",
-    "/char.app/",
-    "/char staging.app/",
-    "/char nightly.app/",
+    "/librelog.app/",
+    "/librelog dev.app/",
+    "/librelog staging.app/",
+    "/librelog nightly.app/",
 ];
 
 fn is_self_app(app: &InstalledApp) -> bool {
@@ -109,24 +97,17 @@ mod tests {
     }
 
     #[test]
-    fn is_self_app_matches_only_anarlog_identities() {
+    fn is_self_app_matches_only_librelog_identities() {
         for (id, name, expected) in [
-            ("com.anarlog.stable", "Anarlog", true),
-            ("com.hyprnote.stable", "Anarlog", true),
-            ("com.hyprnote.Hyprnote", "Hyprnote", true),
-            ("pid:42", "Anarlog", true),
-            ("pid:43", "Char Nightly", true),
-            ("pid:44", "Hyprnote Staging", true),
+            ("com.arturgrr.librelog", "Librelog", true),
+            ("pid:42", "Librelog", true),
+            ("pid:43", "Librelog Nightly", true),
             (
-                "/Applications/Anarlog.app/Contents/MacOS/anarlog",
+                "/Applications/Librelog.app/Contents/MacOS/librelog",
                 "Unknown",
                 true,
             ),
-            (
-                "/Applications/Hyprnote Nightly.app/Contents/MacOS/Hyprnote Nightly",
-                "Unknown",
-                true,
-            ),
+            ("com.hyprnote.stable", "Anarlog", false),
             ("com.adobe.character-animator", "Character Animator", false),
             (
                 "/Applications/Chart.app/Contents/MacOS/Chart",

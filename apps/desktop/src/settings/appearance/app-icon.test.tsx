@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   applyAppIconPreference: vi.fn(),
   appIcon: "default",
   theme: "system",
-  appIdentifier: "com.hyprnote.stable" as string | undefined,
+  appIdentifier: "com.arturgrr.librelog" as string | undefined,
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -44,7 +44,7 @@ describe("AppIconSelector", () => {
     mocks.platform.mockReturnValue("macos");
     mocks.appIcon = "default";
     mocks.theme = "system";
-    mocks.appIdentifier = "com.hyprnote.stable";
+    mocks.appIdentifier = "com.arturgrr.librelog";
   });
 
   it.each([["system"], ["dark"]])(

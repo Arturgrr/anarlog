@@ -21,46 +21,70 @@ describe("app icon preference", () => {
   });
 
   it("resolves the default icon from the app channel", () => {
-    expect(resolveAppIconName("default", "com.hyprnote.stable")).toBe("stable");
-    expect(resolveAppIconName("default", "com.hyprnote.nightly")).toBe(
+    expect(resolveAppIconName("default", "com.arturgrr.librelog")).toBe(
+      "stable",
+    );
+    expect(resolveAppIconName("default", "com.arturgrr.librelog.nightly")).toBe(
       "staging",
     );
-    expect(resolveAppIconName("default", "com.hyprnote.staging")).toBe(
+    expect(resolveAppIconName("default", "com.arturgrr.librelog.staging")).toBe(
       "staging",
     );
-    expect(resolveAppIconName("default", "com.hyprnote.dev")).toBe("dev");
+    expect(resolveAppIconName("default", "com.arturgrr.librelog.dev")).toBe(
+      "dev",
+    );
   });
 
   it("follows the system appearance for the system theme", () => {
     expect(
-      resolveDockIconName("anagram", "system", false, "com.hyprnote.dev"),
+      resolveDockIconName(
+        "anagram",
+        "system",
+        false,
+        "com.arturgrr.librelog.dev",
+      ),
     ).toBe("anagram");
     expect(
-      resolveDockIconName("anagram", "system", true, "com.hyprnote.dev"),
+      resolveDockIconName(
+        "anagram",
+        "system",
+        true,
+        "com.arturgrr.librelog.dev",
+      ),
     ).toBe("anagram-dark");
     expect(
-      resolveDockIconName("staging", "system", true, "com.hyprnote.stable"),
+      resolveDockIconName("staging", "system", true, "com.arturgrr.librelog"),
     ).toBe("staging-dark");
   });
 
   it("overrides the system appearance with an explicit theme", () => {
     expect(
-      resolveDockIconName("anagram", "dark", false, "com.hyprnote.dev"),
+      resolveDockIconName(
+        "anagram",
+        "dark",
+        false,
+        "com.arturgrr.librelog.dev",
+      ),
     ).toBe("anagram-dark");
     expect(
-      resolveDockIconName("anagram", "light", true, "com.hyprnote.dev"),
+      resolveDockIconName(
+        "anagram",
+        "light",
+        true,
+        "com.arturgrr.librelog.dev",
+      ),
     ).toBe("anagram");
     expect(
-      resolveDockIconName("default", "dark", false, "com.hyprnote.stable"),
+      resolveDockIconName("default", "dark", false, "com.arturgrr.librelog"),
     ).toBe("stable-dark");
   });
 
   it("keeps theme-independent icons unchanged", () => {
     expect(
-      resolveDockIconName("journal", "system", true, "com.hyprnote.stable"),
+      resolveDockIconName("journal", "system", true, "com.arturgrr.librelog"),
     ).toBe("journal");
     expect(
-      resolveDockIconName("stone", "dark", false, "com.hyprnote.stable"),
+      resolveDockIconName("stone", "dark", false, "com.arturgrr.librelog"),
     ).toBe("stone");
     expect(hasDarkAppIconVariant("anagram")).toBe(true);
     expect(hasDarkAppIconVariant("walnut")).toBe(false);
