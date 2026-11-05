@@ -13,7 +13,6 @@ anlg-calendar-interface = { workspace = true }
 anlg-db-app = { workspace = true }
 
 tauri = { workspace = true, features = ["test"] }
-tauri-plugin-auth = { workspace = true }
 tauri-plugin-db = { workspace = true }
 tauri-plugin-permissions = { workspace = true }
 tauri-specta = { workspace = true, features = ["derive", "typescript"] }

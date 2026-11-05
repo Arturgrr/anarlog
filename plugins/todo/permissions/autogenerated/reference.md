@@ -12,10 +12,6 @@ Default permissions for the plugin
 - `allow-create-todo`
 - `allow-complete-todo`
 - `allow-delete-todo`
-- `allow-linear-list-teams`
-- `allow-linear-list-tickets`
-- `allow-github-issue-state`
-- `allow-github-issue-detail`
 
 ## Permission Table
 
@@ -159,110 +155,6 @@ Denies the fetch_todos command without any pre-configured scope.
 <tr>
 <td>
 
-`todo:allow-github-issue-detail`
-
-</td>
-<td>
-
-Enables the github_issue_detail command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`todo:deny-github-issue-detail`
-
-</td>
-<td>
-
-Denies the github_issue_detail command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`todo:allow-github-issue-state`
-
-</td>
-<td>
-
-Enables the github_issue_state command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`todo:deny-github-issue-state`
-
-</td>
-<td>
-
-Denies the github_issue_state command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`todo:allow-linear-list-teams`
-
-</td>
-<td>
-
-Enables the linear_list_teams command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`todo:deny-linear-list-teams`
-
-</td>
-<td>
-
-Denies the linear_list_teams command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`todo:allow-linear-list-tickets`
-
-</td>
-<td>
-
-Enables the linear_list_tickets command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`todo:deny-linear-list-tickets`
-
-</td>
-<td>
-
-Denies the linear_list_tickets command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 `todo:allow-list-todo-lists`
 
 </td>
@@ -282,32 +174,6 @@ Enables the list_todo_lists command without any pre-configured scope.
 <td>
 
 Denies the list_todo_lists command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`todo:allow-ping`
-
-</td>
-<td>
-
-Enables the ping command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`todo:deny-ping`
-
-</td>
-<td>
-
-Denies the ping command without any pre-configured scope.
 
 </td>
 </tr>

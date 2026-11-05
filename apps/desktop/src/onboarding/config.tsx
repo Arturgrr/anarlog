@@ -16,7 +16,7 @@ const STEPS_MACOS: OnboardingStep[] = [
   "imports",
   "final",
 ];
-const STEPS_OTHER: OnboardingStep[] = ["login", "calendar", "imports", "final"];
+const STEPS_OTHER: OnboardingStep[] = ["login", "imports", "final"];
 
 function getOnboardingSteps(): OnboardingStep[] {
   return platform() === "macos" ? STEPS_MACOS : STEPS_OTHER;

@@ -5,18 +5,9 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PermissionStatus } from "@anlg/plugin-permissions";
-
-// The real iconify-icon web component renders asynchronously via timers that
-// can fire after the test environment is torn down ("document is not
-// defined" unhandled errors), so render an inert element instead.
-vi.mock("@iconify-icon/react", () => ({
-  Icon: (props: Record<string, unknown>) =>
-    createElement("iconify-icon", props),
-}));
 
 type ContextMenuItem = {
   id?: string;
@@ -35,7 +26,6 @@ const mocks = vi.hoisted(() => ({
     reset: vi.fn(),
     error: null as string | null,
   },
-  openIntegration: vi.fn(),
   removeDisconnectedCalendarConnection: vi.fn(),
   allowReconnectedCalendarConnections: vi.fn(),
   syncCalendarEvents: vi.fn(),
@@ -44,18 +34,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@tauri-apps/plugin-os", () => ({
   platform: () => "macos",
-}));
-
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: {} }),
-}));
-
-vi.mock("~/auth/useConnections", () => ({
-  useConnections: () => ({
-    data: [],
-    isPending: false,
-    isError: false,
-  }),
 }));
 
 vi.mock("~/shared/hooks/useNativeContextMenu", () => ({
@@ -67,14 +45,6 @@ vi.mock("~/shared/hooks/useNativeContextMenu", () => ({
 
 vi.mock("~/shared/hooks/usePermissions", () => ({
   usePermission: () => mocks.calendar,
-}));
-
-vi.mock("~/shared/integration", () => ({
-  openIntegrationUrl: vi.fn(),
-  useOpenIntegrationUrl: () => ({
-    openIntegration: mocks.openIntegration,
-    openingAction: null,
-  }),
 }));
 
 vi.mock("~/services/calendar", () => ({

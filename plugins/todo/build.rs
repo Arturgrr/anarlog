@@ -7,10 +7,6 @@ const COMMANDS: &[&str] = &[
     "create_todo",
     "complete_todo",
     "delete_todo",
-    "linear_list_teams",
-    "linear_list_tickets",
-    "github_issue_state",
-    "github_issue_detail",
 ];
 
 fn main() {

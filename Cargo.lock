@@ -2796,22 +2796,15 @@ dependencies = [
 name = "calendar"
 version = "0.1.0"
 dependencies = [
- "api-client",
  "apple-calendar",
  "calendar-interface",
  "chrono",
  "chrono-tz 0.10.4",
- "google-calendar",
- "outlook-calendar",
  "regex",
- "reqwest 0.13.2",
  "serde",
  "serde_json",
  "specta",
  "thiserror 2.0.18",
- "tokio",
- "tracing",
- "wiremock",
 ]
 
 [[package]]
@@ -16253,7 +16246,6 @@ dependencies = [
  "sqlx",
  "tauri",
  "tauri-plugin",
- "tauri-plugin-auth",
  "tauri-plugin-db",
  "tauri-plugin-permissions",
  "tauri-specta",
@@ -17189,20 +17181,14 @@ dependencies = [
 name = "tauri-plugin-todo"
 version = "0.1.0"
 dependencies = [
- "anlg-http-utils",
- "api-client",
  "apple-todo",
- "github-issues",
- "reqwest 0.13.2",
  "serde",
  "specta",
  "specta-typescript",
  "tauri",
  "tauri-plugin",
- "tauri-plugin-auth",
  "tauri-specta",
  "thiserror 2.0.18",
- "ticket-interface",
 ]
 
 [[package]]
