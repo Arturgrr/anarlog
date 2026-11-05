@@ -78,7 +78,6 @@ allowBuilds:
   "@parcel/watcher": true
   dprint: true
   esbuild: true
-  supabase: true
 
 patchedDependencies:
   # Embed React Scan history, prompts, and inspector in the developer bar.
