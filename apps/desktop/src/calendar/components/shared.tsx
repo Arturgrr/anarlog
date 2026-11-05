@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 
 import { OutlookIcon } from "@anlg/ui/components/icons/outlook";
 
+import { docsUrl } from "~/shared/links";
+
 export type CalendarProvider = {
   disabled: boolean;
   id: string;
@@ -28,7 +30,7 @@ const _PROVIDERS = [
       />
     ),
     platform: "macos",
-    docsPath: "https://docs.anarlog.so/calendar#apple-calendar",
+    docsPath: docsUrl("calendar", "apple-calendar"),
     nangoIntegrationId: undefined,
   },
   {

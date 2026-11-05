@@ -5,12 +5,14 @@ description: "Record a meeting, take notes, and leave with a clear summary."
 
 Anarlog records your microphone and computer audio without joining the call as a bot. Each meeting stays together as an editable memo, transcript, and summary.
 
+Anarlog is local-first and open source. There is no account to create and no subscription: every feature is available to everyone. Transcription and summaries run on local models or on a provider you configure with your own API key.
+
 <CardGroup cols={2}>
   <Card title="Try your first meeting" icon="play" href="/quickstart">
-    Use the private demo in Anarlog, then record a real meeting.
+    Set up Anarlog, choose your models, and record a short test.
   </Card>
   <Card title="Install the desktop app" icon="download" href="/desktop-installation">
-    Choose the right build for macOS, Windows, or Linux.
+    Download a macOS build or build Anarlog from source.
   </Card>
   <Card title="Record a meeting" icon="microphone" href="/meetings">
     Start from your calendar or from a new note.
@@ -19,7 +21,7 @@ Anarlog records your microphone and computer audio without joining the call as a
     Work with your memo, summary, transcript, and exports.
   </Card>
   <Card title="Choose your AI" icon="sparkles" href="/ai-setup">
-    Use Anarlog Cloud, your own provider, or local models.
+    Use local models or your own provider.
   </Card>
 </CardGroup>
 
@@ -30,31 +32,28 @@ Anarlog records your microphone and computer audio without joining the call as a
     See the Settings language list and which models cover it.
   </Card>
   <Card title="How do I compare transcription costs?" icon="coins" href="/help#compare-transcription-costs">
-    See on-device, Anarlog Cloud, and bring-your-own-key pricing.
+    Compare on-device models with bring-your-own-key providers.
   </Card>
   <Card title="How can I use on-device models?" icon="hard-drive" href="/help#use-on-device-models">
     Use Soniqo, Apple Speech, a whisper.cpp `.bin`, or a Deepgram-compatible local server.
   </Card>
   <Card title="Is there a local model for hour-long calls?" icon="hourglass" href="/help#local-model-hour-long-calls">
-    Use Soniqo Parakeet Batch on Apple Silicon, or a hosted after-recording model.
+    Use Soniqo Parakeet Batch on Apple Silicon, or an after-recording provider.
   </Card>
   <Card title="Which models does Anarlog use?" icon="microchip" href="/models-and-providers">
-    See the current cloud routes, on-device models, and bring-your-own-provider behavior.
+    See the on-device models and how your own providers handle requests.
   </Card>
   <Card title="Can I use Anarlog offline?" icon="wifi-slash" href="/offline">
     Record, transcribe, summarize, and chat with local models.
   </Card>
   <Card title="Where is my data stored?" icon="hard-drive" href="/data-and-privacy">
-    See what stays local and what hosted features receive.
+    See what stays local and what a provider you choose receives.
   </Card>
   <Card title="Can I import a recording?" icon="file-arrow-up" href="/import-recordings">
     Create a meeting note from audio, SRT, or VTT files.
   </Card>
   <Card title="How do I improve summaries?" icon="wand-magic-sparkles" href="/customize-summaries">
     Use templates, instructions, languages, and your dictionary.
-  </Card>
-  <Card title="Can I share a meeting?" icon="share-nodes" href="/sharing">
-    Invite people, send a recap, or share a view-only link.
   </Card>
   <Card title="Can I import my meeting history?" icon="clock-rotate-left" href="/imports">
     Bring supported exports from another meeting assistant.
@@ -70,8 +69,8 @@ Anarlog records your microphone and computer audio without joining the call as a
 3. Take rough notes in **Memos** while Anarlog listens.
 4. Stop listening, then review **Summary** and **Transcript**.
 
-Your app data is stored locally by default. Hosted AI, sync, sharing, connected calendars, and the optional Cloud API send the content needed for the feature you choose. See [Data, privacy, and retention](/data-and-privacy) for the exact boundaries.
+Your app data is stored on your computer. Content leaves it only when you choose a hosted Transcription or Intelligence provider, or configure an integration such as a webhook. See [Data, privacy, and retention](/data-and-privacy) for the exact boundaries.
 
 <Note>
-  New to Anarlog? Open the **Welcome to Anarlog** note and click **Join & record**. It uses a private, prerecorded demo meeting.
+  New to Anarlog? Open the **Welcome to Anarlog** note and click **Record** to try a short test.
 </Note>

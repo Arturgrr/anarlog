@@ -301,13 +301,13 @@ mod tests {
 - Offers powerful extensions—like real-time transcripts and CRM uploads (e.g. Twenty).
 
 ## Stay Connected
-- Follow updates on [X](https://anarlog.so/x).
-- Join the community and chat on [Discord](https://anarlog.so/discord). 
+- Follow updates on [GitHub](https://github.com/Arturgrr/anarlog).
+- Report issues on [GitHub Issues](https://github.com/Arturgrr/anarlog/issues). 
 
 # Participants:
 
-* [John Jeong](mailto:john@hyprnote.com)
-* [Yujong Lee](mailto:yujonglee@hyprnote.com)
+* [John Jeong](mailto:john@example.com)
+* [Yujong Lee](mailto:yujong@example.com)
 
 # Meeting Transcript
 (No raw excerpt provided, utilized to generate the enhanced note)
@@ -340,15 +340,15 @@ mod tests {
 
         # Stay Connected
 
-        - Follow updates on [X](https://anarlog.so/x).
-        - Join the community and chat on [Discord](https://anarlog.so/discord).
+        - Follow updates on [GitHub](https://github.com/Arturgrr/anarlog).
+        - Report issues on [GitHub Issues](https://github.com/Arturgrr/anarlog/issues).
 
          
 
         # Participants:
 
-        - [John Jeong](mailto:john@hyprnote.com)
-        - [Yujong Lee](mailto:yujonglee@hyprnote.com)
+        - [John Jeong](mailto:john@example.com)
+        - [Yujong Lee](mailto:yujong@example.com)
 
          
 
@@ -378,8 +378,8 @@ mod tests {
 - Offers powerful extensions—like real-time transcripts and CRM uploads (e.g. Twenty).
 
 ## Stay Connected
-- Follow updates on [X](https://anarlog.so/x).
-- Join the community and chat on [Discord](https://anarlog.so/discord).
+- Follow updates on [GitHub](https://github.com/Arturgrr/anarlog).
+- Report issues on [GitHub Issues](https://github.com/Arturgrr/anarlog/issues).
 "#;
 
         insta::assert_snapshot!(opinionated_md_to_html(input).unwrap().to_string(), @r#"
@@ -406,8 +406,8 @@ mod tests {
         <p> </p>
         <h1>Stay Connected</h1>
         <ul>
-        <li>Follow updates on <a href="https://anarlog.so/x">X</a>.</li>
-        <li>Join the community and chat on <a href="https://anarlog.so/discord">Discord</a>.</li>
+        <li>Follow updates on <a href="https://github.com/Arturgrr/anarlog">GitHub</a>.</li>
+        <li>Report issues on <a href="https://github.com/Arturgrr/anarlog/issues">GitHub Issues</a>.</li>
         </ul>
         "#);
     }

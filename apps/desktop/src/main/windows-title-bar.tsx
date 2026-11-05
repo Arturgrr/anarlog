@@ -22,6 +22,7 @@ import { WindowsWindowControls } from "./windows-window-controls";
 
 import { useShell } from "~/contexts/shell";
 import { usesTitleBarSidebarActions } from "~/shared/hooks/useWindowControlsGutter";
+import { DOCS_URL, ISSUES_URL } from "~/shared/links";
 import { useOpenNoteDialog } from "~/shared/open-note-dialog";
 import { useNewNote } from "~/shared/useNewNote";
 import {
@@ -179,24 +180,18 @@ export function WindowsTitleBar({
           </TitleBarMenu>
           <TitleBarMenu label={t`Help`} onPointerDown={rememberEditTarget}>
             <DropdownMenuItem
-              onSelect={() =>
-                void openerCommands.openUrl("https://docs.anarlog.so", null)
-              }
+              onSelect={() => void openerCommands.openUrl(DOCS_URL, null)}
             >
               {t`Documentation`}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onSelect={() =>
-                void openerCommands.openUrl("https://anarlog.so/discord", null)
-              }
+              onSelect={() => void openerCommands.openUrl(ISSUES_URL, null)}
             >
               {t`Report a Bug`}
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={() =>
-                void openerCommands.openUrl("https://anarlog.so/discord", null)
-              }
+              onSelect={() => void openerCommands.openUrl(ISSUES_URL, null)}
             >
               {t`Suggest a Feature`}
             </DropdownMenuItem>

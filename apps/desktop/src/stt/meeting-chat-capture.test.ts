@@ -298,7 +298,7 @@ describe("startMeetingChatCapture", () => {
   });
 
   test("excludes the generated disclosure while retaining participant chat", async () => {
-    const disclosure = "Anarlog disclosure https://anarlog.so";
+    const disclosure = "Anarlog disclosure https://github.com/Arturgrr/anarlog";
     captureMeetingChatMessagesMock.mockResolvedValue(captureResult([]));
     const stop = startMeetingChatCapture({
       sessionId: "session-1",
@@ -314,7 +314,7 @@ describe("startMeetingChatCapture", () => {
           id: "disclosure",
           direction: "outgoing",
           text: `  ${disclosure.replace(" ", "\n")}  `,
-          links: ["https://anarlog.so"],
+          links: ["https://github.com/Arturgrr/anarlog"],
         },
         capturedMessage,
       ]),

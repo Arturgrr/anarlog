@@ -21,7 +21,6 @@ import {
 import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
-import { type WebTemplate } from "./codec";
 import { getTemplateCopyTitle, type UserTemplate } from "./queries";
 import { TemplateIconGlyph } from "./template-icon";
 import { AUTO_TEMPLATE_ID, useTemplateTab } from "./utils";
@@ -51,13 +50,8 @@ export function TemplatesSidebarContent({
 
   const {
     userTemplates,
-    webTemplates,
-    isWebLoading,
-    isWebMode,
     selectedMineId: effectiveSelectedMineId,
-    selectedWebIndex: effectiveSelectedWebIndex,
     setSelectedMineId,
-    setSelectedWebIndex,
     createTemplate,
     createDefaultTemplate,
     deleteTemplate,
@@ -138,34 +132,6 @@ export function TemplatesSidebarContent({
     );
   }, [sortedUserTemplates, search]);
 
-  const filteredWeb = useMemo(() => {
-    const query = search.toLowerCase().trim();
-
-    const matchingTemplates = webTemplates.flatMap((template, index) => {
-      const matches =
-        !query ||
-        template.title?.toLowerCase().includes(query) ||
-        template.description?.toLowerCase().includes(query) ||
-        template.category?.toLowerCase().includes(query) ||
-        template.targets?.some((target) =>
-          target.toLowerCase().includes(query),
-        );
-
-      return matches ? [{ template, index }] : [];
-    });
-
-    matchingTemplates.sort((a, b) => {
-      const titleA = a.template.title || "";
-      const titleB = b.template.title || "";
-
-      return sortOption === "reverse-alphabetical"
-        ? titleB.localeCompare(titleA)
-        : titleA.localeCompare(titleB);
-    });
-
-    return matchingTemplates;
-  }, [search, sortOption, webTemplates]);
-
   const combinedTemplates = useMemo<
     Array<
       | {
@@ -183,15 +149,6 @@ export function TemplatesSidebarContent({
           source: "user";
           template: UserTemplate;
         }
-      | {
-          key: string;
-          title: string;
-          selected: boolean;
-          pinned: false;
-          source: "web";
-          index: number;
-          template: WebTemplate;
-        }
     >
   >(() => {
     const query = search.trim().toLowerCase();
@@ -201,8 +158,7 @@ export function TemplatesSidebarContent({
             {
               key: AUTO_TEMPLATE_ID as typeof AUTO_TEMPLATE_ID,
               title: "Auto" as const,
-              selected:
-                !isWebMode && effectiveSelectedMineId === AUTO_TEMPLATE_ID,
+              selected: effectiveSelectedMineId === AUTO_TEMPLATE_ID,
               source: "auto" as const,
               customized: Boolean(autoPrompt.trim()),
             },
@@ -211,35 +167,16 @@ export function TemplatesSidebarContent({
     const mine = filteredMine.map((template) => ({
       key: template.id,
       title: template.title?.trim() || "Untitled",
-      selected: !isWebMode && effectiveSelectedMineId === template.id,
+      selected: effectiveSelectedMineId === template.id,
       pinned: Boolean(template.pinned),
       source: "user" as const,
       template,
     }));
 
-    const web = filteredWeb.map(({ template, index }) => ({
-      key: template.slug || `web-${index}`,
-      title: template.title?.trim() || "Untitled",
-      selected: isWebMode && effectiveSelectedWebIndex === index,
-      pinned: false as const,
-      source: "web" as const,
-      index,
-      template,
-    }));
-
-    return [...auto, ...mine, ...web];
-  }, [
-    autoPrompt,
-    effectiveSelectedMineId,
-    effectiveSelectedWebIndex,
-    filteredMine,
-    filteredWeb,
-    isWebMode,
-    search,
-  ]);
+    return [...auto, ...mine];
+  }, [autoPrompt, effectiveSelectedMineId, filteredMine, search]);
 
   const hasResults = combinedTemplates.length > 0;
-  const isEmpty = !isWebLoading && !hasResults;
 
   const selectCombinedTemplate = useCallback(
     (
@@ -250,25 +187,13 @@ export function TemplatesSidebarContent({
         | {
             source: "user";
             template: UserTemplate;
-          }
-        | {
-            source: "web";
-            index: number;
           },
     ) => {
-      if (item.source === "auto") {
-        setSelectedMineId(AUTO_TEMPLATE_ID);
-        return;
-      }
-
-      if (item.source === "user") {
-        setSelectedMineId(item.template.id);
-        return;
-      }
-
-      setSelectedWebIndex(item.index);
+      setSelectedMineId(
+        item.source === "auto" ? AUTO_TEMPLATE_ID : item.template.id,
+      );
     },
-    [setSelectedMineId, setSelectedWebIndex],
+    [setSelectedMineId],
   );
 
   useEffect(() => {
@@ -339,7 +264,7 @@ export function TemplatesSidebarContent({
     selectedElement.scrollIntoView({
       block: "nearest",
     });
-  }, [effectiveSelectedMineId, effectiveSelectedWebIndex]);
+  }, [effectiveSelectedMineId]);
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
@@ -425,7 +350,7 @@ export function TemplatesSidebarContent({
         ref={scrollContainerRef}
         className="scrollbar-hide flex-1 overflow-y-auto"
       >
-        {isEmpty ? (
+        {!hasResults ? (
           <div className="text-muted-foreground px-3 py-8 text-center">
             <BookOpenText
               size={32}
@@ -473,7 +398,7 @@ export function TemplatesSidebarContent({
                         </div>
                       </div>
                     </button>
-                  ) : item.source === "user" ? (
+                  ) : (
                     <TemplateListItem
                       key={item.key}
                       template={item.template}
@@ -483,48 +408,11 @@ export function TemplatesSidebarContent({
                       onDuplicate={handleDuplicateTemplate}
                       onDelete={handleDeleteTemplate}
                     />
-                  ) : (
-                    <button
-                      key={item.key}
-                      onClick={() => setSelectedWebIndex(item.index)}
-                      data-template-selected={item.selected}
-                      className={cn([
-                        "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-                        item.selected ? "bg-accent" : "hover:bg-accent/50",
-                      ])}
-                    >
-                      <div className="flex items-center gap-2">
-                        <TemplateIconGlyph
-                          icon={item.template.icon}
-                          className="size-4 text-sm"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate font-medium">
-                            {item.title}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
                   ),
                 )}
               </div>
             )}
 
-            {isWebLoading && !hasResults && (
-              <div className="pt-1">
-                <div className="flex flex-col gap-1">
-                  {[0, 1, 2, 3].map((index) => (
-                    <div
-                      key={index}
-                      className="animate-pulse rounded-lg px-3 py-2"
-                    >
-                      <div className="bg-accent h-4 w-3/4 rounded-xs" />
-                      <div className="bg-muted mt-1.5 h-3 w-1/3 rounded-xs" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
             <SharedResourceLibrarySection
               resourceType="template"
               search={search}

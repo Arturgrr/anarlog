@@ -114,6 +114,8 @@ function ChangelogBody({
             ) : (
               <>{children}</>
             ),
+          // Release-note images are hosted remotely; the app stays offline.
+          img: () => null,
         }}
       />
     );

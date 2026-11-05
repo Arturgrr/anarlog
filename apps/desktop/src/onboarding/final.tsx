@@ -5,12 +5,7 @@ import { useRef, useState } from "react";
 import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { commands as openerCommands } from "@anlg/plugin-opener2";
 import { commands as sfxCommands } from "@anlg/plugin-sfx";
-import {
-  CircleNotch,
-  DiscordLogo,
-  GithubLogo,
-  XLogo,
-} from "@anlg/ui/components/icons";
+import { CircleNotch, GithubLogo } from "@anlg/ui/components/icons";
 
 import { OnboardingButton } from "./shared";
 import {
@@ -19,29 +14,9 @@ import {
 } from "./welcome-note";
 
 import { createSession } from "~/session/queries";
+import { REPOSITORY_URL } from "~/shared/links";
 import { flushAutomaticRelaunch } from "~/shared/relaunch";
 import { commands } from "~/types/tauri.gen";
-
-const SOCIALS = [
-  {
-    label: "Discord",
-    icon: DiscordLogo,
-    url: "https://anarlog.so/discord",
-  },
-  {
-    label: "GitHub",
-    icon: GithubLogo,
-    url: "https://github.com/fastrepl/anarlog",
-  },
-  {
-    label: "X",
-    icon: XLogo,
-    size: 14,
-    url: "https://x.com/anarlogapp",
-  },
-] as const;
-
-const SOCIAL_ICON_SIZE = 18;
 
 export function FinalDescription() {
   return (
@@ -49,23 +24,13 @@ export function FinalDescription() {
       <span>
         <Trans>Join our community and stay updated:</Trans>
       </span>
-      <div className="flex items-center gap-2">
-        {SOCIALS.map((social) => {
-          const iconSize = "size" in social ? social.size : SOCIAL_ICON_SIZE;
-          const SocialIcon = social.icon;
-
-          return (
-            <button
-              key={social.label}
-              onClick={() => void openerCommands.openUrl(social.url, null)}
-              className="text-muted-foreground hover:text-muted-foreground inline-flex size-5 items-center justify-center rounded-md transition-colors duration-150"
-              aria-label={social.label}
-            >
-              <SocialIcon size={iconSize} />
-            </button>
-          );
-        })}
-      </div>
+      <button
+        onClick={() => void openerCommands.openUrl(REPOSITORY_URL, null)}
+        className="text-muted-foreground hover:text-muted-foreground inline-flex size-5 items-center justify-center rounded-md transition-colors duration-150"
+        aria-label="GitHub"
+      >
+        <GithubLogo size={18} />
+      </button>
     </div>
   );
 }
