@@ -24,14 +24,7 @@ import {
 import { toast } from "@anlg/ui/components/ui/toast";
 import { cn, formatDistanceToNow } from "@anlg/utils";
 
-import { GoogleDriveConfig, DriveExportResult } from "./google-drive-config";
-import {
-  AutomationLastRunLine,
-  LinearIssuesConfig,
-  MarkdownExportConfig,
-  NotionUpdateConfig,
-  SlackRecapConfig,
-} from "./starter-config";
+import { AutomationLastRunLine, MarkdownExportConfig } from "./starter-config";
 import { useSaveWorkflow, WorkflowBuilder } from "./workflow-builder";
 
 import {
@@ -39,7 +32,6 @@ import {
   useDeleteWorkflow,
   useRemoveStarterDraft,
 } from "~/automations/actions";
-import { parseAutomationTargetRef } from "~/automations/engine";
 import {
   useAutomationSelection,
   useEffectiveAutomationSelection,
@@ -51,10 +43,6 @@ import {
 } from "~/automations/starters";
 import {
   type AutomationWorkflow,
-  type WorkflowStep,
-  GOOGLE_DRIVE_STARTER_WORKFLOW_ID,
-  createGoogleDriveWorkflow,
-  mutateAutomationWorkflows,
   createEmptyWorkflow,
   isWorkflowReady,
   parseAutomationWorkflows,
@@ -62,10 +50,6 @@ import {
   useAutomationWorkflows,
 } from "~/automations/workflows";
 import { useChatGroup } from "~/chat/store/queries";
-import {
-  ResourceShareButton,
-  sharedAutomationPayload,
-} from "~/resource-sharing";
 import { SettingsHydrationBoundary } from "~/settings/hydration-boundary";
 import { SettingsPageTitle } from "~/settings/page-title";
 import {
@@ -74,7 +58,6 @@ import {
   setSettingValues,
   useStoredSettingValues,
 } from "~/settings/queries";
-import type { SettingValues } from "~/settings/schema";
 import { StandardContentWrapper } from "~/shared/main";
 
 export function TabContentAutomations() {
@@ -325,12 +308,6 @@ function CustomWorkflowDetails({
       description={description}
       actions={
         <div className="flex items-center gap-2">
-          <ResourceShareButton
-            resourceType="automation"
-            sourceId={workflow.id}
-            title={workflow.title.trim() || t`Untitled automation`}
-            buildPayload={() => sharedAutomationPayload(workflow)}
-          />
           {workflow.enabled ? (
             <Button
               type="button"
@@ -424,59 +401,24 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
   const { t } = useLingui();
   const starter = useStarterAutomations().find((item) => item.id === starterId);
   const [showPreview, setShowPreview] = useState(false);
-  const workflows = useAutomationWorkflows();
-  const driveFallback = useMemo(
-    () => ({
-      ...createGoogleDriveWorkflow(starter?.title ?? ""),
-      id: GOOGLE_DRIVE_STARTER_WORKFLOW_ID,
-    }),
-    [starter?.title],
-  );
-  const driveWorkflow =
-    workflows.find((item) => item.id === GOOGLE_DRIVE_STARTER_WORKFLOW_ID) ??
-    driveFallback;
-  const driveStep = driveWorkflow.steps.find(
-    (step) => step.type === "google_drive_export",
-  );
-  const legacyKeys =
-    starterId === "google-drive" ? null : STARTER_AUTOMATIONS[starterId];
-  const saveDrive = (
-    updates: { enabled?: boolean; steps?: WorkflowStep[] } = {},
-  ) =>
-    mutateAutomationWorkflows((items) => {
-      const current =
-        items.find((item) => item.id === GOOGLE_DRIVE_STARTER_WORKFLOW_ID) ??
-        driveFallback;
-      return [
-        { ...current, ...updates },
-        ...items.filter((item) => item.id !== current.id),
-      ];
-    });
-  const configureDrive = useMutation({
-    mutationFn: (step: WorkflowStep) => saveDrive({ steps: [step] }),
-    onError: () => toast.error(t`Could not update the automation`),
-  });
+  const starterKeys = STARTER_AUTOMATIONS[starterId];
   const { values: settingValues } = useStoredSettingValues();
   const removeStarterDraft = useRemoveStarterDraft();
 
   const saveDraftMutation = useMutation({
     mutationKey: ["automation-draft-template"],
-    mutationFn: async () => {
-      if (starterId === "google-drive") await saveDrive();
-      await setSettingValue("automation_draft_template", starterId);
-    },
+    mutationFn: () => setSettingValue("automation_draft_template", starterId),
     onSuccess: () => toast.success(t`Automation draft saved`),
     onError: () => toast.error(t`Could not save the automation draft`),
   });
 
   const setEnabledMutation = useMutation({
     mutationKey: ["automation-starter-enabled"],
-    mutationFn: async ({ enabled }: { enabled: boolean }) => {
-      const updates: SettingValues = { automation_draft_template: starterId };
-      if (legacyKeys) updates[legacyKeys.enabledKey] = enabled;
-      else await saveDrive({ enabled });
-      return setSettingValues(updates);
-    },
+    mutationFn: ({ enabled }: { enabled: boolean }) =>
+      setSettingValues({
+        automation_draft_template: starterId,
+        [starterKeys.enabledKey]: enabled,
+      }),
     onSuccess: (_, { enabled }) =>
       toast.success(enabled ? t`Automation enabled` : t`Automation disabled`),
     onError: () => toast.error(t`Could not update the automation`),
@@ -486,32 +428,10 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
     return null;
   }
 
-  const isEnabled = legacyKeys
-    ? Boolean(settingValues[legacyKeys.enabledKey])
-    : driveWorkflow.enabled;
-  const targetRaw = legacyKeys
-    ? (settingValues[legacyKeys.targetKey] ?? "")
-    : "";
+  const isEnabled = Boolean(settingValues[starterKeys.enabledKey]);
   const isReady =
-    starterId === "google-drive"
-      ? isWorkflowReady(driveWorkflow)
-      : starterId === "markdown-export"
-        ? targetRaw.trim().length > 0
-        : parseAutomationTargetRef(targetRaw) !== null;
-  const readinessHint = (() => {
-    switch (starterId) {
-      case "google-drive":
-        return t`Choose a Google Drive folder first.`;
-      case "markdown-export":
-        return t`Choose an export folder first.`;
-      case "slack-recap":
-        return t`Choose a Slack channel first.`;
-      case "linear-action-items":
-        return t`Choose a Linear team first.`;
-      case "notion-project-notes":
-        return t`Choose a Notion page first.`;
-    }
-  })();
+    (settingValues[starterKeys.targetKey] ?? "").trim().length > 0;
+  const readinessHint = t`Choose an export folder first.`;
 
   return (
     <AutomationDetailsLayout
@@ -655,26 +575,8 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
         </div>
 
         <div className="border-border border-t px-5 py-4">
-          {starterId === "google-drive" && driveStep ? (
-            <>
-              <GoogleDriveConfig
-                step={driveStep}
-                onChange={(step) => configureDrive.mutate(step)}
-              />
-              <DriveExportResult workflow={driveWorkflow} step={driveStep} />
-            </>
-          ) : starterId === "markdown-export" ? (
-            <MarkdownExportConfig />
-          ) : starterId === "slack-recap" ? (
-            <SlackRecapConfig />
-          ) : starterId === "linear-action-items" ? (
-            <LinearIssuesConfig />
-          ) : (
-            <NotionUpdateConfig />
-          )}
-          {legacyKeys ? (
-            <AutomationLastRunLine settingKey={legacyKeys.lastRunKey} />
-          ) : null}
+          <MarkdownExportConfig />
+          <AutomationLastRunLine settingKey={starterKeys.lastRunKey} />
         </div>
 
         {showPreview ? (

@@ -40,7 +40,6 @@ import { useSTTConnection } from "./useSTTConnection";
 
 import { requestMainAutoEnhance } from "~/ai/task-window-sync";
 import { trackAnalyticsEvent } from "~/analytics";
-import { useAuth } from "~/auth";
 import { releaseCloudsyncActivityEventually } from "~/db/cloudsync-activity";
 import {
   deleteProcessedAudioForRetention,
@@ -48,12 +47,12 @@ import {
 } from "~/services/audio-retention";
 import { getEnhancerService } from "~/services/enhancer";
 import { maybeExtractVoiceprintCandidates } from "~/services/voiceprint";
-import { flushCanonicalSessionEditorChanges } from "~/session-sharing/editor-activity";
 import {
   catalogLocalSessionAudio,
   markSessionAudioTranscriptionComplete,
 } from "~/session/attachments";
 import { enqueueSessionAudioOperation } from "~/session/audio-operations";
+import { flushCanonicalSessionEditorChanges } from "~/session/editor-activity";
 import {
   isSessionDeleted,
   useSession,
@@ -188,9 +187,6 @@ export function getPostCaptureAction(
 
 export function useCaptureLifecycle(sessionId: string) {
   const session = useSession(sessionId);
-  const auth = useAuth();
-  const authRef = useRef(auth);
-  authRef.current = auth;
   const transcriptExistence = useSessionTranscriptExistence(sessionId);
   const participantHumanIds = useSessionParticipantHumanIds(sessionId);
   const audioRetention = normalizeAudioRetention(
@@ -318,10 +314,6 @@ export function useCaptureLifecycle(sessionId: string) {
         hasMultipleRemoteParticipants &&
         localBatchDiarizationAvailableRef.current &&
         isRealtimeLocalModel(model);
-      const shouldRefineSpeakerDiarization = () =>
-        hasMultipleRemoteParticipants &&
-        ((provider === "anarlog" && model === "cloud") ||
-          shouldUseLocalBatchForSpeakerDiarization());
       const cloudsyncLeaseKey = `${sessionId}:${transcriptId}`;
       let pendingSummaryMode = recoveredMarker?.summaryMode;
       const refreshSummaryAfterRepair =
@@ -645,28 +637,6 @@ export function useCaptureLifecycle(sessionId: string) {
       };
       let recoveryUnlisten: (() => void)[] = [];
       let recoveryListening: Promise<void> | undefined;
-      let credentialTimer: ReturnType<typeof setTimeout> | undefined;
-      let refreshCredentialsActive = false;
-      const refreshCredentials = async () => {
-        if (!refreshCredentialsActive) return;
-        try {
-          const current = await authRef.current.getSessionForRequest();
-          if (refreshCredentialsActive && current?.access_token) {
-            await transcriptionCommands.updateCaptureCredentials(
-              sessionId,
-              current.access_token,
-            );
-          }
-        } catch (error) {
-          console.warn("[listener] capture credential refresh deferred", error);
-        } finally {
-          if (refreshCredentialsActive)
-            credentialTimer = setTimeout(
-              () => void refreshCredentials(),
-              30_000,
-            );
-        }
-      };
       const startAudioRecovery = () =>
         (recoveryListening ??= Promise.all([
           transcriptionEvents.captureLifecycleEvent.listen(({ payload }) => {
@@ -698,18 +668,9 @@ export function useCaptureLifecycle(sessionId: string) {
             await restoreAudioRecovery();
           if (batchFromRetainedAudio || inheritedOnly)
             audioRecovery.batchOnly(true);
-          if (provider === "anarlog" && model === "cloud") {
-            refreshCredentialsActive = true;
-            credentialTimer = setTimeout(
-              () => void refreshCredentials(),
-              1_000,
-            );
-          }
         }));
       const stopAudioRecovery = async () => {
         await recoveryListening;
-        refreshCredentialsActive = false;
-        clearTimeout(credentialTimer);
         recoveryUnlisten.forEach((unlisten) => unlisten());
         recoveryUnlisten = [];
         const recovery = await audioRecovery.stop().catch((error) => {
@@ -951,7 +912,7 @@ export function useCaptureLifecycle(sessionId: string) {
         const useLocalBatchForSpeakerDiarization =
           shouldUseLocalBatchForSpeakerDiarization();
         const refineSpeakerDiarization =
-          !usesChunkedAudio && shouldRefineSpeakerDiarization();
+          !usesChunkedAudio && useLocalBatchForSpeakerDiarization;
         if (transcriptCreated) {
           try {
             await waitForSessionSearchIndex(sessionId);
@@ -1369,8 +1330,6 @@ export function useCaptureLifecycle(sessionId: string) {
           }
         } else {
           audioRecovery.cancel();
-          refreshCredentialsActive = false;
-          clearTimeout(credentialTimer);
           recoveryUnlisten.forEach((unlisten) => unlisten());
         }
         if (!retainAudio) details = { ...details, audioPath: null };
@@ -1388,7 +1347,7 @@ export function useCaptureLifecycle(sessionId: string) {
           canRunBatchRef.current &&
           (!details.liveTranscriptionActive ||
             details.needsBatchRepair ||
-            shouldRefineSpeakerDiarization())
+            shouldUseLocalBatchForSpeakerDiarization())
         ) {
           updateBatchTranscriptionPending(true);
         }
@@ -1491,8 +1450,6 @@ export function useCaptureLifecycle(sessionId: string) {
           });
         },
         cleanupFailedStart: async () => {
-          refreshCredentialsActive = false;
-          clearTimeout(credentialTimer);
           audioRecovery.cancel();
           recoveryUnlisten.forEach((unlisten) => unlisten());
           await transcriptPersistence.flush();

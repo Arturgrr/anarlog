@@ -32,10 +32,8 @@ function getPauseCause({
   sttProvider: string | null | undefined;
   online: boolean;
 }) {
-  const isCloud = sttProvider === "anarlog";
-  const providerName = isCloud
-    ? null
-    : (providerDisplayName(sttProvider) ?? "the transcription service");
+  const providerName =
+    providerDisplayName(sttProvider) ?? "the transcription service";
 
   const isLocal = !!sttProvider && LOCAL_PROVIDER_IDS.has(sttProvider);
 
@@ -44,39 +42,28 @@ function getPauseCause({
   }
 
   if (degraded?.type === "authentication_failed") {
-    return isCloud
-      ? "Anarlog couldn't verify your account"
-      : `${providerName} rejected your API key`;
+    return `${providerName} rejected your API key`;
   }
 
   if (degraded?.type === "provider_configuration") {
-    return isCloud
-      ? "our speech-to-text provider rejected the request"
-      : `${providerName} rejected the transcription settings`;
+    return `${providerName} rejected the transcription settings`;
   }
 
   if (
     degraded?.type === "stream_error" &&
     isProviderSideStreamError(degraded.message)
   ) {
-    return isCloud
-      ? "our speech-to-text provider is having an outage"
-      : `${providerName} is having an outage`;
+    return `${providerName} is having an outage`;
   }
 
   if (degraded) {
-    if (isCloud) {
-      return "Anarlog's transcription server is having issues";
-    }
-    if (sttProvider && LOCAL_PROVIDER_IDS.has(sttProvider)) {
+    if (isLocal) {
       return "the local transcription model stopped responding";
     }
     return `Anarlog can't reach ${providerName}`;
   }
 
-  return isCloud
-    ? "Anarlog's transcription server stopped sending words"
-    : `${providerName} stopped sending words`;
+  return `${providerName} stopped sending words`;
 }
 
 export function getLiveTranscriptPausedMessage({

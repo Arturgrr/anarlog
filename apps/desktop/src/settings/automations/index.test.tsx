@@ -92,9 +92,6 @@ vi.mock("~/settings/queries", () => ({
 vi.mock("./starter-config", () => ({
   AutomationLastRunLine: () => null,
   MarkdownExportConfig: () => <div data-testid="config-markdown" />,
-  SlackRecapConfig: () => <div data-testid="config-slack" />,
-  LinearIssuesConfig: () => <div data-testid="config-linear" />,
-  NotionUpdateConfig: () => <div data-testid="config-notion" />,
 }));
 
 vi.mock("@anlg/ui/components/ui/toast", () => ({
@@ -102,11 +99,6 @@ vi.mock("@anlg/ui/components/ui/toast", () => ({
     error: mocks.toastError,
     success: mocks.toastSuccess,
   },
-}));
-
-vi.mock("./google-drive-config", () => ({
-  GoogleDriveConfig: () => <div data-testid="config-drive" />,
-  DriveExportResult: () => null,
 }));
 
 import { AutomationsContent } from ".";
@@ -144,42 +136,6 @@ describe("AutomationsContent", () => {
     mocks.setSettingValue.mockClear();
     mocks.toastError.mockClear();
     mocks.toastSuccess.mockClear();
-  });
-
-  it("opens the Drive starter without saving and uses the shared template controls", async () => {
-    mocks.selection = { kind: "starter", starterId: "google-drive" };
-    renderAutomations();
-    expect(screen.getByTestId("config-drive")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Save draft" })).toBeTruthy();
-    expect(
-      screen
-        .getByRole("button", { name: "Save & enable" })
-        .hasAttribute("disabled"),
-    ).toBe(true);
-    expect(mocks.setSettingValue).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
-    expect(
-      screen.getByText(
-        "A Markdown file or Google document with the meeting summary and transcript.",
-      ),
-    ).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
-    await waitFor(() =>
-      expect(mocks.setSettingValue).toHaveBeenCalledWith(
-        "automation_draft_template",
-        "google-drive",
-      ),
-    );
-    const call = mocks.setSettingValue.mock.calls.find(
-      ([key]) => key === "automation_workflows",
-    );
-    expect(JSON.parse(call![1] as string)).toMatchObject([
-      {
-        id: "starter-google-drive",
-        enabled: false,
-        steps: [{ type: "google_drive_export" }],
-      },
-    ]);
   });
 
   it("shows the overview when nothing is selected", () => {
@@ -223,7 +179,7 @@ describe("AutomationsContent", () => {
   });
 
   it("shows the selected starter as an inspectable deterministic draft", () => {
-    mocks.selection = { kind: "starter", starterId: "slack-recap" };
+    mocks.selection = { kind: "starter", starterId: "markdown-export" };
 
     renderAutomations();
 
@@ -252,11 +208,11 @@ describe("AutomationsContent", () => {
     },
     {
       name: "starter automation",
-      selection: { kind: "starter", starterId: "slack-recap" },
+      selection: { kind: "starter", starterId: "markdown-export" },
       chatGroup: null,
       menuItem: "Remove automation",
       mock: mocks.removeStarterDraft,
-      id: "slack-recap",
+      id: "markdown-export",
     },
     {
       name: "chat automation",

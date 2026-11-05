@@ -24,16 +24,10 @@ import {
 import {
   type AutomationWorkflow,
   createEmptyWorkflow,
-  GOOGLE_DRIVE_STARTER_WORKFLOW_ID,
   saveAutomationWorkflows,
   useAutomationWorkflows,
 } from "~/automations/workflows";
 import { type ChatGroupRecord, useChatGroups } from "~/chat/store/queries";
-import {
-  importSharedAutomation,
-  parseSharedAutomationPayload,
-  SharedResourceLibrarySection,
-} from "~/resource-sharing";
 import { useNativeContextMenu } from "~/shared/hooks/useNativeContextMenu";
 
 export function AutomationsNav() {
@@ -75,9 +69,7 @@ export function AutomationsNav() {
   );
   const filteredWorkflows = useMemo(() => {
     return workflows.filter(
-      (workflow) =>
-        workflow.id !== GOOGLE_DRIVE_STARTER_WORKFLOW_ID &&
-        (!query || workflow.title.toLowerCase().includes(query)),
+      (workflow) => !query || workflow.title.toLowerCase().includes(query),
     );
   }, [query, workflows]);
   const filteredChatAutomations = useMemo(() => {
@@ -234,18 +226,6 @@ export function AutomationsNav() {
                 ))}
               </div>
             ) : null}
-            <SharedResourceLibrarySection
-              resourceType="automation"
-              search={search}
-              onImport={async (resource) => {
-                const workflow = parseSharedAutomationPayload(resource.payload);
-                const workflowId = await importSharedAutomation({
-                  version: 1,
-                  workflow,
-                });
-                selectWorkflow(workflowId);
-              }}
-            />
           </>
         )}
       </div>

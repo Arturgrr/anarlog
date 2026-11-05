@@ -12,7 +12,6 @@ function dependencies(): ToolDependencies {
     getSessionId: vi.fn(),
     getEnhancedNoteId: vi.fn(),
     openEditTab: vi.fn(),
-    getAuthHeaders: vi.fn(),
   };
 }
 
