@@ -2,34 +2,33 @@ mod common;
 
 use std::time::Duration;
 
-use dictation_ui_macos::{DictationState, Phase, hide, show, update_state};
+use dictation_ui_macos::{hud_event, hud_meter, prewarm_hud};
 
+/// Records for four seconds of synthetic syllables, transcribes, finishes;
+/// then records again and fails.
 fn main() {
     common::run_app(|| {
-        std::thread::sleep(Duration::from_millis(200));
-        show();
-
-        let total_ms = 6000;
-        let step_ms = 50;
-        let steps = total_ms / step_ms;
-        for i in 0..steps {
-            let t = i as f32 * (step_ms as f32) / 1000.0;
-            let amp = (t * 3.0).sin().abs() * 0.8;
-            update_state(&DictationState {
-                phase: Phase::Recording,
-                amplitude: amp,
-            });
-            std::thread::sleep(Duration::from_millis(step_ms as u64));
+        prewarm_hud();
+        std::thread::sleep(Duration::from_millis(300));
+        for outcome in ["completed", "failed"] {
+            hud_event(r#"{"type":"started"}"#);
+            for i in 0..200 {
+                let t = i as f32 * 0.02;
+                let syllable = (t * 4.5 * std::f32::consts::TAU).sin().max(0.0);
+                let db = -58.0 + 28.0 * syllable.powf(0.6) * (t % 2.4 < 1.7) as u8 as f32;
+                hud_meter(10_f32.powf(db / 20.0));
+                if i == 60 {
+                    hud_event(
+                        r#"{"type":"preview","stable":"So the plan","tentative":" for today"}"#,
+                    );
+                }
+                std::thread::sleep(Duration::from_millis(20));
+            }
+            hud_event(r#"{"type":"processing"}"#);
+            std::thread::sleep(Duration::from_millis(1200));
+            hud_event(&format!(r#"{{"type":"{outcome}"}}"#));
+            std::thread::sleep(Duration::from_millis(1500));
         }
-
-        update_state(&DictationState {
-            phase: Phase::Processing,
-            amplitude: 0.0,
-        });
-        std::thread::sleep(Duration::from_millis(1500));
-
-        hide();
-        std::thread::sleep(Duration::from_millis(500));
         std::process::exit(0);
     });
 }

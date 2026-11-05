@@ -1,8 +1,5 @@
 const COMMANDS: &[&str] = &[
-    "show",
-    "hide",
-    "set_phase",
-    "update_amplitude",
+    "hud",
     "start_recording",
     "start_system_recording",
     "stop_recording",

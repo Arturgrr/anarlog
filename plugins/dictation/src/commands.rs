@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tauri::Manager;
 
 use crate::{
-    events::Phase,
+    events::HudEvent,
     ext::DictationPluginExt,
     recorder::{RecordedAudio, Recorder},
 };
@@ -28,34 +28,11 @@ pub(crate) async fn insert_text(target: String, text: String) -> Result<(), Stri
 
 #[tauri::command]
 #[specta::specta]
-pub(crate) async fn show<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
-    app.dictation().show().map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-#[specta::specta]
-pub(crate) async fn hide<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
-    app.dictation().hide().map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-#[specta::specta]
-pub(crate) async fn set_phase<R: tauri::Runtime>(
+pub(crate) async fn hud<R: tauri::Runtime>(
     app: tauri::AppHandle<R>,
-    phase: Phase,
+    event: HudEvent,
 ) -> Result<(), String> {
-    app.dictation().set_phase(phase).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-#[specta::specta]
-pub(crate) async fn update_amplitude<R: tauri::Runtime>(
-    app: tauri::AppHandle<R>,
-    amplitude: f32,
-) -> Result<(), String> {
-    app.dictation()
-        .update_amplitude(amplitude)
-        .map_err(|e| e.to_string())
+    app.dictation().hud(event).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -109,6 +86,8 @@ pub(crate) async fn discard_recording<R: tauri::Runtime>(
         .map_err(|error| error.to_string())
 }
 
+/// Records for system-wide dictation: the HUD follows the microphone, and the
+/// live preview's words arrive over `updates`.
 #[tauri::command]
 #[specta::specta]
 pub(crate) async fn start_system_recording<R: tauri::Runtime>(
@@ -122,7 +101,16 @@ pub(crate) async fn start_system_recording<R: tauri::Runtime>(
         .state::<Arc<dyn anlg_audio::AudioProvider>>()
         .inner()
         .clone();
+    let hud = app.clone();
+    let meter: crate::recorder::Meter = Arc::new(move |rms| hud.dictation().meter(rms));
     app.state::<Recorder>()
-        .start_with_feedback(audio, microphone_device, owner, preview, Some(updates))
+        .start_with_feedback(
+            audio,
+            microphone_device,
+            owner,
+            preview,
+            Some(updates),
+            Some(meter),
+        )
         .map_err(|error| error.to_string())
 }

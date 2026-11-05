@@ -1,4 +1,4 @@
-use crate::{error::Error, events::Phase, handler::Handler};
+use crate::{error::Error, events::HudEvent, handler::Handler};
 
 pub struct Dictation<'a, R: tauri::Runtime, M: tauri::Manager<R>> {
     manager: &'a M,
@@ -6,20 +6,15 @@ pub struct Dictation<'a, R: tauri::Runtime, M: tauri::Manager<R>> {
 }
 
 impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Dictation<'a, R, M> {
-    pub fn show(&self) -> Result<(), Error> {
-        self.manager.state::<Handler>().show()
+    /// Tells the HUD what the dictation is doing. `Started` resolves once the
+    /// HUD is on screen, so a recording never starts unseen.
+    pub async fn hud(&self, event: HudEvent) -> Result<(), Error> {
+        self.manager.state::<Handler>().hud(event).await
     }
 
-    pub fn hide(&self) -> Result<(), Error> {
-        self.manager.state::<Handler>().hide()
-    }
-
-    pub fn set_phase(&self, phase: Phase) -> Result<(), Error> {
-        self.manager.state::<Handler>().set_phase(phase)
-    }
-
-    pub fn update_amplitude(&self, amplitude: f32) -> Result<(), Error> {
-        self.manager.state::<Handler>().update_amplitude(amplitude)
+    /// The microphone's RMS for one captured buffer.
+    pub fn meter(&self, rms: f32) {
+        self.manager.state::<Handler>().meter(rms)
     }
 }
 

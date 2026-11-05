@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dictation</title>
+    <style>
+      /* Laid out for the 560 × 100 pt window the dictation plugin opens:
+         Hex's 304 × 80 pt HUD with the plate in its middle, and the live
+         text plate 6 pt under the plate. */
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+        user-select: none;
+        cursor: default;
+      }
+      #scope {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 304px;
+        height: 80px;
+        transform: translateX(-50%);
+      }
+      #live-text {
+        position: absolute;
+        top: 59px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        height: 32px;
+        max-width: 552px;
+        padding: 0 14px;
+        border-radius: 16px;
+        border: 0.5px solid rgba(0, 0, 0, 0.1);
+        background: #ffffff;
+        color: #171717;
+        font: 440 13px/1 Inter, "SF Pro Text", system-ui, -apple-system,
+          "Segoe UI", Roboto, sans-serif;
+        white-space: pre;
+      }
+      #live-text[hidden] {
+        display: none;
+      }
+      #live-text .tentative {
+        color: #8f8f8f;
+      }
+      @media (resolution < 2x) {
+        #live-text {
+          border-width: 1px;
+        }
+      }
+      @media (prefers-color-scheme: dark) {
+        #live-text {
+          border-color: rgba(255, 255, 255, 0.1);
+          background: #161616;
+          color: #ededed;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="scope"></canvas>
+    <div id="live-text" hidden></div>
+    <script type="module" src="/src/dictation/hud/page.ts"></script>
+  </body>
+</html>

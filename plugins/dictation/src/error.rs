@@ -16,6 +16,10 @@ pub enum Error {
     Task(String),
     #[error("unknown voice recording")]
     UnknownRecording,
+    #[error("dictation indicator failed: {0}")]
+    Hud(String),
+    #[error(transparent)]
+    Tauri(#[from] tauri::Error),
 }
 
 impl Serialize for Error {

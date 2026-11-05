@@ -21,10 +21,7 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
     tauri_specta::Builder::<R>::new()
         .plugin_name(PLUGIN_NAME)
         .commands(tauri_specta::collect_commands![
-            commands::show::<tauri::Wry>,
-            commands::hide::<tauri::Wry>,
-            commands::set_phase::<tauri::Wry>,
-            commands::update_amplitude::<tauri::Wry>,
+            commands::hud::<tauri::Wry>,
             commands::start_recording::<tauri::Wry>,
             commands::start_system_recording::<tauri::Wry>,
             commands::stop_recording::<tauri::Wry>,
