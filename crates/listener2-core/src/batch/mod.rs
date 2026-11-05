@@ -24,7 +24,6 @@ use simple::{run_apple_speech_batch, run_direct_batch_for_adapter_kind, run_soni
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
 pub enum BatchProvider {
-    Argmax,
     #[serde(rename = "whispercpp")]
     #[strum(serialize = "whispercpp")]
     WhisperLocal,
@@ -42,9 +41,6 @@ pub enum BatchProvider {
     DashScope,
     Mistral,
     Meta,
-    #[serde(alias = "hyprnote")]
-    Anarlog,
-    Am,
     Soniqo,
     AppleSpeech,
     AquaVoice,
@@ -74,7 +70,6 @@ pub enum BatchProvider {
 impl BatchProvider {
     pub fn to_adapter_kind(&self) -> Option<AdapterKind> {
         match self {
-            Self::Argmax => Some(AdapterKind::Argmax),
             Self::Deepgram => Some(AdapterKind::Deepgram),
             Self::Soniox => Some(AdapterKind::Soniox),
             Self::AssemblyAI => Some(AdapterKind::AssemblyAI),
@@ -88,7 +83,6 @@ impl BatchProvider {
             Self::Pyannote => Some(AdapterKind::Pyannote),
             Self::Mistral => Some(AdapterKind::Mistral),
             Self::Meta => Some(AdapterKind::Meta),
-            Self::Anarlog => Some(AdapterKind::Anarlog),
             Self::AquaVoice => Some(AdapterKind::AquaVoice),
             Self::Cartesia => Some(AdapterKind::Cartesia),
             Self::Cohere => Some(AdapterKind::Cohere),
@@ -103,9 +97,7 @@ impl BatchProvider {
             Self::Xai => Some(AdapterKind::Xai),
             Self::SmallestAI => Some(AdapterKind::SmallestAI),
             Self::WisprFlow => Some(AdapterKind::WisprFlow),
-            Self::Am | Self::WhisperLocal | Self::Soniqo | Self::AppleSpeech | Self::DashScope => {
-                None
-            }
+            Self::WhisperLocal | Self::Soniqo | Self::AppleSpeech | Self::DashScope => None,
         }
     }
 }
@@ -199,7 +191,7 @@ pub fn uses_local_diarization(params: &BatchParams) -> bool {
 
 pub fn expects_progressive_batch(params: &BatchParams) -> bool {
     match params.provider {
-        BatchProvider::Am | BatchProvider::OpenAI => {
+        BatchProvider::OpenAI => {
             let listen_params = owhisper_interface::ListenParams {
                 model: params.model.clone(),
                 languages: params.languages.clone(),
@@ -248,7 +240,7 @@ async fn run_batch_inner(
 
     let post_process = (runtime.clone(), params.clone(), listen_params.clone());
     let mut output = match params.provider {
-        BatchProvider::Am | BatchProvider::OpenAI => {
+        BatchProvider::OpenAI => {
             let adapter_kind = resolve_batch_adapter_kind(&params, &listen_params);
             if supports_progressive_batch(adapter_kind, listen_params.model.as_deref()) {
                 run_progressive_batch_session(runtime, params, listen_params).await
@@ -296,11 +288,7 @@ fn resolve_batch_adapter_kind(
 }
 
 fn supports_progressive_batch(adapter_kind: AdapterKind, model: Option<&str>) -> bool {
-    match adapter_kind {
-        AdapterKind::Argmax => true,
-        AdapterKind::OpenAI => OpenAIAdapter::supports_progressive_batch_model(model),
-        _ => false,
-    }
+    adapter_kind == AdapterKind::OpenAI && OpenAIAdapter::supports_progressive_batch_model(model)
 }
 
 fn build_listen_params(
@@ -437,21 +425,8 @@ mod tests {
     }
 
     #[test]
-    fn am_routes_each_backend_to_its_batch_mode() {
+    fn openai_routes_each_model_to_its_batch_mode() {
         let cases = [
-            (
-                "https://api.pyannote.ai",
-                None,
-                AdapterKind::Pyannote,
-                false,
-            ),
-            (
-                "https://api.deepgram.com/v1",
-                None,
-                AdapterKind::Deepgram,
-                false,
-            ),
-            ("http://localhost:50060/v1", None, AdapterKind::Argmax, true),
             (
                 "https://api.openai.com/v1",
                 Some("gpt-4o-transcribe"),
@@ -467,7 +442,7 @@ mod tests {
         ];
 
         for (base_url, model, expected_adapter_kind, expected_progressive) in cases {
-            let params = batch_params(BatchProvider::Am, base_url);
+            let params = batch_params(BatchProvider::OpenAI, base_url);
             let adapter_kind = resolve_batch_adapter_kind(&params, &listen_params(model));
 
             assert_eq!(adapter_kind, expected_adapter_kind);
@@ -481,9 +456,11 @@ mod tests {
     #[test]
     fn only_local_batches_expect_progressive() {
         let cases = [
-            (BatchProvider::Anarlog, "https://api.anarlog.so/stt", false),
-            (BatchProvider::Am, "https://api.anarlog.so/stt", false),
-            (BatchProvider::Am, "http://localhost:50060/v1", true),
+            (
+                BatchProvider::Deepgram,
+                "https://api.deepgram.com/v1",
+                false,
+            ),
             (BatchProvider::OpenAI, "http://localhost:9000/v1", true),
             (
                 BatchProvider::OpenAI,

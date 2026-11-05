@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 
-pub use anlg_am::AmModel;
 use anlg_model_downloader::{DownloadableModel, Error};
 pub use anlg_transcribe_soniqo::SoniqoModel;
 pub use anlg_transcribe_speechanalyzer::AppleSpeechModel;
@@ -28,13 +27,13 @@ impl GgufLlmModel {
     pub fn model_url(&self) -> &str {
         match self {
             GgufLlmModel::Llama3p2_3bQ4 => {
-                "https://models.anarlog.so/v0/lmstudio-community/Llama-3.2-3B-Instruct-GGUF/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf"
+                "https://huggingface.co/lmstudio-community/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf"
             }
             GgufLlmModel::AnarlogLLM => {
-                "https://models.anarlog.so/v0/yujonglee/hypr-llm-sm/model_q4_k_m.gguf"
+                "https://huggingface.co/yujonglee/hypr-llm-sm/resolve/main/model_q4_k_m.gguf"
             }
             GgufLlmModel::Gemma3_4bQ4 => {
-                "https://models.anarlog.so/v0/unsloth/gemma-3-4b-it-GGUF/gemma-3-4b-it-Q4_K_M.gguf"
+                "https://huggingface.co/unsloth/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf"
             }
         }
     }
@@ -85,7 +84,6 @@ pub enum LocalModel {
     Soniqo(SoniqoModel),
     AppleSpeech(AppleSpeechModel),
     Whisper(WhisperModel),
-    Am(AmModel),
     GgufLlm(GgufLlmModel),
 }
 
@@ -95,7 +93,6 @@ impl std::fmt::Display for LocalModel {
             LocalModel::Soniqo(model) => write!(f, "{model}"),
             LocalModel::AppleSpeech(model) => write!(f, "{model}"),
             LocalModel::Whisper(model) => write!(f, "whisper-{model}"),
-            LocalModel::Am(model) => write!(f, "am-{model}"),
             LocalModel::GgufLlm(model) => write!(f, "llm-{model:?}"),
         }
     }
@@ -124,9 +121,6 @@ impl LocalModel {
             LocalModel::Whisper(WhisperModel::QuantizedSmall),
             LocalModel::Whisper(WhisperModel::QuantizedSmallEn),
             LocalModel::Whisper(WhisperModel::QuantizedLargeTurbo),
-            LocalModel::Am(AmModel::ParakeetV2),
-            LocalModel::Am(AmModel::ParakeetV3),
-            LocalModel::Am(AmModel::WhisperLargeV3),
         ]);
 
         models.extend([
@@ -143,17 +137,15 @@ impl LocalModel {
             LocalModel::Soniqo(_) => "stt-soniqo",
             LocalModel::AppleSpeech(_) => "stt-apple-speech",
             LocalModel::Whisper(_) => "stt-whisper",
-            LocalModel::Am(_) => "stt-am",
             LocalModel::GgufLlm(_) => "llm",
         }
     }
 
     pub fn model_kind(&self) -> LocalModelKind {
         match self {
-            LocalModel::Soniqo(_)
-            | LocalModel::AppleSpeech(_)
-            | LocalModel::Whisper(_)
-            | LocalModel::Am(_) => LocalModelKind::Stt,
+            LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) | LocalModel::Whisper(_) => {
+                LocalModelKind::Stt
+            }
             LocalModel::GgufLlm(_) => LocalModelKind::Llm,
         }
     }
@@ -169,9 +161,6 @@ impl LocalModel {
             LocalModel::Whisper(WhisperModel::QuantizedSmall) => "whisper-small",
             LocalModel::Whisper(WhisperModel::QuantizedSmallEn) => "whisper-small-en",
             LocalModel::Whisper(WhisperModel::QuantizedLargeTurbo) => "whisper-large-turbo",
-            LocalModel::Am(AmModel::ParakeetV2) => "am-parakeet-v2",
-            LocalModel::Am(AmModel::ParakeetV3) => "am-parakeet-v3",
-            LocalModel::Am(AmModel::WhisperLargeV3) => "am-whisper-large-v3",
             LocalModel::GgufLlm(GgufLlmModel::Llama3p2_3bQ4) => "llm-llama3-2-3b-q4",
             LocalModel::GgufLlm(GgufLlmModel::AnarlogLLM) => "llm-hypr-llm",
             LocalModel::GgufLlm(GgufLlmModel::Gemma3_4bQ4) => "llm-gemma3-4b-q4",
@@ -183,7 +172,6 @@ impl LocalModel {
             LocalModel::Soniqo(model) => models_base.join("soniqo").join(model.as_str()),
             LocalModel::AppleSpeech(model) => models_base.join("apple-speech").join(model.as_str()),
             LocalModel::Whisper(model) => models_base.join("stt").join(model.file_name()),
-            LocalModel::Am(model) => models_base.join("stt").join(model.model_dir()),
             LocalModel::GgufLlm(model) => models_base.join("llm").join(model.file_name()),
         }
     }
@@ -193,7 +181,6 @@ impl LocalModel {
             LocalModel::Soniqo(model) => model.display_name().to_string(),
             LocalModel::AppleSpeech(model) => model.display_name().to_string(),
             LocalModel::Whisper(model) => model.display_name().to_string(),
-            LocalModel::Am(model) => model.display_name().to_string(),
             LocalModel::GgufLlm(model) => model.display_name().to_string(),
         }
     }
@@ -203,7 +190,6 @@ impl LocalModel {
             LocalModel::Soniqo(model) => model.description().to_string(),
             LocalModel::AppleSpeech(model) => model.description().to_string(),
             LocalModel::Whisper(model) => model.description(),
-            LocalModel::Am(model) => model.description().to_string(),
             LocalModel::GgufLlm(model) => model.description(),
         }
     }
@@ -215,7 +201,6 @@ impl LocalModel {
             LocalModel::Soniqo(model) => model.is_available_on_current_platform(),
             LocalModel::AppleSpeech(model) => model.is_available_on_current_platform(),
             LocalModel::Whisper(_) => is_apple_silicon,
-            LocalModel::Am(_) => is_apple_silicon,
             LocalModel::GgufLlm(_) => cfg!(target_arch = "aarch64"),
         }
     }
@@ -268,7 +253,6 @@ impl DownloadableModel for LocalModel {
             LocalModel::Soniqo(model) => format!("soniqo:{}", model.as_str()),
             LocalModel::AppleSpeech(model) => format!("apple-speech:{}", model.as_str()),
             LocalModel::Whisper(model) => format!("whisper:{}", model.file_name()),
-            LocalModel::Am(model) => format!("am:{}", model.model_dir()),
             LocalModel::GgufLlm(model) => model.download_key(),
         }
     }
@@ -277,7 +261,6 @@ impl DownloadableModel for LocalModel {
         match self {
             LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) => None,
             LocalModel::Whisper(model) => Some(model.model_url().to_string()),
-            LocalModel::Am(model) => Some(model.tar_url().to_string()),
             LocalModel::GgufLlm(model) => model.download_url(),
         }
     }
@@ -286,7 +269,6 @@ impl DownloadableModel for LocalModel {
         match self {
             LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) => None,
             LocalModel::Whisper(model) => Some(model.checksum()),
-            LocalModel::Am(model) => Some(model.tar_checksum()),
             LocalModel::GgufLlm(model) => model.download_checksum(),
         }
     }
@@ -296,9 +278,6 @@ impl DownloadableModel for LocalModel {
             LocalModel::Soniqo(model) => models_base.join("soniqo").join(model.as_str()),
             LocalModel::AppleSpeech(model) => models_base.join("apple-speech").join(model.as_str()),
             LocalModel::Whisper(model) => models_base.join("stt").join(model.file_name()),
-            LocalModel::Am(model) => models_base
-                .join("stt")
-                .join(format!("{}.tar", model.model_dir())),
             LocalModel::GgufLlm(model) => model.download_destination(models_base),
         }
     }
@@ -317,9 +296,6 @@ impl DownloadableModel for LocalModel {
             LocalModel::Whisper(model) => {
                 Ok(models_base.join("stt").join(model.file_name()).exists())
             }
-            LocalModel::Am(model) => model
-                .is_downloaded(models_base.join("stt"))
-                .map_err(|e| Error::OperationFailed(e.to_string())),
             LocalModel::GgufLlm(model) => model.is_downloaded(models_base),
         }
     }
@@ -333,12 +309,6 @@ impl DownloadableModel for LocalModel {
                 "Apple Speech assets are installed by macOS".to_string(),
             )),
             LocalModel::Whisper(_) => Ok(()),
-            LocalModel::Am(model) => {
-                let final_path = models_base.join("stt");
-                model
-                    .tar_unpack_and_cleanup(downloaded_path, &final_path)
-                    .map_err(|e| Error::FinalizeFailed(e.to_string()))
-            }
             LocalModel::GgufLlm(model) => model.finalize_download(downloaded_path, models_base),
         }
     }
@@ -362,20 +332,8 @@ impl DownloadableModel for LocalModel {
                 }
                 Ok(())
             }
-            LocalModel::Am(model) => {
-                let model_dir = models_base.join("stt").join(model.model_dir());
-                if model_dir.exists() {
-                    std::fs::remove_dir_all(&model_dir)
-                        .map_err(|e| Error::DeleteFailed(e.to_string()))?;
-                }
-                Ok(())
-            }
             LocalModel::GgufLlm(model) => model.delete_downloaded(models_base),
         }
-    }
-
-    fn remove_destination_after_finalize(&self) -> bool {
-        matches!(self, LocalModel::Am(_))
     }
 }
 

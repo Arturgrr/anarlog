@@ -121,16 +121,6 @@ mod tests {
                 "wss://api.gladia.io:8443/v2/live",
                 vec![],
             ),
-            (
-                "https://api.anarlog.so?provider=gladia",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "gladia")],
-            ),
-            (
-                "http://localhost:8787/listen?provider=gladia",
-                "ws://localhost:8787/listen",
-                vec![("provider", "gladia")],
-            ),
         ];
 
         for (input, expected_url, expected_params) in cases {
@@ -140,7 +130,7 @@ mod tests {
                 params,
                 expected_params
                     .into_iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .map(|(k, v): (&str, &str)| (k.to_string(), v.to_string()))
                     .collect::<Vec<_>>(),
                 "input: {}",
                 input

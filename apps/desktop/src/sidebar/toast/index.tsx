@@ -21,10 +21,7 @@ import { useConfigValues } from "~/shared/config";
 import { useLatestRef } from "~/shared/hooks/useLatestRef";
 import { useDevtoolsToastPreview } from "~/store/zustand/devtools-toast-preview";
 import { useTabs } from "~/store/zustand/tabs";
-import {
-  isConfiguredSttModel,
-  isAnarlogCloudSttModel,
-} from "~/stt/capabilities";
+import { isConfiguredSttModel } from "~/stt/capabilities";
 import { useListener } from "~/stt/contexts";
 
 export function ToastNotifications() {
@@ -90,11 +87,6 @@ export function ToastNotifications() {
     current_stt_provider,
     current_stt_model,
   );
-  const hasProSttConfigured = isAnarlogCloudSttModel(
-    current_stt_provider,
-    current_stt_model,
-  );
-  const hasProLlmConfigured = current_llm_provider === "anarlog";
 
   const currentTab = useTabs((state) => state.currentTab);
   const devtoolsPreview = useDevtoolsToastPreview((state) => state.preview);
@@ -158,8 +150,6 @@ export function ToastNotifications() {
         isAuthLoading,
         hasLLMConfigured,
         hasSttConfigured,
-        hasProSttConfigured,
-        hasProLlmConfigured,
         isAiTranscriptionTabActive,
         isAiIntelligenceTabActive,
         isBatchTranscribingInActiveTranscriptTab,
@@ -179,8 +169,6 @@ export function ToastNotifications() {
       isAuthLoading,
       hasLLMConfigured,
       hasSttConfigured,
-      hasProSttConfigured,
-      hasProLlmConfigured,
       isAiTranscriptionTabActive,
       isAiIntelligenceTabActive,
       isBatchTranscribingInActiveTranscriptTab,
@@ -227,17 +215,11 @@ export function ToastNotifications() {
       devtoolsPreview
         ? createDevtoolsToastPreview({
             preview: devtoolsPreview.type,
-            onSignIn: handleSignIn,
             onOpenLLMSettings: handleOpenLLMSettings,
             onOpenSTTSettings: handleOpenSTTSettings,
           })
         : null,
-    [
-      devtoolsPreview,
-      handleSignIn,
-      handleOpenLLMSettings,
-      handleOpenSTTSettings,
-    ],
+    [devtoolsPreview, handleOpenLLMSettings, handleOpenSTTSettings],
   );
 
   const registryPriorityToast =

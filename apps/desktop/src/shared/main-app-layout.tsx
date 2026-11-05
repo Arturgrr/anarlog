@@ -14,7 +14,6 @@ import {
 } from "./useNewNote";
 
 import { AuthProvider } from "~/auth";
-import { BillingProvider } from "~/auth/billing";
 import { EnterpriseCaptureSync } from "~/enterprise-capture/lifecycle";
 import { MeetingImportSync } from "~/services/meeting-import-sync";
 import { getOrCreateSessionForEventId } from "~/session/queries";
@@ -37,10 +36,8 @@ export default function MainAppLayout() {
 
   return (
     <AuthProvider>
-      <BillingProvider>
-        <SharedWorkspaceMirror />
-        <MainAppContent />
-      </BillingProvider>
+      <SharedWorkspaceMirror />
+      <MainAppContent />
     </AuthProvider>
   );
 }

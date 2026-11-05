@@ -4,7 +4,6 @@ use anlg_ws_client::client::{IntoClientRequest, Message};
 use bytes::Bytes;
 
 use super::{ListenClientDualInput, TransformedInput, forward_dual_to_single, mic_stream_params};
-use crate::test_utils::{run_dual_test, run_single_test};
 use crate::{AssemblyAIAdapter, DeepgramAdapter, ListenClient, RealtimeSttAdapter, SonioxAdapter};
 
 #[derive(Clone, Default)]
@@ -53,10 +52,6 @@ impl RealtimeSttAdapter for TestAdapter {
     }
 }
 
-fn proxy_base() -> String {
-    std::env::var("PROXY_URL").unwrap_or_else(|_| "localhost:3001".to_string())
-}
-
 #[tokio::test]
 async fn malformed_custom_endpoint_returns_provider_configuration_error() {
     let api_base = format!("{}://custom.example/listen", "a".repeat(65));
@@ -92,18 +87,13 @@ async fn malformed_direct_endpoint_returns_provider_configuration_error() {
 }
 
 #[tokio::test]
-async fn valid_proxy_and_direct_endpoints_still_build() {
-    for api_base in [
-        "https://api.deepgram.com/v1",
-        "https://api.anarlog.so/stt?provider=deepgram",
-    ] {
-        ListenClient::builder()
-            .adapter::<DeepgramAdapter>()
-            .api_base(api_base)
-            .build_single()
-            .await
-            .unwrap();
-    }
+async fn valid_direct_endpoint_still_builds() {
+    ListenClient::builder()
+        .adapter::<DeepgramAdapter>()
+        .api_base("https://api.deepgram.com/v1")
+        .build_single()
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
@@ -275,114 +265,6 @@ async fn build_single_normalizes_languages_before_initial_message() {
     assert_eq!(hints.len(), 2);
     assert_eq!(hints[0].as_str().unwrap(), "en");
     assert_eq!(hints[1].as_str().unwrap(), "ko");
-}
-
-#[tokio::test]
-#[ignore]
-async fn test_proxy_deepgram_single() {
-    let client = ListenClient::builder()
-        .adapter::<DeepgramAdapter>()
-        .api_base(&format!("http://{}", proxy_base()))
-        .params(owhisper_interface::ListenParams {
-            model: Some("nova-3".to_string()),
-            languages: vec![anlg_language::ISO639::En.into()],
-            ..Default::default()
-        })
-        .build_single()
-        .await
-        .unwrap();
-
-    run_single_test(client, "proxy-deepgram").await;
-}
-
-#[tokio::test]
-#[ignore]
-async fn test_proxy_deepgram_dual() {
-    let client = ListenClient::builder()
-        .adapter::<DeepgramAdapter>()
-        .api_base(&format!("http://{}", proxy_base()))
-        .params(owhisper_interface::ListenParams {
-            model: Some("nova-3".to_string()),
-            languages: vec![anlg_language::ISO639::En.into()],
-            ..Default::default()
-        })
-        .build_dual()
-        .await
-        .unwrap();
-
-    run_dual_test(client, "proxy-deepgram").await;
-}
-
-#[tokio::test]
-#[ignore]
-async fn test_proxy_soniox_single() {
-    let client = ListenClient::builder()
-        .adapter::<SonioxAdapter>()
-        .api_base(&format!("http://{}", proxy_base()))
-        .params(owhisper_interface::ListenParams {
-            model: Some("stt-v3".to_string()),
-            languages: vec![anlg_language::ISO639::En.into()],
-            ..Default::default()
-        })
-        .build_single()
-        .await
-        .unwrap();
-
-    run_single_test(client, "proxy-soniox").await;
-}
-
-#[tokio::test]
-#[ignore]
-async fn test_proxy_soniox_dual() {
-    let client = ListenClient::builder()
-        .adapter::<SonioxAdapter>()
-        .api_base(&format!("http://{}", proxy_base()))
-        .params(owhisper_interface::ListenParams {
-            model: Some("stt-v3".to_string()),
-            languages: vec![anlg_language::ISO639::En.into()],
-            ..Default::default()
-        })
-        .build_dual()
-        .await
-        .unwrap();
-
-    run_dual_test(client, "proxy-soniox").await;
-}
-
-#[tokio::test]
-#[ignore]
-async fn test_proxy_assemblyai_single() {
-    let client = ListenClient::builder()
-        .adapter::<AssemblyAIAdapter>()
-        .api_base(&format!("http://{}", proxy_base()))
-        .params(owhisper_interface::ListenParams {
-            model: Some("u3-rt-pro".to_string()),
-            languages: vec![anlg_language::ISO639::En.into()],
-            ..Default::default()
-        })
-        .build_single()
-        .await
-        .unwrap();
-
-    run_single_test(client, "proxy-assemblyai").await;
-}
-
-#[tokio::test]
-#[ignore]
-async fn test_proxy_assemblyai_dual() {
-    let client = ListenClient::builder()
-        .adapter::<AssemblyAIAdapter>()
-        .api_base(&format!("http://{}", proxy_base()))
-        .params(owhisper_interface::ListenParams {
-            model: Some("u3-rt-pro".to_string()),
-            languages: vec![anlg_language::ISO639::En.into()],
-            ..Default::default()
-        })
-        .build_dual()
-        .await
-        .unwrap();
-
-    run_dual_test(client, "proxy-assemblyai").await;
 }
 
 #[tokio::test]

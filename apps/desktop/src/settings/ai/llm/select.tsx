@@ -29,19 +29,13 @@ import {
   normalizeReasoningEffort,
   supportsReasoningEffort,
 } from "~/ai/reasoning-effort";
-import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import {
   providerRowId,
   ProviderIconSlot,
   requiresKeyVerification,
   useProviderAvailability,
 } from "~/settings/ai/shared";
-import { ANARLOG_PRO_LLM_MODELS } from "~/settings/ai/shared/anarlog-pro-models";
-import {
-  getProviderSelectionBlockers,
-  requiresEntitlement,
-} from "~/settings/ai/shared/eligibility";
+import { getProviderSelectionBlockers } from "~/settings/ai/shared/eligibility";
 import { listAnthropicModels } from "~/settings/ai/shared/list-anthropic";
 import { listAppleFoundationModels } from "~/settings/ai/shared/list-apple-foundation";
 import { listAzureAIModels } from "~/settings/ai/shared/list-azure-ai";
@@ -88,7 +82,6 @@ export function SelectProviderAndModel() {
     "intelligence_disabled",
   ] as const).intelligence_disabled;
   const settingsReady = useSettingsReady() && !intelligenceDisabled;
-  const billing = useBillingAccess();
   const queryClient = useQueryClient();
   const { setAccordionValue } = useLlmSettings();
   const [pendingSelection, setPendingSelection] = useState<{
@@ -276,11 +269,6 @@ export function SelectProviderAndModel() {
       : undefined;
 
   const handleProviderChange = (provider: string) => {
-    if (provider === "anarlog" && !billing.isPaid) {
-      billing.upgradeToPro();
-      return;
-    }
-
     const requestId = ++selectionRequestRef.current;
 
     const status = configuredProviders[provider];
@@ -404,11 +392,6 @@ export function SelectProviderAndModel() {
                 </div>
               )}
               {providerOptions.map((provider) => {
-                const requiresPro = requiresEntitlement(
-                  provider.requirements,
-                  "pro",
-                );
-                const locked = requiresPro && !billing.isPaid;
                 const configured =
                   configuredProviders[provider.id]?.configured ?? false;
 
@@ -416,22 +399,15 @@ export function SelectProviderAndModel() {
                   <SelectItem
                     key={provider.id}
                     value={provider.id}
-                    disabled={locked || !configured}
+                    disabled={!configured}
                     className={cn([
                       "data-disabled:text-muted-foreground data-disabled:!opacity-100",
-                      !configured && !locked && "text-muted-foreground",
+                      !configured && "text-muted-foreground",
                     ])}
                   >
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-2">
-                        <ProviderIconSlot>{provider.icon}</ProviderIconSlot>
-                        <span>{provider.displayName}</span>
-                      </div>
-                      {locked ? (
-                        <span className="text-muted-foreground text-[11px]">
-                          <Trans>Upgrade to Pro to use this provider.</Trans>
-                        </span>
-                      ) : null}
+                    <div className="flex items-center gap-2">
+                      <ProviderIconSlot>{provider.icon}</ProviderIconSlot>
+                      <span>{provider.displayName}</span>
                     </div>
                   </SelectItem>
                 );
@@ -526,14 +502,10 @@ const GOOGLE_VERTEX_AI_MODELS = [
 export function getLlmProviderStatus({
   provider,
   config,
-  isAuthenticated,
-  isPaid,
   isAvailable,
 }: {
   provider: Provider;
   config?: ProviderConfig;
-  isAuthenticated: boolean;
-  isPaid: boolean;
   isAvailable?: boolean;
 }): ProviderStatus {
   const baseUrl = String(config?.base_url || provider.baseUrl || "").trim();
@@ -541,8 +513,6 @@ export function getLlmProviderStatus({
 
   const eligible =
     getProviderSelectionBlockers(provider.requirements, {
-      isAuthenticated,
-      isPaid,
       config: { base_url: baseUrl, api_key: apiKey },
     }).length === 0;
 
@@ -557,20 +527,6 @@ export function getLlmProviderStatus({
     if (!isAvailable) {
       return { configured: false };
     }
-  }
-
-  if (provider.id === "anarlog") {
-    const result: ListModelsResult = {
-      models: ANARLOG_PRO_LLM_MODELS.map(({ id }) => id),
-      ignored: [],
-      metadata: Object.fromEntries(
-        ANARLOG_PRO_LLM_MODELS.map(({ id, inputModalities }) => [
-          id,
-          { input_modalities: [...inputModalities] },
-        ]),
-      ),
-    };
-    return { configured: true, listModels: async () => result };
   }
 
   let listModelsFunc: () => Promise<ListModelsResult>;
@@ -654,8 +610,6 @@ function useConfiguredMapping(): {
   providers: Record<string, ProviderStatus>;
   isReady: boolean;
 } {
-  const auth = useAuth();
-  const billing = useBillingAccess();
   const availability = useProviderAvailability("llm", PROVIDERS);
   const { current_llm_provider } = useConfigValues([
     "current_llm_provider",
@@ -677,17 +631,11 @@ function useConfiguredMapping(): {
             : undefined;
         return [
           provider.id,
-          getLlmProviderStatus({
-            provider,
-            config,
-            isAuthenticated: !!auth?.session,
-            isPaid: billing.isPaid,
-            isAvailable,
-          }),
+          getLlmProviderStatus({ provider, config, isAvailable }),
         ];
       }),
     ) as Record<string, ProviderStatus>;
-  }, [configuredProviders, auth, billing, availability, current_llm_provider]);
+  }, [configuredProviders, availability, current_llm_provider]);
 
   return {
     providers: mapping,

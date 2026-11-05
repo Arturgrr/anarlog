@@ -81,16 +81,6 @@ mod tests {
                 "wss://audio-streaming-v2.api.fireworks.ai/v1/audio/transcriptions/streaming",
                 vec![],
             ),
-            (
-                "https://api.anarlog.so/listen?provider=fireworks",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "fireworks")],
-            ),
-            (
-                "http://localhost:8787/listen?provider=fireworks",
-                "ws://localhost:8787/listen",
-                vec![("provider", "fireworks")],
-            ),
         ];
 
         for (input, expected_url, expected_params) in cases {
@@ -100,7 +90,7 @@ mod tests {
                 params,
                 expected_params
                     .into_iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .map(|(k, v): (&str, &str)| (k.to_string(), v.to_string()))
                     .collect::<Vec<_>>(),
                 "input: {input}"
             );

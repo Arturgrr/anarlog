@@ -13,7 +13,6 @@ import {
 } from "@anlg/plugin-local-stt";
 import { toast } from "@anlg/ui/components/ui/toast";
 
-import { useBillingAccess } from "~/auth/billing-context";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 
 type SttSettingsContextType = {
@@ -21,7 +20,6 @@ type SttSettingsContextType = {
   setAccordionValue: (value: string) => void;
   startDownload: (model: LocalModel, provider: string) => void;
   queuedDownloads: LocalModel[];
-  startTrial: () => void;
 };
 
 const SttSettingsContext = createContext<SttSettingsContextType | null>(null);
@@ -34,7 +32,6 @@ export function SttSettingsProvider({
   children: React.ReactNode;
 }) {
   const [accordionValue, setAccordionValue] = useState<string>("");
-  const { upgradeToPro } = useBillingAccess();
 
   const [queuedDownloads, setQueuedDownloads] = useState<LocalModel[]>([]);
   const queuedDownloadsRef = useRef<Set<LocalModel>>(new Set());
@@ -95,10 +92,6 @@ export function SttSettingsProvider({
     );
   }, []);
 
-  const startTrial = useCallback(() => {
-    upgradeToPro();
-  }, [upgradeToPro]);
-
   return (
     <SttSettingsContext.Provider
       value={{
@@ -106,7 +99,6 @@ export function SttSettingsProvider({
         setAccordionValue,
         startDownload,
         queuedDownloads,
-        startTrial,
       }}
     >
       {children}

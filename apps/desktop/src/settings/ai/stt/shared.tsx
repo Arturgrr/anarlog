@@ -25,12 +25,7 @@ import type { ReactNode } from "react";
 import type { LocalModel } from "@anlg/plugin-local-stt";
 import { Cpu, Shuffle, Waveform } from "@anlg/ui/components/icons";
 
-import { env } from "~/env";
-import {
-  AnarlogProviderIcon,
-  ProviderBrandImage,
-  ProviderLobeIcon,
-} from "~/settings/ai/shared";
+import { ProviderBrandImage, ProviderLobeIcon } from "~/settings/ai/shared";
 import { type ProviderRequirement } from "~/settings/ai/shared/eligibility";
 import { sortProviders } from "~/settings/ai/shared/sort-providers";
 import { localSttQueries } from "~/stt/useLocalSttModel";
@@ -77,10 +72,6 @@ const OPENROUTER_MODEL_LABELS: Record<string, string> = {
 const displayModelId = (model: string): string => {
   if (model === "qwen3-asr-fast") return "Qwen3 ASR Fast";
   if (model === "qwen3-asr") return "Qwen3 ASR";
-
-  if (model === "cloud") {
-    return "Pro (Cloud)";
-  }
 
   if (model === "local-file") {
     return "whisper.cpp .bin";
@@ -385,20 +376,6 @@ export function formatModelSize(sizeBytes?: number | null) {
 }
 
 const _PROVIDERS = [
-  {
-    disabled: false,
-    id: "anarlog",
-    displayName: "Anarlog",
-    badge: "Recommended",
-    builtIn: true,
-    icon: <AnarlogProviderIcon />,
-    baseUrl: new URL(
-      "/stt",
-      env.VITE_AI_API_URL ?? env.VITE_API_URL,
-    ).toString(),
-    models: ["cloud"],
-    requirements: [],
-  },
   {
     disabled: false,
     id: "soniqo",

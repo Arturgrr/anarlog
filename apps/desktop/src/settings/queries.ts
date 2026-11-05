@@ -1,4 +1,5 @@
 import { disable, enable } from "@tauri-apps/plugin-autostart";
+import { arch, platform } from "@tauri-apps/plugin-os";
 import { useCallback } from "react";
 
 import { commands as analyticsCommands } from "@anlg/plugin-analytics";
@@ -32,7 +33,11 @@ import {
 } from "~/settings/schema";
 import { isAppStoreBuild } from "~/shared/app-store";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
-import { isConfiguredSttModel, isOnDeviceSttModel } from "~/stt/capabilities";
+import {
+  getUnsupportedDesktopLocalSttRepair,
+  isConfiguredSttModel,
+  isOnDeviceSttModel,
+} from "~/stt/capabilities";
 import {
   getDefaultSttModel,
   normalizeStoredSttModel,
@@ -110,10 +115,17 @@ export async function initializeApplicationSettings(): Promise<void> {
     .getPreferredLanguages()
     .catch(() => null);
   const updates: SettingValues = {};
-  const normalizedSttSelection = normalizeStoredSttSelection(
+  const storedSttSelection = normalizeStoredSttSelection(
     stored.values.current_stt_provider,
     stored.values.current_stt_model,
   );
+  const normalizedSttSelection =
+    getUnsupportedDesktopLocalSttRepair(
+      platform(),
+      arch(),
+      storedSttSelection.provider,
+      storedSttSelection.model,
+    ) ?? storedSttSelection;
 
   if (
     !stored.hasValues.has("crash_reporting_consent") &&
@@ -127,6 +139,15 @@ export async function initializeApplicationSettings(): Promise<void> {
   }
   if (normalizedSttSelection.model !== stored.values.current_stt_model) {
     updates.current_stt_model = normalizedSttSelection.model;
+  }
+
+  // The hosted Anarlog LLM (formerly "hyprnote") no longer exists.
+  if (
+    stored.values.current_llm_provider === "anarlog" ||
+    stored.values.current_llm_provider === "hyprnote"
+  ) {
+    updates.current_llm_provider = "";
+    updates.current_llm_model = "";
   }
 
   if (languageResult?.status === "ok" && languageResult.data.length > 0) {
@@ -538,9 +559,7 @@ async function syncLocalSttServer(): Promise<void> {
   const localModelPath = values.local_stt_model_path?.trim();
 
   if (
-    ["anarlog", "soniqo", "apple_speech", "local_file"].includes(
-      provider ?? "",
-    ) &&
+    ["soniqo", "apple_speech", "local_file"].includes(provider ?? "") &&
     model &&
     !isConfiguredSttModel(provider, model)
   ) {

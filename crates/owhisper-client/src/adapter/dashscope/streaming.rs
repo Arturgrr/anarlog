@@ -129,8 +129,7 @@ impl RealtimeSttAdapter for DashScopeStreamingAdapter {
         let (mut url, existing_params) = DashScopeAdapter::build_ws_url_from_base(api_base);
 
         // Direct endpoints (default, China, or workspace-specific `ws-*.maas.aliyuncs.com`
-        // hosts) speak the task protocol on `/api-ws/v1/inference`; the Anarlog proxy keeps
-        // its own `/listen` path and dispatches by model server-side.
+        // hosts) speak the task protocol on `/api-ws/v1/inference`.
         if url.path() == Provider::DashScope.ws_path() {
             url.set_path(INFERENCE_WS_PATH);
         }
@@ -396,14 +395,6 @@ mod tests {
         let url = adapter.build_ws_url("wss://dashscope.aliyuncs.com", &params, 1);
         assert_eq!(url.path(), "/api-ws/v1/inference");
         assert_eq!(url.host_str(), Some("dashscope.aliyuncs.com"));
-
-        let url = adapter.build_ws_url("https://api.anarlog.so?provider=dashscope", &params, 1);
-        assert_eq!(url.path(), "/listen");
-        assert!(url.as_str().contains("provider=dashscope"));
-        assert!(
-            url.as_str()
-                .contains("model=qwen-audio-3.1-asr-flash-streaming")
-        );
     }
 
     #[test]

@@ -34,8 +34,7 @@ const hoisted = vi.hoisted(() => ({
     | undefined,
   llmStatus: {
     status: "success",
-    providerId: "anarlog",
-    isHosted: true,
+    providerId: "openai",
   } as LLMConnectionStatus,
   content: "",
   noteExists: true,
@@ -154,8 +153,7 @@ describe("Enhanced", () => {
     hoisted.titleTask = undefined;
     hoisted.llmStatus = {
       status: "success",
-      providerId: "anarlog",
-      isHosted: true,
+      providerId: "openai",
     };
     hoisted.content = "";
     hoisted.noteExists = true;
@@ -364,14 +362,6 @@ describe("Enhanced", () => {
   });
 
   it.each([
-    [
-      "hosted subscription",
-      { status: "error", reason: "not_pro", providerId: "anarlog" },
-    ],
-    [
-      "hosted authentication",
-      { status: "error", reason: "unauthenticated", providerId: "anarlog" },
-    ],
     [
       "provider API key",
       {

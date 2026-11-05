@@ -5,20 +5,20 @@ use bytes::Bytes;
 use ractor::{ActorProcessingErr, ActorRef};
 
 use owhisper_client::{
-    AdapterKind, AlebexAdapter, AnarlogAdapter, ArgmaxAdapter, AssemblyAIAdapter, CartesiaAdapter,
-    DashScopeAdapter, DashScopeStreamingAdapter, DeepgramAdapter, DeepgramFluxAdapter,
-    ElevenLabsAdapter, FireworksAdapter, GladiaAdapter, GoogleGenerativeAiAdapter, GradiumAdapter,
-    InworldAdapter, MetaAdapter, MistralAdapter, ModulateAdapter, NariAdapter, NvidiaAdapter,
-    OpenAIAdapter, RealtimeSttAdapter, SmallestAIAdapter, SonioxAdapter, WisprFlowAdapter,
-    XaiAdapter, anlg_ws_client,
+    AdapterKind, AlebexAdapter, AssemblyAIAdapter, CartesiaAdapter, DashScopeAdapter,
+    DashScopeStreamingAdapter, DeepgramAdapter, DeepgramFluxAdapter, ElevenLabsAdapter,
+    FireworksAdapter, GladiaAdapter, GoogleGenerativeAiAdapter, GradiumAdapter, InworldAdapter,
+    MetaAdapter, MistralAdapter, ModulateAdapter, NariAdapter, NvidiaAdapter, OpenAIAdapter,
+    RealtimeSttAdapter, SmallestAIAdapter, SonioxAdapter, WisprFlowAdapter, XaiAdapter,
+    anlg_ws_client,
 };
 use owhisper_interface::stream::{Extra, StreamResponse};
 use owhisper_interface::{ControlMessage, MixedMessage};
 
 use super::stream::process_stream;
 use super::{
-    ChannelSender, DEVICE_FINGERPRINT_HEADER, ListenerArgs, ListenerMsg, actor_error,
-    actor_error_with_degraded, actor_error_with_degraded_retry,
+    ChannelSender, ListenerArgs, ListenerMsg, actor_error, actor_error_with_degraded,
+    actor_error_with_degraded_retry,
 };
 
 use crate::{DegradedError, SessionErrorEvent};
@@ -192,7 +192,6 @@ pub(super) async fn spawn_rx_task(
     }
 
     let result = dispatch_realtime!(adapter_kind, is_dual, args, myself, {
-        Argmax => ArgmaxAdapter,
         Cartesia => CartesiaAdapter,
         Soniox => SonioxAdapter,
         Fireworks => FireworksAdapter,
@@ -214,7 +213,6 @@ pub(super) async fn spawn_rx_task(
         SmallestAI => SmallestAIAdapter,
         WisprFlow => WisprFlowAdapter,
         GoogleGenerativeAi => GoogleGenerativeAiAdapter,
-        Anarlog => AnarlogAdapter,
     }, batch_only: [
         AmazonBedrock,
         AquaVoice,
@@ -572,7 +570,6 @@ async fn spawn_rx_task_single_with_adapter<A: RealtimeSttAdapter>(
         .api_key(args.api_key.clone())
         .params(build_listen_params(&args))
         .connect_policy(desktop_connect_policy())
-        .extra_header(DEVICE_FINGERPRINT_HEADER, anlg_host::fingerprint())
         .build_single()
         .await
         .map_err(|error| client_build_error(&args, error))?;
@@ -623,7 +620,6 @@ async fn spawn_rx_task_dual_with_adapter<A: RealtimeSttAdapter>(
         .api_key(args.api_key.clone())
         .params(build_listen_params(&args))
         .connect_policy(desktop_connect_policy())
-        .extra_header(DEVICE_FINGERPRINT_HEADER, anlg_host::fingerprint())
         .build_dual()
         .await
         .map_err(|error| client_build_error(&args, error))?;
@@ -742,13 +738,6 @@ mod tests {
                 vec!["remote"],
                 Some("self"),
             ),
-            (
-                "anarlog proxy",
-                "https://api.anarlog.so/stt",
-                "cloud",
-                vec!["self", "remote-a", "remote-b"],
-                Some("self"),
-            ),
         ] {
             let mut args = listener_args(base_url, model);
             args.participant_human_ids = participants.iter().map(|id| id.to_string()).collect();
@@ -847,7 +836,10 @@ mod tests {
             retry_after_secs: Some(7),
         };
 
-        let error = ws_connect_error(&listener_args("https://api.anarlog.so/stt", "cloud"), error);
+        let error = ws_connect_error(
+            &listener_args("https://api.deepgram.com/v1", "nova-3"),
+            error,
+        );
         let error = error
             .downcast_ref::<super::super::ListenerInitError>()
             .expect("listener init error");

@@ -3,11 +3,7 @@ import { describe, expect, it } from "vitest";
 import { modelSupportsImageInput } from "./model-capabilities";
 
 describe("modelSupportsImageInput", () => {
-  it("allows known multimodal hosted models", () => {
-    expect(modelSupportsImageInput("anarlog", "Auto")).toBe(true);
-    expect(modelSupportsImageInput("anarlog", "~openai/gpt-sol-latest")).toBe(
-      true,
-    );
+  it("allows known multimodal models", () => {
     expect(modelSupportsImageInput("openai", "gpt-4o")).toBe(true);
     expect(modelSupportsImageInput("anthropic", "claude-3-5-sonnet")).toBe(
       true,
@@ -19,9 +15,6 @@ describe("modelSupportsImageInput", () => {
 
   it("blocks known text-only or non-chat models", () => {
     expect(modelSupportsImageInput("openai", "gpt-3.5-turbo")).toBe(false);
-    expect(
-      modelSupportsImageInput("anarlog", "~deepseek/deepseek-pro-latest"),
-    ).toBe(false);
     expect(modelSupportsImageInput("openai", "gpt-4")).toBe(false);
     expect(modelSupportsImageInput("anthropic", "claude-2.1")).toBe(false);
     expect(modelSupportsImageInput("anthropic", "custom-text-model")).toBe(

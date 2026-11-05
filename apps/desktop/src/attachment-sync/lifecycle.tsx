@@ -7,7 +7,6 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { startAttachmentTransferRunner } from "./runner";
 
 import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { env } from "~/env";
 import { sessionAttachmentPathsQueryKey } from "~/session/hooks/useAttachmentResolver";
 import { useConfigValue } from "~/shared/config";
@@ -15,7 +14,6 @@ import { useLatestRef } from "~/shared/hooks/useLatestRef";
 
 export function AttachmentTransferLifecycle() {
   const auth = useAuth();
-  const billing = useBillingAccess();
   const cloudSyncEnabled = useConfigValue("cloud_sync_enabled");
   const session = auth.session;
   const supabaseUrl = env.VITE_SUPABASE_URL;
@@ -23,7 +21,6 @@ export function AttachmentTransferLifecycle() {
   if (
     !session ||
     session.user.is_anonymous === true ||
-    !billing.isPaid ||
     !cloudSyncEnabled ||
     !supabaseUrl
   ) {

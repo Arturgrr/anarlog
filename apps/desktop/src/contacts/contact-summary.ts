@@ -77,7 +77,7 @@ export function useContactSummary({
   sessions: HumanSessionRecord[];
   settleMs?: number;
 }) {
-  const model = useLanguageModel("enhance");
+  const model = useLanguageModel();
   const [settledSessions] = useDebounceValue(
     sessions,
     settleMs,

@@ -104,11 +104,6 @@ mod tests {
                 "wss://api.meta.ai/v1/asr/realtime",
                 vec![],
             ),
-            (
-                "https://api.anarlog.so?provider=meta",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "meta")],
-            ),
         ] {
             let (url, params) = MetaAdapter::build_ws_url_from_base(input);
             assert_eq!(url.as_str(), expected_url, "input: {input}");
@@ -116,7 +111,7 @@ mod tests {
                 params,
                 expected_params
                     .into_iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .map(|(k, v): (&str, &str)| (k.to_string(), v.to_string()))
                     .collect::<Vec<_>>(),
                 "input: {input}"
             );

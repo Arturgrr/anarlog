@@ -27,6 +27,11 @@ vi.mock("~/error-reporting", () => ({
   setSessionReplayAnalyticsEnabled: mocks.setSessionReplayAnalyticsEnabled,
 }));
 
+vi.mock("@tauri-apps/plugin-os", () => ({
+  platform: () => "macos",
+  arch: () => "aarch64",
+}));
+
 vi.mock("@anlg/plugin-detect", () => ({
   commands: {
     getPreferredLanguages: mocks.getPreferredLanguages,
@@ -433,6 +438,43 @@ describe("SQLite settings", () => {
     await initializeApplicationSettings();
 
     expect(mocks.executeTransaction).not.toHaveBeenCalled();
+  });
+
+  it.each(["cloud", "am-parakeet-v3"])(
+    "clears the removed hosted Anarlog transcription model %s",
+    async (model) => {
+      mocks.execute.mockResolvedValue([
+        { id: "current_stt_provider", value_json: JSON.stringify("anarlog") },
+        { id: "current_stt_model", value_json: JSON.stringify(model) },
+      ]);
+
+      await initializeApplicationSettings();
+
+      const statements = mocks.executeTransaction.mock.calls[0][0];
+      expect(
+        statements.map((statement) => statement.params.slice(0, 2)),
+      ).toEqual([
+        ["current_stt_provider", JSON.stringify("")],
+        ["current_stt_model", JSON.stringify("")],
+      ]);
+    },
+  );
+
+  it("clears the removed hosted Anarlog language model", async () => {
+    mocks.execute.mockResolvedValue([
+      { id: "current_llm_provider", value_json: JSON.stringify("anarlog") },
+      { id: "current_llm_model", value_json: JSON.stringify("Auto") },
+    ]);
+
+    await initializeApplicationSettings();
+
+    const statements = mocks.executeTransaction.mock.calls[0][0];
+    expect(statements.map((statement) => statement.params.slice(0, 2))).toEqual(
+      [
+        ["current_llm_provider", JSON.stringify("")],
+        ["current_llm_model", JSON.stringify("")],
+      ],
+    );
   });
 
   it("repairs a selected external transcription provider with no model", async () => {

@@ -26,10 +26,6 @@ const {
   useSessionMock,
   useSessionParticipantsMock,
   useSTTConnectionMock,
-  useAuthMock,
-  getSessionForRequestMock,
-  refreshSessionMock,
-  useBillingAccessMock,
   useConfigValueMock,
   isSupportedLanguagesBatchMock,
   toastWarningMock,
@@ -48,10 +44,6 @@ const {
   useSessionMock: vi.fn(),
   useSessionParticipantsMock: vi.fn(),
   useSTTConnectionMock: vi.fn(),
-  useAuthMock: vi.fn(),
-  getSessionForRequestMock: vi.fn(),
-  refreshSessionMock: vi.fn(),
-  useBillingAccessMock: vi.fn(),
   useConfigValueMock: vi.fn(),
   isSupportedLanguagesBatchMock: vi.fn(),
   toastWarningMock: vi.fn(),
@@ -94,14 +86,6 @@ vi.mock("@anlg/ui/components/ui/toast", () => ({
   toast: {
     warning: toastWarningMock,
   },
-}));
-
-vi.mock("~/auth", () => ({
-  useAuth: useAuthMock,
-}));
-
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: useBillingAccessMock,
 }));
 
 vi.mock("~/env", () => ({
@@ -175,11 +159,7 @@ vi.mock("~/stt/capabilities", () => {
     ) =>
       typeof model === "string" &&
       ((provider === "soniqo" && model.startsWith("soniqo-")) ||
-        (provider === "apple_speech" && model === "apple-speech") ||
-        (provider === "anarlog" &&
-          (model.startsWith("soniqo-") ||
-            model.startsWith("am-") ||
-            model.startsWith("Quantized")))),
+        (provider === "apple_speech" && model === "apple-speech")),
     isSupportedLanguagesBatch: isSupportedLanguagesBatchMock,
   };
 });
@@ -212,7 +192,6 @@ describe("getBatchProvider", () => {
     ["meta", "muse-voice-transcribe-1.0", "meta"],
     ["cloudflare_workers_ai", "nova-3", "deepgram"],
     ["custom", "nova-3", "deepgram"],
-    ["anarlog", "soniqo-parakeet-batch", "soniqo"],
     ["soniqo", "soniqo-parakeet-batch", "soniqo"],
     ["apple_speech", "apple-speech", "applespeech"],
     ["local_file", "local-file", "whispercpp"],
@@ -264,30 +243,9 @@ describe("isTerminalTranscriptionError", () => {
 });
 
 describe("getBatchFallbackTarget", () => {
-  test("uses hosted cloud transcription for paid users with a session", () => {
+  test("uses local Soniqo batch transcription on Apple Silicon", () => {
     expect(
       getBatchFallbackTarget({
-        isPaid: true,
-        accessToken: "token",
-        apiBaseUrl: "https://api.test",
-        currentPlatform: "windows",
-        currentArch: "x86_64",
-      }),
-    ).toEqual({
-      provider: "anarlog",
-      model: "cloud",
-      baseUrl: "https://api.test/stt",
-      apiKey: "token",
-      label: "Pro cloud transcription",
-    });
-  });
-
-  test("uses local Soniqo batch transcription otherwise", () => {
-    expect(
-      getBatchFallbackTarget({
-        isPaid: false,
-        accessToken: null,
-        apiBaseUrl: "https://api.test",
         currentPlatform: "macos",
         currentArch: "aarch64",
       }),
@@ -309,9 +267,6 @@ describe("getBatchFallbackTarget", () => {
     ({ currentPlatform, currentArch }) => {
       expect(
         getBatchFallbackTarget({
-          isPaid: false,
-          accessToken: null,
-          apiBaseUrl: "https://api.test",
           currentPlatform,
           currentArch,
         }),
@@ -359,71 +314,23 @@ describe("useRunBatch", () => {
         apiKey: "test-key",
       },
     });
-    useAuthMock.mockReturnValue({
-      session: {
-        access_token: "paid-token",
-        user: { id: "user-1" },
-      },
-      getSessionForRequest: getSessionForRequestMock,
-      refreshSession: refreshSessionMock,
-    });
-    getSessionForRequestMock.mockResolvedValue({
-      access_token: "paid-token",
-    });
-    refreshSessionMock.mockResolvedValue(null);
-    useBillingAccessMock.mockReturnValue({
-      isPaid: false,
-    });
     useConfigValueMock.mockImplementation((key) =>
       key === "ai_language" ? "en" : [],
     );
   });
 
-  test.each([
-    { name: "a pre-aborted signal", cancelsDuringAuthPreflight: false },
-    { name: "a cancelled auth preflight", cancelsDuringAuthPreflight: true },
-  ])(
-    "does not start a dictation transcription after $name",
-    async ({ cancelsDuringAuthPreflight }) => {
-      const abort = new AbortController();
-      let finish: ((value: null) => void) | undefined;
-      if (cancelsDuringAuthPreflight) {
-        useBillingAccessMock.mockReturnValue({ isPaid: true });
-        getSessionForRequestMock.mockReturnValueOnce(
-          new Promise((resolve) => {
-            finish = resolve;
-          }),
-        );
-      } else {
-        abort.abort();
-      }
-      const { result } = renderHook(() => useRunBatch("dictation"));
-      const run = result.current("/tmp/voice.wav", { signal: abort.signal });
-      const rejected = expect(run).rejects.toMatchObject({
-        name: "AbortError",
-      });
-      if (cancelsDuringAuthPreflight) {
-        await waitFor(() =>
-          expect(getSessionForRequestMock).toHaveBeenCalled(),
-        );
-        abort.abort();
-        finish?.(null);
-      }
-      await rejected;
-      expect(startTranscriptionMock).not.toHaveBeenCalled();
-    },
-  );
-
-  test("cancels the active provider and never retries authentication after abort", async () => {
+  test("does not start a dictation transcription after a pre-aborted signal", async () => {
     const abort = new AbortController();
-    useSTTConnectionMock.mockReturnValue({
-      conn: {
-        provider: "anarlog",
-        model: "cloud",
-        baseUrl: "https://api.test/stt",
-        apiKey: "stale",
-      },
-    });
+    abort.abort();
+    const { result } = renderHook(() => useRunBatch("dictation"));
+    await expect(
+      result.current("/tmp/voice.wav", { signal: abort.signal }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(startTranscriptionMock).not.toHaveBeenCalled();
+  });
+
+  test("cancels the active provider after abort", async () => {
+    const abort = new AbortController();
     let fail!: (reason: Error) => void;
     startTranscriptionMock.mockImplementationOnce(
       () =>
@@ -450,7 +357,6 @@ describe("useRunBatch", () => {
     );
     await rejected;
     expect(stopTranscriptionMock).toHaveBeenCalledWith("dictation");
-    expect(refreshSessionMock).not.toHaveBeenCalled();
     expect(startTranscriptionMock).toHaveBeenCalledOnce();
     expect(saveBatchTranscriptMock).not.toHaveBeenCalled();
   });
@@ -1050,7 +956,7 @@ describe("useRunBatch", () => {
   test("passes selected transcription languages to batch transcription", async () => {
     useSTTConnectionMock.mockReturnValue({
       conn: {
-        provider: "anarlog",
+        provider: "soniqo",
         model: "soniqo-parakeet-batch",
         baseUrl: "soniqo://local",
         apiKey: "",
@@ -1166,15 +1072,11 @@ describe("useRunBatch", () => {
     },
   );
 
-  test.each([
-    { isPaid: false, name: "rejects Soniqo for unpaid users" },
-    { isPaid: true, name: "falls back to cloud for paid users" },
-  ])("never invokes Soniqo on Intel macOS: $name", async ({ isPaid }) => {
+  test("never invokes Soniqo on Intel macOS", async () => {
     archMock.mockReturnValue("x86_64");
-    useBillingAccessMock.mockReturnValue({ isPaid });
     useSTTConnectionMock.mockReturnValue({
       conn: {
-        provider: "anarlog",
+        provider: "soniqo",
         model: "soniqo-parakeet-batch",
         baseUrl: "soniqo://local",
         apiKey: "",
@@ -1184,174 +1086,14 @@ describe("useRunBatch", () => {
 
     const { result } = renderHook(() => useRunBatch("session-1"));
 
-    if (!isPaid) {
-      await expect(
-        act(async () => {
-          await result.current("/tmp/session.wav");
-        }),
-      ).rejects.toThrow(
-        "soniqo-parakeet-batch is not available for batch transcription on this platform",
-      );
-      expect(startTranscriptionMock).not.toHaveBeenCalled();
-      return;
-    }
-
-    await act(async () => {
-      await result.current("/tmp/session.wav");
-    });
-
-    expect(startTranscriptionMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        provider: "anarlog",
-        model: "cloud",
-        base_url: "https://api.test/stt",
-        api_key: "paid-token",
+    await expect(
+      act(async () => {
+        await result.current("/tmp/session.wav");
       }),
-      expect.any(Object),
+    ).rejects.toThrow(
+      "soniqo-parakeet-batch is not available for batch transcription on this platform",
     );
-  });
-
-  test("falls back to hosted cloud transcription for paid users", async () => {
-    isSupportedLanguagesBatchMock.mockResolvedValue(false);
-    useBillingAccessMock.mockReturnValue({
-      isPaid: true,
-    });
-    startTranscriptionMock.mockResolvedValue(undefined);
-
-    const { result } = renderHook(() => useRunBatch("session-1"));
-
-    await act(async () => {
-      await result.current("/tmp/session.wav");
-    });
-
-    expect(startTranscriptionMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        provider: "anarlog",
-        model: "cloud",
-        base_url: "https://api.test/stt",
-        api_key: "paid-token",
-      }),
-      expect.any(Object),
-    );
-    expect(toastWarningMock).toHaveBeenCalledWith(
-      "Using a batch transcription provider",
-      expect.objectContaining({
-        description:
-          "nova-3 is not available for batch transcription. Using Pro cloud transcription instead.",
-      }),
-    );
-  });
-
-  test("uses a request-ready cloud token before transcription starts", async () => {
-    useSTTConnectionMock.mockReturnValue({
-      conn: {
-        provider: "anarlog",
-        model: "cloud",
-        baseUrl: "https://api.test/stt",
-        apiKey: "stale-token",
-      },
-    });
-    useBillingAccessMock.mockReturnValue({ isPaid: true });
-    getSessionForRequestMock.mockResolvedValue({
-      access_token: "request-ready-token",
-    });
-    startTranscriptionMock.mockResolvedValue(undefined);
-
-    const { result } = renderHook(() => useRunBatch("session-1"));
-
-    await act(async () => {
-      await result.current("/tmp/session.wav");
-    });
-
-    expect(startTranscriptionMock).toHaveBeenCalledTimes(1);
-    expect(startTranscriptionMock).toHaveBeenCalledWith(
-      expect.objectContaining({ api_key: "request-ready-token" }),
-      expect.any(Object),
-    );
-  });
-
-  test("falls back to the current cloud token when refresh is unavailable", async () => {
-    useSTTConnectionMock.mockReturnValue({
-      conn: {
-        provider: "anarlog",
-        model: "cloud",
-        baseUrl: "https://api.test/stt",
-        apiKey: "stale-token",
-      },
-    });
-    useBillingAccessMock.mockReturnValue({ isPaid: true });
-    getSessionForRequestMock.mockRejectedValue(new Error("offline"));
-    startTranscriptionMock.mockResolvedValue(undefined);
-
-    const { result } = renderHook(() => useRunBatch("session-1"));
-
-    await act(async () => {
-      await result.current("/tmp/session.wav");
-    });
-
-    expect(startTranscriptionMock).toHaveBeenCalledTimes(1);
-    expect(startTranscriptionMock).toHaveBeenCalledWith(
-      expect.objectContaining({ api_key: "paid-token" }),
-      expect.any(Object),
-    );
-  });
-
-  test("refreshes an expired cloud token and retries transcription once", async () => {
-    useSTTConnectionMock.mockReturnValue({
-      conn: {
-        provider: "anarlog",
-        model: "cloud",
-        baseUrl: "https://api.test/stt",
-        apiKey: "stale-token",
-      },
-    });
-    useAuthMock.mockReturnValue({
-      session: {
-        access_token: "stale-token",
-        user: { id: "user-1" },
-      },
-      getSessionForRequest: getSessionForRequestMock,
-      refreshSession: refreshSessionMock,
-    });
-    getSessionForRequestMock.mockResolvedValue({
-      access_token: "stale-token",
-    });
-    refreshSessionMock.mockResolvedValue({ access_token: "fresh-token" });
-    startTranscriptionMock
-      .mockImplementationOnce(async (_params, options) => {
-        options.handlePersist(
-          [{ text: "stale", start_ms: 0, end_ms: 100, channel: 0 }],
-          [],
-        );
-        throw new Error(
-          "Authentication failed. Please check your API key in settings.",
-        );
-      })
-      .mockImplementationOnce(async (_params, options) => {
-        options.handlePersist(
-          [{ text: "fresh", start_ms: 0, end_ms: 100, channel: 0 }],
-          [],
-        );
-      });
-
-    const { result } = renderHook(() => useRunBatch("session-1"));
-
-    await act(async () => {
-      await result.current("/tmp/session.wav");
-    });
-
-    expect(refreshSessionMock).toHaveBeenCalledTimes(1);
-    expect(startTranscriptionMock).toHaveBeenCalledTimes(2);
-    expect(startTranscriptionMock).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ api_key: "fresh-token" }),
-      expect.any(Object),
-    );
-    expect(saveBatchTranscriptMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        words: [expect.objectContaining({ text: "fresh" })],
-      }),
-    );
+    expect(startTranscriptionMock).not.toHaveBeenCalled();
   });
 });
 

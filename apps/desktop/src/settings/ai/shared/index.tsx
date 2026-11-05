@@ -40,12 +40,10 @@ import {
   getProviderSelectionBlockers,
   getRequiredConfigFields,
   type ProviderRequirement,
-  requiresEntitlement,
 } from "./eligibility";
 import { useProviderSelectionPrompt } from "./provider-selection-prompt";
 
 import { providerFetch } from "~/ai/provider-fetch";
-import { useBillingAccess } from "~/auth/billing-context";
 import {
   isKeychainAccessError,
   repairKeychainAccess,
@@ -80,20 +78,6 @@ type ProviderConfig = {
     setup?: { label: string; url: string };
   };
 };
-
-const ANARLOG_ICON_SRC = "/assets/anarlog-icon.png";
-
-export function AnarlogProviderIcon() {
-  return (
-    <img
-      src={staticAssetUrl(ANARLOG_ICON_SRC)}
-      onError={fallbackToLocalAsset(ANARLOG_ICON_SRC)}
-      alt="Anarlog"
-      data-slot="provider-logo"
-      className="size-full object-contain object-center"
-    />
-  );
-}
 
 type LobeIconComponent = ComponentType<{
   color?: string;
@@ -225,7 +209,6 @@ export function useProviderAvailability(
   providerType: ProviderType,
   providers: readonly ProviderConfig[],
 ): Record<string, boolean | undefined> {
-  const billing = useBillingAccess();
   const configuredProviders = useAiProviders(providerType);
 
   const inputs = providers
@@ -240,8 +223,6 @@ export function useProviderAvailability(
       const apiKey = String(config?.api_key || "").trim();
       const isConfigured =
         getProviderSelectionBlockers(provider.requirements, {
-          isAuthenticated: true,
-          isPaid: billing.isPaid,
           config: { base_url: baseUrl, api_key: apiKey },
         }).length === 0;
 
@@ -299,7 +280,6 @@ function useIsProviderReady(
   providerType: ProviderType,
   providers: readonly ProviderConfig[],
 ) {
-  const billing = useBillingAccess();
   const configuredProviders = useAiProviders(providerType);
   const availability = useProviderAvailability(providerType, providers);
   const providerDef = providers.find((p) => p.id === providerId);
@@ -318,14 +298,12 @@ function useIsProviderReady(
   return (
     !!providerDef &&
     getProviderSelectionBlockers(providerDef.requirements, {
-      isAuthenticated: true,
-      isPaid: billing.isPaid,
       config: { base_url: baseUrl, api_key: apiKey },
     }).length === 0
   );
 }
 
-export function NonAnarlogProviderCard({
+export function ProviderCard({
   config,
   providerType,
   providers,
@@ -345,7 +323,6 @@ export function NonAnarlogProviderCard({
   subscriptionProviderId?: string;
 }) {
   const { t } = useLingui();
-  const billing = useBillingAccess();
   const [provider, providerMutation, providerStateReady] = useProvider(
     providerType,
     config,
@@ -362,8 +339,6 @@ export function NonAnarlogProviderCard({
     useState(false);
   const [isKeychainRecoveryInProgress, setIsKeychainRecoveryInProgress] =
     useState(false);
-  const locked =
-    requiresEntitlement(config.requirements, "pro") && !billing.isPaid;
   const isReady = useIsProviderReady(config.id, providerType, providers);
   const configuredProviders = useAiProviders(providerType);
   const subscriptionReady = Boolean(
@@ -520,7 +495,7 @@ export function NonAnarlogProviderCard({
 
   return (
     <AccordionItem
-      disabled={config.disabled || locked}
+      disabled={config.disabled}
       value={config.id}
       className={cn([
         "bg-muted rounded-[22px] border-2",
@@ -546,8 +521,7 @@ export function NonAnarlogProviderCard({
       <AccordionTrigger
         className={cn([
           "gap-2 px-4 capitalize hover:no-underline",
-          (config.disabled || locked) &&
-            "text-muted-foreground cursor-not-allowed",
+          config.disabled && "text-muted-foreground cursor-not-allowed",
         ])}
       >
         <div className="flex items-center gap-2">

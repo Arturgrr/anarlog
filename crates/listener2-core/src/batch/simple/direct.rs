@@ -1,14 +1,12 @@
-use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use owhisper_client::{
-    AdapterKind, AnarlogAdapter, AquaVoiceAdapter, ArgmaxAdapter, AssemblyAIAdapter,
-    AwsTranscribeAdapter, AzureSpeechAdapter, BatchSttAdapter, BatchUploadLimit, CartesiaAdapter,
-    CohereAdapter, DeepgramAdapter, ElevenLabsAdapter, FireworksAdapter, GladiaAdapter,
-    GoogleCloudAdapter, GoogleGenerativeAiAdapter, GroqAdapter, MetaAdapter, MistralAdapter,
-    OpenAIAdapter, OpenRouterAdapter, PyannoteAdapter, RevAiAdapter, SiliconFlowAdapter,
-    SmallestAIAdapter, SonioxAdapter, SpeechmaticsAdapter, TogetherAdapter, WisprFlowAdapter,
-    XaiAdapter, ZaiAdapter,
+    AdapterKind, AquaVoiceAdapter, AssemblyAIAdapter, AwsTranscribeAdapter, AzureSpeechAdapter,
+    BatchSttAdapter, BatchUploadLimit, CartesiaAdapter, CohereAdapter, DeepgramAdapter,
+    ElevenLabsAdapter, FireworksAdapter, GladiaAdapter, GoogleCloudAdapter,
+    GoogleGenerativeAiAdapter, GroqAdapter, MetaAdapter, MistralAdapter, OpenAIAdapter,
+    OpenRouterAdapter, PyannoteAdapter, RevAiAdapter, SiliconFlowAdapter, SmallestAIAdapter,
+    SonioxAdapter, SpeechmaticsAdapter, TogetherAdapter, WisprFlowAdapter, XaiAdapter, ZaiAdapter,
 };
 use owhisper_interface::batch::{Alternatives, Channel, Response, Results};
 use tracing::Instrument;
@@ -23,28 +21,11 @@ pub(super) const DIRECT_BATCH_TIMEOUT_FLOOR: Duration = Duration::from_secs(15 *
 pub(super) const DIRECT_BATCH_TIMEOUT_CEILING: Duration = Duration::from_secs(6 * 60 * 60);
 const DIRECT_BATCH_TIMEOUT_BUFFER: Duration = Duration::from_secs(5 * 60);
 const DIRECT_BATCH_AUDIO_DURATION_MULTIPLIER: u32 = 2;
-const ANARLOG_PROXY_MAX_AUDIO_BYTES: u64 = 512 * 1024 * 1024;
 // Provider quotas are mostly per-minute windows. Segmented uploads fire several
 // requests back to back, so a 429 usually clears within the next minute.
 const RATE_LIMIT_MAX_RETRIES: u32 = 3;
 pub(super) const RATE_LIMIT_BASE_DELAY: Duration = Duration::from_secs(15);
 pub(super) const RATE_LIMIT_MAX_DELAY: Duration = Duration::from_secs(90);
-
-pub(super) enum PreparedBatchUpload {
-    Original(PathBuf),
-    Compressed {
-        _temp_dir: tempfile::TempDir,
-        path: PathBuf,
-    },
-}
-
-impl PreparedBatchUpload {
-    pub(super) fn path(&self) -> &Path {
-        match self {
-            Self::Original(path) | Self::Compressed { path, .. } => path,
-        }
-    }
-}
 
 macro_rules! dispatch_batch {
     ($ak:expr, $params:expr, $lp:expr, $limit:expr,
@@ -70,9 +51,6 @@ pub(in crate::batch) async fn run_direct_batch_for_adapter_kind(
     params: BatchParams,
     listen_params: owhisper_interface::ListenParams,
 ) -> crate::Result<BatchRunOutput> {
-    if adapter_kind == AdapterKind::Anarlog {
-        return run_anarlog_batch(params, listen_params).await;
-    }
     if adapter_kind == AdapterKind::GoogleCloud {
         return super::google_cloud::run(params, listen_params).await;
     }
@@ -80,7 +58,6 @@ pub(in crate::batch) async fn run_direct_batch_for_adapter_kind(
     let limit = adapter_kind.batch_upload_limit(listen_params.model.as_deref());
 
     dispatch_batch!(adapter_kind, params, listen_params, limit, {
-        Argmax => ArgmaxAdapter,
         Cartesia => CartesiaAdapter,
         Deepgram => DeepgramAdapter,
         Soniox => SonioxAdapter,
@@ -96,7 +73,6 @@ pub(in crate::batch) async fn run_direct_batch_for_adapter_kind(
         Pyannote => PyannoteAdapter,
         Mistral => MistralAdapter,
         Meta => MetaAdapter,
-        Anarlog => AnarlogAdapter,
         AquaVoice => AquaVoiceAdapter,
         Cohere => CohereAdapter,
         AwsTranscribe => AwsTranscribeAdapter,
@@ -111,109 +87,6 @@ pub(in crate::batch) async fn run_direct_batch_for_adapter_kind(
         SmallestAI => SmallestAIAdapter,
         WisprFlow => WisprFlowAdapter,
     }, unsupported: [DashScope, Nari, Inworld, Gradium, Modulate, Alebex, Nvidia])
-}
-
-async fn run_anarlog_batch(
-    mut params: BatchParams,
-    listen_params: owhisper_interface::ListenParams,
-) -> crate::Result<BatchRunOutput> {
-    let upload =
-        prepare_anarlog_batch_upload(&params.file_path, ANARLOG_PROXY_MAX_AUDIO_BYTES).await?;
-    params.file_path = upload.path().to_string_lossy().into_owned();
-    run_direct_batch::<AnarlogAdapter>(
-        &AdapterKind::Anarlog.to_string(),
-        params,
-        listen_params,
-        None,
-    )
-    .await
-}
-
-pub(super) async fn prepare_anarlog_batch_upload(
-    file_path: &str,
-    max_bytes: u64,
-) -> crate::Result<PreparedBatchUpload> {
-    let source_path = PathBuf::from(file_path);
-    let source_size = tokio::fs::metadata(&source_path).await?.len();
-    if source_size <= max_bytes {
-        return Ok(PreparedBatchUpload::Original(source_path));
-    }
-
-    let is_wav = source_path
-        .extension()
-        .and_then(|extension| extension.to_str())
-        .is_some_and(|extension| extension.eq_ignore_ascii_case("wav"));
-    if !is_wav {
-        return Err(crate::BatchFailure::DirectRequestFailed {
-            provider: AdapterKind::Anarlog.to_string(),
-            message:
-                "This recording is too large for cloud transcription. Convert it to MP3 and try again."
-                    .to_string(),
-        }
-        .into());
-    }
-
-    let temp_dir =
-        super::super::upload::temporary_audio_directory(file_path).map_err(|_error| {
-            tracing::error!(
-                error.type = "temp_dir_create_failed",
-                "large_batch_audio_temp_dir_failed"
-            );
-            crate::BatchFailure::DirectRequestFailed {
-                provider: AdapterKind::Anarlog.to_string(),
-                message: "Anarlog couldn't prepare this large recording for transcription."
-                    .to_string(),
-            }
-        })?;
-    let encoded_path = temp_dir.path().join("audio.mp3");
-    let encode_source = source_path.clone();
-    let encode_target = encoded_path.clone();
-    tokio::task::spawn_blocking(move || anlg_mp3::encode_wav(&encode_source, &encode_target))
-        .await
-        .map_err(|_error| {
-            tracing::error!(
-                error.type = "local_task_join_failed",
-                "large_batch_audio_encode_task_failed"
-            );
-            crate::BatchFailure::DirectRequestFailed {
-                provider: AdapterKind::Anarlog.to_string(),
-                message: "Anarlog couldn't prepare this large recording for transcription."
-                    .to_string(),
-            }
-        })?
-        .map_err(|_error| {
-            tracing::error!(
-                error.type = "audio_encode_failed",
-                "large_batch_audio_encode_failed"
-            );
-            crate::BatchFailure::DirectRequestFailed {
-                provider: AdapterKind::Anarlog.to_string(),
-                message: "Anarlog couldn't prepare this large recording for transcription."
-                    .to_string(),
-            }
-        })?;
-
-    let encoded_size = tokio::fs::metadata(&encoded_path).await?.len();
-    if encoded_size > max_bytes {
-        return Err(crate::BatchFailure::DirectRequestFailed {
-            provider: AdapterKind::Anarlog.to_string(),
-            message:
-                "This recording is too large for cloud transcription. Split it into smaller files and try again."
-                    .to_string(),
-        }
-        .into());
-    }
-
-    tracing::info!(
-        source_size,
-        encoded_size,
-        "large_batch_audio_compressed_for_upload"
-    );
-
-    Ok(PreparedBatchUpload::Compressed {
-        _temp_dir: temp_dir,
-        path: encoded_path,
-    })
 }
 
 pub(super) async fn run_direct_batch<A: BatchSttAdapter>(

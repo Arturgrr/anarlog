@@ -418,36 +418,6 @@ async fn oversized_audio_is_uploaded_one_segment_at_a_time() {
 }
 
 #[tokio::test]
-async fn compresses_oversized_legacy_wav_before_anarlog_upload() {
-    let source = tempfile::Builder::new().suffix(".wav").tempfile().unwrap();
-    write_test_wav_samples(source.path(), TARGET_SAMPLE_RATE as usize);
-    let source_size = std::fs::metadata(source.path()).unwrap().len();
-    let max_bytes = source_size / 2;
-
-    let upload = prepare_anarlog_batch_upload(source.path().to_str().unwrap(), max_bytes)
-        .await
-        .unwrap();
-
-    assert_eq!(upload.path().extension().unwrap(), "mp3");
-    assert!(std::fs::metadata(upload.path()).unwrap().len() <= max_bytes);
-    assert!(source.path().exists());
-}
-
-#[tokio::test]
-async fn keeps_anarlog_uploads_that_fit_without_reencoding() {
-    let source = tempfile::Builder::new().suffix(".wav").tempfile().unwrap();
-    write_test_wav(source.path());
-    let source_path = source.path().to_path_buf();
-    let max_bytes = std::fs::metadata(&source_path).unwrap().len();
-
-    let upload = prepare_anarlog_batch_upload(source_path.to_str().unwrap(), max_bytes)
-        .await
-        .unwrap();
-
-    assert_eq!(upload.path(), source_path);
-}
-
-#[tokio::test]
 async fn direct_provider_timeout_cancels_non_responding_request() {
     let request_started = Arc::new(Notify::new());
     let request_cancelled = Arc::new(Notify::new());

@@ -27,9 +27,6 @@ export function shouldShowInProviderList(
   providerId: string,
   search: string,
 ): boolean {
-  if (providerId === "anarlog") {
-    return false;
-  }
   if (isFoldedSubscriptionProvider(providerId) && !search.trim()) {
     return false;
   }

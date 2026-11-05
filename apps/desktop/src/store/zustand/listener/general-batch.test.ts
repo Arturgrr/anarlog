@@ -128,7 +128,7 @@ describe("runBatchSession", () => {
         "dictation",
         {
           session_id: "dictation",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/dictation.wav",
           base_url: "",
           api_key: "",
@@ -157,7 +157,7 @@ describe("runBatchSession", () => {
     expect(
       shouldUseSyntheticBatchProgress({
         session_id: "session-1",
-        provider: "anarlog",
+        provider: "deepgram",
         file_path: "/tmp/session.wav",
         base_url: "",
         api_key: "",
@@ -179,34 +179,6 @@ describe("runBatchSession", () => {
         file_path: "/tmp/session.wav",
         model: "gpt-4o-transcribe",
         base_url: "",
-        api_key: "",
-      }),
-    ).toBe(false);
-    expect(
-      shouldUseSyntheticBatchProgress({
-        session_id: "session-1",
-        provider: "am",
-        file_path: "/tmp/session.wav",
-        base_url: "https://api.deepgram.com/v1",
-        api_key: "",
-      }),
-    ).toBe(true);
-    expect(
-      shouldUseSyntheticBatchProgress({
-        session_id: "session-1",
-        provider: "am",
-        file_path: "/tmp/session.wav",
-        base_url: "http://localhost:50060/v1",
-        api_key: "",
-      }),
-    ).toBe(false);
-    expect(
-      shouldUseSyntheticBatchProgress({
-        session_id: "session-1",
-        provider: "am",
-        file_path: "/tmp/session.wav",
-        model: "gpt-4o-transcribe",
-        base_url: "https://api.openai.com/v1",
         api_key: "",
       }),
     ).toBe(false);
@@ -277,7 +249,7 @@ describe("runBatchSession", () => {
         "session-1",
         {
           session_id: "session-1",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/session.wav",
           base_url: "",
           api_key: "",
@@ -379,7 +351,7 @@ describe("runBatchSession", () => {
         "session-1",
         {
           session_id: "session-1",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/session.wav",
           base_url: "",
           api_key: "",
@@ -489,7 +461,7 @@ describe("runBatchSession", () => {
       "session-1",
       {
         session_id: "session-1",
-        provider: "anarlog",
+        provider: "deepgram",
         file_path: "/tmp/session.wav",
         base_url: "",
         api_key: "",
@@ -678,7 +650,7 @@ describe("runBatchSession", () => {
         "session-1",
         {
           session_id: "session-1",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/session.wav",
           base_url: "",
           api_key: "",
@@ -777,7 +749,7 @@ describe("runBatchSession", () => {
       "session-1",
       {
         session_id: "session-1",
-        provider: "anarlog",
+        provider: "deepgram",
         file_path: "/tmp/session.wav",
         base_url: "",
         api_key: "",
@@ -876,7 +848,7 @@ describe("runBatchSession", () => {
           "session-1",
           {
             session_id: "session-1",
-            provider: "anarlog",
+            provider: "deepgram",
             file_path: "/tmp/session.wav",
             base_url: "",
             api_key: "",
@@ -967,7 +939,7 @@ describe("runBatchSession", () => {
         "session-1",
         {
           session_id: "session-1",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/session.wav",
           base_url: "",
           api_key: "",
@@ -1049,7 +1021,7 @@ describe("runBatchSession", () => {
           "session-1",
           {
             session_id: "session-1",
-            provider: "anarlog",
+            provider: "deepgram",
             file_path: "/tmp/session.wav",
             base_url: "",
             api_key: "",
@@ -1070,7 +1042,7 @@ describe("runBatchSession", () => {
         mode: "batch",
         failure_stage: code === "timed_out" ? "timed_out" : "failed",
         error_code: code,
-        provider: "anarlog",
+        provider: "deepgram",
       });
       expect(handleBatchStopped).not.toHaveBeenCalled();
     },

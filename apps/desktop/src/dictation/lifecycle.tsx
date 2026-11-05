@@ -16,8 +16,6 @@ import { DictationController } from "./controller";
 import { waitForDictationPanel } from "./panel";
 import { useDictationStatus } from "./state";
 
-import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { useSettingsReady } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
 import { useListener } from "~/stt/contexts";
@@ -32,8 +30,6 @@ export function waitForDictationCleanup() {
 }
 
 export function DictationLifecycle() {
-  const { session } = useAuth();
-  const { isPro, isReady } = useBillingAccess();
   const settingsReady = useSettingsReady();
   const enabled = useConfigValue("dictation_enabled");
   const shortcut = useConfigValue("dictation_shortcut");
@@ -46,9 +42,9 @@ export function DictationLifecycle() {
     (state) => state.live.status !== "inactive" || state.live.loading,
   );
 
-  if (!session || !isReady || !isPro || !settingsReady || !enabled) return null;
+  if (!settingsReady || !enabled) return null;
   return (
-    <TranscriptRetention key={session.user.id}>
+    <TranscriptRetention>
       {!meetingActive && !capturingShortcut && (
         <ActiveDictation
           key={`${shortcut}:${handsFree}:${retry}`}
@@ -88,8 +84,7 @@ function ActiveDictation({
   const livePreview = useConfigValue("dictation_live_preview");
   const dictionary = useConfigValue("personalization_dictionary_terms");
   const languages = useConfigValue("spoken_languages");
-  const { conn, isCloudModel } = useSTTConnection();
-  const auth = useAuth();
+  const { conn } = useSTTConnection();
   const current = useRef({
     runBatch,
     microphone,
@@ -97,8 +92,6 @@ function ActiveDictation({
     languages,
     dictionary,
     conn,
-    isCloudModel,
-    auth,
   });
   current.current = {
     runBatch,
@@ -107,8 +100,6 @@ function ActiveDictation({
     languages,
     dictionary,
     conn,
-    isCloudModel,
-    auth,
   };
 
   useMountEffect(() => {
@@ -132,15 +123,8 @@ function ActiveDictation({
         finalTranscript = null;
         const recordingAbort = abort;
         const owner = `${id}:${crypto.randomUUID()}`;
-        const {
-          microphone,
-          livePreview,
-          conn,
-          isCloudModel,
-          languages,
-          dictionary,
-          auth,
-        } = current.current;
+        const { microphone, livePreview, conn, languages, dictionary } =
+          current.current;
         useDictationStatus.setState({
           owner,
           error: null,
@@ -168,31 +152,24 @@ function ActiveDictation({
           );
         abort.signal.throwIfAborted();
         target = unwrap(await dictation.captureTarget());
-        const previewSession = isCloudModel
-          ? await auth.getSessionForRequest().catch(() => null)
+        const preview = conn
+          ? {
+              provider: conn.provider,
+              baseUrl: conn.baseUrl,
+              apiKey: conn.apiKey,
+              params: {
+                model: conn.model,
+                channels: 1,
+                sample_rate: 16000,
+                languages: languages || [],
+                keywords: dictionary || [],
+                num_speakers: 1,
+                min_speakers: null,
+                max_speakers: null,
+                custom_query: null,
+              },
+            }
           : null;
-        const apiKey = isCloudModel
-          ? previewSession?.access_token
-          : conn?.apiKey;
-        const preview =
-          conn && (!isCloudModel || previewSession)
-            ? {
-                provider: conn.provider,
-                baseUrl: conn.baseUrl,
-                apiKey: apiKey ?? "",
-                params: {
-                  model: conn.model,
-                  channels: 1,
-                  sample_rate: 16000,
-                  languages: languages || [],
-                  keywords: dictionary || [],
-                  num_speakers: 1,
-                  min_speakers: null,
-                  max_speakers: null,
-                  custom_query: null,
-                },
-              }
-            : null;
         useDictationStatus.setState({
           previewUnavailable: livePreview && !preview,
         });

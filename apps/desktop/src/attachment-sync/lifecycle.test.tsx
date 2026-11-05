@@ -28,10 +28,6 @@ vi.mock("~/auth", () => ({
   }),
 }));
 
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ isPaid: true }),
-}));
-
 vi.mock("~/env", () => ({
   env: {
     VITE_API_URL: "https://api.example.com",

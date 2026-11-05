@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   downloadModel: vi.fn(),
   toastError: vi.fn(),
-  upgradeToPro: vi.fn(),
 }));
 
 vi.mock("@anlg/plugin-local-stt", () => ({
@@ -13,10 +12,6 @@ vi.mock("@anlg/plugin-local-stt", () => ({
 
 vi.mock("@anlg/ui/components/ui/toast", () => ({
   toast: { error: mocks.toastError },
-}));
-
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ upgradeToPro: mocks.upgradeToPro }),
 }));
 
 import { SttSettingsProvider, useSttSettings } from "./context";

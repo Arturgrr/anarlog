@@ -976,14 +976,13 @@ mod tests {
     fn batch_idle_timeout_applies_only_to_local_batch() {
         let cases = [
             (
-                core::BatchProvider::Anarlog,
-                "https://api.anarlog.so/stt",
+                core::BatchProvider::Deepgram,
+                "https://api.deepgram.com/v1",
                 None,
             ),
-            (core::BatchProvider::Am, "https://api.anarlog.so/stt", None),
             (
-                core::BatchProvider::Am,
-                "http://localhost:50060/v1",
+                core::BatchProvider::WhisperLocal,
+                "http://127.0.0.1:8080/v1",
                 Some(BATCH_IDLE_TIMEOUT),
             ),
         ];

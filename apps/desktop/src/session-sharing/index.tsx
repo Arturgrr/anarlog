@@ -3,14 +3,9 @@ import { Trans } from "@lingui/react/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
-import { ShareNetwork, Users } from "@anlg/ui/components/icons";
+import { ShareNetwork } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
-import {
-  AppFloatingPanel,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@anlg/ui/components/ui/popover";
+import { Popover, PopoverTrigger } from "@anlg/ui/components/ui/popover";
 import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
@@ -60,7 +55,6 @@ import { loadSessionShareSource, useAvailableShareWorkspaces } from "./source";
 
 import { trackAnalyticsEvent } from "~/analytics";
 import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { env } from "~/env";
 import {
   loadManagedSharedNoteForSession,
@@ -137,7 +131,6 @@ export function SessionShareButton({
     }
     return { ...context, signal };
   };
-  const billing = useBillingAccess();
   const queryClient = useQueryClient();
   const [sharePanelIdentity, setSharePanelIdentity] =
     useState<SharePanelIdentity | null>(null);
@@ -507,13 +500,6 @@ export function SessionShareButton({
     sharePanelIdentityRef.current === sharePanelIdentity
       ? sharePanelIdentity
       : cachedSharePanelIdentity;
-  const showUpgradePrompt = Boolean(
-    activeSharePreparationIdentity &&
-    !activeSharePanelIdentity &&
-    !managedNoteQuery.isLoading &&
-    billing.isReady &&
-    !billing.isPaid,
-  );
   const isSignedOut = !auth.session || auth.session.user.is_anonymous === true;
   const signedOutPreviewOpen =
     signedOutPreviewSessionId === sessionId && isSignedOut;
@@ -580,9 +566,7 @@ export function SessionShareButton({
     if (
       !activeSharePreparationIdentity ||
       !isActiveSharePreparation(activeSharePreparationIdentity) ||
-      managedNoteQuery.isLoading ||
-      !billing.isReady ||
-      !billing.isPaid
+      managedNoteQuery.isLoading
     ) {
       return;
     }
@@ -649,16 +633,14 @@ export function SessionShareButton({
           ) : null}
         </Button>
       </PopoverTrigger>
-      {showUpgradePrompt ? (
-        <SessionShareUpgradeContent onUpgrade={billing.upgradeToPro} />
-      ) : activeSharePanelIdentity ? (
+      {activeSharePanelIdentity ? (
         <SessionSharePopoverContent
           key={`${activeSharePanelIdentity.ownerUserId}:${activeSharePanelIdentity.shareId}:${activeSharePanelIdentity.sessionId}`}
           sessionId={activeSharePanelIdentity.sessionId}
           identity={activeSharePanelIdentity}
           data={shareQuery.data}
           error={shareQuery.isError}
-          canExpand={billing.isPaid}
+          canExpand
           sharedAttachments={sharedAttachments}
           sharedSnapshot={durableNoteQuery.data ?? null}
           sharedAttachmentsReady={sharedAttachmentsReady}
@@ -700,9 +682,7 @@ export function SessionShareButton({
       ) : activeSharePreparationIdentity ? (
         <SessionShareDraftContent
           sessionId={activeSharePreparationIdentity.sessionId}
-          disabled={
-            managedNoteQuery.isLoading || !billing.isReady || !billing.isPaid
-          }
+          disabled={managedNoteQuery.isLoading}
           pendingAction={
             activationMutation.isPending
               ? (activationMutation.variables?.action ?? null)
@@ -738,48 +718,5 @@ function SessionShareSignInAction() {
         <Trans>Sign in</Trans>
       )}
     </Button>
-  );
-}
-
-function SessionShareUpgradeContent({ onUpgrade }: { onUpgrade: () => void }) {
-  useMountEffect(() => {
-    trackAnalyticsEvent("paywall_viewed", {
-      entry_point: "session_sharing",
-      feature: "sharing",
-    });
-  });
-
-  return (
-    <PopoverContent
-      variant="app"
-      align="end"
-      sideOffset={8}
-      aria-labelledby="session-share-upgrade-heading"
-      aria-describedby="session-share-upgrade-description"
-      className="w-[440px] max-w-[calc(100vw-16px)] overflow-hidden"
-    >
-      <AppFloatingPanel className="flex max-h-[min(530px,calc(100vh-74px))] flex-col items-center overflow-y-auto px-6 py-7 text-center">
-        <div className="bg-accent flex size-10 items-center justify-center rounded-full">
-          <Users className="size-4" aria-hidden="true" />
-        </div>
-        <h2
-          id="session-share-upgrade-heading"
-          className="mt-3 text-sm font-semibold"
-        >
-          <Trans>Share notes with others</Trans>
-        </h2>
-        <p
-          id="session-share-upgrade-description"
-          className="text-muted-foreground mt-1 text-xs leading-5"
-        >
-          <Trans>
-            Upgrade to Pro to invite people and share this note with them.
-          </Trans>
-        </p>
-        <Button type="button" size="sm" onClick={onUpgrade} className="mt-4">
-          <Trans>Upgrade to Pro</Trans>
-        </Button>
-      </AppFloatingPanel>
-    </PopoverContent>
   );
 }

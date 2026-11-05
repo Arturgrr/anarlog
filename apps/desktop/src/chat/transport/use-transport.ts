@@ -96,7 +96,7 @@ export function useTransport(
   userId?: string,
 ) {
   const registry = useToolRegistry();
-  const configuredModel = useLanguageModel("chat");
+  const configuredModel = useLanguageModel();
   const model = modelOverride ?? configuredModel;
   const language = useConfigValue("ai_language") || "en";
   const systemPromptQuery = useQuery({

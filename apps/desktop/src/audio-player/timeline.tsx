@@ -12,7 +12,6 @@ import { cn } from "@anlg/utils";
 import { useAudioPlayer, useAudioTime } from "./provider";
 import { TimelineMeta, TimelineShell } from "./timeline-shell";
 
-import { useBillingAccess } from "~/auth/billing-context";
 import { useNativeContextMenu } from "~/shared/hooks/useNativeContextMenu";
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
@@ -22,7 +21,6 @@ export function Timeline({
 }: {
   contentClassName?: string;
 } = {}) {
-  const { isPro } = useBillingAccess();
   const {
     registerContainer,
     state,
@@ -116,49 +114,47 @@ export function Timeline({
             <span>{formatTime(time.total)}</span>
           </TimelineMeta>
 
-          {isPro ? (
-            <DropdownMenu
-              modal={false}
-              open={showRateMenu}
-              onOpenChange={setShowRateMenu}
+          <DropdownMenu
+            modal={false}
+            open={showRateMenu}
+            onOpenChange={setShowRateMenu}
+          >
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn([
+                  "flex shrink-0 items-center justify-center",
+                  "h-6 rounded-md px-1.5",
+                  "border-border bg-card border",
+                  "hover:bg-accent transition-colors",
+                  "text-muted-foreground font-mono text-xs select-none",
+                  "shadow-xs",
+                ])}
+              >
+                {playbackRate}x
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side="top"
+              align="end"
+              className="border-border bg-card min-w-0 rounded-lg p-0 py-1"
             >
-              <DropdownMenuTrigger asChild>
-                <button
+              {PLAYBACK_RATES.map((rate) => (
+                <DropdownMenuItem
+                  key={rate}
+                  onSelect={() => setPlaybackRate(rate)}
                   className={cn([
-                    "flex shrink-0 items-center justify-center",
-                    "h-6 rounded-md px-1.5",
-                    "border-border bg-card border",
-                    "hover:bg-accent transition-colors",
-                    "text-muted-foreground font-mono text-xs select-none",
-                    "shadow-xs",
+                    "block w-full rounded-none px-3 py-1 text-left font-mono text-xs select-none",
+                    "hover:bg-accent focus:bg-accent transition-colors",
+                    rate === playbackRate
+                      ? "text-foreground font-semibold"
+                      : "text-muted-foreground",
                   ])}
                 >
-                  {playbackRate}x
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                align="end"
-                className="border-border bg-card min-w-0 rounded-lg p-0 py-1"
-              >
-                {PLAYBACK_RATES.map((rate) => (
-                  <DropdownMenuItem
-                    key={rate}
-                    onSelect={() => setPlaybackRate(rate)}
-                    className={cn([
-                      "block w-full rounded-none px-3 py-1 text-left font-mono text-xs select-none",
-                      "hover:bg-accent focus:bg-accent transition-colors",
-                      rate === playbackRate
-                        ? "text-foreground font-semibold"
-                        : "text-muted-foreground",
-                    ])}
-                  >
-                    {rate}x
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
+                  {rate}x
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </>
       }
       main={

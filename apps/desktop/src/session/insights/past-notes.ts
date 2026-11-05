@@ -117,7 +117,7 @@ export function usePastSessionNotes(
   const { sessions, participants, enhancedNotes, keyFacts } =
     usePastSessionNotesData(enabled);
   const userId = sessions[sessionId]?.user_id || null;
-  const model = useLanguageModel("enhance");
+  const model = useLanguageModel();
 
   const built = useMemo(() => {
     if (!enabled) {

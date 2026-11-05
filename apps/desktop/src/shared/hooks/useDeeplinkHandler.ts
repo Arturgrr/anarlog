@@ -82,9 +82,6 @@ export function useDeeplinkHandler() {
             );
           });
         }
-      } else if (payload.to === "/billing/refresh") {
-        void authRef.current.refreshSession();
-        void dismissInstruction();
       } else if (payload.to === "/integration/callback") {
         const {
           disconnected_connection_id,

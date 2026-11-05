@@ -8,83 +8,6 @@ use owhisper_interface::stream::StreamResponse;
 use crate::live::{FinalizeHandle, ListenClientDualInput, ListenClientInput};
 use crate::{ListenClient, ListenClientDual, RealtimeSttAdapter};
 
-#[macro_export]
-macro_rules! define_realtime_e2e_tests {
-    (
-        adapter = $adapter:ty,
-        provider = $provider:expr,
-        env_key = $env_key:expr,
-        base = $base:expr
-    ) => {
-        #[tokio::test]
-        #[ignore]
-        async fn test_build_single() {
-            let client = $crate::ListenClient::builder()
-                .adapter::<$adapter>()
-                .api_base($base)
-                .api_key(std::env::var($env_key).expect(concat!($env_key, " not set")))
-                .params(owhisper_interface::ListenParams::default())
-                .build_single()
-                .await
-                .unwrap();
-
-            $crate::test_utils::run_single_test(client, $provider).await;
-        }
-
-        #[tokio::test]
-        #[ignore]
-        async fn test_build_dual() {
-            let client = $crate::ListenClient::builder()
-                .adapter::<$adapter>()
-                .api_base($base)
-                .api_key(std::env::var($env_key).expect(concat!($env_key, " not set")))
-                .params(owhisper_interface::ListenParams::default())
-                .build_dual()
-                .await
-                .unwrap();
-
-            $crate::test_utils::run_dual_test(client, $provider).await;
-        }
-    };
-    (
-        adapter = $adapter:ty,
-        provider = $provider:expr,
-        env_key = $env_key:expr,
-        base = $base:expr,
-        params = $params:expr
-    ) => {
-        #[tokio::test]
-        #[ignore]
-        async fn test_build_single() {
-            let client = $crate::ListenClient::builder()
-                .adapter::<$adapter>()
-                .api_base($base)
-                .api_key(std::env::var($env_key).expect(concat!($env_key, " not set")))
-                .params($params)
-                .build_single()
-                .await
-                .unwrap();
-
-            $crate::test_utils::run_single_test(client, $provider).await;
-        }
-
-        #[tokio::test]
-        #[ignore]
-        async fn test_build_dual() {
-            let client = $crate::ListenClient::builder()
-                .adapter::<$adapter>()
-                .api_base($base)
-                .api_key(std::env::var($env_key).expect(concat!($env_key, " not set")))
-                .params($params)
-                .build_dual()
-                .await
-                .unwrap();
-
-            $crate::test_utils::run_dual_test(client, $provider).await;
-        }
-    };
-}
-
 fn timeout_secs() -> u64 {
     std::env::var("TEST_TIMEOUT_SECS")
         .ok()
@@ -98,10 +21,6 @@ fn throttle_ms() -> u64 {
 
 fn chunk_samples() -> usize {
     1600
-}
-
-fn default_sample_rate() -> u32 {
-    16000
 }
 
 pub fn test_audio_stream_single_with_rate(
@@ -132,10 +51,6 @@ pub fn test_audio_stream_dual_with_rate(
         audio.map(|chunk| MixedMessage::Audio((chunk.clone(), chunk))),
         Duration::from_millis(throttle_ms()),
     ))
-}
-
-pub async fn run_single_test<A: RealtimeSttAdapter>(client: ListenClient<A>, provider_name: &str) {
-    run_single_test_with_rate(client, provider_name, default_sample_rate()).await;
 }
 
 pub async fn run_single_test_with_rate<A: RealtimeSttAdapter>(
@@ -179,13 +94,6 @@ pub async fn run_single_test_with_rate<A: RealtimeSttAdapter>(
         "[{}] expected at least one non-empty transcript",
         provider_name
     );
-}
-
-pub async fn run_dual_test<A: RealtimeSttAdapter>(
-    client: ListenClientDual<A>,
-    provider_name: &str,
-) {
-    run_dual_test_with_rate(client, provider_name, default_sample_rate()).await;
 }
 
 pub async fn run_dual_test_with_rate<A: RealtimeSttAdapter>(

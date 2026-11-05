@@ -16,11 +16,9 @@ import { SettingsCrm } from "~/settings/crm";
 import { SettingsDevelopers } from "~/settings/developers";
 import { SettingsDictation } from "~/settings/dictation";
 import { SettingsDictionary } from "~/settings/dictionary";
-import { SettingsBilling } from "~/settings/general/billing";
 import { SettingsHydrationBoundary } from "~/settings/hydration-boundary";
 import { SettingsImports } from "~/settings/imports";
 import { SettingsPrivacy } from "~/settings/privacy";
-import { SettingsReferrals } from "~/settings/referrals";
 import { SettingsInsights } from "~/settings/stats";
 import { SettingsSync } from "~/settings/sync";
 import { SettingsTeam } from "~/settings/team";
@@ -56,10 +54,6 @@ function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
     switch (activeTab) {
       case "account":
         return <SettingsAccount />;
-      case "billing":
-        return <SettingsBilling />;
-      case "referrals":
-        return <SettingsReferrals />;
       case "stats":
       case "insights":
         return <SettingsInsights />;

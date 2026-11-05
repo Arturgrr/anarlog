@@ -1,4 +1,3 @@
-import { anarlogProLlmModelLabel } from "./anarlog-pro-models";
 import { modelName } from "./model-id";
 
 const MODEL_NAME_OVERRIDES: Record<string, string> = {
@@ -8,14 +7,7 @@ const MODEL_NAME_OVERRIDES: Record<string, string> = {
   "claude-sonnet-5": "Claude Sonnet 5",
 };
 
-export function displayLlmModelId(providerId: string, model: string): string {
-  if (providerId === "anarlog") {
-    const label = anarlogProLlmModelLabel(model);
-    if (label) {
-      return label;
-    }
-  }
-
+export function displayLlmModelId(model: string): string {
   const normalized = stripReleaseDate(modelName(model));
 
   const override = MODEL_NAME_OVERRIDES[normalized];

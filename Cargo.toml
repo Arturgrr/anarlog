@@ -23,7 +23,6 @@ anlg-aec = { path = "crates/aec", package = "aec" }
 anlg-afconvert = { path = "crates/afconvert", package = "afconvert" }
 anlg-agent-access = { path = "crates/agent-access", package = "agent-access" }
 anlg-agent-core = { path = "crates/agent-core", package = "agent-core" }
-anlg-am = { path = "crates/am", package = "am" }
 anlg-analytics = { path = "crates/analytics", package = "analytics" }
 anlg-api-auth = { path = "crates/api-auth", package = "api-auth" }
 anlg-api-calendar = { path = "crates/api-calendar", package = "api-calendar" }

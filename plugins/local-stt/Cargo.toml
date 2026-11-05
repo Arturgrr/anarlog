@@ -34,7 +34,6 @@ tokio-tungstenite = { workspace = true }
 tower = { workspace = true }
 
 [dependencies]
-anlg-am = { workspace = true }
 anlg-file = { workspace = true }
 anlg-host = { workspace = true }
 anlg-local-model = { workspace = true }
@@ -50,8 +49,6 @@ tauri = { workspace = true, features = ["test"] }
 tauri-specta = { workspace = true, features = ["derive", "typescript"] }
 
 tauri-plugin-settings = { workspace = true }
-tauri-plugin-shell = { workspace = true }
-tauri-plugin-sidecar2 = { workspace = true }
 
 dirs = { workspace = true }
 serde = { workspace = true }
@@ -61,12 +58,10 @@ thiserror = { workspace = true }
 axum = { workspace = true, features = ["ws"] }
 tower-http = { workspace = true, features = ["cors", "trace"] }
 
-backon = { workspace = true }
 reqwest = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros"] }
 tokio-util = { workspace = true }
 tracing = { workspace = true }
 
 anlg-supervisor = { workspace = true }
-port_check = "0.3.0"
 ractor = { workspace = true, features = ["async-trait"] }

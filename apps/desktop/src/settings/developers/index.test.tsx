@@ -22,16 +22,6 @@ const mocks = vi.hoisted(() => ({
   setCloudApiEnabled: vi.fn(),
   backfillCloudApiSnapshots: vi.fn(),
   createCloudApiKey: vi.fn(),
-  billing: {
-    isPro: true,
-    isReady: true,
-    isUpgradingToPro: false,
-    upgradeToPro: vi.fn(),
-  },
-}));
-
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => mocks.billing,
 }));
 
 vi.mock("~/types/tauri.gen", () => ({
@@ -170,10 +160,6 @@ describe("SettingsDevelopers", () => {
     });
     mocks.setCloudApiEnabled.mockReset();
     mocks.backfillCloudApiSnapshots.mockReset();
-    mocks.billing.isPro = true;
-    mocks.billing.isReady = true;
-    mocks.billing.isUpgradingToPro = false;
-    mocks.billing.upgradeToPro.mockReset();
   });
 
   afterEach(() => {
@@ -417,49 +403,6 @@ describe("SettingsDevelopers", () => {
       );
     });
     expect(mocks.backfillCloudApiSnapshots).not.toHaveBeenCalled();
-  });
-
-  it("shows Cloud API controls and toasts on the free plan", () => {
-    mocks.billing.isPro = false;
-    mocks.checkEmbeddedCli.mockResolvedValue({
-      status: "ok",
-      data: {
-        supported: false,
-        commandName: "anarlog",
-        installPath: "/Users/test/.local/bin/anarlog",
-        state: "unsupported",
-        details: "Unavailable.",
-      },
-    });
-
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    render(
-      <QueryClientProvider client={queryClient}>
-        <SettingsDevelopers />
-      </QueryClientProvider>,
-    );
-
-    fireEvent.click(
-      screen.getByRole("switch", {
-        name: "Enable Cloud API & Connectors",
-      }),
-    );
-
-    expect(screen.getByText("REST API")).toBeTruthy();
-    expect(screen.getByText(/server-readable copy/)).toBeTruthy();
-    expect(mocks.getCloudApiSettings).not.toHaveBeenCalled();
-    expect(mocks.toastWarning).toHaveBeenCalledWith(
-      "This requires Anarlog Pro",
-      {
-        action: {
-          label: "Upgrade",
-          onClick: expect.any(Function),
-        },
-      },
-    );
-    expect(mocks.billing.upgradeToPro).not.toHaveBeenCalled();
   });
 
   it("installs the skill into every detected agent from one action", async () => {

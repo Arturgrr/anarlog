@@ -37,7 +37,7 @@ export function AutoFormatExamplesDialog({
   onGenerated: (format: string) => void;
 }) {
   const { t } = useLingui();
-  const model = useLanguageModel("enhance");
+  const model = useLanguageModel();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [examples, setExamples] = useState([""]);
   const populatedExamples = examples

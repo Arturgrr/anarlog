@@ -5,7 +5,7 @@ use owhisper_interface::ListenParams;
 use owhisper_interface::batch::Response as BatchResponse;
 use reqwest_middleware::ClientWithMiddleware;
 
-use crate::adapter::{BatchSttAdapter, append_provider_param, is_anarlog_proxy};
+use crate::adapter::BatchSttAdapter;
 use crate::error::Error;
 use crate::http_client::create_client;
 use crate::{DeepgramAdapter, ListenClientBuilder, normalize_listen_params};
@@ -72,17 +72,6 @@ pub struct BatchClient<A: BatchSttAdapter = DeepgramAdapter> {
 }
 
 impl<A: BatchSttAdapter> BatchClient<A> {
-    fn normalize_api_base(api_base: String) -> String {
-        if !is_anarlog_proxy(&api_base) {
-            return api_base;
-        }
-        let provider_name = A::default().provider_name();
-        if provider_name == "unknown" {
-            return api_base;
-        }
-        append_provider_param(&api_base, provider_name)
-    }
-
     pub fn builder() -> BatchClientBuilder<A> {
         BatchClientBuilder {
             api_base: None,
@@ -93,7 +82,6 @@ impl<A: BatchSttAdapter> BatchClient<A> {
     }
 
     pub fn new(api_base: String, api_key: String, params: ListenParams) -> Self {
-        let api_base = Self::normalize_api_base(api_base);
         let params = normalize_listen_params(params);
 
         Self {
@@ -132,37 +120,8 @@ impl<A: crate::RealtimeSttAdapter + BatchSttAdapter> ListenClientBuilder<A> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AnarlogAdapter, DeepgramAdapter, OpenAIAdapter};
+    use crate::DeepgramAdapter;
     use anlg_language::{ISO639, Language};
-
-    #[test]
-    fn injects_or_rewrites_provider_param_for_anarlog_proxy() {
-        let client = BatchClient::<AnarlogAdapter>::builder()
-            .api_base("https://api.anarlog.so/stt")
-            .api_key("test")
-            .build();
-        assert!(client.api_base.contains("provider=hyprnote"));
-
-        let client = BatchClient::<OpenAIAdapter>::builder()
-            .api_base("https://api.openai.com/v1")
-            .api_key("test")
-            .build();
-        assert_eq!(client.api_base, "https://api.openai.com/v1");
-
-        let client = BatchClient::<DeepgramAdapter>::builder()
-            .api_base("https://api.anarlog.so/stt")
-            .api_key("test")
-            .build();
-        assert!(client.api_base.contains("provider=deepgram"));
-
-        let client = BatchClient::<OpenAIAdapter>::builder()
-            .api_base("https://api.anarlog.so/stt?provider=anarlog&model=whisper-1")
-            .api_key("test")
-            .build();
-        assert!(client.api_base.contains("provider=openai"));
-        assert!(!client.api_base.contains("provider=anarlog"));
-        assert!(client.api_base.contains("model=whisper-1"));
-    }
 
     #[test]
     fn normalizes_languages_when_constructed() {

@@ -138,10 +138,6 @@ vi.mock("@anlg/ui/components/ui/toast", () => ({
   },
 }));
 
-vi.mock("@anlg/supabase", () => ({
-  deriveBillingInfo: vi.fn(() => ({ plan: "free", trialEnd: null })),
-}));
-
 vi.mock("@tauri-apps/api/app", () => ({
   getVersion: vi.fn().mockResolvedValue("1.0.0"),
 }));
@@ -333,8 +329,6 @@ describe("AuthProvider", () => {
             key: "account-id",
             properties: {
               created_at: "2026-01-01T00:00:00.000Z",
-              plan: "free",
-              trial_end_date: null,
             },
           },
         }),

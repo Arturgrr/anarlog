@@ -24,7 +24,6 @@ use adapters::spawn_rx_task;
 pub(super) const LISTEN_STREAM_TIMEOUT: Duration = Duration::from_secs(15 * 60);
 pub(super) const FINALIZE_STREAM_TIMEOUT: Duration = Duration::from_secs(5);
 const STREAM_TASK_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(7);
-pub(super) const DEVICE_FINGERPRINT_HEADER: &str = "x-device-fingerprint";
 
 pub enum ListenerMsg {
     AudioSingle(Bytes, RpcReplyPort<ListenerAudioResult>),

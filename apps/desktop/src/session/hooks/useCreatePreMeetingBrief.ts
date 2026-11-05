@@ -43,7 +43,7 @@ export function useCreatePreMeetingBrief({
 }) {
   const now = useNow();
   const language = useConfigValue("ai_language") || "en";
-  const model = useLanguageModel("enhance");
+  const model = useLanguageModel();
   const enabled = sessionMode === "inactive";
   const event = useSessionCalendarEvent(sessionId, { enabled });
   const upcoming = shouldShowPreMeetingBrief(event, now.getTime());

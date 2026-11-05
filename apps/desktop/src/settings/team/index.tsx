@@ -90,7 +90,6 @@ import {
 } from "./my-invitations";
 
 import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { useSharedProfilePhoto } from "~/contacts/profile-photo";
 import { usePersonalContact } from "~/contacts/queries";
 import {
@@ -99,7 +98,6 @@ import {
 } from "~/enterprise-capture/client";
 import { env } from "~/env";
 import { SettingsPageTitle } from "~/settings/page-title";
-import { PlanGate } from "~/settings/plan-gate";
 import { SettingSwitchRow } from "~/settings/setting-row";
 import { DestructiveConfirmationDialog } from "~/shared/ui/destructive-confirmation-dialog";
 import {
@@ -110,7 +108,6 @@ import { buildWebAppUrl } from "~/shared/utils";
 
 export function SettingsTeam() {
   const auth = useAuth();
-  const { isPro } = useBillingAccess();
   const { t } = useLingui();
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -153,14 +150,12 @@ export function SettingsTeam() {
   }
 
   const createForm = (
-    <PlanGate allowed={isPro} plan="pro">
-      <CreateWorkspaceForm
-        onCreate={(name) => create.mutate(name)}
-        pending={create.isPending}
-        error={create.error?.message}
-        placeholder={t`Acme`}
-      />
-    </PlanGate>
+    <CreateWorkspaceForm
+      onCreate={(name) => create.mutate(name)}
+      pending={create.isPending}
+      error={create.error?.message}
+      placeholder={t`Acme`}
+    />
   );
 
   return (
@@ -1499,10 +1494,7 @@ function WorkspacePolicyForm({
         checked={allowPublic}
         onChange={setAllowPublic}
       />
-      <PlanGate
-        plan="enterprise"
-        allowed={canConfigureSso || canConfigureScim || canConfigureRetention}
-      >
+      {canConfigureSso || canConfigureScim || canConfigureRetention ? (
         <div className="flex flex-col gap-6">
           <SettingSwitchRow
             title={<Trans>Require SSO</Trans>}
@@ -1587,7 +1579,7 @@ function WorkspacePolicyForm({
             </form>
           </div>
         </div>
-      </PlanGate>
+      ) : null}
       <Button
         type="button"
         size="sm"

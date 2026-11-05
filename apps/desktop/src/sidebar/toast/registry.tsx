@@ -20,8 +20,6 @@ type ToastRegistryParams = {
   isAuthLoading: boolean;
   hasLLMConfigured: boolean;
   hasSttConfigured: boolean;
-  hasProSttConfigured: boolean;
-  hasProLlmConfigured: boolean;
   isAiTranscriptionTabActive: boolean;
   isAiIntelligenceTabActive: boolean;
   isBatchTranscribingInActiveTranscriptTab: boolean;
@@ -39,7 +37,6 @@ type ToastRegistryParams = {
 
 type DevtoolsToastPreviewParams = {
   preview: DevtoolsToastPreview;
-  onSignIn: () => void | Promise<void>;
   onOpenLLMSettings: () => void;
   onOpenSTTSettings: () => void;
 };
@@ -49,8 +46,6 @@ export function createToastRegistry({
   isAuthLoading,
   hasLLMConfigured,
   hasSttConfigured,
-  hasProSttConfigured,
-  hasProLlmConfigured,
   isAiTranscriptionTabActive,
   isAiIntelligenceTabActive,
   isBatchTranscribingInActiveTranscriptTab,
@@ -69,12 +64,6 @@ export function createToastRegistry({
     activeDownloads.length === 1 && downloadingModel
       ? t`Downloading ${downloadingModel}`
       : t`Downloading ${activeDownloads.length} models`;
-  const hasUsableSttConfigured =
-    hasSttConfigured &&
-    (isAuthLoading || isAuthenticated || !hasProSttConfigured);
-  const hasUsableLlmConfigured =
-    hasLLMConfigured &&
-    (isAuthLoading || isAuthenticated || !hasProLlmConfigured);
   const updateToast = createDesktopUpdateToast(update);
 
   // order matters
@@ -170,7 +159,7 @@ export function createToastRegistry({
         },
         lifecycle: { type: "condition-bound" },
       },
-      condition: () => !hasUsableSttConfigured && !isAiTranscriptionTabActive,
+      condition: () => !hasSttConfigured && !isAiTranscriptionTabActive,
     },
     {
       toast: {
@@ -183,32 +172,7 @@ export function createToastRegistry({
         lifecycle: { type: "condition-bound" },
       },
       condition: () =>
-        hasUsableSttConfigured &&
-        !hasUsableLlmConfigured &&
-        !isAiIntelligenceTabActive,
-    },
-    {
-      toast: {
-        id: "upgrade-to-pro",
-        description: t`Pro features available`,
-        primaryAction: {
-          label: t`Upgrade`,
-          onClick: onSignIn,
-        },
-        lifecycle: {
-          type: "persistent",
-          dismissal: "permanent",
-          dismissalId: "auth-promotion",
-        },
-      },
-      // suppress until auth resolves to avoid flash on startup
-      condition: () =>
-        !isAuthLoading &&
-        !isAuthenticated &&
-        hasLLMConfigured &&
-        hasSttConfigured &&
-        !hasProSttConfigured &&
-        !hasProLlmConfigured,
+        hasSttConfigured && !hasLLMConfigured && !isAiIntelligenceTabActive,
     },
   ];
 }
@@ -292,7 +256,6 @@ export function getToastToShow(
 
 export function createDevtoolsToastPreview({
   preview,
-  onSignIn,
   onOpenLLMSettings,
   onOpenSTTSettings,
 }: DevtoolsToastPreviewParams): ToastType {
@@ -334,16 +297,6 @@ export function createDevtoolsToastPreview({
         description: t`Downloading model`,
         lifecycle: { type: "persistent", dismissal: "session" },
         loading: true,
-      };
-    case "pro":
-      return {
-        id: "devtools-upgrade-to-pro",
-        description: t`Pro features available`,
-        primaryAction: {
-          label: t`Upgrade`,
-          onClick: onSignIn,
-        },
-        lifecycle: { type: "persistent", dismissal: "session" },
       };
   }
 }

@@ -919,12 +919,6 @@ mod tests {
                 "direct soniox preserves recording",
             ),
             (
-                "https://api.anarlog.so/stt?provider=soniox",
-                "cloud",
-                false,
-                "anarlog proxy soniox enters batch fallback",
-            ),
-            (
                 "http://localhost:1234",
                 "test-model",
                 false,
@@ -1028,8 +1022,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn stalled_cloud_and_soniox_listeners_schedule_reconnection_without_stopping_recording() {
-        for base_url in ["https://api.anarlog.so/stt", "https://api.soniox.com"] {
+    async fn stalled_remote_listeners_schedule_reconnection_without_stopping_recording() {
+        for base_url in ["https://api.deepgram.com/v1", "https://api.soniox.com"] {
             let runtime = Arc::new(RecordingRuntime {
                 lifecycle_events: std::sync::Mutex::new(vec![]),
             });

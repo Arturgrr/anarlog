@@ -13,9 +13,6 @@ export function sortProviders<T extends Sortable>(
   );
 
   return [...providers].sort((a, b) => {
-    if (a.id === "anarlog") return -1;
-    if (b.id === "anarlog") return 1;
-
     if (a.id === "custom") return 1;
     if (b.id === "custom") return -1;
 

@@ -86,8 +86,8 @@ mod tests {
             ("", "https://api.pyannote.ai/"),
             ("https://api.pyannote.ai", "https://api.pyannote.ai/v1"),
             (
-                "https://api.anarlog.so/pyannote",
-                "https://api.anarlog.so/pyannote/v1",
+                "https://stt.example.com/pyannote",
+                "https://stt.example.com/pyannote/v1",
             ),
         ] {
             assert_eq!(
