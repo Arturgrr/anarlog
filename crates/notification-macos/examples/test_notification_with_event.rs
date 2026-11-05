@@ -29,17 +29,17 @@ fn main() {
             },
             Participant {
                 name: Some("John Jeong".to_string()),
-                email: "john@hyprnote.com".to_string(),
+                email: "john@example.com".to_string(),
                 status: ParticipantStatus::Accepted,
             },
             Participant {
                 name: Some("Yujong Lee".to_string()),
-                email: "yujonglee@hyprnote.com".to_string(),
+                email: "yujonglee@example.com".to_string(),
                 status: ParticipantStatus::Maybe,
             },
             Participant {
                 name: Some("Tony Stark".to_string()),
-                email: "tony@hyprnote.com".to_string(),
+                email: "tony@example.com".to_string(),
                 status: ParticipantStatus::Declined,
             },
         ];

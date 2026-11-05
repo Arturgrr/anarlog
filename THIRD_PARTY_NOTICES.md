@@ -64,3 +64,15 @@ These files link to the upstream code they were adapted from or written against.
 
 - `patches/` holds changes to npm packages. Each patch stays under the license of the package it modifies.
 - Company and product logos in `apps/desktop/public/assets` identify the services they represent. They remain trademarks of their owners and are not covered by the MIT License.
+
+## License texts
+
+The desktop app bundles this file, `LICENSE`, and the full license texts it requires under `licenses/` in its resources:
+
+- `licenses/MIT.txt`: applies to each MIT-licensed item above, with that item's copyright line.
+- `licenses/Apache-2.0.txt`: Tremor and the code adapted from vercel/ai.
+- `licenses/BSD-2-Clause-AudioCap.txt`: code adapted from AudioCap.
+- `crates/mp3/LICENSE-LAME.txt`: LAME.
+- `crates/export-core/fonts/OFL.txt` and `plugins/windows/swift-lib/src/Resources/OFL.txt`: Pretendard and Cabin Sketch.
+
+The WeSpeaker attribution above satisfies CC-BY-4.0, whose full text is at https://creativecommons.org/licenses/by/4.0/legalcode. Licenses of npm and Cargo dependencies are not reproduced here; generate them with a license tool such as `cargo about` before publishing a release.

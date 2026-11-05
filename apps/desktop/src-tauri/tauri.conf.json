@@ -70,7 +70,14 @@
       "resources/stable-dark/AppIcon.icns": "icons/stable-dark.icns",
       "resources/typewriter-key/AppIcon.icns": "icons/typewriter-key.icns",
       "resources/walnut/AppIcon.icns": "icons/walnut.icns",
-      "resources/notification-icons": "notification-icons"
+      "resources/notification-icons": "notification-icons",
+      "../../../LICENSE": "licenses/LICENSE",
+      "../../../THIRD_PARTY_NOTICES.md": "licenses/THIRD_PARTY_NOTICES.md",
+      "../../../licenses/Apache-2.0.txt": "licenses/Apache-2.0.txt",
+      "../../../licenses/BSD-2-Clause-AudioCap.txt": "licenses/BSD-2-Clause-AudioCap.txt",
+      "../../../licenses/MIT.txt": "licenses/MIT.txt",
+      "../../../crates/mp3/LICENSE-LAME.txt": "licenses/LICENSE-LAME.txt",
+      "../../../crates/export-core/fonts/OFL.txt": "licenses/Pretendard-OFL.txt"
     },
     "macOS": {
       "minimumSystemVersion": "15.0",

@@ -38,7 +38,7 @@ We agreed to ship the new onboarding flow next sprint, pending design review.
 | Billing | David | Blocked |
 | Retention | John | Done |
 
-See the [launch checklist](https://anarlog.so/docs#export) for details. Inline code like `nightly --seed` works too, and ~~old plan~~ was removed.
+See the [launch checklist](https://example.com/docs#export) for details. Inline code like `nightly --seed` works too, and ~~old plan~~ was removed.
 
 | Status |
 | --- |
