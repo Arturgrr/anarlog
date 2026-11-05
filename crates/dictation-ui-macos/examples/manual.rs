@@ -11,7 +11,10 @@ fn main() {
         prewarm_hud();
         std::thread::sleep(Duration::from_millis(300));
         for outcome in ["completed", "failed"] {
-            hud_event(r#"{"type":"started"}"#);
+            if !hud_event(r#"{"type":"started"}"#) {
+                eprintln!("the HUD could not show");
+                std::process::exit(1);
+            }
             for i in 0..200 {
                 let t = i as f32 * 0.02;
                 let syllable = (t * 4.5 * std::f32::consts::TAU).sin().max(0.0);
