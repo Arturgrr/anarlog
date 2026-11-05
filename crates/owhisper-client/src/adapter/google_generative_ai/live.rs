@@ -4,9 +4,7 @@ use owhisper_interface::stream::{Alternatives, Channel, Metadata, StreamResponse
 
 use super::{GoogleGenerativeAiAdapter, WS_PATH, parse_duration_secs};
 use crate::adapter::parsing::{WordBuilder, parse_speaker_id};
-use crate::adapter::{
-    RealtimeSttAdapter, build_proxy_ws_url, build_url_with_scheme, is_anarlog_proxy,
-};
+use crate::adapter::{RealtimeSttAdapter, build_url_with_scheme};
 use crate::providers::Provider;
 
 impl RealtimeSttAdapter for GoogleGenerativeAiAdapter {
@@ -174,40 +172,28 @@ impl GoogleGenerativeAiAdapter {
         _params: &ListenParams,
         api_key: Option<&str>,
     ) -> url::Url {
-        let (mut url, existing_params) = if let Some(result) = build_proxy_ws_url(api_base) {
-            result
+        let parsed: url::Url = if api_base.is_empty() {
+            Provider::GoogleGenerativeAi
+                .default_api_base()
+                .parse()
+                .expect("invalid_default_google_generative_ai_api_base")
         } else {
-            let parsed: url::Url = if api_base.is_empty() {
+            api_base.parse().unwrap_or_else(|_| {
                 Provider::GoogleGenerativeAi
                     .default_api_base()
                     .parse()
                     .expect("invalid_default_google_generative_ai_api_base")
-            } else {
-                api_base.parse().unwrap_or_else(|_| {
-                    Provider::GoogleGenerativeAi
-                        .default_api_base()
-                        .parse()
-                        .expect("invalid_default_google_generative_ai_api_base")
-                })
-            };
-            (
-                build_url_with_scheme(
-                    &parsed,
-                    Provider::GoogleGenerativeAi.default_ws_host(),
-                    WS_PATH,
-                    true,
-                ),
-                Vec::new(),
-            )
+            })
         };
+        let mut url = build_url_with_scheme(
+            &parsed,
+            Provider::GoogleGenerativeAi.default_ws_host(),
+            WS_PATH,
+            true,
+        );
 
-        {
-            let mut query = url.query_pairs_mut();
-            if is_anarlog_proxy(api_base) {
-                query.extend_pairs(&existing_params);
-            } else if let Some(api_key) = api_key.filter(|key| !key.is_empty()) {
-                query.append_pair("key", api_key);
-            }
+        if let Some(api_key) = api_key.filter(|key| !key.is_empty()) {
+            url.query_pairs_mut().append_pair("key", api_key);
         }
 
         url
@@ -285,7 +271,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn builds_direct_and_proxy_urls() {
+    fn builds_direct_urls() {
         let params = ListenParams {
             sample_rate: 16_000,
             languages: vec![anlg_language::ISO639::En.into()],
@@ -303,26 +289,11 @@ mod tests {
             &params,
             Some("test-key"),
         );
-        let proxy = adapter.build_ws_url(
-            "https://api.anarlog.so/stt?provider=google_generative_ai",
-            &params,
-            1,
-        );
 
         assert_eq!(direct.scheme(), "wss");
         assert_eq!(direct.host_str(), Some("generativelanguage.googleapis.com"));
         assert_eq!(direct.path(), WS_PATH);
         assert!(keyed.query().unwrap().contains("key=test-key"));
-        assert_eq!(
-            proxy.as_str().split('?').next().unwrap(),
-            "wss://api.anarlog.so/stt/listen"
-        );
-        assert!(
-            proxy
-                .query()
-                .unwrap()
-                .contains("provider=google_generative_ai")
-        );
     }
 
     #[test]

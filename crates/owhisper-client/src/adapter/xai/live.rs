@@ -4,7 +4,7 @@ use anlg_ws_client::client::Message;
 use owhisper_interface::ListenParams;
 use owhisper_interface::stream::{Alternatives, Channel, Metadata, StreamResponse, Word};
 
-use crate::adapter::{RealtimeSttAdapter, build_proxy_ws_url, build_url_with_scheme};
+use crate::adapter::{RealtimeSttAdapter, build_url_with_scheme};
 use crate::providers::Provider;
 
 use super::XaiAdapter;
@@ -29,31 +29,23 @@ impl RealtimeSttAdapter for XaiAdapter {
     fn build_ws_url(&self, api_base: &str, params: &ListenParams, channels: u8) -> url::Url {
         self.live_channels.store(channels.max(1), Ordering::Relaxed);
 
-        let (mut url, existing_params) = if let Some(result) = build_proxy_ws_url(api_base) {
-            result
+        let parsed: url::Url = if api_base.is_empty() {
+            Provider::Xai
+                .default_api_base()
+                .parse()
+                .expect("invalid_default_xai_api_base")
         } else {
-            let parsed: url::Url = if api_base.is_empty() {
-                Provider::Xai
-                    .default_api_base()
-                    .parse()
-                    .expect("invalid_default_xai_api_base")
-            } else {
-                api_base.parse().expect("invalid_xai_api_base")
-            };
-            (
-                build_url_with_scheme(
-                    &parsed,
-                    Provider::Xai.default_ws_host(),
-                    Provider::Xai.ws_path(),
-                    true,
-                ),
-                Vec::new(),
-            )
+            api_base.parse().expect("invalid_xai_api_base")
         };
+        let mut url = build_url_with_scheme(
+            &parsed,
+            Provider::Xai.default_ws_host(),
+            Provider::Xai.ws_path(),
+            true,
+        );
 
         {
             let mut query = url.query_pairs_mut();
-            query.extend_pairs(&existing_params);
             query.append_pair("sample_rate", &params.sample_rate.to_string());
             query.append_pair("encoding", "pcm");
             query.append_pair("interim_results", "true");
@@ -196,7 +188,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn builds_direct_and_proxy_urls() {
+    fn builds_direct_url() {
         let params = ListenParams {
             sample_rate: 16_000,
             languages: vec![anlg_language::ISO639::En.into()],
@@ -206,16 +198,10 @@ mod tests {
 
         let adapter = XaiAdapter::default();
         let direct = adapter.build_ws_url("https://api.x.ai/v1", &params, 2);
-        let proxy = adapter.build_ws_url("https://api.anarlog.so/stt?provider=xai", &params, 1);
 
         assert_eq!(direct.scheme(), "wss");
         assert_eq!(direct.path(), "/v1/stt");
         assert!(direct.query().unwrap().contains("multichannel=true"));
-        assert_eq!(
-            proxy.as_str().split('?').next().unwrap(),
-            "wss://api.anarlog.so/stt/listen"
-        );
-        assert!(proxy.query().unwrap().contains("provider=xai"));
     }
 
     #[test]

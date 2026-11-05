@@ -128,17 +128,6 @@ impl RealtimeSttAdapter for GladiaAdapter {
         let api_key = api_key.map(ToString::to_string);
 
         async move {
-            if let Some(proxy_result) = crate::adapter::build_proxy_ws_url(&api_base) {
-                let (mut url, existing_params) = proxy_result;
-                if !existing_params.is_empty() {
-                    let mut query_pairs = url.query_pairs_mut();
-                    for (key, value) in &existing_params {
-                        query_pairs.append_pair(key, value);
-                    }
-                }
-                return Some(url);
-            }
-
             let key = api_key.as_deref()?;
             let post_url = Self::build_http_url(&api_base);
 

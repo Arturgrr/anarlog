@@ -94,7 +94,6 @@ async fn run(
         return Err(());
     }
     match config.provider.as_str() {
-        "anarlog" => listen::<AnarlogAdapter>(config, receiver, updates).await,
         "deepgram"
             if config
                 .params
@@ -127,7 +126,6 @@ async fn run(
         "fireworks" => listen::<FireworksAdapter>(config, receiver, updates).await,
         "mistral" => listen::<MistralAdapter>(config, receiver, updates).await,
         "xai" => listen::<XaiAdapter>(config, receiver, updates).await,
-        "argmax" => listen::<ArgmaxAdapter>(config, receiver, updates).await,
         "nari" => listen::<NariAdapter>(config, receiver, updates).await,
         "google_generative_ai" => {
             listen::<GoogleGenerativeAiAdapter>(config, receiver, updates).await
@@ -464,7 +462,7 @@ mod tests {
         });
         let preview = Preview::start(
             PreviewConfig {
-                provider: "anarlog".into(),
+                provider: "deepgram".into(),
                 base_url: format!("http://{address}"),
                 api_key: "test".into(),
                 params: ListenParams::default(),

@@ -94,10 +94,6 @@ impl OpenAIAdapter {
             );
         }
 
-        if let Some(proxy_result) = super::build_proxy_ws_url(api_base) {
-            return proxy_result;
-        }
-
         let parsed: url::Url = api_base.parse().expect("invalid_api_base");
         let mut existing_params = super::extract_query_params(&parsed);
 
@@ -156,17 +152,12 @@ mod tests {
     }
 
     #[test]
-    fn build_ws_url_resolves_intent_and_proxy_params() {
+    fn build_ws_url_resolves_intent_params() {
         for (input, expected_url, expected_params) in [
             (
                 "",
                 "wss://api.openai.com/v1/realtime",
                 vec![("intent", "transcription")],
-            ),
-            (
-                "https://api.anarlog.so?provider=openai",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "openai")],
             ),
             (
                 "https://stt.example.com:8443/v1",

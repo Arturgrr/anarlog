@@ -65,16 +65,6 @@ mod tests {
                 "wss://dashscope.aliyuncs.com/api-ws/v1/realtime",
                 vec![],
             ),
-            (
-                "https://api.anarlog.so?provider=dashscope",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "dashscope")],
-            ),
-            (
-                "http://localhost:8787?provider=dashscope",
-                "ws://localhost:8787/listen",
-                vec![("provider", "dashscope")],
-            ),
         ];
 
         for (input, expected_url, expected_params) in cases {
@@ -84,7 +74,7 @@ mod tests {
                 params,
                 expected_params
                     .into_iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .map(|(k, v): (&str, &str)| (k.to_string(), v.to_string()))
                     .collect::<Vec<_>>(),
                 "input: {input}"
             );

@@ -1,12 +1,9 @@
-pub use anlg_local_model::{AmModel, AppleSpeechModel, LocalModel, SoniqoModel, WhisperModel};
+pub use anlg_local_model::{AppleSpeechModel, LocalModel, SoniqoModel, WhisperModel};
 
 pub static SUPPORTED_MODELS: &[LocalModel] = &[
     LocalModel::Soniqo(SoniqoModel::ParakeetStreaming),
     LocalModel::Soniqo(SoniqoModel::ParakeetBatch),
     LocalModel::AppleSpeech(AppleSpeechModel::Default),
-    LocalModel::Am(AmModel::ParakeetV2),
-    LocalModel::Am(AmModel::ParakeetV3),
-    LocalModel::Am(AmModel::WhisperLargeV3),
 ];
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -16,7 +13,6 @@ pub enum SttModelType {
     Soniqo,
     AppleSpeech,
     Whispercpp,
-    Argmax,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -41,8 +37,6 @@ const fn recommended_memory_bytes(model: &LocalModel) -> u64 {
         LocalModel::Soniqo(SoniqoModel::Qwen3Large) => 32 * GIB,
         LocalModel::AppleSpeech(_) => 8 * GIB,
         LocalModel::Whisper(_) => 8 * GIB,
-        LocalModel::Am(AmModel::WhisperLargeV3) => 16 * GIB,
-        LocalModel::Am(AmModel::ParakeetV2 | AmModel::ParakeetV3) => 8 * GIB,
         LocalModel::GgufLlm(_) => unreachable!(),
     }
 }
@@ -77,15 +71,6 @@ pub fn stt_model_info(model: &LocalModel) -> SttModelInfo {
             supports_realtime: false,
             recommended_memory_bytes: recommended_memory_bytes(model),
         },
-        LocalModel::Am(value) => SttModelInfo {
-            key: model.clone(),
-            display_name: value.display_name().to_string(),
-            description: value.description().to_string(),
-            size_bytes: Some(value.model_size_bytes()),
-            model_type: SttModelType::Argmax,
-            supports_realtime: false,
-            recommended_memory_bytes: recommended_memory_bytes(model),
-        },
         LocalModel::GgufLlm(_) => unreachable!(),
     }
 }
@@ -116,7 +101,7 @@ mod tests {
             let supports_realtime = match model {
                 LocalModel::Soniqo(model) => model.supports_live(),
                 LocalModel::AppleSpeech(model) => model.supports_live(),
-                LocalModel::Whisper(_) | LocalModel::Am(_) => false,
+                LocalModel::Whisper(_) => false,
                 LocalModel::GgufLlm(_) => unreachable!(),
             };
 

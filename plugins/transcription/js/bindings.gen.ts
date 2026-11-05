@@ -830,7 +830,6 @@ export type BatchErrorCode =
   | "progressive_stream_error"
   | "progressive_stream_timeout";
 export type BatchProvider =
-  | "argmax"
   | "whispercpp"
   | "deepgram"
   | "soniox"
@@ -846,8 +845,6 @@ export type BatchProvider =
   | "dashscope"
   | "mistral"
   | "meta"
-  | "anarlog"
-  | "am"
   | "soniqo"
   | "applespeech"
   | "aquavoice"

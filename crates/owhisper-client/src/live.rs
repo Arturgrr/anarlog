@@ -12,16 +12,12 @@ use owhisper_interface::ListenParams;
 use owhisper_interface::stream::StreamResponse;
 use owhisper_interface::{ControlMessage, MixedMessage};
 
-use crate::{
-    DeepgramAdapter, RealtimeSttAdapter, append_provider_param, is_anarlog_proxy,
-    normalize_listen_params,
-};
+use crate::{DeepgramAdapter, RealtimeSttAdapter, append_provider_param, normalize_listen_params};
 
 pub struct ListenClientBuilder<A: RealtimeSttAdapter = DeepgramAdapter> {
     pub(crate) api_base: Option<String>,
     pub(crate) api_key: Option<String>,
     pub(crate) params: Option<ListenParams>,
-    pub(crate) extra_headers: Vec<(String, String)>,
     pub(crate) connect_policy: Option<anlg_ws_client::client::WebSocketConnectPolicy>,
     pub(crate) _marker: PhantomData<A>,
 }
@@ -32,7 +28,6 @@ impl Default for ListenClientBuilder {
             api_base: None,
             api_key: None,
             params: None,
-            extra_headers: Vec::new(),
             connect_policy: None,
             _marker: PhantomData,
         }
@@ -55,11 +50,6 @@ impl<A: RealtimeSttAdapter> ListenClientBuilder<A> {
         self
     }
 
-    pub fn extra_header(mut self, name: impl Into<String>, value: impl Into<String>) -> Self {
-        self.extra_headers.push((name.into(), value.into()));
-        self
-    }
-
     pub fn connect_policy(
         mut self,
         policy: anlg_ws_client::client::WebSocketConnectPolicy,
@@ -73,7 +63,6 @@ impl<A: RealtimeSttAdapter> ListenClientBuilder<A> {
             api_base: self.api_base,
             api_key: self.api_key,
             params: self.params,
-            extra_headers: self.extra_headers,
             connect_policy: self.connect_policy,
             _marker: PhantomData,
         }
@@ -101,8 +90,7 @@ impl<A: RealtimeSttAdapter> ListenClientBuilder<A> {
                 format!("requires {rate} Hz PCM audio"),
             ));
         }
-        let original_api_base = self.get_api_base();
-        let api_base = append_provider_param(original_api_base, adapter.provider_name());
+        let api_base = append_provider_param(self.get_api_base(), adapter.provider_name());
         let url = adapter
             .build_ws_url_with_api_key(&api_base, params, channels, self.api_key.as_deref())
             .await
@@ -116,14 +104,7 @@ impl<A: RealtimeSttAdapter> ListenClientBuilder<A> {
 
         let mut request = anlg_ws_client::client::ClientRequestBuilder::new(uri);
 
-        if is_anarlog_proxy(original_api_base) {
-            if let Some(api_key) = self.api_key.as_deref() {
-                request = request.with_header("Authorization", format!("Bearer {}", api_key));
-            }
-            for (name, value) in &self.extra_headers {
-                request = request.with_header(name, value);
-            }
-        } else if let Some((header_name, header_value)) =
+        if let Some((header_name, header_value)) =
             adapter.build_auth_header(self.api_key.as_deref())
         {
             request = request.with_header(header_name, header_value);

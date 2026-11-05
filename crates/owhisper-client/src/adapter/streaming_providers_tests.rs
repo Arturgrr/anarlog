@@ -156,14 +156,6 @@ fn provider_selection_survives_custom_and_loopback_endpoints() {
             expected
         );
     }
-    assert_eq!(
-        AdapterKind::from_url_and_languages(
-            "https://api.anarlog.so/stt?provider=inworld",
-            &[],
-            None
-        ),
-        AdapterKind::Anarlog
-    );
     let url = NvidiaAdapter::default().build_ws_url(
         "http://localhost:9000?provider=nvidia",
         &ListenParams::default(),

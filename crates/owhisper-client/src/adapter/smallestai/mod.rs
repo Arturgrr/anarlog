@@ -175,16 +175,6 @@ mod tests {
                 "wss://api.us.smallest.ai/waves/v1/stt/live",
                 vec![("foo", "bar")],
             ),
-            (
-                "https://api.anarlog.so/stt?provider=smallestai",
-                "wss://api.anarlog.so/stt/listen",
-                vec![("provider", "smallestai")],
-            ),
-            (
-                "http://localhost:8787/stt?provider=smallestai",
-                "ws://localhost:8787/stt/listen",
-                vec![("provider", "smallestai")],
-            ),
         ] {
             let (url, params) = SmallestAIAdapter::build_ws_url_from_base(input);
             assert_eq!(url.as_str(), expected_url, "input: {input}");
