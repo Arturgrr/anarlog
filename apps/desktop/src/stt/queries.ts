@@ -398,6 +398,7 @@ function getTranscriptHumansQuery(humanIds: readonly string[]) {
       FROM humans
       WHERE id IN (${placeholders || "NULL"})
         AND name <> ''
+        AND id <> owner_user_id
       ORDER BY id
     `,
   };

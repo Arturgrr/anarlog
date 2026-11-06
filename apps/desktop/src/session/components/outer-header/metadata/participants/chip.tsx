@@ -27,9 +27,11 @@ export function ParticipantChip({
   enhancingHumanId?: string;
   onEnhanceContact?: (humanId: string) => void;
 }) {
+  const { t } = useLingui();
   const details = useParticipantDetails(mappingId);
 
   const assignedHumanId = details?.humanId;
+  const isSelf = details?.isSelf ?? false;
   const sessionId = details?.sessionId;
   const source = details?.source;
 
@@ -40,27 +42,27 @@ export function ParticipantChip({
   });
 
   const handleClick = useCallback(() => {
-    if (assignedHumanId) {
+    if (assignedHumanId && !isSelf) {
       useTabs.getState().openNew({
         type: "contacts",
         state: { selected: { type: "person", id: assignedHumanId } },
       });
     }
-  }, [assignedHumanId]);
+  }, [assignedHumanId, isSelf]);
 
   if (!details || source === "excluded" || isRemoving) {
     return null;
   }
 
   const { humanName, humanEmail } = details;
-  const displayName = humanName.trim() || humanEmail?.trim();
+  const displayName = isSelf ? t`You` : humanName.trim() || humanEmail?.trim();
 
   if (!displayName) {
     return null;
   }
 
   const isEnhancing = enhancingHumanId === assignedHumanId;
-  const canEnhance = Boolean(onEnhanceContact && assignedHumanId);
+  const canEnhance = Boolean(onEnhanceContact && assignedHumanId && !isSelf);
 
   return (
     <Badge
@@ -165,6 +167,7 @@ function useParticipantDetails(mappingId: string) {
     orgName: participant.organizationName || undefined,
     sessionId: participant.sessionId,
     source: participant.source,
+    isSelf: participant.isSelf,
   };
 }
 

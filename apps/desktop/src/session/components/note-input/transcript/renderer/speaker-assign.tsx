@@ -348,7 +348,7 @@ export function SpeakerParticipantPicker({
           const email = participant.email.trim();
           return {
             id: participant.humanId,
-            name: name || email || t`Unknown`,
+            name: participant.isSelf ? t`You` : name || email || t`Unknown`,
             email: email || undefined,
             avatarDataUrl:
               avatarByHumanId.get(participant.humanId) ?? undefined,

@@ -16,7 +16,39 @@ type SessionParticipantSqlRow = {
   linkedin_username: string;
   organization_id: string;
   organization_name: string;
+  is_self: number;
 };
+
+// The local user's participant row only marks "you": its contact and the
+// names copied onto the mapping are never read.
+const IS_SELF_SQL = `(
+  participant.human_id <> ''
+  AND participant.human_id = COALESCE(session.owner_user_id, '')
+)`;
+
+const PARTICIPANT_COLUMNS_SQL = `
+  CASE WHEN ${IS_SELF_SQL} THEN ''
+    ELSE COALESCE(NULLIF(human.name, ''), participant.display_name)
+  END AS name,
+  CASE WHEN ${IS_SELF_SQL} THEN ''
+    ELSE COALESCE(NULLIF(human.email, ''), participant.email)
+  END AS email,
+  COALESCE(human.job_title, '') AS job_title,
+  COALESCE(human.linkedin_username, '') AS linkedin_username,
+  COALESCE(human.organization_id, '') AS organization_id,
+  COALESCE(organization.name, '') AS organization_name,
+  ${IS_SELF_SQL} AS is_self`;
+
+const PARTICIPANT_JOINS_SQL = `
+  FROM session_participants AS participant
+  LEFT JOIN sessions AS session ON session.id = participant.session_id
+  LEFT JOIN humans AS human
+    ON human.id = participant.human_id
+    AND human.deleted_at IS NULL
+    AND NOT (${IS_SELF_SQL})
+  LEFT JOIN organizations AS organization
+    ON organization.id = human.organization_id
+    AND organization.deleted_at IS NULL`;
 
 const EMPTY_SESSION_PARTICIPANTS: SessionParticipantRecord[] = [];
 
@@ -33,18 +65,8 @@ export function useSessionParticipants(
         participant.session_id,
         participant.human_id,
         participant.source,
-        COALESCE(NULLIF(human.name, ''), participant.display_name) AS name,
-        COALESCE(NULLIF(human.email, ''), participant.email) AS email,
-        COALESCE(human.job_title, '') AS job_title,
-        COALESCE(human.linkedin_username, '') AS linkedin_username,
-        COALESCE(human.organization_id, '') AS organization_id,
-        COALESCE(organization.name, '') AS organization_name
-      FROM session_participants AS participant
-      LEFT JOIN humans AS human
-        ON human.id = participant.human_id AND human.deleted_at IS NULL
-      LEFT JOIN organizations AS organization
-        ON organization.id = human.organization_id
-        AND organization.deleted_at IS NULL
+        ${PARTICIPANT_COLUMNS_SQL}
+      ${PARTICIPANT_JOINS_SQL}
       WHERE participant.session_id = ?
         AND participant.deleted_at IS NULL
       ORDER BY name, email, participant.id
@@ -69,18 +91,8 @@ export function useSessionParticipant(
         participant.session_id,
         participant.human_id,
         participant.source,
-        COALESCE(NULLIF(human.name, ''), participant.display_name) AS name,
-        COALESCE(NULLIF(human.email, ''), participant.email) AS email,
-        COALESCE(human.job_title, '') AS job_title,
-        COALESCE(human.linkedin_username, '') AS linkedin_username,
-        COALESCE(human.organization_id, '') AS organization_id,
-        COALESCE(organization.name, '') AS organization_name
-      FROM session_participants AS participant
-      LEFT JOIN humans AS human
-        ON human.id = participant.human_id AND human.deleted_at IS NULL
-      LEFT JOIN organizations AS organization
-        ON organization.id = human.organization_id
-        AND organization.deleted_at IS NULL
+        ${PARTICIPANT_COLUMNS_SQL}
+      ${PARTICIPANT_JOINS_SQL}
       WHERE participant.id = ? AND participant.deleted_at IS NULL
       LIMIT 1
     `,
@@ -129,5 +141,6 @@ function mapSessionParticipantRow(
     linkedinUsername: row.linkedin_username,
     organizationId: row.organization_id,
     organizationName: row.organization_name,
+    isSelf: Boolean(row.is_self),
   };
 }

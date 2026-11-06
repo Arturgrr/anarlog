@@ -38,7 +38,7 @@ describe("SegmentKeyUtils", () => {
       } as Parameters<typeof SegmentKeyUtils.renderLabel>[0],
       context: ctx,
       known: true,
-      label: "Me",
+      label: "You",
     },
     {
       name: "assigned direct-mic segments are not self when the name is unavailable",
@@ -52,16 +52,13 @@ describe("SegmentKeyUtils", () => {
       label: "Speaker 2",
     },
     {
-      name: "an unnamed assigned self is You on the direct mic",
+      name: "an assigned self is You on any channel, never their name",
       key: {
-        channel: "DirectMic",
+        channel: "MixedCapture",
         speaker_index: null,
         speaker_human_id: "self",
       } as Parameters<typeof SegmentKeyUtils.renderLabel>[0],
-      context: {
-        getSelfHumanId: () => "self",
-        getHumanName: () => undefined,
-      } as RenderLabelContext,
+      context: ctx,
       known: undefined,
       label: "You",
     },
