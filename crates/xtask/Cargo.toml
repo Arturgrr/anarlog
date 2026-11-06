@@ -6,4 +6,5 @@ publish = false
 
 [dependencies]
 anyhow = "1"
+serde_json = { workspace = true }
 xshell = "0.2"
