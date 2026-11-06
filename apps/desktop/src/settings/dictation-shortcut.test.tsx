@@ -80,6 +80,21 @@ describe("dictation shortcut recorder", () => {
     );
   });
 
+  it("records two quick presses of the left Option key", async () => {
+    setup();
+    const button = await start();
+    const option = { key: "Alt", code: "AltLeft", altKey: true };
+    fireEvent.keyDown(button, option);
+    expect(mocks.validate).not.toHaveBeenCalled();
+    fireEvent.keyDown(button, option);
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith(
+        "dictation_shortcut",
+        "DoubleTap+AltLeft",
+      ),
+    );
+  });
+
   it.each(["Escape", "Tab", "blur", "unmount"])(
     "cancels on %s without saving",
     async (action) => {

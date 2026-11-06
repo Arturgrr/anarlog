@@ -47,6 +47,8 @@ export function localizeExternalMessage(message: string): string {
       return t`Global shortcuts are unavailable in this desktop session.`;
     case "Choose a shortcut with Control, Alt, Shift, or Command.":
       return t`Choose a shortcut with Control, Alt, Shift, or Command.`;
+    case "Double-tap shortcuts are only available on macOS.":
+      return t`Double-tap shortcuts are only available on macOS.`;
     case "Escape is reserved for cancelling dictation. Choose another key.":
       return t`Escape is reserved for cancelling dictation. Choose another key.`;
     case "Transcription stopped.":

@@ -1,3 +1,9 @@
+// Double-tapping one modifier key needs the native macOS event tap.
+const DEFAULT_DICTATION_SHORTCUT =
+  typeof navigator !== "undefined" && navigator.userAgent.includes("Macintosh")
+    ? "DoubleTap+AltLeft"
+    : "Control+Alt+Space";
+
 export const SETTING_DEFINITIONS = {
   intelligence_disabled: {
     type: "boolean",
@@ -17,12 +23,12 @@ export const SETTING_DEFINITIONS = {
   dictation_shortcut: {
     type: "string",
     path: ["dictation", "shortcut"],
-    default: "Control+Alt+Space" as string,
+    default: DEFAULT_DICTATION_SHORTCUT as string,
   },
   dictation_hands_free: {
     type: "boolean",
     path: ["dictation", "hands_free"],
-    default: false as boolean,
+    default: true as boolean,
   },
   export_directory: {
     type: "string",

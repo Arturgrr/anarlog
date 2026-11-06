@@ -1,6 +1,10 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
+};
 
 use crate::{
+    double_tap::{DoubleTapDetector, DoubleTapOutput, ModifierKey},
     hotkey::HotKey,
     processor::{HotKeyProcessor, Options, Output},
     tap::{EventTap, TapError, TapEvent},
@@ -37,6 +41,36 @@ impl Listener {
                 callback(out);
             }
             consume
+        })?;
+
+        Ok(Self { _tap: tap })
+    }
+
+    /// Reports a double tap of `key`; while `active` is set, one press is
+    /// enough. Key events still reach the focused app.
+    pub fn start_double_tap<F>(
+        key: ModifierKey,
+        active: Arc<AtomicBool>,
+        callback: F,
+    ) -> Result<Self, TapError>
+    where
+        F: Fn(DoubleTapOutput) + Send + Sync + 'static,
+    {
+        let detector = Mutex::new(DoubleTapDetector::new(key));
+        let tap = EventTap::start(move |event| {
+            let out = {
+                let mut detector = detector.lock().unwrap_or_else(|e| e.into_inner());
+                match event {
+                    TapEvent::Key(k) => detector.process_key(k, active.load(Ordering::SeqCst)),
+                    TapEvent::MouseClick => {
+                        detector.process_mouse_click();
+                        None
+                    }
+                }
+            };
+            if let Some(out) = out {
+                callback(out);
+            }
         })?;
 
         Ok(Self { _tap: tap })

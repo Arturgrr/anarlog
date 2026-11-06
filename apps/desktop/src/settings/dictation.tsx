@@ -8,7 +8,7 @@ import { commands as transcription } from "@anlg/plugin-transcription";
 import { Button } from "@anlg/ui/components/ui/button";
 import { Textarea } from "@anlg/ui/components/ui/textarea";
 
-import { DictationShortcut } from "./dictation-shortcut";
+import { DictationShortcut, isDoubleTapShortcut } from "./dictation-shortcut";
 
 import { useDictationStatus } from "~/dictation/state";
 import { AudioDeviceRow } from "~/settings/general/audio-settings";
@@ -98,7 +98,18 @@ export function SettingsDictation() {
         <SettingSwitchRow
           title={<Trans>Hands-free dictation</Trans>}
           description={
-            handsFree ? (
+            isDoubleTapShortcut(shortcut) ? (
+              handsFree ? (
+                <Trans>
+                  Press the key twice to start, then press it once to finish.
+                </Trans>
+              ) : (
+                <Trans>
+                  Press the key twice and keep holding it while speaking, then
+                  release it to finish.
+                </Trans>
+              )
+            ) : handsFree ? (
               <Trans>
                 Press your shortcut to start, then press it again to finish.
               </Trans>

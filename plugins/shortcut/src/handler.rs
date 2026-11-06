@@ -11,7 +11,10 @@ pub use self::stub::Handler;
 
 #[cfg(target_os = "macos")]
 mod macos {
-    use std::{sync::Mutex, time::Duration};
+    use std::{
+        sync::{Arc, Mutex, atomic::AtomicBool},
+        time::Duration,
+    };
 
     use anlg_shortcut_macos as sm;
     use tauri::{AppHandle, Runtime};
@@ -51,6 +54,25 @@ mod macos {
                     let _ = evt.emit(&app);
                 },
             )
+            .map_err(|e| Error::TapStart(e.to_string()))?;
+
+            *self.listener.lock().unwrap_or_else(|e| e.into_inner()) = Some(listener);
+            Ok(())
+        }
+
+        pub fn register_double_tap<R: Runtime>(
+            &self,
+            app: AppHandle<R>,
+            key: sm::ModifierKey,
+            active: Arc<AtomicBool>,
+        ) -> Result<(), Error> {
+            let listener = sm::Listener::start_double_tap(key, active, move |out| {
+                let evt = match out {
+                    sm::DoubleTapOutput::Pressed => ShortcutEvent::Pressed,
+                    sm::DoubleTapOutput::Released => ShortcutEvent::Released,
+                };
+                let _ = evt.emit(&app);
+            })
             .map_err(|e| Error::TapStart(e.to_string()))?;
 
             *self.listener.lock().unwrap_or_else(|e| e.into_inner()) = Some(listener);

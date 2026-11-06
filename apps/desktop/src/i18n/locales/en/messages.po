@@ -1154,6 +1154,10 @@ msgid "Click here, then use your dictation shortcut."
 msgstr "Click here, then use your dictation shortcut."
 
 #: src/settings/dictation-shortcut.tsx
+msgid "Click the shortcut to record a new key combination, or press one modifier key twice quickly. Press Escape to cancel."
+msgstr "Click the shortcut to record a new key combination, or press one modifier key twice quickly. Press Escape to cancel."
+
+#: src/settings/dictation-shortcut.tsx
 msgid "Click the shortcut to record a new key combination. Press Escape to cancel."
 msgstr "Click the shortcut to record a new key combination. Press Escape to cancel."
 
@@ -1811,6 +1815,10 @@ msgstr "Documentation"
 #: src/settings/general/audio-settings.tsx
 msgid "Don't save"
 msgstr "Don't save"
+
+#: src/i18n/external-messages.ts
+msgid "Double-tap shortcuts are only available on macOS."
+msgstr "Double-tap shortcuts are only available on macOS."
 
 #: src/i18n/native-labels.tsx
 #: src/settings/ai/stt/select.tsx
@@ -2681,6 +2689,26 @@ msgstr "Learn how to fix this"
 #: src/settings/automations/markdown-export-options.tsx
 msgid "Leave blank to use the meeting date and title."
 msgstr "Leave blank to use the meeting date and title."
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⇧"
+msgstr "Left ⇧"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⌃"
+msgstr "Left ⌃"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⌘"
+msgstr "Left ⌘"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⌥"
+msgstr "Left ⌥"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⌥ twice"
+msgstr "Left ⌥ twice"
 
 #: src/settings/stats/index.tsx
 msgid "Less"
@@ -3850,6 +3878,14 @@ msgid "Press shortcut…"
 msgstr "Press shortcut…"
 
 #: src/settings/dictation.tsx
+msgid "Press the key twice and keep holding it while speaking, then release it to finish."
+msgstr "Press the key twice and keep holding it while speaking, then release it to finish."
+
+#: src/settings/dictation.tsx
+msgid "Press the key twice to start, then press it once to finish."
+msgstr "Press the key twice to start, then press it once to finish."
+
+#: src/settings/dictation.tsx
 msgid "Press your shortcut to start, then press it again to finish."
 msgstr "Press your shortcut to start, then press it again to finish."
 
@@ -4269,6 +4305,22 @@ msgstr "Review summary"
 #: src/settings/general/timezone.tsx
 msgid "Reykjavik"
 msgstr "Reykjavik"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Right ⇧"
+msgstr "Right ⇧"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Right ⌃"
+msgstr "Right ⌃"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Right ⌘"
+msgstr "Right ⌘"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Right ⌥"
+msgstr "Right ⌥"
 
 #: src/settings/dictation-shortcut.tsx
 msgid "Right Command"

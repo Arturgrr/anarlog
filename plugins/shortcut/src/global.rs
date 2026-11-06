@@ -36,8 +36,7 @@ pub async fn configure(app: tauri::AppHandle, shortcut: Option<String>) -> Resul
     let state = app.state::<GlobalState>();
     let mut registration = state.registration.lock().await;
     state.active.store(false, Ordering::SeqCst);
-    let native_only =
-        cfg!(target_os = "macos") && matches!(shortcut.as_deref(), Some("Fn" | "RightCommand"));
+    let native_only = cfg!(target_os = "macos") && shortcut.as_deref().is_some_and(is_native);
     if !uses_portal() {
         if let Some(global) =
             app.try_state::<tauri_plugin_global_shortcut::GlobalShortcut<tauri::Wry>>()
@@ -67,6 +66,14 @@ pub async fn configure(app: tauri::AppHandle, shortcut: Option<String>) -> Resul
     let Some(shortcut) = shortcut else {
         return Ok(());
     };
+
+    #[cfg(target_os = "macos")]
+    if let Some(key) = double_tap_key(&shortcut) {
+        return app
+            .shortcut()
+            .register_double_tap(key, state.active.clone())
+            .map_err(|e| e.to_string());
+    }
 
     #[cfg(target_os = "macos")]
     if shortcut == "Fn" || shortcut == "RightCommand" {
@@ -178,8 +185,41 @@ pub fn validate(app: tauri::AppHandle, shortcut: String) -> Result<(), String> {
     )
 }
 
+/// `DoubleTap+<KeyboardEvent.code>`: two quick taps of one modifier key.
+const DOUBLE_TAP_PREFIX: &str = "DoubleTap+";
+
+fn is_native(shortcut: &str) -> bool {
+    matches!(shortcut, "Fn" | "RightCommand") || shortcut.starts_with(DOUBLE_TAP_PREFIX)
+}
+
+#[cfg(target_os = "macos")]
+fn double_tap_key(shortcut: &str) -> Option<anlg_shortcut_macos::ModifierKey> {
+    use anlg_shortcut_macos::ModifierKey;
+    Some(match shortcut.strip_prefix(DOUBLE_TAP_PREFIX)? {
+        "AltLeft" => ModifierKey::LeftOption,
+        "AltRight" => ModifierKey::RightOption,
+        "MetaLeft" => ModifierKey::LeftCommand,
+        "MetaRight" => ModifierKey::RightCommand,
+        "ControlLeft" => ModifierKey::LeftControl,
+        "ControlRight" => ModifierKey::RightControl,
+        "ShiftLeft" => ModifierKey::LeftShift,
+        "ShiftRight" => ModifierKey::RightShift,
+        _ => return None,
+    })
+}
+
 fn validate_shortcut(shortcut: &str, global_available: bool) -> Result<(), String> {
-    if cfg!(target_os = "macos") && matches!(shortcut, "Fn" | "RightCommand") {
+    if shortcut.starts_with(DOUBLE_TAP_PREFIX) {
+        if !cfg!(target_os = "macos") {
+            return Err("Double-tap shortcuts are only available on macOS.".into());
+        }
+        #[cfg(target_os = "macos")]
+        if double_tap_key(shortcut).is_none() {
+            return Err(format!("Invalid dictation shortcut: {shortcut}"));
+        }
+        return Ok(());
+    }
+    if cfg!(target_os = "macos") && is_native(shortcut) {
         return Ok(());
     }
     let key = parse_shortcut(shortcut)?;
@@ -221,5 +261,10 @@ mod validation_tests {
         }
         #[cfg(target_os = "macos")]
         assert!(validate_shortcut("Fn", false).is_ok());
+        assert_eq!(
+            validate_shortcut("DoubleTap+AltLeft", false).is_ok(),
+            cfg!(target_os = "macos")
+        );
+        assert!(validate_shortcut("DoubleTap+KeyA", true).is_err());
     }
 }

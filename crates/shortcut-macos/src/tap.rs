@@ -10,7 +10,7 @@ use std::{
 
 use crate::{
     hotkey::{Modifier, Modifiers},
-    key_event::{KVK_FUNCTION, KeyEvent},
+    key_event::{KVK_FUNCTION, KeyEvent, ModifierChange},
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -192,15 +192,43 @@ extern "C" fn tap_callback(
         if CGEventSourceKeyState(1, 0x36) {
             modifiers.insert(Modifier::RightCommand);
         }
-        let modifier_release =
-            event_type == KCG_EVENT_FLAGS_CHANGED && !CGEventSourceKeyState(1, keycode);
-        let consumed = (ctx.callback)(TapEvent::Key(KeyEvent::new(key, modifiers)));
+        let mut key_event = KeyEvent::new(key, modifiers);
+        let mut modifier_release = false;
+        if event_type == KCG_EVENT_FLAGS_CHANGED {
+            let down = match device_flag(keycode) {
+                Some(mask) => flags & mask != 0,
+                None => CGEventSourceKeyState(1, keycode),
+            };
+            modifier_release = !down;
+            key_event = key_event.with_modifier_change(if down {
+                ModifierChange::Down(keycode)
+            } else {
+                ModifierChange::Up(keycode)
+            });
+        }
+        let consumed = (ctx.callback)(TapEvent::Key(key_event));
         if consumed && event_type != KCG_EVENT_KEY_UP && !modifier_release {
             return ptr::null_mut();
         }
     }
 
     event
+}
+
+/// The side-specific `NX_DEVICE*KEYMASK` bit that a modifier key sets in the
+/// event flags while it is down.
+fn device_flag(keycode: u16) -> Option<u64> {
+    Some(match keycode {
+        0x3B => 0x0000_0001, // left control
+        0x38 => 0x0000_0002, // left shift
+        0x3C => 0x0000_0004, // right shift
+        0x37 => 0x0000_0008, // left command
+        0x36 => 0x0000_0010, // right command
+        0x3A => 0x0000_0020, // left option
+        0x3D => 0x0000_0040, // right option
+        0x3E => 0x0000_2000, // right control
+        _ => return None,
+    })
 }
 
 fn decode_flags(flags: u64, fn_pressed: bool) -> Modifiers {

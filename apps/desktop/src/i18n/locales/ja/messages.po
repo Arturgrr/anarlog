@@ -1144,6 +1144,10 @@ msgid "Click here, then use your dictation shortcut."
 msgstr ""
 
 #: src/settings/dictation-shortcut.tsx
+msgid "Click the shortcut to record a new key combination, or press one modifier key twice quickly. Press Escape to cancel."
+msgstr ""
+
+#: src/settings/dictation-shortcut.tsx
 msgid "Click the shortcut to record a new key combination. Press Escape to cancel."
 msgstr ""
 
@@ -1800,6 +1804,10 @@ msgstr ""
 
 #: src/settings/general/audio-settings.tsx
 msgid "Don't save"
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Double-tap shortcuts are only available on macOS."
 msgstr ""
 
 #: src/i18n/native-labels.tsx
@@ -2671,6 +2679,26 @@ msgstr ""
 #: src/settings/automations/markdown-export-options.tsx
 msgid "Leave blank to use the meeting date and title."
 msgstr "空欄の場合は会議の日付とタイトルを使用します。"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⇧"
+msgstr ""
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⌃"
+msgstr ""
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⌘"
+msgstr ""
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⌥"
+msgstr ""
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Left ⌥ twice"
+msgstr ""
 
 #: src/settings/stats/index.tsx
 msgid "Less"
@@ -3840,6 +3868,14 @@ msgid "Press shortcut…"
 msgstr ""
 
 #: src/settings/dictation.tsx
+msgid "Press the key twice and keep holding it while speaking, then release it to finish."
+msgstr ""
+
+#: src/settings/dictation.tsx
+msgid "Press the key twice to start, then press it once to finish."
+msgstr ""
+
+#: src/settings/dictation.tsx
 msgid "Press your shortcut to start, then press it again to finish."
 msgstr ""
 
@@ -4258,6 +4294,22 @@ msgstr ""
 
 #: src/settings/general/timezone.tsx
 msgid "Reykjavik"
+msgstr ""
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Right ⇧"
+msgstr ""
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Right ⌃"
+msgstr ""
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Right ⌘"
+msgstr ""
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Right ⌥"
 msgstr ""
 
 #: src/settings/dictation-shortcut.tsx

@@ -15,6 +15,16 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Shortcut<'a, R, M> {
         handler.register(self.manager.app_handle().clone(), hotkey, options)
     }
 
+    #[cfg(target_os = "macos")]
+    pub fn register_double_tap(
+        &self,
+        key: anlg_shortcut_macos::ModifierKey,
+        active: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    ) -> Result<(), Error> {
+        let handler = self.manager.state::<Handler>();
+        handler.register_double_tap(self.manager.app_handle().clone(), key, active)
+    }
+
     pub fn unregister(&self) -> Result<(), Error> {
         self.manager.state::<Handler>().unregister()
     }

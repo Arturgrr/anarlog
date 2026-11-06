@@ -12,12 +12,35 @@ import { useDictationStatus } from "~/dictation/state";
 import { localizeExternalMessage } from "~/i18n/external-messages";
 import { setSettingValue } from "~/settings/queries";
 
+const DOUBLE_TAP_PREFIX = "DoubleTap+";
+const DOUBLE_TAP_CODES = [
+  "AltLeft",
+  "AltRight",
+  "MetaLeft",
+  "MetaRight",
+  "ControlLeft",
+  "ControlRight",
+  "ShiftLeft",
+  "ShiftRight",
+];
+
+export function isDoubleTapShortcut(shortcut: string) {
+  return shortcut.startsWith(DOUBLE_TAP_PREFIX);
+}
+
+function shortcutKeys(shortcut: string) {
+  return isDoubleTapShortcut(shortcut)
+    ? [shortcut.slice(DOUBLE_TAP_PREFIX.length), "DoubleTap"]
+    : shortcut.split("+");
+}
+
 export function DictationShortcut({ shortcut }: { shortcut: string }) {
   const { t } = useLingui();
   const mac = platform() === "macos";
   const [recording, setRecording] = useState(false);
   const attempt = useRef(0);
   const persisting = useRef(false);
+  const lastModifierPress = useRef<{ code: string; at: number } | null>(null);
   const prepare = useMutation({ mutationFn: waitForDictationCleanup });
   const save = useMutation({
     mutationFn: async ({ value, token }: { value: string; token: number }) => {
@@ -65,6 +88,15 @@ export function DictationShortcut({ shortcut }: { shortcut: string }) {
     Meta: mac ? "⌘" : "Super",
     Fn: t`Fn / Globe`,
     RightCommand: t`Right Command`,
+    DoubleTap: "×2",
+    AltLeft: t`Left ⌥`,
+    AltRight: t`Right ⌥`,
+    MetaLeft: t`Left ⌘`,
+    MetaRight: t`Right ⌘`,
+    ControlLeft: t`Left ⌃`,
+    ControlRight: t`Right ⌃`,
+    ShiftLeft: t`Left ⇧`,
+    ShiftRight: t`Right ⇧`,
     ArrowLeft: "←",
     ArrowRight: "→",
     ArrowUp: "↑",
@@ -87,6 +119,7 @@ export function DictationShortcut({ shortcut }: { shortcut: string }) {
           onClick={() => {
             if (recording) return finish();
             attempt.current += 1;
+            lastModifierPress.current = null;
             save.reset();
             useDictationStatus.setState({ capturingShortcut: true });
             prepare.mutate();
@@ -103,8 +136,35 @@ export function DictationShortcut({ shortcut }: { shortcut: string }) {
             event.preventDefault();
             if (event.key === "Escape") return finish();
             if (event.repeat || !prepare.isSuccess || save.isPending) return;
-            if (["Control", "Alt", "Meta", "Shift", "Fn"].includes(event.key))
+            if (["Control", "Alt", "Meta", "Shift", "Fn"].includes(event.key)) {
+              // On macOS, two quick presses of one modifier key on its own
+              // record a double-tap shortcut.
+              const previous = lastModifierPress.current;
+              const alone =
+                [
+                  event.ctrlKey,
+                  event.altKey,
+                  event.shiftKey,
+                  event.metaKey,
+                ].filter(Boolean).length === 1;
+              lastModifierPress.current =
+                mac && alone && DOUBLE_TAP_CODES.includes(event.code)
+                  ? { code: event.code, at: performance.now() }
+                  : null;
+              if (
+                lastModifierPress.current &&
+                previous?.code === event.code &&
+                lastModifierPress.current.at - previous.at < 500
+              ) {
+                lastModifierPress.current = null;
+                save.mutate({
+                  value: `${DOUBLE_TAP_PREFIX}${event.code}`,
+                  token: attempt.current,
+                });
+              }
               return;
+            }
+            lastModifierPress.current = null;
             const modifiers = [
               event.ctrlKey && "Control",
               event.altKey && "Alt",
@@ -125,7 +185,7 @@ export function DictationShortcut({ shortcut }: { shortcut: string }) {
             )
           ) : (
             <span className="inline-flex items-center gap-1">
-              {shortcut.split("+").map((key) => (
+              {shortcutKeys(shortcut).map((key) => (
                 <kbd
                   key={key}
                   className="bg-muted rounded border px-1.5 py-0.5 font-sans text-xs"
@@ -138,10 +198,17 @@ export function DictationShortcut({ shortcut }: { shortcut: string }) {
         </Button>
       </div>
       <p className="text-muted-foreground text-xs">
-        <Trans>
-          Click the shortcut to record a new key combination. Press Escape to
-          cancel.
-        </Trans>
+        {mac ? (
+          <Trans>
+            Click the shortcut to record a new key combination, or press one
+            modifier key twice quickly. Press Escape to cancel.
+          </Trans>
+        ) : (
+          <Trans>
+            Click the shortcut to record a new key combination. Press Escape to
+            cancel.
+          </Trans>
+        )}
       </p>
       {save.error && (
         <p role="alert" className="text-destructive text-sm">
@@ -151,6 +218,7 @@ export function DictationShortcut({ shortcut }: { shortcut: string }) {
       {mac && (
         <div className="flex gap-2">
           {[
+            [`${DOUBLE_TAP_PREFIX}AltLeft`, t`Left ⌥ twice`],
             ["Fn", t`Fn / Globe`],
             ["RightCommand", t`Right Command`],
           ].map(([value, label]) => (
