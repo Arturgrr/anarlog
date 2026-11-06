@@ -61,7 +61,6 @@ These files link to the upstream code they were adapted from or written against.
 | `crates/whisper-local/src/model/actual.rs`                                                  | [tazz4843/whisper-rs](https://github.com/tazz4843/whisper-rs)                                                                                                   | Unlicense              |
 | `crates/dictation-ui-macos/swift-lib/src/{DictationHud,HudModel,HudScope,HudShader,HudViews}.swift`, `apps/desktop/src/dictation/hud/{model,scope,shader,spring}.ts` | [anomalyco/hex](https://github.com/anomalyco/hex) at `3dc7f538` (the dictation indicator's lifecycle, springs, plate and trace motion from Dot scope; the traces are drawn as lines instead of Hex's dot field), Copyright (c) 2026 Christopher Langton | MIT |
 | `packages/design-system/src/{tokens,theme}.css`, `packages/design-system/src/index.ts`, `packages/ui` component styles | Colour, elevation, radius and type values from the "opencode" theme of [anomalyco/rune](https://github.com/anomalyco/rune) at `386b2fd3`, and component specs from [anomalyco/hex](https://github.com/anomalyco/hex), Copyright (c) 2026 Christopher Langton | MIT |
-| `scripts/pre_build.py`                                                                      | [thewh1teagle/vibe](https://github.com/thewh1teagle/vibe), Copyright (c) 2024 thewh1teagle; [utilityai/llama-cpp-rs](https://github.com/utilityai/llama-cpp-rs) | MIT; MIT OR Apache-2.0 |
 
 ## Other material
 
