@@ -72,7 +72,6 @@
     "os:default",
     "os:allow-hostname",
     "opener2:default",
-    "messenger:default",
     "detect:default",
     "dock:default",
     "permissions:default",
