@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, watch } from "node:fs";
+import { readFileSync, watch } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin, ViteDevServer } from "vite";
@@ -8,36 +8,27 @@ const changelogDir = resolve(
   __dirname,
   "../../../packages/changelog/content/desktop",
 );
+const packageJsonPath = resolve(__dirname, "../package.json");
 
 const VIRTUAL_ID = "virtual:changelog";
 const RESOLVED_ID = "\0" + VIRTUAL_ID;
 
-function getLatestVersion(): string | null {
+// Tauri reads the app version from the same package.json.
+function getAppVersion(): string | null {
   try {
-    const files = readdirSync(changelogDir).filter((f) =>
-      /^\d+\.\d+\.\d+\.md$/.test(f),
-    );
-    const versions = files.map((f) => f.replace(".md", ""));
-    versions.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
-    return versions[0] || null;
+    return JSON.parse(readFileSync(packageJsonPath, "utf-8")).version ?? null;
   } catch {
     return null;
   }
 }
 
 function buildModule(): string {
-  const nightly = process.env.RELEASE_CHANNEL === "nightly";
-  const latest = nightly
-    ? (process.env.VITE_APP_VERSION ?? null)
-    : process.env.VITE_APP_VERSION || getLatestVersion();
+  const latest = getAppVersion();
   let content: string | null = null;
 
   if (latest) {
     try {
-      content = readFileSync(
-        resolve(changelogDir, nightly ? "../../nightly.md" : `${latest}.md`),
-        "utf-8",
-      );
+      content = readFileSync(resolve(changelogDir, `${latest}.md`), "utf-8");
     } catch {}
   }
 
