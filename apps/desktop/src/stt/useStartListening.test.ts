@@ -301,10 +301,6 @@ vi.mock("~/contexts/shell", () => ({
   })),
 }));
 
-vi.mock("~/session/utils", () => ({
-  getSessionEvent: vi.fn(() => null),
-}));
-
 vi.mock("~/session/queries", () => ({
   isSessionDeleted: isSessionDeletedMock,
   useSession: useSessionMock,

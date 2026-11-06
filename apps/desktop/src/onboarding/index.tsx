@@ -9,7 +9,6 @@ import { SpeakerHigh, SpeakerX } from "@anlg/ui/components/icons";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
-import { CalendarSection } from "./calendar";
 import {
   getInitialStep,
   getNextStep,
@@ -210,22 +209,6 @@ function OnboardingScreenContent({
             onNext={goNext}
           >
             <PermissionsSection onContinue={goNext} />
-          </OnboardingSection>
-
-          <OnboardingSection
-            title={<Trans>Connect calendar</Trans>}
-            description={
-              <Trans>
-                Librelog will sync your calendar to get meeting reminders
-              </Trans>
-            }
-            completedTitle={<Trans>Calendar connected</Trans>}
-            status={getStepStatus("calendar", currentStep)}
-            onBack={goBack}
-            onNext={goNext}
-            onSkip={goNext}
-          >
-            <CalendarSection onContinue={goNext} />
           </OnboardingSection>
 
           <OnboardingSection

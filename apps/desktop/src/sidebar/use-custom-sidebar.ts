@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 import type { Tab } from "~/store/zustand/tabs";
 
 const CUSTOM_SIDEBAR_TYPES: Tab["type"][] = [
-  "calendar",
   "settings",
   "contacts",
   "templates",
@@ -12,7 +11,6 @@ const CUSTOM_SIDEBAR_TYPES: Tab["type"][] = [
 ];
 
 const LEFT_SURFACE_CUSTOM_SIDEBAR_TYPES: Tab["type"][] = [
-  "calendar",
   "settings",
   "contacts",
   "templates",
@@ -22,7 +20,6 @@ const LEFT_SURFACE_CUSTOM_SIDEBAR_TYPES: Tab["type"][] = [
 
 // Tabs whose sidebar nav renders CustomSidebarHeader in the window chrome row.
 const OWN_SIDEBAR_HEADER_TYPES: Tab["type"][] = [
-  "calendar",
   "settings",
   "contacts",
   "templates",

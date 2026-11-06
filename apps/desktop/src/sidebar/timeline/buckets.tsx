@@ -4,7 +4,6 @@ import { cn } from "@anlg/utils";
 
 import { TimelineItemComponent } from "./item";
 import { CurrentTimeIndicator, useCurrentTimeMs } from "./realtime";
-import type { SidebarUpcomingMeetingStatus } from "./upcoming-meeting";
 import {
   calculateTodayIndicatorPlacement,
   getItemTimestamp,
@@ -30,8 +29,6 @@ export function TimelineBuckets({
   showCurrentTimeIndicator = true,
   sortOrder = "newest",
   timezone,
-  upcomingMeetingStatus,
-  upcomingNodeRef,
 }: {
   bucketHeaderTopClassName: string;
   buckets: TimelineBucket[];
@@ -47,8 +44,6 @@ export function TimelineBuckets({
   showCurrentTimeIndicator?: boolean;
   sortOrder?: TimelineSortOrder;
   timezone?: string;
-  upcomingMeetingStatus: SidebarUpcomingMeetingStatus | null;
-  upcomingNodeRef: RefCallback<HTMLDivElement>;
 }) {
   return (
     <>
@@ -100,16 +95,11 @@ export function TimelineBuckets({
                 timezone={timezone}
                 selectedIds={selectedIds}
                 getFlatItemKeys={getFlatItemKeys}
-                upcomingItemKey={upcomingMeetingStatus?.itemKey}
-                upcomingItemLabel={upcomingMeetingStatus?.label}
-                upcomingItemProgress={upcomingMeetingStatus?.progress}
-                upcomingItemNodeRef={upcomingNodeRef}
               />
             ) : (
               bucket.items.map((item) => {
                 const itemKey = `${item.type}-${item.id}`;
-                const selected =
-                  item.type === "session" && item.id === selectedSessionId;
+                const selected = item.id === selectedSessionId;
                 return (
                   <TimelineItemComponent
                     key={itemKey}
@@ -120,22 +110,6 @@ export function TimelineBuckets({
                     multiSelected={selectedIds.includes(itemKey)}
                     getFlatItemKeys={getFlatItemKeys}
                     selectedNodeRef={selected ? selectedNodeRef : undefined}
-                    itemNodeRef={
-                      itemKey === upcomingMeetingStatus?.itemKey
-                        ? upcomingNodeRef
-                        : undefined
-                    }
-                    isUpcoming={itemKey === upcomingMeetingStatus?.itemKey}
-                    upcomingLabel={
-                      itemKey === upcomingMeetingStatus?.itemKey
-                        ? upcomingMeetingStatus.label
-                        : undefined
-                    }
-                    upcomingProgress={
-                      itemKey === upcomingMeetingStatus?.itemKey
-                        ? upcomingMeetingStatus.progress
-                        : undefined
-                    }
                   />
                 );
               })
@@ -156,28 +130,16 @@ export function TimelineBuckets({
 }
 
 function CurrentTimeAnchor({
-  progress = 0.5,
   registerIndicator,
-  variant = "seam",
 }: {
-  progress?: number;
   registerIndicator: (node: HTMLDivElement | null) => void;
-  variant?: "seam" | "inside";
 }) {
   return (
     <div
       ref={registerIndicator}
       aria-hidden
       data-sidebar-current-time-anchor
-      className={cn([
-        "pointer-events-none opacity-0",
-        variant === "inside"
-          ? "absolute inset-x-0 z-20 h-px"
-          : "relative z-20 h-px",
-      ])}
-      style={
-        variant === "inside" ? { top: `${(1 - progress) * 100}%` } : undefined
-      }
+      className="pointer-events-none relative z-20 h-px opacity-0"
     />
   );
 }
@@ -194,10 +156,6 @@ function TodayBucket({
   timezone,
   selectedIds,
   getFlatItemKeys,
-  upcomingItemKey,
-  upcomingItemLabel,
-  upcomingItemProgress,
-  upcomingItemNodeRef,
 }: {
   emptyLabel: ReactNode;
   items: TimelineItem[];
@@ -210,10 +168,6 @@ function TodayBucket({
   timezone?: string;
   selectedIds: string[];
   getFlatItemKeys: () => string[];
-  upcomingItemKey?: string;
-  upcomingItemLabel?: string;
-  upcomingItemProgress?: number;
-  upcomingItemNodeRef: RefCallback<HTMLDivElement>;
 }) {
   const currentTimeMs = useCurrentTimeMs();
 
@@ -273,10 +227,9 @@ function TodayBucket({
       }
 
       const itemKey = `${entry.item.type}-${entry.item.id}`;
-      const selected =
-        entry.item.type === "session" && entry.item.id === selectedSessionId;
+      const selected = entry.item.id === selectedSessionId;
 
-      const itemNode = (
+      nodes.push(
         <TimelineItemComponent
           key={itemKey}
           item={entry.item}
@@ -286,47 +239,8 @@ function TodayBucket({
           multiSelected={selectedIds.includes(itemKey)}
           getFlatItemKeys={getFlatItemKeys}
           selectedNodeRef={selected ? selectedNodeRef : undefined}
-          itemNodeRef={
-            itemKey === upcomingItemKey ? upcomingItemNodeRef : undefined
-          }
-          isUpcoming={itemKey === upcomingItemKey}
-          upcomingLabel={
-            itemKey === upcomingItemKey ? upcomingItemLabel : undefined
-          }
-          upcomingProgress={
-            itemKey === upcomingItemKey ? upcomingItemProgress : undefined
-          }
-        />
+        />,
       );
-
-      if (
-        indicatorPlacement.type === "inside" &&
-        index === indicatorPlacement.index
-      ) {
-        nodes.push(
-          <div key={`${itemKey}-wrapper`} className="relative">
-            {suppressCurrentTimeIndicator ? (
-              <CurrentTimeAnchor
-                registerIndicator={registerIndicator}
-                variant="inside"
-                progress={indicatorPlacement.progress}
-              />
-            ) : (
-              <CurrentTimeIndicator
-                ref={registerIndicator}
-                key="current-time-indicator-inside"
-                timezone={timezone}
-                variant="inside"
-                progress={indicatorPlacement.progress}
-              />
-            )}
-            {itemNode}
-          </div>,
-        );
-        return;
-      }
-
-      nodes.push(itemNode);
     });
 
     if (indicatorPlacement.type === "after") {
@@ -359,10 +273,6 @@ function TodayBucket({
     timezone,
     selectedIds,
     getFlatItemKeys,
-    upcomingItemKey,
-    upcomingItemLabel,
-    upcomingItemProgress,
-    upcomingItemNodeRef,
   ]);
 
   return renderedEntries;

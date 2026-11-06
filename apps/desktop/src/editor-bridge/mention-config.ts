@@ -2,10 +2,10 @@ import { useMemo } from "react";
 
 import type { MentionConfig } from "@anlg/editor/widgets";
 
-import { useTimelineSessionsTable } from "~/calendar/queries";
 import { useHumans, useOrganizations } from "~/contacts/queries";
 import { useSearchEngine } from "~/search/contexts/engine";
 import { useFolderPaths } from "~/session/queries/folders";
+import { useTimelineSessionsTable } from "~/sidebar/timeline/queries";
 
 function interleave<T>(lists: T[][]): T[] {
   const items: T[] = [];

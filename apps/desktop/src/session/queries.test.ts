@@ -11,12 +11,6 @@ const mocks = vi.hoisted(() => ({
   createSession: vi.fn(() =>
     Promise.resolve({ status: "ok", data: "session-1" }),
   ),
-  createSessionForEvent: vi.fn(() =>
-    Promise.resolve({
-      status: "ok",
-      data: { session_id: "session-created", created: true },
-    }),
-  ),
   softDeleteSession: vi.fn(() =>
     Promise.resolve({
       status: "ok" as const,
@@ -46,7 +40,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@anlg/plugin-session", () => ({
   commands: {
     createSession: mocks.createSession,
-    createSessionForEvent: mocks.createSessionForEvent,
     softDeleteSession: mocks.softDeleteSession,
     restoreDeletedSession: mocks.restoreDeletedSession,
     addSessionParticipant: mocks.addSessionParticipant,
@@ -73,22 +66,13 @@ import {
   applySessionProposal,
   declineSessionProposal,
   deleteEnhancedNote,
-  getOrCreateSessionForEventId,
   isSessionDeleted,
   isSessionEmpty,
-  loadSessionEvent,
   restoreDeletedSession,
   softDeleteSession,
   updateEnhancedNoteContent,
   updateSession,
 } from "./queries";
-
-const event = {
-  id: "event-1",
-  participants_json: JSON.stringify([
-    { name: "Alice", email: "alice@example.com" },
-  ]),
-};
 
 type SqlStatement = { sql: string; params: unknown[] };
 
@@ -120,10 +104,6 @@ describe("session SQLite operations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
-    mocks.createSessionForEvent.mockResolvedValue({
-      status: "ok",
-      data: { session_id: "session-created", created: true },
-    });
     mocks.softDeleteSession.mockResolvedValue({
       status: "ok",
       data: { id: "session-1", title: "Planning" },
@@ -132,72 +112,6 @@ describe("session SQLite operations", () => {
       status: "ok",
       data: "restored",
     });
-  });
-
-  it("loads embedded event metadata from the canonical session", async () => {
-    mocks.execute.mockResolvedValueOnce([
-      {
-        event_json: JSON.stringify({
-          tracking_id: "event-1",
-          calendar_id: "calendar-1",
-          title: "Planning",
-        }),
-      },
-    ]);
-
-    await expect(loadSessionEvent("session-1")).resolves.toMatchObject({
-      tracking_id: "event-1",
-      calendar_id: "calendar-1",
-      title: "Planning",
-    });
-  });
-
-  it("attaches parsed calendar participants to an existing event note", async () => {
-    mocks.execute.mockResolvedValueOnce([event]);
-    mocks.createSessionForEvent.mockResolvedValueOnce({
-      status: "ok",
-      data: { session_id: "session-existing", created: false },
-    });
-
-    await expect(getOrCreateSessionForEventId("event-1")).resolves.toBe(
-      "session-existing",
-    );
-
-    expect(mocks.createSessionForEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        event_id: "event-1",
-        participants: [expect.objectContaining({ email: "alice@example.com" })],
-      }),
-    );
-  });
-
-  it("does not attach malformed or self calendar participants", async () => {
-    mocks.execute.mockResolvedValueOnce([
-      {
-        ...event,
-        participants_json: JSON.stringify([
-          null,
-          { name: 42, email: "invalid@example.com" },
-          {
-            name: "John",
-            email: "john@example.com",
-            is_current_user: true,
-          },
-          { name: "Artem", email: "artem@example.com" },
-          { name: "Artem Dupe", email: "ARTEM@example.com" },
-        ]),
-      },
-    ]);
-
-    await expect(getOrCreateSessionForEventId("event-1")).resolves.toBe(
-      "session-created",
-    );
-
-    expect(mocks.createSessionForEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        participants: [expect.objectContaining({ email: "artem@example.com" })],
-      }),
-    );
   });
 
   it("commits title and raw note changes in one ordered transaction", async () => {
@@ -590,7 +504,6 @@ describe("session SQLite operations", () => {
     mocks.execute.mockResolvedValueOnce([
       {
         title: "",
-        event_json: "",
         note_body: JSON.stringify({
           type: "doc",
           content: [{ type: "paragraph" }],
@@ -608,7 +521,7 @@ describe("session SQLite operations", () => {
   });
 
   it.each([
-    ["title", { title: "Named note", event_json: "" }],
+    ["title", { title: "Named note" }],
     ["note body", { note_body: "Written content" }],
     ["transcript", { transcript_count: 1 }],
     ["enhanced note", { enhanced_note_count: 1 }],
@@ -619,7 +532,6 @@ describe("session SQLite operations", () => {
     mocks.execute.mockResolvedValueOnce([
       {
         title: "",
-        event_json: "event",
         note_body: "",
         note_body_format: "prosemirror_json",
         transcript_count: 0,

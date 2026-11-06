@@ -138,7 +138,6 @@ describe("Basic Tab Actions", () => {
       state: {
         view: { type: "enhanced", id: "summary-1" },
         autoStart: true,
-        scheduledAutoStart: null,
       },
     });
     expect(useTabs.getState().tabs).toHaveLength(1);
@@ -220,7 +219,7 @@ describe("Basic Tab Actions", () => {
     });
   });
 
-  test.each(["calendar", "contacts", "templates"] as const)(
+  test.each(["contacts", "templates"] as const)(
     "openNew tracks where %s was opened from",
     (type) => {
       useTabs.getState().openNew({ type: "settings" });

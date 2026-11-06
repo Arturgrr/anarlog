@@ -3,7 +3,6 @@ import { useLingui } from "@lingui/react/macro";
 import {
   Bell,
   BookOpen,
-  CalendarDots,
   ChartLineUp,
   Code,
   DownloadSimple,
@@ -32,7 +31,7 @@ type SettingsNavItem =
       icon: Icon;
     }
   | {
-      id: "automations" | "calendar" | "contacts" | "folders" | "templates";
+      id: "automations" | "contacts" | "folders" | "templates";
       label: string;
       icon: Icon;
       destination: TabInput;
@@ -71,12 +70,6 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
           label: t`Folders`,
           icon: FolderSimple,
           destination: { type: "folders" },
-        },
-        {
-          id: "calendar",
-          label: t`Calendar`,
-          icon: CalendarDots,
-          destination: { type: "calendar" },
         },
         {
           id: "contacts",

@@ -18,7 +18,6 @@ import { useLanguageModel } from "~/ai/hooks";
 import { executeTransaction, useLiveQuery } from "~/db";
 import { enqueueDatabaseWrite } from "~/db/write-queue";
 import { extractPlainText } from "~/search/contexts/engine/utils";
-import { getSessionEvent } from "~/session/utils";
 
 export type PastSessionNote = {
   sessionId: string;
@@ -27,7 +26,7 @@ export type PastSessionNote = {
   occurredAt: string;
   participantNames?: string[];
   sourceSummary: string;
-  relationship: "same_series" | "matching_title" | "shared_participants";
+  relationship: "matching_title" | "shared_participants";
   summary: string | null;
   isGenerating: boolean;
   isRegenerateDisabled?: boolean;
@@ -57,7 +56,6 @@ type PastSessionRow = {
   user_id: string;
   title: string;
   created_at: string;
-  event_json: string;
 };
 
 type PastParticipantRow = {
@@ -228,8 +226,7 @@ function usePastSessionNotesData(enabled: boolean): PastSessionNotesData {
         id,
         owner_user_id AS user_id,
         title,
-        created_at,
-        event_json
+        created_at
       FROM sessions
       WHERE deleted_at IS NULL AND locked = 0
       ORDER BY created_at, id
@@ -342,14 +339,8 @@ export function buildPastSessionNotes(
     getSessionParticipantIds(participantsBySession.get(id) ?? [], userId);
 
   const currentParticipantIds = participantIdsFor(sessionId);
-  const currentEvent = getSessionEvent(currentSession);
-  const currentSeriesId = getRecurrenceSeriesId(currentEvent);
   const currentTitleKey = getSessionTitleKey(currentSession);
-  if (
-    !currentSeriesId &&
-    !currentTitleKey &&
-    currentParticipantIds.size === 0
-  ) {
+  if (!currentTitleKey && currentParticipantIds.size === 0) {
     return { notes: [], missing: [], requests: [] };
   }
 
@@ -375,15 +366,11 @@ export function buildPastSessionNotes(
       continue;
     }
 
-    const candidateEvent = getSessionEvent(candidateSession);
     const candidateParticipantIds = participantIdsFor(candidateSessionId);
-    const candidateSeriesId = getRecurrenceSeriesId(candidateEvent);
     const relationship = getPastSessionRelationship({
       currentParticipantIds,
-      currentSeriesId,
       currentTitleKey,
       candidateParticipantIds,
-      candidateSeriesId,
       candidateTitleKey: getSessionTitleKey(candidateSession),
     });
     if (!relationship) {
@@ -425,7 +412,7 @@ export function buildPastSessionNotes(
         sessionId: candidateSessionId,
         title,
         dateLabel,
-        occurredAt: candidateEvent?.started_at || candidateSession.created_at,
+        occurredAt: candidateSession.created_at,
         participantNames,
         sourceSummary: source,
         relationship,
@@ -743,23 +730,15 @@ function getSessionParticipantNames(
 
 function getPastSessionRelationship({
   currentParticipantIds,
-  currentSeriesId,
   currentTitleKey,
   candidateParticipantIds,
-  candidateSeriesId,
   candidateTitleKey,
 }: {
   currentParticipantIds: Set<string>;
-  currentSeriesId: string | null;
   currentTitleKey: string;
   candidateParticipantIds: Set<string>;
-  candidateSeriesId: string | null;
   candidateTitleKey: string;
 }): PastSessionNote["relationship"] | null {
-  if (currentSeriesId && candidateSeriesId === currentSeriesId) {
-    return "same_series";
-  }
-
   const sharesParticipants = hasSharedParticipants(
     currentParticipantIds,
     candidateParticipantIds,
@@ -798,8 +777,6 @@ function hasSharedParticipants(
 
 function getRelationshipRank(relationship: PastSessionNote["relationship"]) {
   switch (relationship) {
-    case "same_series":
-      return 2;
     case "matching_title":
       return 1;
     case "shared_participants":
@@ -823,19 +800,8 @@ function getSessionUserId(
   return session.user_id?.trim() || fallbackUserId || "";
 }
 
-function getRecurrenceSeriesId(
-  event: ReturnType<typeof getSessionEvent>,
-): string | null {
-  const seriesId = event?.recurrence_series_id?.trim();
-  return seriesId || null;
-}
-
-function getSessionTimestamp(session: {
-  created_at?: string;
-  event_json?: string;
-}): number {
-  const event = getSessionEvent(session);
-  const value = event?.started_at || session.created_at;
+function getSessionTimestamp(session: { created_at?: string }): number {
+  const value = session.created_at;
   if (!value) {
     return 0;
   }
@@ -844,12 +810,8 @@ function getSessionTimestamp(session: {
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
-function formatSessionDate(session: {
-  created_at?: string;
-  event_json?: string;
-}): string {
-  const event = getSessionEvent(session);
-  const parsed = safeParseDate(event?.started_at || session.created_at);
+function formatSessionDate(session: { created_at?: string }): string {
+  const parsed = safeParseDate(session.created_at);
   return parsed ? format(parsed, "MMM d, yyyy") : "";
 }
 

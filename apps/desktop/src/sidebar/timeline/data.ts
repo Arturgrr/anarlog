@@ -1,17 +1,16 @@
 import { useMemo } from "react";
 
-import { useSmartCurrentTime } from "./realtime";
 import {
   buildTimelineBuckets,
-  deriveTimelineWindowData,
-  filterTimelineTablesByFolder,
+  filterTimelineSessionsByFolder,
   getItemTimestamp,
   type TimelineBucket,
-  type TimelineEventsTable,
   type TimelineGroupBy,
   type TimelineSessionsTable,
   type TimelineSortOrder,
 } from "./utils";
+
+import { useCurrentDay } from "~/shared/hooks/useCurrentDay";
 
 export function getFallbackIndicatorIndex(
   buckets: TimelineBucket[],
@@ -76,71 +75,31 @@ function isFutureBucketLabel(label: string) {
 export function useTimelineData({
   folderFilter = null,
   groupBy = "date",
-  isEventIgnored,
-  showIgnored,
   sortOrder = "newest",
-  timelineEventsTable,
   timelineSessionsTable,
   timezone,
 }: {
   folderFilter?: string | null;
   groupBy?: TimelineGroupBy;
-  isEventIgnored: (
-    trackingId: string | null | undefined,
-    recurrenceSeriesId: string | null | undefined,
-  ) => boolean;
-  showIgnored: boolean;
   sortOrder?: TimelineSortOrder;
-  timelineEventsTable: TimelineEventsTable;
   timelineSessionsTable: TimelineSessionsTable;
   timezone?: string;
-}): {
-  buckets: TimelineBucket[];
-  hasMoreFutureItems: boolean;
-} {
-  const folderScopedTables = useMemo(
+}): TimelineBucket[] {
+  const folderScopedSessions = useMemo(
+    () => filterTimelineSessionsByFolder(timelineSessionsTable, folderFilter),
+    [folderFilter, timelineSessionsTable],
+  );
+  // Date bucket labels are relative to today, so rebuild them when the day changes.
+  const currentDay = useCurrentDay(timezone);
+
+  return useMemo(
     () =>
-      filterTimelineTablesByFolder({
-        folderFilter,
-        timelineEventsTable,
-        timelineSessionsTable,
+      buildTimelineBuckets({
+        groupBy,
+        sortOrder,
+        timelineSessionsTable: folderScopedSessions,
+        timezone,
       }),
-    [folderFilter, timelineEventsTable, timelineSessionsTable],
+    [groupBy, sortOrder, folderScopedSessions, currentDay, timezone],
   );
-  const windowData = useMemo(() => {
-    if (groupBy === "folder") {
-      return {
-        timelineEventsTable: {},
-        timelineSessionsTable: folderScopedTables.timelineSessionsTable,
-        hasMoreFutureItems: false,
-      };
-    }
-
-    return deriveTimelineWindowData({
-      isEventIgnored,
-      showIgnored,
-      timelineEventsTable: folderScopedTables.timelineEventsTable,
-      timelineSessionsTable: folderScopedTables.timelineSessionsTable,
-      timezone,
-    });
-  }, [folderScopedTables, groupBy, isEventIgnored, showIgnored, timezone]);
-  const currentTimeMs = useSmartCurrentTime(
-    windowData.timelineEventsTable,
-    windowData.timelineSessionsTable,
-  );
-
-  return useMemo(() => {
-    const buckets = buildTimelineBuckets({
-      groupBy,
-      sortOrder,
-      timelineEventsTable: windowData.timelineEventsTable,
-      timelineSessionsTable: windowData.timelineSessionsTable,
-      timezone,
-    });
-
-    return {
-      buckets,
-      hasMoreFutureItems: windowData.hasMoreFutureItems,
-    };
-  }, [groupBy, sortOrder, windowData, currentTimeMs, timezone]);
 }

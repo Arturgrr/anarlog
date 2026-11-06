@@ -73,7 +73,7 @@ export function useStandaloneNoteTab(sessionId: string) {
         id: sessionId,
         pinned: false,
         slotId: `note-window-${sessionId}`,
-        state: { view: null, autoStart: null, scheduledAutoStart: null },
+        state: { view: null, autoStart: null },
         type: "sessions",
       }) satisfies Extract<Tab, { type: "sessions" }>,
     [sessionId],

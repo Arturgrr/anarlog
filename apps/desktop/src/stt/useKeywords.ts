@@ -17,9 +17,7 @@ const MAX_TRANSCRIPTION_HINTS = 50;
 type KeywordSnapshotSqlRow = {
   raw_md: string;
   title: string;
-  event_json: string;
   participant_names_json: string;
-  event_participants_json: string;
 };
 
 export async function getSessionKeywords({
@@ -34,7 +32,6 @@ export async function getSessionKeywords({
       SELECT
         COALESCE(note.body, '') AS raw_md,
         session.title,
-        session.event_json,
         COALESCE((
           SELECT json_group_array(name)
           FROM (
@@ -49,29 +46,7 @@ export async function getSessionKeywords({
               AND COALESCE(NULLIF(human.name, ''), participant.display_name) <> ''
             ORDER BY name, participant.id
           )
-        ), '[]') AS participant_names_json,
-        COALESCE((
-          SELECT event.participants_json
-          FROM events AS event
-          WHERE event.deleted_at IS NULL
-            AND (
-              event.id = session.event_id
-              OR (
-                event.tracking_id_event = CASE
-                  WHEN json_valid(session.event_json)
-                  THEN json_extract(session.event_json, '$.tracking_id')
-                  ELSE ''
-                END
-                AND event.calendar_id = CASE
-                  WHEN json_valid(session.event_json)
-                  THEN json_extract(session.event_json, '$.calendar_id')
-                  ELSE ''
-                END
-              )
-            )
-          ORDER BY event.started_at, event.id
-          LIMIT 1
-        ), '[]') AS event_participants_json
+        ), '[]') AS participant_names_json
       FROM sessions AS session
       LEFT JOIN session_documents AS note
         ON note.id = session.id
@@ -86,11 +61,7 @@ export async function getSessionKeywords({
   return buildKeywords({
     rawMd: snapshot?.raw_md,
     title: snapshot?.title,
-    eventJson: snapshot?.event_json,
     sessionParticipantTerms: parseStringList(snapshot?.participant_names_json),
-    eventParticipantTerms: parseEventParticipantNames(
-      snapshot?.event_participants_json,
-    ),
     dictionaryTerms,
   });
 }
@@ -98,23 +69,15 @@ export async function getSessionKeywords({
 export function buildKeywords({
   rawMd,
   title,
-  eventJson,
   sessionParticipantTerms = [],
-  eventParticipantTerms = [],
   dictionaryTerms,
 }: {
   rawMd: unknown;
   title: unknown;
-  eventJson: unknown;
   sessionParticipantTerms?: string[];
-  eventParticipantTerms?: string[];
   dictionaryTerms: string[];
 }) {
-  const sourceText = buildKeywordSourceText({
-    rawMd,
-    title,
-    eventJson,
-  });
+  const sourceText = buildKeywordSourceText({ rawMd, title });
   const { keywords, keyphrases } =
     sourceText.length > 0
       ? extractKeywordsFromMarkdown(sourceText)
@@ -122,7 +85,6 @@ export function buildKeywords({
 
   return normalizeKeywordList([
     ...sessionParticipantTerms,
-    ...eventParticipantTerms,
     ...dictionaryTerms,
     ...keywords,
     ...keyphrases,
@@ -132,17 +94,11 @@ export function buildKeywords({
 export function buildKeywordSourceText({
   rawMd,
   title,
-  eventJson,
 }: {
   rawMd: unknown;
   title: unknown;
-  eventJson: unknown;
 }): string {
-  return [
-    stringValue(rawMd),
-    stringValue(title),
-    ...eventKeywordFields(eventJson),
-  ]
+  return [stringValue(rawMd), stringValue(title)]
     .filter((value) => value.length > 0)
     .join("\n");
 }
@@ -225,24 +181,6 @@ const extractKeyphraseMatches = (phrase: Keyphrase): string[] =>
 const stringValue = (value: unknown): string =>
   typeof value === "string" ? value.trim() : "";
 
-const eventKeywordFields = (eventJson: unknown): string[] => {
-  if (typeof eventJson !== "string" || !eventJson) {
-    return [];
-  }
-
-  try {
-    const event = JSON.parse(eventJson);
-    return [event?.title, event?.description, event?.location].flatMap(
-      (value) => {
-        const text = stringValue(value);
-        return text ? [text] : [];
-      },
-    );
-  } catch {
-    return [];
-  }
-};
-
 const parseStringList = (value: unknown): string[] => {
   if (typeof value !== "string" || !value) return [];
   try {
@@ -250,30 +188,6 @@ const parseStringList = (value: unknown): string[] => {
     return Array.isArray(parsed)
       ? parsed.filter((entry): entry is string => typeof entry === "string")
       : [];
-  } catch {
-    return [];
-  }
-};
-
-const parseEventParticipantNames = (participantsJson: unknown): string[] => {
-  if (typeof participantsJson !== "string" || !participantsJson) {
-    return [];
-  }
-
-  try {
-    const participants = JSON.parse(participantsJson);
-    if (!Array.isArray(participants)) {
-      return [];
-    }
-
-    return participants.flatMap((participant) => {
-      if (participant?.is_current_user === true) {
-        return [];
-      }
-
-      const name = stringValue(participant?.name);
-      return name ? [name] : [];
-    });
   } catch {
     return [];
   }

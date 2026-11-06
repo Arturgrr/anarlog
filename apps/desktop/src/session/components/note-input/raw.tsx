@@ -19,7 +19,6 @@ import { MeetingChatHighlights } from "./meeting-chat-highlights";
 import { MeetingScreenGallery } from "./meeting-screen-gallery";
 
 import { useAudioPlayer } from "~/audio-player";
-import { useSessionEventParticipants } from "~/calendar/queries";
 import { AppLinkView } from "~/editor-bridge/app-link-view";
 import { useMentionConfig } from "~/editor-bridge/mention-config";
 import { openEditorLink } from "~/editor-bridge/open-editor-link";
@@ -28,7 +27,7 @@ import { SessionNodeView } from "~/editor-bridge/session-view";
 import { useCanShowTranscript } from "~/session/components/shared";
 import { useAttachmentResolver } from "~/session/hooks/useAttachmentResolver";
 import { useCreatePreMeetingBrief } from "~/session/hooks/useCreatePreMeetingBrief";
-import { useUpdateSession } from "~/session/queries";
+import { useSessionParticipants, useUpdateSession } from "~/session/queries";
 import type { AppliedTemplateSnapshot } from "~/session/queries/types";
 import { removeDocumentTitle } from "~/session/title-content";
 import { useListener } from "~/stt/contexts";
@@ -83,8 +82,6 @@ export const RawEditor = forwardRef<
     sessionId: string;
     rawMd: string;
     sessionTitle: string;
-    eventTitle?: string;
-    eventDescription?: string;
     className?: string;
     onNavigateToTitle?: (pixelWidth?: number) => void;
     syncTasks?: boolean;
@@ -98,8 +95,6 @@ export const RawEditor = forwardRef<
       sessionId,
       rawMd,
       sessionTitle,
-      eventTitle,
-      eventDescription,
       className,
       onNavigateToTitle,
       syncTasks = true,
@@ -310,8 +305,7 @@ export const RawEditor = forwardRef<
                 {audioExistsResolved && !canShowTranscript ? (
                   <TemplateEmptyState
                     sessionId={sessionId}
-                    eventTitle={eventTitle ?? sessionTitle}
-                    eventDescription={eventDescription}
+                    title={sessionTitle}
                     onApply={handleApplyTemplate}
                   />
                 ) : null}
@@ -347,12 +341,10 @@ function getSuggestedTemplates(
   templates: UserTemplate[],
   favoriteTemplates: UserTemplate[],
   {
-    eventTitle,
-    eventDescription,
+    title,
     participantCount,
   }: {
-    eventTitle?: string;
-    eventDescription?: string;
+    title: string;
     participantCount: number;
   },
 ) {
@@ -362,9 +354,8 @@ function getSuggestedTemplates(
       !favoriteIds.has(template.id) &&
       template.sections.some((section) => section.title.trim()),
   );
-  const eventText = `${eventTitle ?? ""} ${eventDescription ?? ""}`;
   const contextualIds = contextualTemplateRules
-    .filter((rule) => rule.pattern.test(eventText))
+    .filter((rule) => rule.pattern.test(title))
     .map((rule) => rule.id);
   if (participantCount === 2) {
     contextualIds.push("default-one-on-one-meeting");
@@ -393,18 +384,18 @@ function getSuggestedTemplates(
 
 function TemplateEmptyState({
   sessionId,
-  eventTitle,
-  eventDescription,
+  title,
   onApply,
 }: {
   sessionId: string;
-  eventTitle?: string;
-  eventDescription?: string;
+  title: string;
   onApply: (template: UserTemplate) => void;
 }) {
   const { t } = useLingui();
   const userTemplates = useUserTemplates();
-  const eventParticipants = useSessionEventParticipants(sessionId);
+  const participantCount = useSessionParticipants(sessionId).filter(
+    (participant) => participant.source !== "excluded",
+  ).length;
   const createTemplate = useCreateTemplate();
   const openTemplatesTab = useOpenTemplatesTab();
   const favoriteTemplates = useMemo(
@@ -414,17 +405,10 @@ function TemplateEmptyState({
   const suggestedTemplates = useMemo(
     () =>
       getSuggestedTemplates(userTemplates, favoriteTemplates, {
-        eventTitle,
-        eventDescription,
-        participantCount: eventParticipants.length,
+        title,
+        participantCount,
       }),
-    [
-      eventDescription,
-      eventParticipants.length,
-      eventTitle,
-      favoriteTemplates,
-      userTemplates,
-    ],
+    [favoriteTemplates, participantCount, title, userTemplates],
   );
   const handleCreateTemplate = useCallback(() => {
     void (async () => {

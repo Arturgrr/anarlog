@@ -29,7 +29,6 @@ import {
   TITLE_BAR_SIDEBAR_ACTIONS_SLOT_ID,
   useCustomSidebarBack,
 } from "~/sidebar/custom-sidebar-header";
-import { useSidebarUpcomingMeetingStatus } from "~/sidebar/timeline/upcoming-meeting";
 import { hasCustomSidebarTab } from "~/sidebar/use-custom-sidebar";
 import { useTabs } from "~/store/zustand/tabs";
 
@@ -45,17 +44,9 @@ export function WindowsTitleBar({
   const openNew = useTabs((state) => state.openNew);
   const createNewNote = useNewNote();
   const openNoteDialog = useOpenNoteDialog();
-  const upcomingMeetingStatus = useSidebarUpcomingMeetingStatus();
   const goBack = useCustomSidebarBack();
   const showBackButton = hasCustomSidebarTab(currentTab);
   const editTargetRef = useRef<HTMLElement | null>(null);
-  const currentSessionId =
-    currentTab?.type === "sessions" ? currentTab.id : undefined;
-  const showUpcomingMeetingBadge =
-    !leftsidebar.expanded &&
-    !!upcomingMeetingStatus &&
-    (!currentSessionId ||
-      upcomingMeetingStatus.itemKey !== `session-${currentSessionId}`);
 
   const rememberEditTarget = useCallback(() => {
     editTargetRef.current =
@@ -99,7 +90,6 @@ export function WindowsTitleBar({
         ) : (
           <LeftSurfaceChromeButton
             ariaLabel={leftsidebar.expanded ? t`Hide sidebar` : t`Show sidebar`}
-            badge={showUpcomingMeetingBadge ? "upcomingMeeting" : null}
             onClick={leftsidebar.toggleExpanded}
           >
             {leftsidebar.expanded ? (

@@ -7,13 +7,9 @@ import { useTabs } from "~/store/zustand/tabs";
 export function ClassicMainSidebar({
   folderFilter = null,
   timelineHeader,
-  showIgnoredTimelineEvents,
-  onShowIgnoredTimelineEventsChange,
 }: {
   folderFilter?: string | null;
   timelineHeader?: ReactNode;
-  showIgnoredTimelineEvents?: boolean;
-  onShowIgnoredTimelineEventsChange?: (showIgnored: boolean) => void;
 } = {}) {
   const { leftsidebar } = useShell();
   const currentTab = useTabs((state) => state.currentTab);
@@ -24,11 +20,6 @@ export function ClassicMainSidebar({
   }
 
   return (
-    <LeftSidebar
-      folderFilter={folderFilter}
-      timelineHeader={timelineHeader}
-      showIgnoredTimelineEvents={showIgnoredTimelineEvents}
-      onShowIgnoredTimelineEventsChange={onShowIgnoredTimelineEventsChange}
-    />
+    <LeftSidebar folderFilter={folderFilter} timelineHeader={timelineHeader} />
   );
 }

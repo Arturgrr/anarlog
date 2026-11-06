@@ -28,10 +28,6 @@ vi.mock("~/sidebar/timeline", () => ({
   ),
 }));
 
-vi.mock("~/sidebar/calendar", () => ({
-  CalendarNav: () => <div data-testid="calendar-nav" />,
-}));
-
 vi.mock("~/sidebar/automations", () => ({
   AutomationsNav: () => <div data-testid="automations-nav" />,
 }));
@@ -84,7 +80,6 @@ describe("LeftSidebar", () => {
 
   it.each([
     ["settings", "settings-nav"],
-    ["calendar", "calendar-nav"],
     ["contacts", "contacts-nav"],
     ["templates", "templates-nav"],
     ["automations", "automations-nav"],

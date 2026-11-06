@@ -20,10 +20,7 @@ export {
   useEnhancedNoteRecords,
   useUpdateEnhancedNoteContent,
 } from "./queries/enhanced-notes";
-export {
-  createSession,
-  getOrCreateSessionForEventId,
-} from "./queries/creation";
+export { createSession } from "./queries/creation";
 export {
   loadSessionSummariesByFolder,
   useFolderIcons,
@@ -44,7 +41,6 @@ export {
   useSessionParticipants,
 } from "./queries/participants";
 export {
-  loadSessionEvent,
   preloadSession,
   updateSession,
   useSession,

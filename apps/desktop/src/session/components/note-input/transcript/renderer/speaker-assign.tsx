@@ -1,7 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useMemo, useRef, useState } from "react";
 
-import type { EventParticipant } from "@anlg/store";
 import { MagnifyingGlass, Plus } from "@anlg/ui/components/icons";
 import { Checkbox } from "@anlg/ui/components/ui/checkbox";
 import {
@@ -14,7 +13,6 @@ import { cn } from "@anlg/utils";
 
 import { preserveScrollPosition } from "./viewport-hooks";
 
-import { useSessionEventParticipants } from "~/calendar/queries";
 import { ContactImage } from "~/contacts/contact-avatar";
 import { createHuman, useHumans } from "~/contacts/queries";
 import { ContactFacehash } from "~/contacts/shared";
@@ -161,12 +159,10 @@ export type SpeakerParticipantOption = {
 
 export function buildSpeakerParticipantGroups({
   sessionParticipants,
-  eventParticipants = [],
   contacts,
   query,
 }: {
   sessionParticipants: SpeakerParticipantOption[];
-  eventParticipants?: SpeakerParticipantOption[];
   contacts: SpeakerParticipantOption[];
   query: string;
 }) {
@@ -184,7 +180,7 @@ export function buildSpeakerParticipantGroups({
   };
 
   const participantKeys = new Set<string>();
-  const participantOptions = [...sessionParticipants, ...eventParticipants]
+  const participantOptions = sessionParticipants
     .filter((option) => {
       const keys = getSpeakerParticipantDedupeKeys(option);
       if (keys.some((key) => participantKeys.has(key))) {
@@ -254,60 +250,6 @@ export function buildCreateSpeakerParticipantOption({
   };
 }
 
-export function buildEventSpeakerParticipantOptions({
-  eventParticipants,
-  contacts,
-}: {
-  eventParticipants: EventParticipant[];
-  contacts: SpeakerParticipantOption[];
-}): SpeakerParticipantOption[] {
-  const contactByEmail = new Map(
-    contacts.flatMap((contact) =>
-      [contact.email, ...(contact.additionalEmails ?? [])]
-        .filter((email): email is string => Boolean(email))
-        .map((email) => [email.toLowerCase(), contact] as const),
-    ),
-  );
-  const contactByName = new Map(
-    contacts.map((contact) => [contact.name.toLowerCase(), contact]),
-  );
-
-  return eventParticipants
-    .map((participant, index): SpeakerParticipantOption | null => {
-      const name = (participant.name ?? "").trim();
-      const email = (participant.email ?? "").trim();
-      if (!name && !email) {
-        return null;
-      }
-
-      const contact = email
-        ? contactByEmail.get(email.toLowerCase())
-        : name
-          ? contactByName.get(name.toLowerCase())
-          : undefined;
-
-      if (contact) {
-        return {
-          ...contact,
-          name: name || contact.name,
-          email: email || contact.email,
-          isSessionParticipant: true,
-        };
-      }
-
-      const pendingId = email ? `event:${email}` : `event:${name}:${index}`;
-
-      return {
-        id: pendingId,
-        name: name || email,
-        email: email || undefined,
-        isSessionParticipant: true,
-        isNew: true,
-      };
-    })
-    .filter((option): option is SpeakerParticipantOption => option !== null);
-}
-
 export function SpeakerParticipantPicker({
   sessionId,
   onSelect,
@@ -321,9 +263,6 @@ export function SpeakerParticipantPicker({
   const session = useSession(sessionId ?? "");
   const participantRecords = useSessionParticipants(sessionId ?? "");
   const humanRecords = useHumans();
-  const attachedEventParticipants = useSessionEventParticipants(
-    sessionId ?? "",
-  );
 
   const [query, setQuery] = useState("");
   const [selectedOption, setSelectedOption] =
@@ -384,15 +323,6 @@ export function SpeakerParticipantPicker({
     [humanRecords],
   );
 
-  const eventParticipants = useMemo(
-    () =>
-      buildEventSpeakerParticipantOptions({
-        eventParticipants: attachedEventParticipants,
-        contacts,
-      }),
-    [attachedEventParticipants, contacts],
-  );
-
   const participantIds = useMemo(
     () => new Set(participants.map((participant) => participant.id)),
     [participants],
@@ -402,20 +332,19 @@ export function SpeakerParticipantPicker({
     () =>
       buildSpeakerParticipantGroups({
         sessionParticipants: participants,
-        eventParticipants,
         contacts,
         query,
       }),
-    [contacts, eventParticipants, participants, query],
+    [contacts, participants, query],
   );
 
   const createOption = useMemo(
     () =>
       buildCreateSpeakerParticipantOption({
         query,
-        existingOptions: [...participants, ...eventParticipants, ...contacts],
+        existingOptions: [...participants, ...contacts],
       }),
-    [contacts, eventParticipants, participants, query],
+    [contacts, participants, query],
   );
   const hasPeopleGroup = groups.some((group) => group.title === "People");
 

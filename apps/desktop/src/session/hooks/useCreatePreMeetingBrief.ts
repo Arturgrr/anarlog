@@ -11,15 +11,12 @@ import {
 } from "./pre-meeting-brief-job";
 
 import { useLanguageModel } from "~/ai/hooks";
-import { useNow } from "~/calendar/hooks";
-import { useSessionCalendarEvent } from "~/calendar/queries";
 import { getStoredNoteMarkdown } from "~/session/components/note-input/header-shared";
 import { hasStoredNoteContent } from "~/session/components/shared";
 import { usePastSessionNotes } from "~/session/insights/past-notes";
 import {
   canCreatePreMeetingBrief,
   selectBriefSourceNotes,
-  shouldShowPreMeetingBrief,
 } from "~/session/insights/pre-meeting";
 import { useSession, useSessionParticipants } from "~/session/queries";
 import { useConfigValue } from "~/shared/config";
@@ -41,12 +38,9 @@ export function useCreatePreMeetingBrief({
   onSwitchToMemos: () => void;
   getMemoEditor: () => MemoBriefEditor | null;
 }) {
-  const now = useNow();
   const language = useConfigValue("ai_language") || "en";
   const model = useLanguageModel();
   const enabled = sessionMode === "inactive";
-  const event = useSessionCalendarEvent(sessionId, { enabled });
-  const upcoming = shouldShowPreMeetingBrief(event, now.getTime());
   const session = useSession(sessionId);
   const participants = useSessionParticipants(sessionId);
   const hasParticipants = participants.some(
@@ -56,7 +50,7 @@ export function useCreatePreMeetingBrief({
       participant.humanId !== session?.user_id,
   );
   const pastNotes = usePastSessionNotes(sessionId, {
-    enabled: enabled && (upcoming || hasParticipants),
+    enabled: enabled && hasParticipants,
   });
   const memoEmpty = isMemoEmpty ?? !hasStoredNoteContent(session?.raw_md);
   const available =
@@ -64,16 +58,12 @@ export function useCreatePreMeetingBrief({
     Boolean(model) &&
     memoEmpty &&
     canCreatePreMeetingBrief({
-      event,
-      nowMs: now.getTime(),
       notes: pastNotes.notes,
       hasParticipants,
     });
   const isGenerating = usePreMeetingBriefGenerating(sessionId);
   useRegisterPreMeetingBriefEditor(sessionId, getMemoEditor);
 
-  const eventRef = useRef(event);
-  eventRef.current = event;
   const notesRef = useRef(pastNotes.notes);
   notesRef.current = pastNotes.notes;
   const sessionRef = useRef(session);
@@ -91,7 +81,7 @@ export function useCreatePreMeetingBrief({
       return;
     }
 
-    const briefEvent = eventRef.current ?? {
+    const briefEvent = {
       title: sessionRef.current?.title,
       participants: participantsRef.current
         .filter(

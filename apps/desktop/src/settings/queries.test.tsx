@@ -280,7 +280,7 @@ describe("SQLite settings", () => {
   it("writes multiple independent values in one transaction", async () => {
     await setSettingValues({
       theme: "dark",
-      notification_event: false,
+      notification_detect: false,
     });
 
     const statements = mocks.executeTransaction.mock.calls[0][0];
@@ -294,7 +294,7 @@ describe("SQLite settings", () => {
     ]);
     expect(statements[1].sql).toContain("INSERT INTO app_settings");
     expect(statements[1].params.slice(0, 2)).toEqual([
-      "notification_event",
+      "notification_detect",
       JSON.stringify(false),
     ]);
   });

@@ -10,7 +10,6 @@ import {
   commands as templateCommands,
   type JsonValue,
 } from "@anlg/plugin-template";
-import { parseEventInstant } from "@anlg/utils";
 
 import systemPromptTemplate from "./pre-meeting-brief.system.md.jinja?raw";
 import userPromptTemplate from "./pre-meeting-brief.user.md.jinja?raw";
@@ -20,7 +19,6 @@ import type { PastSessionNote } from "~/session/insights/past-notes";
 
 const MAX_BRIEF_MEETINGS = 5;
 
-const AFTER_START_GRACE_MS = 5 * 60 * 1000;
 const MAX_FACTS = 3;
 const MAX_PROMPT_FACTS = 4;
 const MAX_BRIEF_BULLETS = 3;
@@ -39,42 +37,11 @@ const SPACE_REGEX = /\s+/g;
 
 export type PreMeetingBriefEvent = {
   title?: string;
-  started_at?: string;
-  ended_at?: string;
-  is_all_day?: boolean;
-  location?: string;
-  description?: string;
   participants?: Array<{
     name?: string;
     email?: string;
-    is_current_user?: boolean;
   }>;
 };
-
-export function shouldShowPreMeetingBrief(
-  event: {
-    started_at?: string;
-    ended_at?: string;
-    is_all_day?: boolean;
-  } | null,
-  nowMs: number,
-): boolean {
-  if (!event || event.is_all_day) {
-    return false;
-  }
-
-  const startMs = parseEventInstant(event.started_at)?.getTime();
-  if (startMs == null) {
-    return false;
-  }
-  if (startMs > nowMs) {
-    return true;
-  }
-
-  const endMs = parseEventInstant(event.ended_at)?.getTime();
-  const hideAfterMs = endMs ?? startMs + AFTER_START_GRACE_MS;
-  return hideAfterMs > nowMs;
-}
 
 export function selectBriefSourceNotes(
   notes: PastSessionNote[],
@@ -85,20 +52,13 @@ export function selectBriefSourceNotes(
 }
 
 export function canCreatePreMeetingBrief({
-  event,
-  nowMs,
   notes,
   hasParticipants = false,
 }: {
-  event: PreMeetingBriefEvent | null;
-  nowMs: number;
   notes: PastSessionNote[];
   hasParticipants?: boolean;
 }): boolean {
-  return (
-    (event ? shouldShowPreMeetingBrief(event, nowMs) : hasParticipants) &&
-    selectBriefSourceNotes(notes).length > 0
-  );
+  return hasParticipants && selectBriefSourceNotes(notes).length > 0;
 }
 
 function getBriefEventParticipantNames(
@@ -107,7 +67,6 @@ function getBriefEventParticipantNames(
   return [
     ...new Set(
       (event?.participants ?? [])
-        .filter((participant) => participant.is_current_user !== true)
         .map(
           (participant) =>
             participant.name?.trim() || participant.email?.trim() || "",
@@ -298,13 +257,7 @@ export async function streamPreMeetingBrief({
   const prompt = await renderJinja(userPromptTemplate, {
     meeting: {
       title: event.title?.trim() || "Untitled",
-      when: compactBriefText(
-        [event.started_at, event.ended_at].filter(Boolean).join(" – "),
-        160,
-      ),
-      location: compactBriefText(event.location ?? "", 120),
       participants: getBriefEventParticipantNames(event),
-      description: compactBriefText(event.description ?? "", 400),
     },
     past_meetings: getBriefPromptMeetings(sourceNotes),
   });

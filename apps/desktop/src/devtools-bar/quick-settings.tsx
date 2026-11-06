@@ -42,11 +42,6 @@ const QUICK_TOGGLES = [
     description: "Keep the app icon in the Dock while running (macOS).",
   },
   {
-    key: "notification_event",
-    label: "Event notifications",
-    description: "Notify before a calendar event starts.",
-  },
-  {
     key: "notification_detect",
     label: "Meeting detection notifications",
     description: "Notify when a meeting app starts using the microphone.",

@@ -29,15 +29,10 @@ import {
   buildFindRelatedMeetingsTool,
   buildSearchMeetingContentTool,
 } from "./note-files";
-import { buildSearchCalendarEventsTool } from "./search-calendar-events";
 import { buildSearchContactsTool } from "./search-contacts";
 import { buildSearchMeetingsTool } from "./search-meetings";
 import { buildApplySessionCorrectionTool } from "./session-correction";
-import type {
-  CalendarEventSearchResult,
-  ContactSearchResult,
-  ToolDependencies,
-} from "./types";
+import type { ContactSearchResult, ToolDependencies } from "./types";
 
 import type { SearchFilters } from "~/search/contexts/engine/types";
 
@@ -110,10 +105,6 @@ export const buildChatTools = (deps: ToolDependencies) => ({
   search_contacts: withToolLogging(
     "search_contacts",
     buildSearchContactsTool(deps),
-  ),
-  search_calendar_events: withToolLogging(
-    "search_calendar_events",
-    buildSearchCalendarEventsTool(deps),
   ),
   edit_memo: withToolLogging("edit_memo", buildEditMemoTool(deps)),
   edit_summary: withToolLogging("edit_summary", buildEditSummaryTool(deps)),
@@ -232,13 +223,6 @@ type LocalTools = {
     output: {
       query: string;
       results: ContactSearchResult[];
-    };
-  };
-  search_calendar_events: {
-    input: { query: string; limit?: number };
-    output: {
-      query: string;
-      results: CalendarEventSearchResult[];
     };
   };
   edit_memo: {

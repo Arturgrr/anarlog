@@ -28,7 +28,6 @@ import {
   useSession,
   useSessionParticipants,
 } from "~/session/queries";
-import { getSessionEvent } from "~/session/utils";
 import {
   getStoredSettingValues,
   useSetSettingValues,
@@ -138,8 +137,6 @@ function ExportModalContent({
   const session = useSession(sessionId);
   const sessionTitle = session?.title;
   const sessionCreatedAt = session?.created_at;
-  const event = session ? getSessionEvent(session) : null;
-  const eventTitle = event?.title;
   const rawMd = session?.raw_md;
 
   const enhancedNoteId = currentView.type === "enhanced" ? currentView.id : "";
@@ -379,7 +376,7 @@ function ExportModalContent({
       title: sessionTitle || t`Untitled`,
       createdAt: sessionCreatedAt ? formatDate(sessionCreatedAt) : "",
       participants: participantNames,
-      eventTitle: eventTitle || null,
+      eventTitle: null,
       duration: transcriptDuration,
     };
 

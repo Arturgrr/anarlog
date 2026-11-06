@@ -30,7 +30,7 @@
     "@anlg/db-tauri": "workspace:*",
     "@anlg/design-system": "workspace:^",
     "@anlg/editor": "workspace:^",
-    "@anlg/plugin-calendar": "workspace:*",
+    "@anlg/plugin-contacts": "workspace:*",
     "@anlg/plugin-db": "workspace:*",
     "@anlg/plugin-deeplink2": "workspace:*",
     "@anlg/plugin-detect": "workspace:*",

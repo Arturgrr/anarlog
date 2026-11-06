@@ -25,10 +25,6 @@ vi.mock("./useNewNote", () => ({
   useNewNote: () => vi.fn(),
 }));
 
-vi.mock("~/session/queries", () => ({
-  getOrCreateSessionForEventId: vi.fn(),
-}));
-
 vi.mock("~/services/meeting-import-sync", () => ({
   MeetingImportSync: () => <div data-testid="meeting-import-sync" />,
 }));

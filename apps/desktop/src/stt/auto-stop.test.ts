@@ -1,11 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
-  AUTO_STOP_NETWORK_HOLD_MS,
   AUTO_STOP_RECENT_OFFLINE_MS,
   getMeetingAppsStillOnCall,
   isRecentNetworkDrop,
-  resolveNetworkHoldUntilMs,
   showMeetingEndedPrompt,
 } from "./auto-stop";
 import { cancelAutoStopEndedNotification } from "./auto-stop-notification";
@@ -32,30 +30,6 @@ beforeEach(() => {
   cancelAutoStopEndedNotification("session-1");
   getNotificationIconForAppMock.mockReset();
   showNotificationMock.mockReset();
-});
-
-describe("resolveNetworkHoldUntilMs", () => {
-  test.each([
-    {
-      name: "keeps a future calendar deadline",
-      calendarDeadlineMs: 2_000,
-      expected: 2_000,
-    },
-    {
-      name: "falls back to the default hold when no calendar deadline exists",
-      calendarDeadlineMs: null,
-      expected: 1_000 + AUTO_STOP_NETWORK_HOLD_MS,
-    },
-    {
-      name: "falls back to the default hold when the calendar deadline has passed",
-      calendarDeadlineMs: 500,
-      expected: 1_000 + AUTO_STOP_NETWORK_HOLD_MS,
-    },
-  ])("$name", ({ calendarDeadlineMs, expected }) => {
-    expect(
-      resolveNetworkHoldUntilMs({ calendarDeadlineMs, nowMs: 1_000 }),
-    ).toBe(expected);
-  });
 });
 
 describe("getMeetingAppsStillOnCall", () => {

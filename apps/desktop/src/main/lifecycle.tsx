@@ -2,7 +2,6 @@ import { useRouteContext } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 
 import { useLanguageModel } from "~/ai/hooks";
-import { searchCalendarEvents } from "~/calendar/queries";
 import { useSessionTab } from "~/chat/components/use-session-tab";
 import { buildChatTools } from "~/chat/tools";
 import { searchContacts } from "~/contacts/queries";
@@ -18,7 +17,6 @@ import { useTabs } from "~/store/zustand/tabs";
 import { BatchTranscriptionRecovery } from "~/stt/batch-transcription-recovery";
 import { LiveCaptureRecovery } from "~/stt/live-capture-recovery";
 import { RecordingImportWorker } from "~/stt/recording-import";
-import { ScheduledMeetingAutoStart } from "~/stt/scheduled-auto-start";
 import { MainListenerControlBridge } from "~/stt/window-control";
 
 export function useClassicMainLifecycle() {
@@ -48,7 +46,6 @@ export function ClassicMainServices() {
       <LiveCaptureRecovery />
       <BatchTranscriptionRecovery />
       <RecordingImportWorker />
-      <ScheduledMeetingAutoStart />
       <MainListenerControlBridge />
       <DictationLifecycle />
       <ToolRegistration />
@@ -61,8 +58,6 @@ function ToolRegistration() {
   const { search } = useSearchEngine();
 
   const getContactSearchResults = searchContacts;
-
-  const getCalendarEventSearchResults = searchCalendarEvents;
 
   const { getSessionId, getEnhancedNoteId } = useSessionTab();
   const getFolderFilter = useCallback(() => {
@@ -79,7 +74,6 @@ function ToolRegistration() {
       buildChatTools({
         search,
         getContactSearchResults,
-        getCalendarEventSearchResults,
         getSessionId,
         getFolderFilter,
         getEnhancedNoteId,
@@ -88,7 +82,6 @@ function ToolRegistration() {
     [
       search,
       getContactSearchResults,
-      getCalendarEventSearchResults,
       getSessionId,
       getFolderFilter,
       getEnhancedNoteId,

@@ -55,14 +55,14 @@ test("completed captures keep their native stop clock through repair and atomica
         ended_at_ms INTEGER, updated_at TEXT, deleted_at TEXT);
       INSERT INTO sessions (id) VALUES ('ad-hoc');
       INSERT INTO sessions (id, started_at, ended_at)
-        VALUES ('calendar', '2026-10-01T09:55:00Z', '2026-10-01T10:30:00Z');
+        VALUES ('meeting', '2026-10-01T09:55:00Z', '2026-10-01T10:30:00Z');
     `);
     const insert = db.prepare(
       "INSERT INTO transcripts (id, session_id, started_at_ms) VALUES (?, ?, ?)",
     );
     insert.run("live", "ad-hoc", start);
     insert.run("resumed", "ad-hoc", stop + 60_000);
-    insert.run("repaired", "calendar", start);
+    insert.run("repaired", "meeting", start);
     const usage = {
       startedAtMs: start,
       requestedLiveTranscription: true,
@@ -105,12 +105,10 @@ test("completed captures keep their native stop clock through repair and atomica
         .prepare("SELECT ended_at_ms FROM transcripts WHERE id='resumed'")
         .get(),
     ).toEqual({ ended_at_ms: null });
-    await completeCaptureTranscript("calendar", "repaired", stop);
+    await completeCaptureTranscript("meeting", "repaired", stop);
     expect(
       db
-        .prepare(
-          "SELECT started_at, ended_at FROM sessions WHERE id='calendar'",
-        )
+        .prepare("SELECT started_at, ended_at FROM sessions WHERE id='meeting'")
         .get(),
     ).toEqual({
       started_at: "2026-10-01T09:55:00Z",

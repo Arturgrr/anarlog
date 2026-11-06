@@ -25,7 +25,6 @@ import { getCanShowTranscript, useHasTranscript } from "./components/shared";
 import { useAutoEnhance } from "./hooks/useAutoEnhance";
 import { useEnhancedNotes } from "./hooks/useEnhancedNotes";
 import { shouldShowSessionTopAudioPlayer } from "./top-audio-player";
-import { getSessionEvent } from "./utils";
 
 import * as AudioPlayer from "~/audio-player";
 import { isLockedFlag } from "~/lock/flag";
@@ -35,7 +34,7 @@ import { useAppLock } from "~/lock/store";
 import { useSession } from "~/session/queries";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
 import { useListener } from "~/stt/contexts";
-import { ScheduledSessionAutoStart } from "~/stt/scheduled-session-auto-start";
+import { SessionAutoStart } from "~/stt/session-auto-start";
 
 export function TabContentNote({
   standaloneWindow = false,
@@ -109,11 +108,8 @@ function UnlockedTabContentNote({
     <>
       {tab.state.autoStart && !standaloneWindow ? (
         // Stay mounted under the lock overlay so a locked session can clear
-        // autoStart instead of blocking later scheduled meetings.
-        <ScheduledSessionAutoStart
-          sessionId={tab.id}
-          requiresCalendarEligibility={Boolean(tab.state.scheduledAutoStart)}
-        />
+        // autoStart instead of leaving it armed.
+        <SessionAutoStart sessionId={tab.id} />
       ) : null}
       <SearchProvider>
         <AudioPlayer.Provider sessionId={tab.id} url={audioUrl ?? ""}>
@@ -169,7 +165,6 @@ function TabContentNoteInner({
     hasTranscript && sessionMode === "inactive",
   );
   const session = useSession(sessionId);
-  const sessionEvent = session ? getSessionEvent(session) : null;
   const updateSessionTabState = useTabs((state) => state.updateSessionTabState);
 
   const { skipReason } = useAutoEnhance(tab);
@@ -303,8 +298,6 @@ function TabContentNoteInner({
                 tab={tab}
                 rawMd={session.raw_md}
                 sessionTitle={session.title}
-                eventTitle={sessionEvent?.title}
-                eventDescription={sessionEvent?.description}
                 editorTabs={editorTabs}
                 currentTab={currentView}
                 handleTabChange={handleTabChange}

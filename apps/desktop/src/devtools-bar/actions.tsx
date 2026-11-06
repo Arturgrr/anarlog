@@ -5,8 +5,6 @@ import { toast } from "@anlg/ui/components/ui/toast";
 
 import { populateRecurringMeetingNotes } from "./recurring-notes";
 
-import { executeTransaction } from "~/db";
-import { createSession, updateSession } from "~/session/queries";
 import { useLocalUserId } from "~/shared/owner-user";
 import {
   type DevtoolsOtaPreviewStatus,
@@ -29,15 +27,10 @@ export type DevtoolsAction =
   | "toasts:clear"
   | `ota:${DevtoolsOtaPreviewStatus}`
   | "ota:clear"
-  | "notifications:calendar"
   | "notifications:mic-detected"
   | "notifications:mic-options"
   | "notifications:auto-stop"
   | "notifications:clear"
-  | "countdown:note-60"
-  | "countdown:note-300"
-  | "countdown:zoom-60"
-  | "countdown:zoom-300"
   | "data:recurring-notes"
   | "error:trigger";
 
@@ -138,12 +131,6 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
     description: "Fire each native notification with sample data.",
     items: [
       {
-        label: "Calendar",
-        description:
-          "Insert a sample event starting in 5 minutes and show its reminder.",
-        action: "notifications:calendar",
-      },
-      {
         label: "Mic detected",
         description:
           'Show the "Are you in a meeting?" notification for a detected app.',
@@ -170,42 +157,13 @@ export const DEVTOOLS_MENU: DevtoolsMenuGroup[] = [
     ],
   },
   {
-    label: "Countdown",
-    description:
-      "Create a note for a meeting that starts soon, to exercise pre-meeting flows.",
-    items: [
-      {
-        label: "Note 1m",
-        description: "Create a note whose meeting starts in 1 minute.",
-        action: "countdown:note-60",
-      },
-      {
-        label: "Note 5m",
-        description: "Create a note whose meeting starts in 5 minutes.",
-        action: "countdown:note-300",
-      },
-      {
-        label: "Zoom 1m",
-        description:
-          "Create a note with a Zoom link whose meeting starts in 1 minute.",
-        action: "countdown:zoom-60",
-      },
-      {
-        label: "Zoom 5m",
-        description:
-          "Create a note with a Zoom link whose meeting starts in 5 minutes.",
-        action: "countdown:zoom-300",
-      },
-    ],
-  },
-  {
     label: "Data",
     description: "Seed sample data into the local database.",
     items: [
       {
         label: "Seed recurring meeting notes",
         description:
-          "Create a recurring series with three past notes and key facts to exercise the Insights tab.",
+          "Create a repeated meeting with three past notes and key facts to exercise the Insights tab.",
         action: "data:recurring-notes",
       },
     ],
@@ -250,75 +208,6 @@ export function useDevtoolsActions() {
     }
   }, []);
 
-  const showCalendarNotification = useCallback(async () => {
-    const eventId = `devtool-event-${crypto.randomUUID()}`;
-    const startedAt = new Date(Date.now() + 5 * 60 * 1000);
-    const endedAt = new Date(startedAt.getTime() + 30 * 60 * 1000);
-    const now = new Date().toISOString();
-
-    await executeTransaction([
-      {
-        sql: `
-          INSERT INTO events (
-            id, tracking_id_event, calendar_id, title, started_at, ended_at,
-            location, meeting_link, description, note, recurrence_series_id,
-            has_recurrence_rules, is_all_day, provider, participants_json,
-            created_at, updated_at, deleted_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '', '', 0, 0, ?, ?, ?, ?, NULL)
-        `,
-        params: [
-          eventId,
-          eventId,
-          "devtool-calendar",
-          "Devtool design sync",
-          startedAt.toISOString(),
-          endedAt.toISOString(),
-          "Conference Room",
-          "https://zoom.us/j/1234567890",
-          "Notification test event",
-          "google",
-          JSON.stringify([
-            {
-              name: "Ada Lovelace",
-              email: "ada@example.com",
-              status: "accepted",
-            },
-          ]),
-          now,
-          now,
-        ],
-      },
-    ]);
-
-    await notificationCommands.showNotification({
-      key: `devtool-calendar-${eventId}`,
-      title: "Devtool design sync",
-      message: "Starting in 5 minutes",
-      timeout: null,
-      source: { type: "calendar_event", event_id: eventId },
-      start_time: Math.floor(startedAt.getTime() / 1000),
-      participants: [
-        {
-          name: "Ada Lovelace",
-          email: "ada@example.com",
-          status: "Accepted",
-        },
-      ],
-      event_details: {
-        what: "Devtool design sync",
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        location: "Conference Room",
-      },
-      action_label: "Open Librelog",
-      action: null,
-      action_menu: null,
-      action_variant: null,
-      options: null,
-      footer: null,
-      icon: null,
-    });
-  }, []);
-
   const showMicDetectedNotification = useCallback(async () => {
     await notificationCommands.showNotification({
       key: `devtool-mic-${crypto.randomUUID()}`,
@@ -329,7 +218,6 @@ export function useDevtoolsActions() {
         type: "mic_detected",
         app_names: ["Zoom"],
         app_ids: ["us.zoom.xos"],
-        event_ids: [],
       },
       start_time: null,
       participants: null,
@@ -347,14 +235,13 @@ export function useDevtoolsActions() {
   const showMicOptionsNotification = useCallback(async () => {
     await notificationCommands.showNotification({
       key: `devtool-mic-options-${crypto.randomUUID()}`,
-      title: "Are you in Design sync right now?",
+      title: "Are you in a meeting?",
       message: "",
       timeout: { secs: 15, nanos: 0 },
       source: {
         type: "mic_detected",
         app_names: ["Zoom", "Google Chrome"],
         app_ids: ["us.zoom.xos", "com.google.Chrome"],
-        event_ids: ["devtool-event-1"],
       },
       start_time: null,
       participants: null,
@@ -397,40 +284,6 @@ export function useDevtoolsActions() {
     });
   }, []);
 
-  const createWithCountdown = useCallback(
-    async (seconds: number, meetingLink?: string) => {
-      if (!userId) {
-        return;
-      }
-
-      const started_at = new Date(Date.now() + seconds * 1000).toISOString();
-      const event_json = JSON.stringify({
-        tracking_id: "devtool-test",
-        calendar_id: "devtool-test",
-        title: "Test Meeting",
-        started_at,
-        ended_at: new Date(
-          Date.now() + seconds * 1000 + 30 * 60 * 1000,
-        ).toISOString(),
-        is_all_day: false,
-        has_recurrence_rules: false,
-        ...(meetingLink ? { meeting_link: meetingLink } : {}),
-      });
-
-      const sessionId = await createSession(
-        meetingLink ? "Countdown Test (Zoom)" : "Countdown Test",
-        userId,
-      );
-      await updateSession(sessionId, {
-        created_at: new Date().toISOString(),
-        event_json,
-      });
-
-      openNew({ type: "sessions", id: sessionId });
-    },
-    [openNew, userId],
-  );
-
   const seedRecurringNotes = useCallback(async () => {
     try {
       const sessionId = await populateRecurringMeetingNotes({ userId });
@@ -470,9 +323,6 @@ export function useDevtoolsActions() {
         case "ota:clear":
           clearOtaPreview();
           return;
-        case "notifications:calendar":
-          void showCalendarNotification();
-          return;
         case "notifications:mic-detected":
           void showMicDetectedNotification();
           return;
@@ -484,18 +334,6 @@ export function useDevtoolsActions() {
           return;
         case "notifications:clear":
           void clearNotifications();
-          return;
-        case "countdown:note-60":
-          void createWithCountdown(60);
-          return;
-        case "countdown:note-300":
-          void createWithCountdown(300);
-          return;
-        case "countdown:zoom-60":
-          void createWithCountdown(60, "https://zoom.us/j/1234567890");
-          return;
-        case "countdown:zoom-300":
-          void createWithCountdown(300, "https://zoom.us/j/1234567890");
           return;
         case "data:recurring-notes":
           void seedRecurringNotes();
@@ -509,11 +347,9 @@ export function useDevtoolsActions() {
       clearNotifications,
       clearOtaPreview,
       clearToastPreview,
-      createWithCountdown,
       openNew,
       seedRecurringNotes,
       showAutoStopNotification,
-      showCalendarNotification,
       showMicDetectedNotification,
       showMicOptionsNotification,
       showOtaPreview,

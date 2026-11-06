@@ -56,7 +56,6 @@ describe("session SQLite queries", () => {
         owner_user_id: "user-1",
         created_at: "2026-08-24T09:00:00.000Z",
         folder_path: "",
-        event_json: "{}",
         title: "Planning",
         raw_body:
           '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Ready immediately"}]}]}',
