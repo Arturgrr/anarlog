@@ -1,6 +1,4 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useQuery } from "@tanstack/react-query";
-import { getIdentifier } from "@tauri-apps/api/app";
 import { platform } from "@tauri-apps/plugin-os";
 
 import { cn } from "@anlg/utils";
@@ -26,16 +24,11 @@ export function AppIconSelector() {
   const { t } = useLingui();
   const value = normalizeAppIconPreference(useConfigValue("app_icon"));
   const setAppIcon = useSetSettingValue("app_icon");
-  const { data: appIdentifier = "com.arturgrr.librelog" } = useQuery({
-    queryKey: ["tauri", "app-identifier"],
-    queryFn: getIdentifier,
-    staleTime: Infinity,
-  });
   const labels = {
     graphite: t`Graphite`,
     light: t`Light`,
   };
-  const selectedIconName = resolveAppIconName(value, appIdentifier);
+  const selectedIconName = resolveAppIconName(value);
 
   if (platform() !== "macos") {
     return null;

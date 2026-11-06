@@ -16,9 +16,6 @@ const writeStoredThemePreference = vi.hoisted(() => vi.fn());
 const setDockIcon = vi.hoisted(() =>
   vi.fn(async () => ({ status: "ok", data: null })),
 );
-const getIdentifier = vi.hoisted(() =>
-  vi.fn(async () => "com.arturgrr.librelog"),
-);
 const nativeTheme = vi.hoisted(() => vi.fn(async () => "light"));
 const setNativeTheme = vi.hoisted(() => vi.fn(async () => undefined));
 const onThemeChanged = vi.hoisted(() =>
@@ -32,8 +29,6 @@ const systemTheme = vi.hoisted(() => ({
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
 }));
-
-vi.mock("@tauri-apps/api/app", () => ({ getIdentifier }));
 
 vi.mock("@tauri-apps/api/window", () => ({
   getCurrentWindow: () => ({
@@ -84,8 +79,6 @@ describe("AppThemeProvider", () => {
     applyDocumentTheme.mockClear();
     writeStoredThemePreference.mockClear();
     setDockIcon.mockClear();
-    getIdentifier.mockReset();
-    getIdentifier.mockResolvedValue("com.arturgrr.librelog");
     nativeTheme.mockReset();
     nativeTheme.mockResolvedValue("light");
     setNativeTheme.mockReset();
@@ -146,38 +139,11 @@ describe("AppThemeProvider", () => {
   });
 
   it.each([
-    {
-      name: "dev channel default",
-      identifier: "com.arturgrr.librelog.dev",
-      appIcon: "default",
-      expected: "light",
-    },
-    {
-      name: "stable fallback",
-      identifier: new Error("unavailable"),
-      appIcon: "default",
-      expected: "graphite",
-    },
-    {
-      name: "removed icon variant",
-      identifier: "com.arturgrr.librelog",
-      appIcon: "anagram",
-      expected: "graphite",
-    },
-    {
-      name: "light selection",
-      identifier: "com.arturgrr.librelog",
-      appIcon: "light",
-      expected: "light",
-    },
+    { name: "removed icon variant", appIcon: "anagram", expected: "graphite" },
+    { name: "light selection", appIcon: "light", expected: "light" },
   ])("uses the $expected Dock icon for a $name", async (scenario) => {
     themeState.settingsReady = true;
     themeState.appIcon = scenario.appIcon;
-    if (scenario.identifier instanceof Error) {
-      getIdentifier.mockRejectedValue(scenario.identifier);
-    } else {
-      getIdentifier.mockResolvedValue(scenario.identifier);
-    }
 
     renderProvider();
 
