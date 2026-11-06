@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { commands as listenerCommands } from "@anlg/plugin-transcription";
 import { CircleNotch } from "@anlg/ui/components/icons";
 
+import { AboutSettingsView } from "./about";
 import { AppSettingsView } from "./app-settings";
 import { AudioSettingsView } from "./audio-settings";
 import {
@@ -281,6 +282,8 @@ function SettingsSectionContent({
           </div>
 
           <StorageSettingsView />
+
+          <AboutSettingsView />
         </>
       )}
 

@@ -325,6 +325,10 @@ msgstr "há uma semana"
 msgid "A whisper.cpp file from your disk"
 msgstr "Um arquivo whisper.cpp do seu disco"
 
+#: src/settings/general/about.tsx
+msgid "About"
+msgstr "Sobre"
+
 #: src/i18n/native-labels.tsx
 msgid "About {app}"
 msgstr "Sobre o {app}"
@@ -883,6 +887,7 @@ msgid "Best for this Mac"
 msgstr "Ideal para este Mac"
 
 #: src/chat/components/body/empty.tsx
+#: src/settings/general/about.tsx
 msgid "Beta"
 msgstr "Beta"
 
@@ -2968,6 +2973,10 @@ msgstr "O Librelog {0} está disponível"
 msgid "Librelog {0} is ready to install"
 msgstr "O Librelog {0} está pronto para instalar"
 
+#: src/settings/general/about.tsx
+msgid "Librelog {version}"
+msgstr "Librelog {version}"
+
 #: src/onboarding/permissions.tsx
 msgid "Librelog can hear others"
 msgstr "O Librelog pode ouvir os outros"
@@ -2991,6 +3000,10 @@ msgstr "O Librelog não conseguiu concluir a limpeza ou a recuperação do áudi
 #: src/stt/capture-lifecycle.ts
 msgid "Librelog could not finish saving the transcript. The recording was kept so you can try again."
 msgstr "O Librelog não conseguiu terminar de salvar a transcrição. A gravação foi mantida para que você possa tentar novamente."
+
+#: src/settings/general/about.tsx
+msgid "Librelog could not open that. Try again."
+msgstr "O Librelog não conseguiu abrir isso. Tente novamente."
 
 #: src/services/audio-cleanup.ts
 msgid "Librelog could not remove temporary audio and will retry cleanup automatically."
@@ -4534,6 +4547,10 @@ msgstr "Substituir por..."
 msgid "Report a Bug"
 msgstr "Reportar um Bug"
 
+#: src/settings/general/about.tsx
+msgid "Report a problem"
+msgstr "Relatar um problema"
+
 #: src/i18n/native-labels.tsx
 msgid "Report Bug"
 msgstr "Reportar Bug"
@@ -4892,6 +4909,10 @@ msgstr "Auto-hospedado"
 msgid "Send email"
 msgstr "Enviar e-mail"
 
+#: src/settings/general/about.tsx
+msgid "Send feedback"
+msgstr "Enviar feedback"
+
 #: src/chat/components/input/index.tsx
 msgid "Send message"
 msgstr "Enviar mensagem"
@@ -5028,11 +5049,15 @@ msgstr "Mostrar na pasta"
 msgid "Show Librelog in the Dock and app switcher."
 msgstr "Mostrar o Librelog no Dock e no alternador de apps."
 
+#: src/settings/general/about.tsx
+msgid "Show log files"
+msgstr "Mostrar arquivos de log"
+
 #: src/settings/appearance/time-format.tsx
 msgid "Show meeting times as 14:00 instead of 2:00 PM."
 msgstr "Mostrar os horários das reuniões como 14:00 em vez de 2:00 PM."
 
-#: src/settings/general/app-settings.tsx
+#: src/settings/general/about.tsx
 msgid "Show release notes"
 msgstr "Mostrar notas da versão"
 
@@ -5628,6 +5653,10 @@ msgstr "Este campo não informa se é editável. Copie seu último ditado em Con
 #: src/i18n/external-messages.ts
 msgid "This image would make the chat draft too large. Remove another image and try again."
 msgstr "Esta imagem deixaria o rascunho do chat grande demais. Remova outra imagem e tente novamente."
+
+#: src/settings/general/about.tsx
+msgid "This is a beta, so expect rough edges. Reports open a GitHub issue with your app version, macOS version, and chip filled in; nothing is sent until you submit it."
+msgstr "Esta é uma versão beta, então espere imperfeições. Os relatos abrem uma issue no GitHub com a versão do app, a versão do macOS e o chip já preenchidos; nada é enviado até você enviá-la."
 
 #: src/settings/ai/shared/list-apple-foundation.ts
 msgid "This Mac does not support Apple Intelligence."
