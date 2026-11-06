@@ -3,19 +3,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { open as selectFile } from "@tauri-apps/plugin-dialog";
 
 import { commands as localSttCommands } from "@anlg/plugin-local-stt";
-import { Check, CircleNotch, FolderOpen, X } from "@anlg/ui/components/icons";
+import { CircleNotch, FolderOpen, X } from "@anlg/ui/components/icons";
 import { toast } from "@anlg/ui/components/ui/toast";
-
-import type { HealthStatus } from "./health";
 
 import { setSettingValue, setSettingValues } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
 
-export function LocalFileModel({
-  healthStatus,
-}: {
-  healthStatus: HealthStatus["status"];
-}) {
+export function LocalFileModel() {
   const { t, i18n } = useLingui();
   const modelPath = useConfigValue("local_stt_model_path")?.trim() ?? "";
   const modelInfo = useQuery({
@@ -95,9 +89,9 @@ export function LocalFileModel({
         onClick={() => chooseModel.mutate()}
       >
         {chooseModel.isPending ? (
-          <CircleNotch className="size-4 shrink-0 animate-spin" />
+          <CircleNotch className="size-4 shrink-0 animate-spin" aria-hidden />
         ) : (
-          <FolderOpen className="size-4 shrink-0" />
+          <FolderOpen className="size-4 shrink-0" aria-hidden />
         )}
         <span className="min-w-0 flex-1 truncate text-sm">
           {filename || <Trans>Choose a .bin model</Trans>}
@@ -117,15 +111,8 @@ export function LocalFileModel({
           className="text-muted-foreground hover:text-foreground hover:bg-hover flex size-5 shrink-0 items-center justify-center rounded-sm"
           onClick={() => clearModel.mutate()}
         >
-          <X className="size-3.5" />
+          <X className="size-3.5" aria-hidden />
         </button>
-      ) : null}
-
-      {modelPath && healthStatus === "pending" ? (
-        <CircleNotch className="text-muted-foreground size-4 shrink-0 animate-spin" />
-      ) : null}
-      {modelPath && healthStatus === "success" ? (
-        <Check className="text-foreground size-4 shrink-0" />
       ) : null}
     </div>
   );

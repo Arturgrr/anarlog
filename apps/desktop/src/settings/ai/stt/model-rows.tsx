@@ -1,0 +1,352 @@
+import { Trans, useLingui } from "@lingui/react/macro";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+
+import {
+  commands as localSttCommands,
+  type LocalModel,
+} from "@anlg/plugin-local-stt";
+import { commands as openerCommands } from "@anlg/plugin-opener2";
+import {
+  Check,
+  CircleNotch,
+  DownloadSimple,
+  FolderOpen,
+  Trash,
+  Warning,
+} from "@anlg/ui/components/icons";
+import { Button } from "@anlg/ui/components/ui/button";
+
+import type { SttMode, SttModelEntry } from "./catalog";
+import { useSttSettings } from "./context";
+import { formatLanguageList, type LanguageSupport } from "./language-support";
+import {
+  displayModelLabel,
+  formatDownloadProgress,
+  formatModelSize,
+  sttModelQueries,
+} from "./shared";
+
+import { useNotifications } from "~/contexts/notifications";
+import { Chip } from "~/settings/ai/shared/chip";
+import { ModelOption } from "~/settings/ai/shared/model-options";
+import { DestructiveConfirmationDialog } from "~/shared/ui/destructive-confirmation-dialog";
+import {
+  canAppleSpeechTranscribe,
+  isSupportedLocalSttModel,
+} from "~/stt/capabilities";
+
+export function ModeChip({ mode }: { mode: SttMode }) {
+  const { t } = useLingui();
+  return mode === "live" ? (
+    <Chip title={t`Can transcribe while the meeting is happening.`}>
+      <Trans>Live</Trans>
+    </Chip>
+  ) : (
+    <Chip title={t`Runs after the recording finishes, not during the meeting.`}>
+      <Trans>After recording</Trans>
+    </Chip>
+  );
+}
+
+export function SttModelRow({
+  provider,
+  model,
+  checked,
+  tabbable,
+  selectable,
+  support,
+  languages,
+  willBeUsedAfterDownload,
+  onSelect,
+}: {
+  provider: string;
+  model: SttModelEntry;
+  checked: boolean;
+  tabbable: boolean;
+  selectable: boolean;
+  support: LanguageSupport | undefined;
+  languages: readonly string[];
+  willBeUsedAfterDownload: boolean;
+  onSelect: () => void;
+}) {
+  const label = displayModelLabel(model.id, model.displayName);
+  const isLocal = isSupportedLocalSttModel(model.id);
+
+  return (
+    <ModelOption
+      name={label}
+      checked={checked}
+      disabled={!selectable || !model.isDownloaded}
+      tabbable={tabbable}
+      onSelect={onSelect}
+      chips={
+        <>
+          <ModeChip mode={model.mode} />
+          {model.isDeprecated ? (
+            <Chip>
+              <Trans>Deprecated</Trans>
+            </Chip>
+          ) : null}
+          {model.isRecommended ? (
+            <Chip emphasis>
+              <Trans>Best for this Mac</Trans>
+            </Chip>
+          ) : null}
+        </>
+      }
+      description={model.description}
+      details={
+        <>
+          <LanguageSupportLine
+            model={model.id}
+            support={support}
+            languages={languages}
+          />
+          {willBeUsedAfterDownload ? (
+            <span className="text-muted-foreground text-xs">
+              <Trans>
+                Librelog switches to this model when the download finishes.
+              </Trans>
+            </span>
+          ) : null}
+        </>
+      }
+      aside={
+        isLocal ? (
+          <LocalModelActions
+            provider={provider}
+            model={model.id as LocalModel}
+            label={label}
+            isDownloaded={model.isDownloaded}
+            sizeBytes={model.sizeBytes}
+          />
+        ) : undefined
+      }
+    />
+  );
+}
+
+export function LanguageSupportLine({
+  model,
+  support,
+  languages,
+}: {
+  model: string;
+  support: LanguageSupport | undefined;
+  languages: readonly string[];
+}) {
+  const { i18n } = useLingui();
+
+  if (!support || languages.length === 0) {
+    return null;
+  }
+
+  if (support.supported) {
+    return (
+      <span className="flex items-center gap-1.5 text-xs">
+        <Check className="size-3.5 shrink-0" aria-hidden />
+        <Trans>Transcribes {formatLanguageList(languages, i18n)}</Trans>
+      </span>
+    );
+  }
+
+  const appleSettingsLanguages =
+    model === "apple-speech"
+      ? support.unsupportedLanguages.filter(canAppleSpeechTranscribe)
+      : [];
+
+  return (
+    <span className="text-muted-foreground flex items-start gap-1.5 text-xs">
+      <Warning className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+      <span>
+        {appleSettingsLanguages.length > 0 ? (
+          <Trans>
+            Add {formatLanguageList(appleSettingsLanguages, i18n)} in System
+            Settings › General › Language & Region to use it.
+          </Trans>
+        ) : support.unsupportedLanguages.length > 0 ? (
+          <Trans>
+            Can’t transcribe{" "}
+            {formatLanguageList(support.unsupportedLanguages, i18n)}.
+          </Trans>
+        ) : (
+          <Trans>Can’t transcribe all your languages together.</Trans>
+        )}
+      </span>
+    </span>
+  );
+}
+
+function LocalModelActions({
+  provider,
+  model,
+  label,
+  isDownloaded,
+  sizeBytes,
+}: {
+  provider: string;
+  model: LocalModel;
+  label: string;
+  isDownloaded: boolean;
+  sizeBytes?: number | null;
+}) {
+  const { t } = useLingui();
+  const queryClient = useQueryClient();
+  const { activeDownloads } = useNotifications();
+  const { startDownload, cancelDownload, queuedDownloads } = useSttSettings();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const download = activeDownloads.find((entry) => entry.model === model);
+  const isDownloading = !!download || queuedDownloads.includes(model);
+  const sizeLabel = formatModelSize(sizeBytes);
+
+  const cancel = useMutation({ mutationFn: () => cancelDownload(model) });
+  const showInFinder = useMutation({
+    mutationFn: async () => {
+      const result = String(model).startsWith("soniqo-")
+        ? await localSttCommands.soniqoModelDir(model)
+        : await localSttCommands.modelsDir();
+      if (result.status === "error") {
+        throw new Error(result.error);
+      }
+      await openerCommands.openPath(result.data, null);
+    },
+  });
+  const deleteModel = useMutation({
+    mutationFn: async () => {
+      const result = await localSttCommands.deleteModel(model);
+      if (result.status === "error") {
+        throw new Error(result.error);
+      }
+    },
+    onSuccess: async () => {
+      setConfirmingDelete(false);
+      await queryClient.invalidateQueries({
+        queryKey: sttModelQueries.isDownloaded(model).queryKey,
+      });
+    },
+  });
+  const error = cancel.error ?? showInFinder.error ?? deleteModel.error;
+
+  if (isDownloading) {
+    const progress = download && !download.isStarting ? download.progress : 0;
+    const progressLabel = formatDownloadProgress(progress);
+
+    return (
+      <>
+        <span className="text-faint font-mono text-xs">
+          {progressLabel ? (
+            <Trans>Downloading · {progressLabel}</Trans>
+          ) : (
+            <Trans>Starting download…</Trans>
+          )}
+        </span>
+        <div
+          role="progressbar"
+          aria-label={t`Downloading ${label}`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress)}
+          className="bg-layer-2 h-1 w-40 overflow-hidden rounded-full"
+        >
+          <div
+            className="bg-foreground h-full transition-[width] duration-300"
+            style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={cancel.isPending}
+          onClick={() => cancel.mutate()}
+        >
+          <Trans>Cancel download</Trans>
+        </Button>
+        {error ? <ActionError message={error.message} /> : null}
+      </>
+    );
+  }
+
+  if (!isDownloaded) {
+    return (
+      <>
+        {sizeLabel ? (
+          <span className="text-faint font-mono text-xs">{sizeLabel}</span>
+        ) : null}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label={t`Download ${label}`}
+          onClick={() => startDownload(model, provider)}
+        >
+          <DownloadSimple className="size-3.5" aria-hidden />
+          <Trans>Download</Trans>
+        </Button>
+        {error ? <ActionError message={error.message} /> : null}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <span className="text-faint font-mono text-xs">
+        {sizeLabel ? (
+          <Trans>{sizeLabel} · downloaded</Trans>
+        ) : (
+          <Trans>Downloaded</Trans>
+        )}
+      </span>
+      <div className="flex gap-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => showInFinder.mutate()}
+        >
+          <FolderOpen className="size-3.5" aria-hidden />
+          <Trans>Show in Finder</Trans>
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label={t`Delete ${label}`}
+          onClick={() => setConfirmingDelete(true)}
+        >
+          {deleteModel.isPending ? (
+            <CircleNotch className="size-3.5 animate-spin" aria-hidden />
+          ) : (
+            <Trash className="size-3.5" aria-hidden />
+          )}
+          <Trans>Delete</Trans>
+        </Button>
+      </div>
+      {error ? <ActionError message={error.message} /> : null}
+      <DestructiveConfirmationDialog
+        open={confirmingDelete}
+        onOpenChange={setConfirmingDelete}
+        title={<Trans>Delete {label}?</Trans>}
+        description={
+          <Trans>
+            The model files are removed from this Mac. You can download them
+            again later.
+          </Trans>
+        }
+        confirmLabel={<Trans>Delete model</Trans>}
+        isPending={deleteModel.isPending}
+        confirmVariant="default"
+        onConfirm={() => deleteModel.mutate()}
+      />
+    </>
+  );
+}
+
+function ActionError({ message }: { message: string }) {
+  return (
+    <span role="alert" className="text-danger max-w-48 text-right text-xs">
+      {message}
+    </span>
+  );
+}

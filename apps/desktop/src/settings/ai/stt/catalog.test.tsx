@@ -24,7 +24,7 @@ vi.mock("~/shared/config", async (importOriginal) => ({
   useConfigValues: () => ({ local_stt_model_path: "" }),
 }));
 
-import { useConfiguredMapping } from "./select";
+import { useSttCatalog } from "./catalog";
 
 afterEach(cleanup);
 
@@ -38,7 +38,7 @@ test.each([true, false])(
     client.setQueryData(["list-supported-models"], []);
     useProviderAvailabilityMock.mockReturnValue({ deepgram: undefined });
 
-    const { result, rerender } = renderHook(useConfiguredMapping, {
+    const { result, rerender } = renderHook(useSttCatalog, {
       wrapper: ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={client}>{children}</QueryClientProvider>
       ),

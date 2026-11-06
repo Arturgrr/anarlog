@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import { getLlmProviderStatus } from "./select";
 import { PROVIDERS } from "./shared";
+import { getLlmProviderStatus } from "./status";
 
 import { SUBSCRIPTION_BADGE } from "~/settings/ai/shared/provider-labels";
 
