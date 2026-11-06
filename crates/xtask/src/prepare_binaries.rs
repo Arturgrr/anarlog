@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use std::{env, fs, process::Command};
+use std::{env, fs, path::PathBuf, process::Command};
 use xshell::{Shell, cmd};
 
 pub(crate) fn prepare_binaries() -> Result<()> {
@@ -21,6 +21,7 @@ pub(crate) fn prepare_binaries() -> Result<()> {
 
     let sh = Shell::new()?;
     sh.change_dir(&src_tauri);
+    let target_dir = target_dir(&sh, &cargo)?;
     cmd!(
         sh,
         "{cargo} build --release --target {triple} -p chrome-native-host"
@@ -29,8 +30,7 @@ pub(crate) fn prepare_binaries() -> Result<()> {
 
     fs::create_dir_all(&binaries_dir).context("create binaries/")?;
 
-    let src = src_tauri
-        .join("target")
+    let src = target_dir
         .join(&triple)
         .join("release")
         .join(format!("librelog-chrome-native-host{ext}"));
@@ -47,8 +47,7 @@ pub(crate) fn prepare_binaries() -> Result<()> {
 
     fs::create_dir_all(&embedded_cli_dir).context("create resources/cli/")?;
 
-    let src = src_tauri
-        .join("target")
+    let src = target_dir
         .join(&triple)
         .join("release")
         .join(format!("librelog{ext}"));
@@ -57,6 +56,21 @@ pub(crate) fn prepare_binaries() -> Result<()> {
 
     println!("prepare-binaries: resources/cli/librelog-cli-{triple}{ext}");
     Ok(())
+}
+
+// The desktop crate is a workspace member, so its builds land in the workspace
+// target directory (or CARGO_TARGET_DIR), never in src-tauri/target.
+fn target_dir(sh: &Shell, cargo: &str) -> Result<PathBuf> {
+    let metadata = cmd!(sh, "{cargo} metadata --format-version 1 --no-deps")
+        .quiet()
+        .read()
+        .context("run cargo metadata")?;
+    let metadata: serde_json::Value =
+        serde_json::from_str(&metadata).context("parse cargo metadata")?;
+    let dir = metadata["target_directory"]
+        .as_str()
+        .context("cargo metadata has no target_directory")?;
+    Ok(PathBuf::from(dir))
 }
 
 fn rustc_host_triple() -> Result<String> {

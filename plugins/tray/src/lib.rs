@@ -1,5 +1,6 @@
 mod commands;
 mod ext;
+mod feedback;
 mod labels;
 mod macos_position;
 mod menu_items;

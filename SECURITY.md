@@ -2,12 +2,12 @@
 
 ## Supported Versions
 
-Security fixes are applied to the latest release only.
+Security fixes are applied to the latest release only, including beta releases such as `0.1.0-beta.N`.
 
-| Version        | Supported          |
-| -------------- | ------------------ |
-| Latest release | :white_check_mark: |
-| Older versions | :x:                |
+| Version                         | Supported          |
+| ------------------------------- | ------------------ |
+| Latest release (beta or stable) | :white_check_mark: |
+| Older versions                  | :x:                |
 
 If you're on an older version, update to the latest release before reporting an issue you can no longer reproduce.
 

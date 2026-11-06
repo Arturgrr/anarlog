@@ -1,9 +1,0 @@
-{
-  "plugins": {
-    "updater": {
-      "endpoints": [
-        "https://github.com/Arturgrr/librelog/releases/latest/download/latest.json"
-      ]
-    }
-  }
-}

@@ -315,6 +315,10 @@ msgstr ""
 msgid "A whisper.cpp file from your disk"
 msgstr ""
 
+#: src/settings/general/about.tsx
+msgid "About"
+msgstr ""
+
 #: src/i18n/native-labels.tsx
 msgid "About {app}"
 msgstr ""
@@ -881,6 +885,7 @@ msgid "Best for this Mac"
 msgstr ""
 
 #: src/chat/components/body/empty.tsx
+#: src/settings/general/about.tsx
 msgid "Beta"
 msgstr ""
 
@@ -2966,6 +2971,10 @@ msgstr ""
 msgid "Librelog {0} is ready to install"
 msgstr ""
 
+#: src/settings/general/about.tsx
+msgid "Librelog {version}"
+msgstr ""
+
 #: src/onboarding/permissions.tsx
 msgid "Librelog can hear others"
 msgstr ""
@@ -2988,6 +2997,10 @@ msgstr ""
 
 #: src/stt/capture-lifecycle.ts
 msgid "Librelog could not finish saving the transcript. The recording was kept so you can try again."
+msgstr ""
+
+#: src/settings/general/about.tsx
+msgid "Librelog could not open that. Try again."
 msgstr ""
 
 #: src/services/audio-cleanup.ts
@@ -4552,6 +4565,10 @@ msgstr ""
 msgid "Report a Bug"
 msgstr ""
 
+#: src/settings/general/about.tsx
+msgid "Report a problem"
+msgstr ""
+
 #: src/i18n/native-labels.tsx
 msgid "Report Bug"
 msgstr ""
@@ -4910,6 +4927,10 @@ msgstr ""
 msgid "Send email"
 msgstr ""
 
+#: src/settings/general/about.tsx
+msgid "Send feedback"
+msgstr ""
+
 #: src/chat/components/input/index.tsx
 msgid "Send message"
 msgstr ""
@@ -5046,11 +5067,15 @@ msgstr ""
 msgid "Show Librelog in the Dock and app switcher."
 msgstr ""
 
+#: src/settings/general/about.tsx
+msgid "Show log files"
+msgstr ""
+
 #: src/settings/appearance/time-format.tsx
 msgid "Show meeting times as 14:00 instead of 2:00 PM."
 msgstr "Mostra les hores de les reunions com a 14:00 en lloc de 2:00 PM."
 
-#: src/settings/general/app-settings.tsx
+#: src/settings/general/about.tsx
 msgid "Show release notes"
 msgstr ""
 
@@ -5645,6 +5670,10 @@ msgstr ""
 
 #: src/i18n/external-messages.ts
 msgid "This image would make the chat draft too large. Remove another image and try again."
+msgstr ""
+
+#: src/settings/general/about.tsx
+msgid "This is a beta, so expect rough edges. Reports open a GitHub issue with your app version, macOS version, and chip filled in; nothing is sent until you submit it."
 msgstr ""
 
 #: src/settings/ai/shared/list-apple-foundation.ts

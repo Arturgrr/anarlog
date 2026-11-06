@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Arturgrr/librelog/security/advisories/new
+    about: Report security problems privately instead of in a public issue.
+  - name: Install and first-launch help
+    url: https://github.com/Arturgrr/librelog#install
+    about: Read this first if macOS blocks Librelog or asks for permissions again.
