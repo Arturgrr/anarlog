@@ -18,6 +18,7 @@ import {
 } from "./config";
 import { FinalDescription, FinalSection, finishOnboarding } from "./final";
 import { ImportSection } from "./imports";
+import { WelcomeLanguagePicker } from "./language-picker";
 import { PermissionsSection } from "./permissions";
 import { OnboardingSection } from "./shared";
 
@@ -157,8 +158,9 @@ function OnboardingScreenContent({
 
       <div
         data-tauri-drag-region={headerDragRegion || undefined}
-        className="relative z-30 flex h-12 shrink-0 items-center justify-end pr-3 pl-12"
+        className="relative z-30 flex h-12 shrink-0 items-center justify-end gap-1 pr-3 pl-12"
       >
+        <WelcomeLanguagePicker />
         <button
           onClick={() => setIsMuted((prev) => !prev)}
           data-tauri-drag-region="false"
