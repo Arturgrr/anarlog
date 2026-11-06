@@ -16,7 +16,7 @@ import {
   usesWindowsStyleTitleBar,
   useWindowControlsGutter,
   WINDOW_CONTROLS_GUTTER_CLASS,
-  WINDOW_CONTROLS_GUTTER_PLUS_32_CLASS,
+  WINDOW_CONTROLS_GUTTER_PLUS_40_CLASS,
 } from "~/shared/hooks/useWindowControlsGutter";
 import type { EditorView, Tab } from "~/store/zustand/tabs/schema";
 import { useListener } from "~/stt/contexts";
@@ -66,8 +66,8 @@ export function OuterHeader({
         !standaloneWindow && !showSidebarTimelineHeaderGutter && "pl-2",
         showSidebarTimelineHeaderGutter &&
           (showWindowControlsGutter
-            ? WINDOW_CONTROLS_GUTTER_PLUS_32_CLASS
-            : "pl-[32px]"),
+            ? WINDOW_CONTROLS_GUTTER_PLUS_40_CLASS
+            : "pl-[40px]"),
       ])}
     >
       {viewSwitcher}

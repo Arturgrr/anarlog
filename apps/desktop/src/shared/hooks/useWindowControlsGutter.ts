@@ -11,8 +11,8 @@ export const WINDOW_CONTROLS_GUTTER_CLASS =
   "pl-[calc(76px_/_var(--anlg-zoom,1))]";
 export const WINDOW_CONTROLS_GUTTER_PLUS_28_CLASS =
   "left-[calc(76px_/_var(--anlg-zoom,1)_+_28px)]";
-export const WINDOW_CONTROLS_GUTTER_PLUS_32_CLASS =
-  "pl-[calc(76px_/_var(--anlg-zoom,1)_+_32px)]";
+export const WINDOW_CONTROLS_GUTTER_PLUS_40_CLASS =
+  "pl-[calc(76px_/_var(--anlg-zoom,1)_+_40px)]";
 export const WINDOW_CONTROLS_GUTTER_PLUS_80_CLASS =
   "pl-[calc(76px_/_var(--anlg-zoom,1)_+_80px)]";
 export const WINDOW_CONTROLS_SIDEBAR_MIN_WIDTH =
