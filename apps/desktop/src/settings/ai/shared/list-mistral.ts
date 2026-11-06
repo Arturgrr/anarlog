@@ -2,6 +2,7 @@ import { Effect, pipe, Schema } from "effect";
 
 import {
   DEFAULT_RESULT,
+  listModelsFailure,
   extractMetadataMap,
   fetchJson,
   type InputModality,
@@ -82,7 +83,7 @@ export async function listMistralModels(
       };
     }),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }

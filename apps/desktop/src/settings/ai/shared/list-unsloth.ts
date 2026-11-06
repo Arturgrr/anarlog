@@ -2,7 +2,7 @@ import { Effect, pipe, Schema } from "effect";
 
 import {
   DEFAULT_RESULT,
-  extractMetadataMap,
+  listModelsFailure,
   fetchJson,
   type ListModelsResult,
   type ModelIgnoreReason,
@@ -32,7 +32,7 @@ export async function listUnslothModels(
     Effect.andThen((json) => Schema.decodeUnknown(UnslothModelSchema)(json)),
     Effect.map(({ data }) => processUnslothModels(data)),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }
@@ -67,10 +67,6 @@ export function processUnslothModels(
   return {
     models: [...models].sort((a, b) => a.localeCompare(b)),
     ignored,
-    metadata: extractMetadataMap(
-      data,
-      (model) => model.id,
-      () => ({ input_modalities: ["text"] }),
-    ),
+    metadata: {},
   };
 }

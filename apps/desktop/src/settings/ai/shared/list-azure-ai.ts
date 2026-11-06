@@ -2,7 +2,7 @@ import { Effect, pipe, Schema } from "effect";
 
 import {
   DEFAULT_RESULT,
-  extractMetadataMap,
+  listModelsFailure,
   fetchJson,
   isOldModel,
   type ListModelsResult,
@@ -56,15 +56,11 @@ export async function listAzureAIModels(
       return {
         models: sortModelsByRecency(result.models),
         ignored: result.ignored,
-        metadata: extractMetadataMap(
-          data,
-          (model) => model.id,
-          (_model) => ({ input_modalities: ["text", "image"] }),
-        ),
+        metadata: {},
       };
     }),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }

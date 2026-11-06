@@ -2,9 +2,8 @@ import { Effect, pipe, Schema } from "effect";
 
 import {
   DEFAULT_RESULT,
-  extractMetadataMap,
+  listModelsFailure,
   fetchJson,
-  type InputModality,
   isOldModel,
   type ListModelsResult,
   type ModelIgnoreReason,
@@ -73,19 +72,11 @@ export async function listAnthropicModels(
       return {
         models: sortModelsByRecency(result.models),
         ignored: result.ignored,
-        metadata: extractMetadataMap(
-          data,
-          (model) => model.id,
-          (model) => ({ input_modalities: getInputModalities(model.id) }),
-        ),
+        metadata: {},
       };
     }),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }
-
-const getInputModalities = (_modelId: string): InputModality[] => {
-  return ["text", "image"];
-};

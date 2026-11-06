@@ -12,7 +12,7 @@ import {
 import { listAnthropicModels } from "~/settings/ai/shared/list-anthropic";
 import {
   DEFAULT_RESULT,
-  extractMetadataMap,
+  listModelsFailure,
   fetchJson,
   type ListModelsResult,
   REQUEST_TIMEOUT,
@@ -58,17 +58,7 @@ function withFallback(
     return result;
   }
 
-  const models = FALLBACK_MODELS[providerId];
-  return {
-    models,
-    ignored: result.ignored,
-    metadata: Object.fromEntries(
-      models.map((id) => [
-        id,
-        { input_modalities: ["text", "image"] as const },
-      ]),
-    ),
-  };
+  return { ...result, models: FALLBACK_MODELS[providerId] };
 }
 
 export async function listSubscriptionModels(
@@ -144,15 +134,11 @@ async function listChatgptModels(
       return {
         models,
         ignored: [],
-        metadata: extractMetadataMap(
-          catalog,
-          (model) => model.slug,
-          () => ({ input_modalities: ["text", "image"] as const }),
-        ),
+        metadata: {},
       };
     }),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }
@@ -185,15 +171,11 @@ async function listCopilotModels(
       return {
         models,
         ignored: [],
-        metadata: extractMetadataMap(
-          data,
-          (model) => model.id,
-          () => ({ input_modalities: ["text", "image"] as const }),
-        ),
+        metadata: {},
       };
     }),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }
