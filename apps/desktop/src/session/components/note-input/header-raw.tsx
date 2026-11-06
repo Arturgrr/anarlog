@@ -96,22 +96,23 @@ function HeaderViewRawActive({
   sessionId: string;
   standalone: boolean;
 }) {
+  const { t } = useLingui();
   const memoMarkdown = useMemo(() => getStoredNoteMarkdown(rawMd), [rawMd]);
   const contextMenu = useMemo<MenuItemDef[]>(
     () => [
       {
         id: `copy-memo-${sessionId}`,
-        text: "Copy",
+        text: t`Copy`,
         action: () => {
           void copyTextToClipboard(memoMarkdown, {
-            success: "Memo copied to clipboard",
-            error: "Failed to copy memo",
+            success: t`Memo copied to clipboard`,
+            error: t`Failed to copy memo`,
           });
         },
         disabled: memoMarkdown.length === 0,
       },
     ],
-    [memoMarkdown, sessionId],
+    [memoMarkdown, sessionId, t],
   );
   const showContextMenu = useNativeContextMenu(contextMenu);
 

@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { memo, type ReactNode } from "react";
 
 import {
@@ -65,6 +66,7 @@ function SidebarTimelineChrome({
   sidebarExpanded: boolean;
   showSidebarToggle: boolean;
 }) {
+  const { t } = useLingui();
   const collapsedBadge = !sidebarExpanded
     ? hasUpcomingMeeting
       ? "upcomingMeeting"
@@ -76,7 +78,7 @@ function SidebarTimelineChrome({
       <div data-tauri-drag-region className="flex items-center gap-0">
         {showSidebarToggle && (
           <LeftSurfaceChromeButton
-            ariaLabel={sidebarExpanded ? "Hide sidebar" : "Show sidebar"}
+            ariaLabel={sidebarExpanded ? t`Hide sidebar` : t`Show sidebar`}
             badge={collapsedBadge}
             onClick={onToggleSidebar}
           >
@@ -102,12 +104,14 @@ export function SidebarNoteActions({
   onNewNote: () => void;
   onSearch: () => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <>
-      <LeftSurfaceChromeButton ariaLabel="Search" onClick={onSearch}>
+      <LeftSurfaceChromeButton ariaLabel={t`Search`} onClick={onSearch}>
         <MagnifyingGlass size={15} />
       </LeftSurfaceChromeButton>
-      <LeftSurfaceChromeButton ariaLabel="New note" onClick={onNewNote}>
+      <LeftSurfaceChromeButton ariaLabel={t`New note`} onClick={onNewNote}>
         <NotePencil size={15} />
       </LeftSurfaceChromeButton>
       <SidebarNoteFilterMenu />

@@ -1,4 +1,5 @@
 import { Chat, useChat } from "@ai-sdk/react";
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import type { ChatStatus, ChatTransport, LanguageModel, ToolSet } from "ai";
 import {
@@ -749,7 +750,7 @@ function ChatSessionLifecycle({
 
 const unavailableChatTransport: ChatTransport<AnlgUIMessage> = {
   sendMessages: async () => {
-    throw new Error("Chat model is not ready");
+    throw new Error(t`Chat model is not ready`);
   },
   reconnectToStream: async () => null,
 };

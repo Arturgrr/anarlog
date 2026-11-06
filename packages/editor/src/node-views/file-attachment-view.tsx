@@ -16,6 +16,7 @@ import {
 } from "@anlg/ui/components/icons";
 import { cn } from "@anlg/utils";
 
+import { useEditorLabels } from "../labels";
 import {
   useAttachmentEditingEnabled,
   useAttachmentResolver,
@@ -99,6 +100,7 @@ export const FileAttachmentView = forwardRef<
   HTMLDivElement,
   NodeViewComponentProps
 >(function FileAttachmentView({ nodeProps, ...htmlAttrs }, ref) {
+  const labels = useEditorLabels();
   const { node, getPos } = nodeProps;
   const resolveAttachment = useAttachmentResolver();
   const attachmentEditingEnabled = useAttachmentEditingEnabled();
@@ -179,7 +181,7 @@ export const FileAttachmentView = forwardRef<
                 handleOpen();
               }}
               className="hover:bg-hover rounded-sm p-1"
-              title="Open file"
+              title={labels.openFile}
             >
               <ArrowSquareOut size={14} className="text-muted-foreground" />
             </button>
@@ -193,7 +195,7 @@ export const FileAttachmentView = forwardRef<
                 handleRemove();
               }}
               className="hover:bg-hover rounded-sm p-1"
-              title="Remove attachment"
+              title={labels.removeAttachment}
             >
               <X size={14} className="text-muted-foreground" />
             </button>

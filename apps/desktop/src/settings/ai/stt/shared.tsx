@@ -1,3 +1,5 @@
+import { i18n, type MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import {
   AlibabaCloud,
   AssemblyAI,
@@ -27,6 +29,7 @@ import { Cpu, Shuffle, Waveform } from "@anlg/ui/components/icons";
 
 import { ProviderBrandImage, ProviderLobeIcon } from "~/settings/ai/shared";
 import { type ProviderRequirement } from "~/settings/ai/shared/eligibility";
+import { AFTER_RECORDING_BADGE } from "~/settings/ai/shared/provider-labels";
 import { sortProviders } from "~/settings/ai/shared/sort-providers";
 import { localSttQueries } from "~/stt/useLocalSttModel";
 
@@ -37,15 +40,15 @@ type Provider = {
   disabled: boolean;
   id: string;
   displayName: string;
-  description?: string;
+  description?: MessageDescriptor;
   icon: ReactNode;
   baseUrl?: string;
   models: LocalModel[] | string[];
-  badge?: string | null;
+  badge?: MessageDescriptor | null;
   requirements: ProviderRequirement[];
   links?: {
-    models?: { label: string; url: string };
-    setup?: { label: string; url: string };
+    models?: { label: MessageDescriptor; url: string };
+    setup?: { label: MessageDescriptor; url: string };
   };
 };
 
@@ -370,7 +373,7 @@ export function formatModelSize(sizeBytes?: number | null) {
   const value =
     unit === "GB" ? sizeBytes / 1024 / 1024 / 1024 : sizeBytes / 1024 / 1024;
 
-  return `~${value.toLocaleString(undefined, {
+  return `~${value.toLocaleString(i18n.locale, {
     maximumFractionDigits: value >= 10 ? 0 : 1,
   })} ${unit}`;
 }
@@ -380,7 +383,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "soniqo",
     displayName: "Soniqo",
-    badge: "On device",
+    badge: msg`On device`,
     baseUrl: "",
     builtIn: true,
     icon: <Waveform />,
@@ -391,7 +394,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "apple_speech",
     displayName: "Apple Speech",
-    badge: "On device",
+    badge: msg`On device`,
     baseUrl: "",
     builtIn: true,
     icon: <ProviderLobeIcon icon={Apple} />,
@@ -402,7 +405,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "local_file",
     displayName: "BYO-model",
-    badge: "On device",
+    badge: msg`On device`,
     baseUrl: "",
     builtIn: true,
     icon: <Cpu />,
@@ -425,11 +428,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://developers.deepgram.com/docs/models-languages-overview",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://console.deepgram.com/",
       },
     },
@@ -445,11 +448,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://www.assemblyai.com/docs/speech-to-text",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://www.assemblyai.com/dashboard",
       },
     },
@@ -470,11 +473,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://platform.openai.com/docs/guides/speech-to-text",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://platform.openai.com/api-keys",
       },
     },
@@ -483,7 +486,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "openrouter",
     displayName: "OpenRouter",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: <ProviderLobeIcon icon={OpenRouter} />,
     baseUrl: "https://openrouter.ai/api/v1",
     models: [
@@ -509,11 +512,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://openrouter.ai/models?output_modalities=transcription",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://openrouter.ai/settings/keys",
       },
     },
@@ -533,11 +536,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://www.alibabacloud.com/help/en/model-studio/real-time-speech-recognition-user-guide",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://www.alibabacloud.com/help/en/model-studio/get-api-key",
       },
     },
@@ -546,18 +549,18 @@ const _PROVIDERS = [
     disabled: false,
     id: "zai",
     displayName: "Z.AI",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: <ProviderLobeIcon icon={ZAI} />,
     baseUrl: "https://api.z.ai/api/paas/v4",
     models: ["glm-asr-2512"],
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.z.ai/guides/audio/glm-asr-2512",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.z.ai/api-reference/introduction",
       },
     },
@@ -566,18 +569,18 @@ const _PROVIDERS = [
     disabled: false,
     id: "siliconflow",
     displayName: "SiliconFlow",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: <ProviderLobeIcon icon={SiliconCloud} />,
     baseUrl: "https://api.siliconflow.com/v1",
     models: ["FunAudioLLM/SenseVoiceSmall", "TeleAI/TeleSpeechASR"],
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.siliconflow.com/en/api-reference/audio/create-audio-transcriptions",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.siliconflow.com/en/userguide/quickstart",
       },
     },
@@ -586,18 +589,18 @@ const _PROVIDERS = [
     disabled: false,
     id: "groq",
     displayName: "Groq",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: <ProviderLobeIcon icon={Groq} />,
     baseUrl: "https://api.groq.com/openai/v1",
     models: ["whisper-large-v3-turbo", "whisper-large-v3"],
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://console.groq.com/docs/speech-to-text",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://console.groq.com/keys",
       },
     },
@@ -613,11 +616,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.x.ai/developers/model-capabilities/audio/speech-to-text",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://console.x.ai/",
       },
     },
@@ -639,10 +642,10 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "API documentation",
+        label: msg`API documentation`,
         url: "https://docs.inworld.ai/stt/overview",
       },
-      setup: { label: "API setup", url: "https://platform.inworld.ai/" },
+      setup: { label: msg`API setup`, url: "https://platform.inworld.ai/" },
     },
   },
   {
@@ -656,11 +659,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "API documentation",
+        label: msg`API documentation`,
         url: "https://docs.gradium.ai/guides/speech-to-text",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.gradium.ai/guides/introduction",
       },
     },
@@ -685,10 +688,10 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "API documentation",
+        label: msg`API documentation`,
         url: "https://docs.modulate.ai/get-started/stt",
       },
-      setup: { label: "API setup", url: "https://platform.modulate.ai/" },
+      setup: { label: msg`API setup`, url: "https://platform.modulate.ai/" },
     },
   },
   {
@@ -708,11 +711,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "API documentation",
+        label: msg`API documentation`,
         url: "https://www.alebex.ai/models-speech-to-text",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://www.alebex.ai/models-api-access",
       },
     },
@@ -721,18 +724,18 @@ const _PROVIDERS = [
     disabled: false,
     id: "nvidia",
     displayName: "NVIDIA Speech NIM",
-    badge: "Self-hosted",
+    badge: msg`Self-hosted`,
     icon: <ProviderLobeIcon icon={Nvidia} />,
     baseUrl: undefined,
     models: ["nemotron-asr-streaming"],
     requirements: [{ kind: "requires_config", fields: ["base_url"] }],
     links: {
       models: {
-        label: "API documentation",
+        label: msg`API documentation`,
         url: "https://docs.nvidia.com/nim/speech/latest/reference/api-references/asr/realtime-asr.html",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.nvidia.com/nim/speech/latest/get-started/tutorials/asr.html",
       },
     },
@@ -741,7 +744,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "amazon_bedrock",
     displayName: "Amazon Bedrock",
-    badge: "Gateway",
+    badge: msg`Gateway`,
     icon: <ProviderLobeIcon icon={Bedrock} />,
     baseUrl: undefined,
     models: ["amazon.nova-2-sonic-v1:0"],
@@ -750,11 +753,11 @@ const _PROVIDERS = [
     ],
     links: {
       models: {
-        label: "API documentation",
+        label: msg`API documentation`,
         url: "https://docs.aws.amazon.com/nova/latest/nova2-userguide/sonic-getting-started.html",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.aws.amazon.com/bedrock/latest/userguide/models-api-compatibility.html",
       },
     },
@@ -776,10 +779,10 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Models & Pricing",
+        label: msg`Models & Pricing`,
         url: "https://docs.narilabs.com/models-and-pricing",
       },
-      setup: { label: "API Keys", url: "https://app.narilabs.com/keys" },
+      setup: { label: msg`API Keys`, url: "https://app.narilabs.com/keys" },
     },
   },
   {
@@ -799,10 +802,10 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "API documentation",
+        label: msg`API documentation`,
         url: "https://api-docs.wisprflow.ai/introduction",
       },
-      setup: { label: "API Keys", url: "https://platform.wisprflow.ai" },
+      setup: { label: msg`API Keys`, url: "https://platform.wisprflow.ai" },
     },
   },
   {
@@ -818,11 +821,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.smallest.ai/models/documentation/speech-to-text-pulse/overview",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://app.smallest.ai/dashboard/api-keys",
       },
     },
@@ -831,7 +834,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "together",
     displayName: "Together AI",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: <ProviderLobeIcon icon={Together} />,
     baseUrl: "https://api.together.xyz/v1",
     models: [
@@ -843,11 +846,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.together.ai/docs/inference/transcription/overview",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://api.together.ai/settings/api-keys",
       },
     },
@@ -856,7 +859,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "speechmatics",
     displayName: "Speechmatics",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: (
       <ProviderBrandImage
         src="/assets/speechmatics-mark.svg"
@@ -868,11 +871,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.speechmatics.com/speech-to-text/batch/quickstart",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://portal.speechmatics.com/settings/api-keys",
       },
     },
@@ -881,7 +884,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "azure_speech",
     displayName: "Azure AI Speech",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: <ProviderLobeIcon icon={Azure} />,
     baseUrl: undefined,
     models: ["fast-transcription"],
@@ -890,11 +893,11 @@ const _PROVIDERS = [
     ],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://learn.microsoft.com/azure/ai-services/speech-service/fast-transcription-create",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://learn.microsoft.com/azure/ai-services/speech-service/get-started-speech-to-text",
       },
     },
@@ -903,18 +906,18 @@ const _PROVIDERS = [
     disabled: false,
     id: "google_cloud",
     displayName: "Google Cloud Speech-to-Text",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: <ProviderLobeIcon icon={GoogleCloud} />,
     baseUrl: "https://speech.googleapis.com/v1",
     models: ["latest_long"],
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://cloud.google.com/speech-to-text/docs/transcription-model",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://cloud.google.com/speech-to-text/docs/authentication",
       },
     },
@@ -930,11 +933,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://ai.google.dev/gemini-api/docs/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://aistudio.google.com/api-keys",
       },
     },
@@ -943,7 +946,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "aws_transcribe",
     displayName: "Amazon Transcribe",
-    badge: "Gateway",
+    badge: msg`Gateway`,
     icon: <ProviderLobeIcon icon={Aws} />,
     baseUrl: undefined,
     models: ["amazon-transcribe"],
@@ -952,11 +955,11 @@ const _PROVIDERS = [
     ],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.aws.amazon.com/transcribe/latest/dg/how-it-works.html",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.aws.amazon.com/transcribe/latest/dg/getting-started-http-websocket.html",
       },
     },
@@ -965,18 +968,18 @@ const _PROVIDERS = [
     disabled: false,
     id: "revai",
     displayName: "Rev AI",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: <ProviderBrandImage src="/assets/revai-mark.svg" alt="Rev AI" />,
     baseUrl: "https://api.rev.ai/speechtotext/v1",
     models: ["machine"],
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.rev.ai/api/asynchronous/get-started",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://www.rev.ai/access_token",
       },
     },
@@ -992,11 +995,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.cartesia.ai/api-reference/stt/transcribe",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://play.cartesia.ai/keys",
       },
     },
@@ -1014,11 +1017,11 @@ const _PROVIDERS = [
     ],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://developers.cloudflare.com/workers-ai/models/nova-3/",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://developers.cloudflare.com/workers-ai/",
       },
     },
@@ -1034,11 +1037,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.gladia.io/",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://app.gladia.io/",
       },
     },
@@ -1060,11 +1063,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://soniox.com/docs/stt/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://console.soniox.com/",
       },
     },
@@ -1087,11 +1090,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://dev.meta.ai/docs/speech-to-text",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://dev.meta.ai/",
       },
     },
@@ -1107,11 +1110,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://elevenlabs.io/docs/capabilities/speech-to-text",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://elevenlabs.io/app/settings/api-keys",
       },
     },
@@ -1127,11 +1130,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.mistral.ai/capabilities/audio/",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://console.mistral.ai/api-keys",
       },
     },
@@ -1140,7 +1143,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "pyannote",
     displayName: "pyannoteAI",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: (
       <ProviderBrandImage
         src="/assets/pyannote-logo-black.png"
@@ -1152,11 +1155,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.pyannote.ai/",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://dashboard.pyannote.ai/",
       },
     },
@@ -1165,7 +1168,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "aquavoice",
     displayName: "AquaVoice",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: (
       <ProviderBrandImage
         src="/assets/aquavoice-black.png"
@@ -1178,11 +1181,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://aquavoice.com/avalon-api/docs",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://app.aquavoice.com/api-dashboard",
       },
     },
@@ -1191,18 +1194,18 @@ const _PROVIDERS = [
     disabled: false,
     id: "cohere",
     displayName: "Cohere",
-    badge: "After recording",
+    badge: AFTER_RECORDING_BADGE,
     icon: <ProviderLobeIcon icon={Cohere} />,
     baseUrl: "https://api.cohere.com/v2",
     models: ["cohere-transcribe-03-2026", "cohere-transcribe-arabic-07-2026"],
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.cohere.com/docs/transcribe",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://dashboard.cohere.com/api-keys",
       },
     },
@@ -1211,7 +1214,7 @@ const _PROVIDERS = [
     disabled: false,
     id: "custom",
     displayName: "Custom",
-    description: "Deepgram-compatible",
+    description: msg`Deepgram-compatible`,
     badge: null,
     icon: <Shuffle />,
     baseUrl: undefined,

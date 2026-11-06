@@ -1,5 +1,6 @@
 import { commands as windowsCommands } from "@anlg/plugin-windows";
 
+import { getFloatingBarLabels } from "./labels";
 import type { FloatingRouteState } from "./route-state";
 
 let sentTranscriptSessionId: string | null = null;
@@ -180,6 +181,7 @@ export async function showFloatingMeetingWindow(
           ? routeState.transcriptBubbles
           : null,
         transcriptNotice: routeState.transcriptNotice ?? null,
+        labels: getFloatingBarLabels(routeState.transcriptNotice),
       });
   if (!shouldContinue()) {
     await hideFloatingMeetingPanel();

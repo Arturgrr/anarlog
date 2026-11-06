@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useQueryClient } from "@tanstack/react-query";
 import { downloadDir } from "@tauri-apps/api/path";
 import { open as selectFile } from "@tauri-apps/plugin-dialog";
@@ -367,15 +368,15 @@ export function useUploadFile(sessionId: string) {
     (kind: "audio" | "transcript") => {
       const filters =
         kind === "audio"
-          ? [{ name: "Audio", extensions: AUDIO_EXTENSIONS }]
-          : [{ name: "Transcript", extensions: TRANSCRIPT_EXTENSIONS }];
+          ? [{ name: t`Audio`, extensions: AUDIO_EXTENSIONS }]
+          : [{ name: t`Transcript`, extensions: TRANSCRIPT_EXTENSIONS }];
 
       const program = pipe(
         Effect.promise(() => downloadDir()),
         Effect.flatMap((defaultPath) =>
           Effect.promise(() =>
             selectFile({
-              title: kind === "audio" ? "Upload Audio" : "Upload Transcript",
+              title: kind === "audio" ? t`Upload Audio` : t`Upload Transcript`,
               multiple: false,
               directory: false,
               defaultPath,
@@ -419,7 +420,7 @@ function audioUploadFilePath(file: File) {
 function assertIpcAudioSize(size: number) {
   if (size > MAX_IPC_AUDIO_BYTES) {
     throw new Error(
-      "Audio files without a native path must be smaller than 4 MB",
+      t`Audio files without a native path must be smaller than 4 MB`,
     );
   }
 }

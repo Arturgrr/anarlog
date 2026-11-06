@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   commands as localApiCommands,
   type MarkdownExportFile,
@@ -175,10 +177,10 @@ async function executeWorkflowStep(
 ): Promise<string> {
   const directory = step.directory.trim();
   if (!directory) {
-    throw new Error("choose an export folder first");
+    throw new Error(t`choose an export folder first`);
   }
   if (step.options && !hasMarkdownExportContent(step.options)) {
-    throw new Error("choose at least one element to export");
+    throw new Error(t`choose at least one element to export`);
   }
   return await executeConfiguredMarkdownExport(
     sessionId,

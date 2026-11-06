@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useMutation } from "@tanstack/react-query";
 import { useCallback } from "react";
 
@@ -305,8 +306,8 @@ export function useToggleTemplateFavorite() {
 export function getTemplateCopyTitle(title: string) {
   const value = title.trim();
 
-  if (!value) return "Untitled (Copy)";
-  if (value.endsWith("(Copy)")) return value;
+  if (!value) return t`Untitled (Copy)`;
+  if (value.endsWith(t`(Copy)`)) return value;
 
-  return `${value} (Copy)`;
+  return t`${value} (Copy)`;
 }

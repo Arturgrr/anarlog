@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useMutation } from "@tanstack/react-query";
 import type { EditorView } from "prosemirror-view";
 import { forwardRef } from "react";
@@ -114,6 +114,7 @@ export const Enhanced = forwardRef<
 );
 
 function EmptySummary({ sessionId }: { sessionId: string }) {
+  const { t } = useLingui();
   const generate = useMutation({
     mutationFn: async () => {
       if (!isMainAITaskHostWindow()) {
@@ -121,12 +122,12 @@ function EmptySummary({ sessionId }: { sessionId: string }) {
         return;
       }
       const service = getEnhancerService();
-      if (!service) throw new Error("Summary generation is not ready yet.");
+      if (!service) throw new Error(t`Summary generation is not ready yet.`);
       const result = await service.enhance(sessionId);
       if (result.type === "no_model")
-        throw new Error("Set up AI summaries first.");
+        throw new Error(t`Set up AI summaries first.`);
       if (result.type === "too_short")
-        throw new Error("Not enough transcript recorded to summarize.");
+        throw new Error(t`Not enough transcript recorded to summarize.`);
     },
   });
   return (

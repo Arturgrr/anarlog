@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { useQuery } from "@tanstack/react-query";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
@@ -69,7 +70,8 @@ function MeetingScreenTile({
   record: MeetingScreenRecord;
   src: string | undefined;
 }) {
-  const time = new Date(record.capturedAt).toLocaleTimeString([], {
+  const { i18n } = useLingui();
+  const time = new Date(record.capturedAt).toLocaleTimeString(i18n.locale, {
     hour: "numeric",
     minute: "2-digit",
   });

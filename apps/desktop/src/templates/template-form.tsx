@@ -102,7 +102,7 @@ function TemplateTargetsInput({
           onClick={() => setIsAddingTag(true)}
         >
           <Plus className="h-3 w-3" />
-          Add tag
+          <Trans>Add tag</Trans>
         </button>
       ) : (
         <input
@@ -232,7 +232,7 @@ export function TemplateForm({
             variant="ghost"
             onClick={setSelectedTemplateId}
             aria-pressed={isDefault}
-            title={isDefault ? "Remove as default" : "Set as default"}
+            title={isDefault ? t`Remove as default` : t`Set as default`}
             className={cn([
               "text-muted-foreground hover:text-foreground shrink-0",
               isDefault
@@ -243,10 +243,10 @@ export function TemplateForm({
             {isDefault ? (
               <>
                 <Check className="size-3.5" weight="bold" />
-                Current default
+                <Trans>Current default</Trans>
               </>
             ) : (
-              "Set as default"
+              <Trans>Set as default</Trans>
             )}
           </Button>
           <Button
@@ -259,10 +259,10 @@ export function TemplateForm({
               template.pinned && "text-foreground",
             ])}
             title={
-              template.pinned ? "Unfavorite template" : "Favorite template"
+              template.pinned ? t`Unfavorite template` : t`Favorite template`
             }
             aria-label={
-              template.pinned ? "Unfavorite template" : "Favorite template"
+              template.pinned ? t`Unfavorite template` : t`Favorite template`
             }
           >
             <Heart

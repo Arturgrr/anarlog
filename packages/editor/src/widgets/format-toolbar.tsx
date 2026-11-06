@@ -31,6 +31,7 @@ import {
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
+import { useEditorLabels } from "../labels";
 import { schema } from "../note/schema";
 
 const OVERFLOW_CLIP = /(auto|scroll|overlay|hidden|clip)/;
@@ -116,6 +117,7 @@ export function FormatToolbar({
   onComment?: () => void;
   showFormatting?: boolean;
 }) {
+  const labels = useEditorLabels();
   const toolbarRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
 
@@ -222,7 +224,7 @@ export function FormatToolbar({
     <div
       ref={toolbarRef}
       role="toolbar"
-      aria-label="Format selection"
+      aria-label={labels.formatSelection}
       className={cn([
         "bg-layer-1 fixed z-50 flex items-center gap-0.5 rounded-md p-0.5",
         "shadow-floating",
@@ -256,7 +258,7 @@ export function FormatToolbar({
       {onComment && (
         <button
           type="button"
-          aria-label="Comment"
+          aria-label={labels.comment}
           className={cn([
             "text-icon-muted flex size-7 items-center justify-center rounded-sm",
             "hover:bg-hover hover:text-foreground cursor-pointer border-none bg-transparent",

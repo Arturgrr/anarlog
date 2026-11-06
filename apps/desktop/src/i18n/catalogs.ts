@@ -1,12 +1,22 @@
 import { i18n, type I18n, type Messages } from "@lingui/core";
 
 import { SOURCE_LOCALE, type DisplayLocale } from "./locales";
+import { messages as sourceCatalog } from "./locales/en/messages";
 
 const catalogModules = import.meta.glob<{ messages: Messages }>(
   "./locales/*/messages.ts",
 );
-const catalogCache = new Map<DisplayLocale, Promise<Messages>>();
+const catalogCache = new Map<DisplayLocale, Promise<Messages>>([
+  [SOURCE_LOCALE, Promise.resolve(sourceCatalog)],
+]);
 let createI18nGeneration = 0;
+
+// Toasts, notifications and native labels can be translated before the
+// user's catalog finishes loading; English keeps them from throwing.
+if (!i18n.locale) {
+  i18n.load(SOURCE_LOCALE, sourceCatalog);
+  i18n.activate(SOURCE_LOCALE);
+}
 
 export function getCatalogLocalesForDisplayLocale(
   locale: DisplayLocale,

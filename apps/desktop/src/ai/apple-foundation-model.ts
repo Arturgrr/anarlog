@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { wrapLanguageModel } from "ai";
 
 import { commands as localLlmCommands } from "@anlg/plugin-local-llm";
@@ -135,7 +136,7 @@ export function prepareFoundationModelRequest(options: CallOptions) {
           break;
         case "file":
           throw new Error(
-            "The Apple Foundation Models experiment currently supports text only.",
+            t`The Apple Foundation Models experiment currently supports text only.`,
           );
         case "tool-call":
           parts.push(
@@ -161,7 +162,7 @@ export function prepareFoundationModelRequest(options: CallOptions) {
   }
 
   if (conversation.length === 0) {
-    throw new Error("Apple Foundation Models requires a text prompt.");
+    throw new Error(t`Apple Foundation Models requires a text prompt.`);
   }
 
   const prompt =

@@ -1,5 +1,4 @@
-import { useLingui } from "@lingui/react";
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useRef, useState } from "react";
 
 import { commands as openerCommands } from "@anlg/plugin-opener2";
@@ -39,8 +38,7 @@ export function FinalSection({
 }: {
   onContinue: (sessionId: string) => void;
 }) {
-  const { i18n } = useLingui();
-  const translate = i18n._.bind(i18n);
+  const { t } = useLingui();
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const finishPromiseRef = useRef<Promise<void> | null>(null);
   const welcomeSessionRef = useRef<string | null>(null);
@@ -79,10 +77,7 @@ export function FinalSection({
       </OnboardingButton>
       {status === "error" && (
         <p className="text-danger text-sm" role="alert">
-          {translate({
-            id: "onboarding.finish-error",
-            message: "Couldn't open Librelog. Please try again.",
-          })}
+          {t`Couldn't open Librelog. Please try again.`}
         </p>
       )}
     </div>

@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { MeetingScreenShareCapture } from "@anlg/plugin-detect";
 import { commands as fsSyncCommands } from "@anlg/plugin-fs-sync";
 
@@ -91,9 +93,12 @@ export async function persistMeetingScreenCapture({
     height: capture.height,
     capturedAt,
   };
-  const title = capture.platform
-    ? `${formatMeetingPlatform(capture.platform)} shared screen`
-    : "Shared screen";
+  const platformLabel = capture.platform
+    ? formatMeetingPlatform(capture.platform)
+    : null;
+  const title = platformLabel
+    ? t`${platformLabel} shared screen`
+    : t`Shared screen`;
 
   await enqueueDatabaseWrite(`session:${sessionId}`, () =>
     executeTransaction([

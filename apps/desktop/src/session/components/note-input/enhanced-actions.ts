@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback } from "react";
 
 import { toast } from "@anlg/ui/components/ui/toast";
@@ -40,7 +41,7 @@ export function useEnhancedNoteActions({
 
       if (!model) {
         toast.error(
-          "Set up Intelligence in Settings before regenerating this summary.",
+          t`Set up Intelligence in Settings before regenerating this summary.`,
         );
         return;
       }
@@ -52,7 +53,7 @@ export function useEnhancedNoteActions({
           !eligibility.eligible &&
           eligibility.code === "transcript_too_short"
         ) {
-          toast.warning("Summary wasn't generated", {
+          toast.warning(t`Summary wasn't generated`, {
             id: `auto-summary-too-short-${sessionId}`,
             description: eligibility.reason,
           });

@@ -8,6 +8,7 @@ import { forwardRef, useCallback, useRef, useState } from "react";
 
 import { cn } from "@anlg/utils";
 
+import { useEditorLabels } from "../labels";
 import {
   useAttachmentEditingEnabled,
   useAttachmentResolver,
@@ -128,6 +129,7 @@ export const ResizableImageView = forwardRef<
   HTMLDivElement,
   NodeViewComponentProps
 >(function ResizableImageView({ nodeProps, ...htmlAttrs }, ref) {
+  const labels = useEditorLabels();
   const { node, getPos } = nodeProps;
   const resolveAttachment = useAttachmentResolver();
   const attachmentEditingEnabled = useAttachmentEditingEnabled();
@@ -288,7 +290,7 @@ export const ResizableImageView = forwardRef<
             />
             <button
               type="button"
-              aria-label="Resize image from left"
+              aria-label={labels.resizeImageFromLeft}
               onPointerDown={(event) => handleResizeStart("left", event)}
               className="border-border bg-card/95 absolute top-1/2 left-1 flex h-14 w-4 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full border shadow-sm backdrop-blur-sm"
             >
@@ -296,7 +298,7 @@ export const ResizableImageView = forwardRef<
             </button>
             <button
               type="button"
-              aria-label="Resize image from right"
+              aria-label={labels.resizeImageFromRight}
               onPointerDown={(event) => handleResizeStart("right", event)}
               className="border-border bg-card/95 absolute top-1/2 right-1 flex h-14 w-4 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full border shadow-sm backdrop-blur-sm"
             >

@@ -212,7 +212,7 @@ function getUpcomingMeetingStatus(
         if (!active || endsAtMs < active.endsAtMs) {
           active = {
             itemKey: `${item.type}-${item.id}`,
-            title: item.data.title || "Untitled",
+            title: item.data.title || "",
             endsAtMs,
           };
         }
@@ -228,7 +228,7 @@ function getUpcomingMeetingStatus(
       if (!nearest || diffMs < nearest.diffMs) {
         nearest = {
           itemKey: `${item.type}-${item.id}`,
-          title: item.data.title || "Untitled",
+          title: item.data.title || "",
           diffMs,
         };
       }

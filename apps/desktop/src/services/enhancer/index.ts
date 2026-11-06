@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import type { LanguageModel } from "ai";
 
 import { hasSummaryContent, resolveSummaryDocument } from "@anlg/utils/session";
@@ -397,7 +398,7 @@ export class EnhancerService {
       this.emit({
         type: "auto-enhance-skipped",
         sessionId,
-        reason: "Could not generate the summary after repeated attempts.",
+        reason: t`Could not generate the summary after repeated attempts.`,
         reasonCode: "error",
       });
       return;

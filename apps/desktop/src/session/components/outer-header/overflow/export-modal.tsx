@@ -124,7 +124,7 @@ function ExportModalContent({
   onOpenChange,
   initialConfig,
 }: ExportModalProps & { initialConfig: ExportConfig }) {
-  const { t } = useLingui();
+  const { i18n, t } = useLingui();
   const persistExportConfig = useSetSettingValues();
   const [format, setFormat] = useState<FileFormat>(initialConfig.format);
   const [includeMemo, setIncludeMemo] = useState(initialConfig.includeMemo);
@@ -218,7 +218,9 @@ function ExportModalContent({
     sections.push(`# ${title}`);
 
     if (sessionCreatedAt) {
-      sections.push(`- ${t`Created`}: ${formatDate(sessionCreatedAt)}`);
+      sections.push(
+        `- ${t`Created`}: ${formatDate(sessionCreatedAt, i18n.locale)}`,
+      );
     }
 
     if (participantNames.length > 0) {
@@ -267,7 +269,7 @@ function ExportModalContent({
     sections.push("=".repeat(title.length));
 
     if (sessionCreatedAt) {
-      sections.push(formatDate(sessionCreatedAt));
+      sections.push(formatDate(sessionCreatedAt, i18n.locale));
     }
 
     if (participantNames.length > 0) {
@@ -318,14 +320,16 @@ function ExportModalContent({
     sections.push(`#+TITLE: ${title}`);
 
     if (sessionCreatedAt) {
-      sections.push(`#+DATE: ${formatDate(sessionCreatedAt)}`);
+      sections.push(`#+DATE: ${formatDate(sessionCreatedAt, i18n.locale)}`);
     }
 
     sections.push("");
     sections.push(`* ${t`Metadata`}`);
 
     if (sessionCreatedAt) {
-      sections.push(`- ${t`Created`} :: ${formatDate(sessionCreatedAt)}`);
+      sections.push(
+        `- ${t`Created`} :: ${formatDate(sessionCreatedAt, i18n.locale)}`,
+      );
     }
 
     if (participantNames.length > 0) {
@@ -377,7 +381,9 @@ function ExportModalContent({
     const { includeMemo, includeSummary, includeTranscript } = config;
     const metadata: ExportMetadata = {
       title: sessionTitle || t`Untitled`,
-      createdAt: sessionCreatedAt ? formatDate(sessionCreatedAt) : "",
+      createdAt: sessionCreatedAt
+        ? formatDate(sessionCreatedAt, i18n.locale)
+        : "",
       participants: participantNames,
       eventTitle: eventTitle || null,
       duration: transcriptDuration,

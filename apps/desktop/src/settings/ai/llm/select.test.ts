@@ -3,6 +3,8 @@ import { describe, expect, test } from "vitest";
 import { getLlmProviderStatus } from "./select";
 import { PROVIDERS } from "./shared";
 
+import { SUBSCRIPTION_BADGE } from "~/settings/ai/shared/provider-labels";
+
 function provider(id: string) {
   const provider = PROVIDERS.find((p) => p.id === id);
   if (!provider) {
@@ -62,7 +64,7 @@ describe("getLlmProviderStatus", () => {
       });
 
       expect(definition.authKind).toBe("subscription");
-      expect(definition.badge).toBe("Subscription");
+      expect(definition.badge).toBe(SUBSCRIPTION_BADGE);
       expect(missing.configured).toBe(false);
       expect(configured.configured).toBe(true);
       expect(configured.listModels).toBeTypeOf("function");

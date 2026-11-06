@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { cn } from "@anlg/utils";
 
 import { LibrelogMark } from "./librelog-mark";
@@ -6,7 +8,7 @@ export function BrandLoadingView({ detail }: { detail?: string }) {
   return (
     <div
       role="status"
-      aria-label="Loading"
+      aria-label={t`Loading`}
       data-tauri-drag-region
       className={cn([
         "bg-background flex h-screen w-screen items-center justify-center",

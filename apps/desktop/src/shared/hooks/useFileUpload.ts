@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useCallback } from "react";
 
@@ -109,7 +110,7 @@ export function useFolderMaterialUpload(folderPath: string) {
 
 function assertIpcAttachmentSize(size: number) {
   if (size > MAX_IPC_ATTACHMENT_BYTES) {
-    throw new Error("Attachments must be smaller than 4 MB");
+    throw new Error(t`Attachments must be smaller than 4 MB`);
   }
 }
 

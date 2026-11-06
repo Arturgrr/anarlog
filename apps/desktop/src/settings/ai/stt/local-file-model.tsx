@@ -16,7 +16,7 @@ export function LocalFileModel({
 }: {
   healthStatus: HealthStatus["status"];
 }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const modelPath = useConfigValue("local_stt_model_path")?.trim() ?? "";
   const modelInfo = useQuery({
     queryKey: ["local-stt-model-file", modelPath],
@@ -104,7 +104,7 @@ export function LocalFileModel({
         </span>
         {modelInfo.data ? (
           <span className="text-muted-foreground shrink-0 text-[11px]">
-            {formatModelSize(modelInfo.data.sizeBytes)} · GGML ·{" "}
+            {formatModelSize(modelInfo.data.sizeBytes, i18n.locale)} · GGML ·{" "}
             <Trans>After recording</Trans>
           </span>
         ) : null}
@@ -131,11 +131,11 @@ export function LocalFileModel({
   );
 }
 
-function formatModelSize(sizeBytes: number) {
+function formatModelSize(sizeBytes: number, locale: string) {
   const unit = sizeBytes >= 1024 * 1024 * 1024 ? "GB" : "MB";
   const value =
     unit === "GB" ? sizeBytes / 1024 / 1024 / 1024 : sizeBytes / 1024 / 1024;
-  return `${value.toLocaleString(undefined, {
+  return `${value.toLocaleString(locale, {
     maximumFractionDigits: value >= 10 ? 0 : 1,
   })} ${unit}`;
 }

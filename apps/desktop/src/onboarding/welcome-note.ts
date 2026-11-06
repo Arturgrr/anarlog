@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { md2json } from "@anlg/editor/markdown";
 import type { SessionEvent } from "@anlg/store";
 
@@ -8,7 +10,8 @@ import { DEFAULT_USER_ID } from "~/shared/utils";
 
 const PENDING_WELCOME_SESSION_KEY = "librelog.pending-welcome-session";
 
-const WELCOME_NOTE = `Welcome to Librelog 👋
+function getWelcomeNoteMarkdown() {
+  return t`Welcome to Librelog 👋
 
 
 This note is a quick way to see how Librelog works.
@@ -18,6 +21,7 @@ Click **Record** in the top-right corner and talk for a minute, or play a video 
 
 
 When you stop recording, Librelog will create your summary automatically if transcription and intelligence are configured.`;
+}
 
 let pendingWelcomeSession: Promise<string> | null = null;
 
@@ -65,16 +69,16 @@ async function findOrCreateWelcomeSession(): Promise<string> {
   const event: SessionEvent = {
     tracking_id: WELCOME_NOTE_TRACKING_ID,
     calendar_id: "",
-    title: "Welcome to Librelog",
+    title: t`Welcome to Librelog`,
     started_at: now,
     ended_at: "",
     is_all_day: false,
     has_recurrence_rules: false,
-    description: "A quick introduction to Librelog.",
+    description: t`A quick introduction to Librelog.`,
   };
 
-  return createSession("Welcome to Librelog", DEFAULT_USER_ID, {
+  return createSession(t`Welcome to Librelog`, DEFAULT_USER_ID, {
     event_json: JSON.stringify(event),
-    raw_md: JSON.stringify(md2json(WELCOME_NOTE)),
+    raw_md: JSON.stringify(md2json(getWelcomeNoteMarkdown())),
   });
 }

@@ -1,6 +1,6 @@
-export function formatDate(isoString: string): string {
+export function formatDate(isoString: string, locale: string): string {
   const date = new Date(isoString);
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale, {
     weekday: "long",
     year: "numeric",
     month: "long",

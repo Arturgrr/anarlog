@@ -1,3 +1,5 @@
+import { plural, t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useMemo } from "react";
 
 import { MagnifyingGlass } from "@anlg/ui/components/icons";
@@ -61,7 +63,7 @@ function parseMeetingSearchResults(output: unknown): MeetingSearchResult[] {
     return [
       {
         id,
-        title: typeof title === "string" ? title : "Untitled",
+        title: typeof title === "string" ? title : "",
         excerpt: typeof excerpt === "string" ? excerpt : "",
         score: typeof score === "number" ? score : 0,
         created_at:
@@ -75,67 +77,76 @@ function parseMeetingSearchResults(output: unknown): MeetingSearchResult[] {
   });
 }
 
-function formatSearchInput(input: Part["input"] | undefined): {
+function formatSearchInput(
+  input: Part["input"] | undefined,
+  locale: string,
+): {
   titleQuery: string;
   details: string[];
 } {
   if (!input) {
-    return { titleQuery: "meetings", details: [] };
+    return { titleQuery: t`meetings`, details: [] };
   }
 
   const details: string[] = [];
   const rawQuery = typeof input.query === "string" ? input.query.trim() : "";
-  const titleQuery = rawQuery || "meetings";
+  const titleQuery = rawQuery || t`meetings`;
 
   if (!rawQuery) {
-    details.push("Query: none");
+    details.push(t`Query: none`);
   } else {
-    details.push(`Query: ${rawQuery}`);
+    details.push(t`Query: ${rawQuery}`);
   }
 
   const createdAt = input.filters?.created_at;
   if (createdAt?.kind === "relative") {
     details.push(
-      `Date: recent ${createdAt.recent_days} day(s), including today`,
+      plural(createdAt.recent_days ?? 0, {
+        one: "Date: recent # day, including today",
+        other: "Date: recent # days, including today",
+      }),
     );
   } else if (createdAt?.kind === "absolute") {
     const bounds = [
       createdAt.gte != null
-        ? `gte ${new Date(createdAt.gte).toLocaleString()}`
+        ? `gte ${new Date(createdAt.gte).toLocaleString(locale)}`
         : null,
       createdAt.lte != null
-        ? `lte ${new Date(createdAt.lte).toLocaleString()}`
+        ? `lte ${new Date(createdAt.lte).toLocaleString(locale)}`
         : null,
       createdAt.gt != null
-        ? `gt ${new Date(createdAt.gt).toLocaleString()}`
+        ? `gt ${new Date(createdAt.gt).toLocaleString(locale)}`
         : null,
       createdAt.lt != null
-        ? `lt ${new Date(createdAt.lt).toLocaleString()}`
+        ? `lt ${new Date(createdAt.lt).toLocaleString(locale)}`
         : null,
       createdAt.eq != null
-        ? `eq ${new Date(createdAt.eq).toLocaleString()}`
+        ? `eq ${new Date(createdAt.eq).toLocaleString(locale)}`
         : null,
     ].filter(Boolean);
 
     if (bounds.length > 0) {
-      details.push(`Date: ${bounds.join(", ")}`);
+      const dateBounds = bounds.join(", ");
+      details.push(t`Date: ${dateBounds}`);
     }
   }
 
   if (typeof input.limit === "number") {
-    details.push(`Limit: ${input.limit}`);
+    const limit = input.limit;
+    details.push(t`Limit: ${limit}`);
   }
 
   return { titleQuery, details };
 }
 
 export const ToolSearchMeetings: Renderer = ({ part }) => {
+  const { i18n } = useLingui();
   const { running: disabled } = useToolState(part);
 
   return (
     <Disclosure
       icon={<MagnifyingGlass className="h-3 w-3" />}
-      title={getTitle(part)}
+      title={getTitle(part, i18n.locale)}
       disabled={disabled}
     >
       <RenderContent part={part} />
@@ -143,26 +154,27 @@ export const ToolSearchMeetings: Renderer = ({ part }) => {
   );
 };
 
-const getTitle = (part: Part) => {
-  const { titleQuery } = formatSearchInput(part.input);
+const getTitle = (part: Part, locale: string) => {
+  const { titleQuery } = formatSearchInput(part.input, locale);
 
   if (part.state === "input-streaming") {
-    return "Preparing search...";
+    return t`Preparing search...`;
   }
   if (part.state === "input-available") {
-    return `Searching for: ${titleQuery}`;
+    return t`Searching for: ${titleQuery}`;
   }
   if (part.state === "output-available") {
-    return `Searched for: ${titleQuery}`;
+    return t`Searched for: ${titleQuery}`;
   }
   if (part.state === "output-error") {
-    return part.input ? `Search failed: ${titleQuery}` : "Search failed";
+    return part.input ? t`Search failed: ${titleQuery}` : t`Search failed`;
   }
-  return "Search";
+  return t`Search`;
 };
 
 function RenderContent({ part }: { part: Part }) {
-  const { details } = formatSearchInput(part.input);
+  const { i18n } = useLingui();
+  const { details } = formatSearchInput(part.input, i18n.locale);
 
   if (part.state === "output-available") {
     const results = parseMeetingSearchResults(part.output);
@@ -178,7 +190,7 @@ function RenderContent({ part }: { part: Part }) {
             </div>
           )}
           <div className="text-muted-foreground flex items-center justify-center py-2 text-xs">
-            No results found
+            <Trans>No results found</Trans>
           </div>
         </div>
       );
@@ -218,7 +230,12 @@ function RenderContent({ part }: { part: Part }) {
   }
 
   if (part.state === "output-error") {
-    return <div className="text-danger text-sm">Error: {part.errorText}</div>;
+    const errorText = part.errorText;
+    return (
+      <div className="text-danger text-sm">
+        <Trans>Error: {errorText}</Trans>
+      </div>
+    );
   }
 
   return details.length > 0 ? (
@@ -231,6 +248,7 @@ function RenderContent({ part }: { part: Part }) {
 }
 
 function RenderMeeting({ result }: { result: MeetingSearchResult }) {
+  const { i18n, t } = useLingui();
   const { id: sessionId } = result;
   const openNew = useTabs((state) => state.openNew);
 
@@ -240,8 +258,8 @@ function RenderMeeting({ result }: { result: MeetingSearchResult }) {
 
   const dateLabel = useMemo(() => {
     if (!result.created_at) return null;
-    return new Date(result.created_at).toLocaleString();
-  }, [result.created_at]);
+    return new Date(result.created_at).toLocaleString(i18n.locale);
+  }, [result.created_at, i18n.locale]);
 
   return (
     <button
@@ -249,14 +267,16 @@ function RenderMeeting({ result }: { result: MeetingSearchResult }) {
       onClick={handleClick}
       className="flex w-full flex-col gap-1 text-left text-xs"
     >
-      <span className="truncate font-medium">{result.title || "Untitled"}</span>
+      <span className="truncate font-medium">
+        {result.title || t`Untitled`}
+      </span>
       {dateLabel && (
         <span className="text-muted-foreground text-[11px] tabular-nums">
           {dateLabel}
         </span>
       )}
       <span className="text-muted-foreground line-clamp-3 break-words">
-        {result.excerpt || "No excerpt available"}
+        {result.excerpt || t`No excerpt available`}
       </span>
     </button>
   );

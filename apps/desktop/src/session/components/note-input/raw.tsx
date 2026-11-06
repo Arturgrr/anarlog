@@ -429,7 +429,7 @@ function TemplateEmptyState({
   const handleCreateTemplate = useCallback(() => {
     void (async () => {
       const templateId = await createTemplate({
-        title: "New Template",
+        title: t`New Template`,
         description: "",
         sections: [],
       });
@@ -442,7 +442,7 @@ function TemplateEmptyState({
         showHomepage: false,
       });
     })();
-  }, [createTemplate, openTemplatesTab]);
+  }, [createTemplate, openTemplatesTab, t]);
 
   return (
     <>

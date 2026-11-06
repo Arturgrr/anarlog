@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { createRootRouteWithContext } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 
@@ -14,7 +15,9 @@ function Component() {
   return (
     <Suspense
       fallback={
-        <BrandLoadingView detail="Loading your workspace. This should only take a moment." />
+        <BrandLoadingView
+          detail={t`Loading your workspace. This should only take a moment.`}
+        />
       }
     >
       <MainAppLayout />

@@ -74,7 +74,7 @@ export function TemplatePickerPopover({
 
   const handleCreateTemplate = useCallback(
     (title?: string) => {
-      const nextTitle = title?.trim() || "New Template";
+      const nextTitle = title?.trim() || t`New Template`;
 
       setOpen(false);
       setSearch("");
@@ -96,7 +96,7 @@ export function TemplatePickerPopover({
         });
       })();
     },
-    [createTemplate, openTemplatesTab],
+    [createTemplate, openTemplatesTab, t],
   );
   const handleSeeAllTemplates = useCallback(() => {
     setOpen(false);
@@ -151,29 +151,29 @@ export function TemplatePickerPopover({
   >(() => {
     const favoriteItems = filteredFavoriteTemplates.map((template) => ({
       key: template.id,
-      title: template.title || "Untitled",
+      title: template.title || t`Untitled`,
       icon: template.icon,
       isFavorite: true,
       onClick: () =>
         handleUseTemplate({
           templateId: template.id,
-          title: template.title || "Untitled",
+          title: template.title || t`Untitled`,
         }),
     }));
 
     const userItems = filteredOtherTemplates.map((template) => ({
       key: template.id,
-      title: template.title || "Untitled",
+      title: template.title || t`Untitled`,
       icon: template.icon,
       onClick: () =>
         handleUseTemplate({
           templateId: template.id,
-          title: template.title || "Untitled",
+          title: template.title || t`Untitled`,
         }),
     }));
 
     return [...favoriteItems, ...userItems];
-  }, [filteredFavoriteTemplates, filteredOtherTemplates, handleUseTemplate]);
+  }, [filteredFavoriteTemplates, filteredOtherTemplates, handleUseTemplate, t]);
   const resultSections = useMemo<
     Array<{
       key: string;
@@ -193,12 +193,12 @@ export function TemplatePickerPopover({
   >(() => {
     const autoSection = {
       key: "auto",
-      title: "Auto",
+      title: t`Auto`,
       showHeader: false,
       items: [
         {
           key: "auto",
-          title: "Auto",
+          title: t`Auto`,
           icon: {
             type: "icon",
             value: "sparkles",
@@ -207,7 +207,7 @@ export function TemplatePickerPopover({
           onClick: () =>
             handleUseTemplate({
               templateId: null,
-              title: "Auto",
+              title: t`Auto`,
             }),
         },
       ],
@@ -218,10 +218,10 @@ export function TemplatePickerPopover({
         autoSection,
         {
           key: "templates",
-          title: "Templates",
+          title: t`Templates`,
           showHeader: false,
           items: templateItems,
-          emptyMessage: "No templates yet",
+          emptyMessage: t`No templates yet`,
         },
       ];
     }
@@ -230,7 +230,7 @@ export function TemplatePickerPopover({
       autoSection,
       {
         key: "create",
-        title: "Create new template",
+        title: t`Create new template`,
         icon: <Plus className="text-icon-muted h-3.5 w-3.5" />,
         uppercase: false,
         items: [
@@ -246,7 +246,7 @@ export function TemplatePickerPopover({
         ? [
             {
               key: "templates",
-              title: "Templates",
+              title: t`Templates`,
               showHeader: false,
               items: templateItems,
             },
@@ -259,6 +259,7 @@ export function TemplatePickerPopover({
     hasSearch,
     templateItems,
     trimmedSearch,
+    t,
   ]);
   const navigableResults = useMemo(
     () => resultSections.flatMap((section) => section.items),

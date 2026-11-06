@@ -34,6 +34,7 @@ import {
 import { useRegisterTranscriptSelectionSource } from "./selection-context";
 import { useVirtualSegments, VirtualSegmentRow } from "./virtual-segments";
 
+import { localizeSpeakerLabel } from "~/i18n/external-messages";
 import {
   applyRenderRequestIdentitiesToSegments,
   getMaxSpeakerNumberForParticipants,
@@ -284,7 +285,9 @@ const SegmentsList = memo(
       for (const segment of segments) {
         labels.set(
           segment,
-          segment.speaker_label ??
+          (segment.speaker_label !== undefined
+            ? localizeSpeakerLabel(segment.speaker_label)
+            : undefined) ??
             SegmentKeyUtils.renderLabel(
               segment.key,
               labelContext,

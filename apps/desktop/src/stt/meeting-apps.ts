@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro";
 import { resolveResource } from "@tauri-apps/api/path";
 
 import type { NotificationIcon } from "@anlg/plugin-notification";
@@ -691,18 +692,21 @@ export function getIgnoreAppsFooterText(apps: MicApp[]) {
   const firstName = apps[0] ? getNotificationAppName(apps[0]).trim() : "";
 
   if (apps.length === 1) {
-    return firstName ? `Ignore ${firstName}?` : "Ignore this app?";
+    return firstName ? t`Ignore ${firstName}?` : t`Ignore this app?`;
   }
 
   if (!firstName) {
-    return "Ignore these apps?";
+    return t`Ignore these apps?`;
   }
 
   const secondName = apps[1] ? getNotificationAppName(apps[1]).trim() : "";
   if (apps.length === 2 && secondName) {
-    return `Ignore ${firstName} and ${secondName}?`;
+    return t`Ignore ${firstName} and ${secondName}?`;
   }
 
   const otherAppCount = apps.length - 1;
-  return `Ignore ${firstName} and ${otherAppCount} other app${otherAppCount === 1 ? "" : "s"}?`;
+  return plural(otherAppCount, {
+    one: `Ignore ${firstName} and # other app?`,
+    other: `Ignore ${firstName} and # other apps?`,
+  });
 }

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { MultiFileDiff } from "@pierre/diffs/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -110,7 +111,7 @@ export function TabContentEdit({ tab }: { tab: EditTab }) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "Failed to update this proposal.",
+          : t`Failed to update this proposal.`,
       );
       setBusy(false);
     }

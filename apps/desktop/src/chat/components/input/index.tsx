@@ -27,6 +27,7 @@ import type { ContextRef } from "~/chat/context/entities";
 import { useChatAppearance } from "~/chat/hooks/use-chat-appearance";
 import { useShell } from "~/contexts/shell";
 import { useMentionConfig } from "~/editor-bridge/mention-config";
+import { localizeExternalMessage } from "~/i18n/external-messages";
 
 export function ChatMessageInput({
   draftKey,
@@ -147,7 +148,9 @@ export function ChatMessageInput({
             mentionConfig={mentionConfig}
             placeholder={placeholder}
             submitShortcut="enter"
-            onAttachmentError={(message) => toast.error(message)}
+            onAttachmentError={(message) =>
+              toast.error(localizeExternalMessage(message))
+            }
             onUpdate={handleEditorUpdate}
             onSubmit={handleSubmit}
             onHistoryNavigate={history.navigate}

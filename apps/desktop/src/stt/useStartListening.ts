@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback } from "react";
 
 import { toast } from "@anlg/ui/components/ui/toast";
@@ -236,23 +237,22 @@ export function useStartListeningState(
         .map((language) => getBaseLanguageDisplayName(language))
         .join(", ");
 
-      toast.warning(`Live transcription is using ${primaryLanguageName}`, {
+      toast.warning(t`Live transcription is using ${primaryLanguageName}`, {
         id: "recording-with-limited-transcription-languages",
         duration: Infinity,
-        description: `Live transcription won't include ${omittedLanguageNames}. Audio is still being saved.`,
+        description: t`Live transcription won't include ${omittedLanguageNames}. Audio is still being saved.`,
         action: {
-          label: "Change",
+          label: t`Change`,
           onClick: openTranscriptionSettings,
         },
       });
     } else if (!conn) {
-      toast.warning("Live transcription is not configured", {
+      toast.warning(t`Live transcription is not configured`, {
         id: "recording-without-transcription",
         duration: Infinity,
-        description:
-          "Audio is being saved. Choose a transcription provider to ensure this recording can be transcribed.",
+        description: t`Audio is being saved. Choose a transcription provider to ensure this recording can be transcribed.`,
         action: {
-          label: "Configure",
+          label: t`Configure`,
           onClick: openTranscriptionSettings,
         },
       });
@@ -265,7 +265,7 @@ export function useStartListeningState(
       excludedTexts: [MEETING_DISCLOSURE_MESSAGE],
       onParticipantDeclined: () => {
         toast.warning(
-          "A participant declined recording. Librelog stopped listening.",
+          t`A participant declined recording. Librelog stopped listening.`,
           { id: "meeting-consent-declined", duration: Infinity },
         );
         stop();

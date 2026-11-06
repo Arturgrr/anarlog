@@ -137,7 +137,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }
 
       if (isFailed) {
-        toast.error(`Couldn’t download ${modelName}`, {
+        toast.error(t`Couldn’t download ${modelName}`, {
           description: status.failed,
         });
       }

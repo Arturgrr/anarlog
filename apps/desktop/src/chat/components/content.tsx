@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import type { ChatStatus } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -249,6 +250,7 @@ function ChatQueue({
   messages: readonly QueuedChatMessage[];
   onRemoveMessage: (messageId: string) => void;
 }) {
+  const { t } = useLingui();
   if (messages.length === 0) {
     return null;
   }
@@ -266,7 +268,7 @@ function ChatQueue({
             <span className="truncate">{message.content}</span>
             <button
               type="button"
-              aria-label={`Remove queued message: ${message.content}`}
+              aria-label={t`Remove queued message: ${message.content}`}
               onClick={() => onRemoveMessage(message.id)}
               className="hover:bg-accent/20 inline-flex size-6 items-center justify-center rounded-md opacity-65 transition-opacity group-hover:opacity-100"
             >

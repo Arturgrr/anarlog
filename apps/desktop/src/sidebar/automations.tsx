@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 
 import { Lightning, MagnifyingGlass, Plus, X } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
-import { cn, formatDistanceToNow } from "@anlg/utils";
+import { cn } from "@anlg/utils";
 
 import { CustomSidebarHeader } from "./custom-sidebar-header";
 
@@ -27,6 +27,7 @@ import {
   useAutomationWorkflows,
 } from "~/automations/workflows";
 import { type ChatGroupRecord, useChatGroups } from "~/chat/store/queries";
+import { formatRelativeToNow } from "~/i18n/format";
 import { useNativeContextMenu } from "~/shared/hooks/useNativeContextMenu";
 
 export function AutomationsNav() {
@@ -409,7 +410,7 @@ function ChatAutomationListItem({
   selected: boolean;
   onSelect: (groupId: string) => void;
 }) {
-  const { t } = useLingui();
+  const { i18n, t } = useLingui();
   const deleteChatAutomation = useDeleteChatAutomation();
   const contextMenu = useMemo(
     () => [
@@ -429,7 +430,7 @@ function ChatAutomationListItem({
   );
   const showContextMenu = useNativeContextMenu(contextMenu);
   const createdAt = automation.createdAt
-    ? formatDistanceToNow(new Date(automation.createdAt), { addSuffix: true })
+    ? formatRelativeToNow(new Date(automation.createdAt), i18n.locale)
     : "";
 
   return (

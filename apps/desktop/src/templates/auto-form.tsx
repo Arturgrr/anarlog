@@ -51,7 +51,9 @@ export function AutoTemplateDetails() {
   if (sourceQuery.error || !sourceQuery.data) {
     return (
       <div className="text-destructive flex h-full items-center justify-center px-6 text-center text-sm">
-        {sourceQuery.error?.message || "Auto format is unavailable."}
+        {sourceQuery.error?.message || (
+          <Trans>Auto format is unavailable.</Trans>
+        )}
       </div>
     );
   }
@@ -134,7 +136,9 @@ export function AutoFormatForm({
       <div className="flex h-12 shrink-0 items-center justify-between gap-3 pr-1 pl-3">
         <div className="flex min-w-0 items-center gap-2">
           <Sparkle className="text-icon size-4 shrink-0" />
-          <span className="truncate text-sm font-semibold">Auto</span>
+          <span className="truncate text-sm font-semibold">
+            <Trans>Auto</Trans>
+          </span>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Button

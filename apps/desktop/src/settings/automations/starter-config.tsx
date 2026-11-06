@@ -6,12 +6,13 @@ import { type ReactNode } from "react";
 import { FolderOpen } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
 import { toast } from "@anlg/ui/components/ui/toast";
-import { cn, formatDistanceToNow } from "@anlg/utils";
+import { cn } from "@anlg/utils";
 
 import {
   type AutomationRunRecord,
   parseAutomationRunRecord,
 } from "~/automations/engine";
+import { formatRelativeToNow } from "~/i18n/format";
 import { setSettingValue, useStoredSettingValue } from "~/settings/queries";
 import { type SettingKey } from "~/settings/schema";
 
@@ -22,6 +23,7 @@ export function AutomationLastRunLine({
   settingKey?: SettingKey;
   lastRun?: AutomationRunRecord | null;
 }) {
+  const { i18n } = useLingui();
   const storedLastRun = parseAutomationRunRecord(
     useStoredSettingValue(settingKey ?? "automation_draft_template").value as
       | string
@@ -32,9 +34,7 @@ export function AutomationLastRunLine({
   if (!lastRun) {
     return null;
   }
-  const relative = formatDistanceToNow(new Date(lastRun.at), {
-    addSuffix: true,
-  });
+  const relative = formatRelativeToNow(new Date(lastRun.at), i18n.locale);
   return (
     <p
       className={cn([

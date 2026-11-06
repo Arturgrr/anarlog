@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { commands as notificationCommands } from "@anlg/plugin-notification";
 import { parseEventInstant } from "@anlg/utils";
 
@@ -188,14 +190,14 @@ export async function showMeetingEndedPrompt({
   try {
     await notificationCommands.showNotification({
       key,
-      title: "Did your meeting end?",
-      message: `Librelog will stop listening in ${AUTO_STOP_CONFIRM_TIMEOUT_SECONDS} seconds.`,
+      title: t`Did your meeting end?`,
+      message: t`Librelog will stop listening in ${AUTO_STOP_CONFIRM_TIMEOUT_SECONDS} seconds.`,
       timeout: { secs: AUTO_STOP_CONFIRM_TIMEOUT_SECONDS, nanos: 0 },
       source: null,
       start_time: null,
       participants: null,
       event_details: null,
-      action_label: "Stop",
+      action_label: t`Stop`,
       action: null,
       action_menu: null,
       action_variant: "destructive",

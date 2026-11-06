@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useStore } from "zustand";
 
 import { commands as trayCommands } from "@anlg/plugin-tray";
@@ -58,7 +59,11 @@ export function getTrayRecordingTitle(
   title: string | null | undefined,
 ): string | null {
   const normalized = title?.trim();
-  if (!normalized || UNTITLED_SESSION_TITLES.has(normalized.toLowerCase())) {
+  if (
+    !normalized ||
+    UNTITLED_SESSION_TITLES.has(normalized.toLowerCase()) ||
+    normalized === t`Untitled`
+  ) {
     return null;
   }
 

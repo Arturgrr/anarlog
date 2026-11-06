@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useCallback, useMemo, useState } from "react";
 
 import { Pause, Play } from "@anlg/ui/components/icons";
@@ -21,6 +22,7 @@ export function Timeline({
 }: {
   contentClassName?: string;
 } = {}) {
+  const { t } = useLingui();
   const {
     registerContainer,
     state,
@@ -54,21 +56,21 @@ export function Timeline({
   const contextMenu = useMemo(
     () => [
       ...(state === "paused"
-        ? [{ id: "resume", text: "Resume", action: resume }]
+        ? [{ id: "resume", text: t`Resume`, action: resume }]
         : []),
       ...(state === "stopped"
-        ? [{ id: "play", text: "Play", action: start }]
+        ? [{ id: "play", text: t`Play`, action: start }]
         : []),
       ...(state === "playing"
-        ? [{ id: "pause", text: "Pause", action: pause }]
+        ? [{ id: "pause", text: t`Pause`, action: pause }]
         : []),
       ...(state !== "stopped"
-        ? [{ id: "stop", text: "Stop", action: stop }]
+        ? [{ id: "stop", text: t`Stop`, action: stop }]
         : []),
       { separator: true as const },
       {
         id: "delete-recording",
-        text: "Delete recording",
+        text: t`Delete recording`,
         action: () => void handleDeleteRecording(),
         disabled: isDeletingRecording,
       },
@@ -81,6 +83,7 @@ export function Timeline({
       stop,
       isDeletingRecording,
       handleDeleteRecording,
+      t,
     ],
   );
   const showContextMenu = useNativeContextMenu(contextMenu);

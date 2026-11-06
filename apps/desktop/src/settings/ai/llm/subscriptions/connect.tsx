@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useMutation } from "@tanstack/react-query";
 import { readText as readClipboardText } from "@tauri-apps/plugin-clipboard-manager";
@@ -85,12 +87,12 @@ export function ConnectSubscriptionDialog({
   const completeMutation = useMutation({
     mutationFn: async (rawCode?: string) => {
       if (!providerId || !provider) {
-        throw new Error("No provider selected.");
+        throw new Error(t`No provider selected.`);
       }
       if (providerId === "kimi_code") {
         const key = apiKey.trim();
         if (!key) {
-          throw new Error("Paste your Kimi Code API key.");
+          throw new Error(t`Paste your Kimi Code API key.`);
         }
         await saveProvider.mutateAsync({
           base_url: provider.baseUrl,
@@ -99,11 +101,11 @@ export function ConnectSubscriptionDialog({
         return key;
       }
       if (!session || session.kind === "api_key") {
-        throw new Error("Sign-in is not ready yet.");
+        throw new Error(t`Sign-in is not ready yet.`);
       }
       if (session.kind === "code") {
         if (providerId !== "claude" && providerId !== "chatgpt") {
-          throw new Error("This provider uses a different sign-in flow.");
+          throw new Error(t`This provider uses a different sign-in flow.`);
         }
         const stored = await completeCodeConnect(
           providerId,
@@ -116,7 +118,7 @@ export function ConnectSubscriptionDialog({
         });
         return stored;
       }
-      throw new Error("Waiting for authorization in the browser.");
+      throw new Error(t`Waiting for authorization in the browser.`);
     },
     onSuccess: (stored) => {
       void finishConnect(stored);
@@ -246,7 +248,7 @@ export function ConnectSubscriptionDialog({
         return;
       }
       if (parsed.state && parsed.state !== current.state) {
-        setError("This sign-in expired. Try connecting again.");
+        setError(i18n._(msg`This sign-in expired. Try connecting again.`));
         return;
       }
       completeFromAuthorizationRef.current(raw);
