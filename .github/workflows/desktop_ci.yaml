@@ -144,7 +144,6 @@ jobs:
             --exclude tauri-plugin-notification \
             --exclude tauri-plugin-notify \
             --exclude tauri-plugin-opener2 \
-            --exclude tauri-plugin-overlay \
             --exclude tauri-plugin-pdf \
             --exclude tauri-plugin-permissions \
             --exclude tauri-plugin-settings \

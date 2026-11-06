@@ -2946,7 +2946,6 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-opener2",
  "tauri-plugin-os",
- "tauri-plugin-overlay",
  "tauri-plugin-permissions",
  "tauri-plugin-prevent-default",
  "tauri-plugin-process",
@@ -13125,20 +13124,6 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "tauri-plugin-overlay"
-version = "0.1.0"
-dependencies = [
- "serde",
- "specta",
- "specta-typescript",
- "tauri",
- "tauri-plugin",
- "tauri-specta",
- "tokio",
- "tracing",
 ]
 
 [[package]]

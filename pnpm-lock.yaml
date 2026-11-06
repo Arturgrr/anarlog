@@ -963,12 +963,6 @@ importers:
         specifier: ^2.10.1
         version: 2.10.1
 
-  plugins/overlay:
-    dependencies:
-      '@tauri-apps/api':
-        specifier: ^2.10.1
-        version: 2.10.1
-
   plugins/permissions:
     dependencies:
       '@tauri-apps/api':

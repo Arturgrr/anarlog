@@ -58,7 +58,6 @@
     "session:default",
     "todo:default",
     "notification:default",
-    "overlay:default",
     "notify:default",
     "tantivy:default",
     "clipboard-manager:allow-write-image",
