@@ -17,7 +17,6 @@ import {
   useOrganizations,
 } from "~/contacts/queries";
 import { ColumnHeader, type SortOption } from "~/contacts/shared";
-import { useLocalUserId } from "~/shared/owner-user";
 import { useTabs } from "~/store/zustand/tabs";
 
 type ContactItem =
@@ -105,9 +104,7 @@ function ContactsList({
     [],
   );
 
-  const ownerUserId = useLocalUserId();
   const humans = useHumans();
-  const self = humans.find((human) => human.id === ownerUserId);
   const organizations = useOrganizations();
 
   const { pinnedItems, nonPinnedItems, teamItems } = useMemo(() => {
@@ -128,7 +125,6 @@ function ContactsList({
     };
     const filteredHumans = humans
       .filter((human) => {
-        if (human.id === ownerUserId) return false;
         if (!q) return true;
         return [human.name, human.email, human.phone].some((value) =>
           value.toLowerCase().includes(q),
@@ -184,7 +180,7 @@ function ContactsList({
       nonPinnedItems: [...unpinnedOrgs, ...unpinnedPeople],
       teamItems: teamOrganizations,
     };
-  }, [humans, organizations, searchValue, sortOption, ownerUserId]);
+  }, [humans, organizations, searchValue, sortOption]);
 
   const handleReorderPinned = useCallback(
     (newOrder: string[]) => {
@@ -229,14 +225,6 @@ function ContactsList({
         searchInputRef={searchInputRef}
       />
       <div className="scrollbar-hide flex-1 overflow-y-auto">
-        {self && (
-          <PersonItem
-            person={self}
-            readOnly
-            active={selected?.type === "person" && selected.id === self.id}
-            onClick={() => setSelected({ type: "person", id: self.id })}
-          />
-        )}
         {showNewPerson && (
           <NewPersonForm
             onSave={(humanId) => {

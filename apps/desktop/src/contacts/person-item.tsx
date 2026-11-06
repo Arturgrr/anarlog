@@ -13,15 +13,13 @@ export function PersonItem({
   active,
   onClick,
   onDelete,
-  readOnly = false,
 }: {
-  readOnly?: boolean;
   person: HumanRecord;
   active: boolean;
   onClick: () => void;
   onDelete?: (id: string) => void;
 }) {
-  const isPinned = readOnly || Boolean(person.pinned);
+  const isPinned = Boolean(person.pinned);
   const personName = person.name;
   const personEmail = person.email;
   const facehashName = personName || personEmail || person.id;
@@ -58,7 +56,7 @@ export function PersonItem({
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onContextMenu={readOnly ? undefined : showContextMenu}
+      onContextMenu={showContextMenu}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -85,31 +83,18 @@ export function PersonItem({
           </div>
         )}
       </div>
-      {readOnly ? (
-        <span
-          role="img"
-          aria-label="Pinned contact"
-          className="text-icon shrink-0 p-1"
-        >
-          <PushPin className="size-3.5" weight="bold" />
-        </span>
-      ) : (
-        <button
-          onClick={handleTogglePin}
-          className={cn([
-            "shrink-0 rounded-xs p-1 transition-colors",
-            isPinned
-              ? "text-icon hover:text-foreground"
-              : "text-icon-faint hover:text-icon-muted opacity-0 group-hover:opacity-100",
-          ])}
-          aria-label={isPinned ? "Unpin contact" : "Pin contact"}
-        >
-          <PushPin
-            className="size-3.5"
-            weight={isPinned ? "bold" : "regular"}
-          />
-        </button>
-      )}
+      <button
+        onClick={handleTogglePin}
+        className={cn([
+          "shrink-0 rounded-xs p-1 transition-colors",
+          isPinned
+            ? "text-icon hover:text-foreground"
+            : "text-icon-faint hover:text-icon-muted opacity-0 group-hover:opacity-100",
+        ])}
+        aria-label={isPinned ? "Unpin contact" : "Pin contact"}
+      >
+        <PushPin className="size-3.5" weight={isPinned ? "bold" : "regular"} />
+      </button>
     </div>
   );
 }

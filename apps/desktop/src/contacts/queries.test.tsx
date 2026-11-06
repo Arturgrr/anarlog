@@ -1,4 +1,5 @@
 import { renderHook } from "@testing-library/react";
+import { createRequire } from "node:module";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -32,6 +33,10 @@ import {
   useOrganizationDisplayRecordsByIds,
   useOrganizations,
 } from "./queries";
+
+const { DatabaseSync } = createRequire(import.meta.url)(
+  "node:sqlite",
+) as typeof import("node:sqlite");
 
 describe("contact SQLite queries", () => {
   beforeEach(() => {
@@ -313,5 +318,34 @@ describe("contact SQLite queries", () => {
       "alice",
       5,
     ]);
+  });
+
+  it("never loads or searches the local user's own row as a contact", async () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec(`
+        CREATE TABLE humans (
+          id TEXT PRIMARY KEY, owner_user_id TEXT, created_at TEXT,
+          organization_id TEXT, name TEXT, email TEXT, phone TEXT,
+          job_title TEXT, linkedin_username TEXT, memo TEXT, pinned INTEGER,
+          pin_order INTEGER, metadata_json TEXT, deleted_at TEXT
+        );
+        CREATE TABLE organizations (id TEXT PRIMARY KEY, name TEXT, deleted_at TEXT);
+        INSERT INTO humans VALUES
+          ('owner-1', 'owner-1', '', '', 'Ada Owner', 'ada@example.com', '', 'CEO', '', '', 0, NULL, '{}', NULL),
+          ('human-1', 'owner-1', '', '', 'Alice', 'alice@example.com', '', '', '', '', 0, NULL, '{}', NULL);
+      `);
+      mocks.execute.mockImplementation((sql: string, params: unknown[]) =>
+        Promise.resolve(db.prepare(sql).all(...(params as string[]))),
+      );
+
+      const searched = await searchContacts("", 10);
+      const loaded = await loadHumansByIds(["owner-1", "human-1"]);
+
+      expect(searched.map((human) => human.id)).toEqual(["human-1"]);
+      expect(loaded.map((human) => human.id)).toEqual(["human-1"]);
+    } finally {
+      db.close();
+    }
   });
 });

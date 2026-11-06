@@ -12,7 +12,6 @@ import {
 } from "./queries";
 
 import { StandardContentWrapper } from "~/shared/main";
-import { useLocalUserId } from "~/shared/owner-user";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
 
 export function TabContentContact({
@@ -35,9 +34,7 @@ function ContactView({ tab }: { tab: Extract<Tab, { type: "contacts" }> }) {
   const invalidateResource = useTabs((state) => state.invalidateResource);
 
   const selected = tab.state.selected;
-  const ownerUserId = useLocalUserId();
   const humans = useHumans();
-  const self = humans.find((human) => human.id === ownerUserId);
   const organizations = useOrganizations();
 
   const setSelected = useCallback(
@@ -78,7 +75,6 @@ function ContactView({ tab }: { tab: Extract<Tab, { type: "contacts" }> }) {
 
   const effectiveSelection =
     selected ??
-    (self ? ({ type: "person", id: self.id } as const) : null) ??
     (humans[0]
       ? ({ type: "person", id: humans[0].id } as const)
       : organizations[0]

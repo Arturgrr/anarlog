@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { commands as listenerCommands } from "@anlg/plugin-transcription";
 import { CircleNotch } from "@anlg/ui/components/icons";
 
-import { AccountProfile } from "./account-profile";
 import { AppSettingsView } from "./app-settings";
 import { AudioSettingsView } from "./audio-settings";
 import {
@@ -199,8 +198,6 @@ function SettingsSectionContent({
 
       {section === "app" && (
         <>
-          <AccountProfile />
-
           <form.Subscribe selector={(state) => state.values}>
             {(values) => (
               <AppSettingsView
