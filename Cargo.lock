@@ -176,10 +176,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
-name = "anlg-http-utils"
-version = "0.1.0"
-
-[[package]]
 name = "annotate-snippets"
 version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3433,7 +3429,6 @@ dependencies = [
  "tauri-plugin-hooks",
  "tauri-plugin-http",
  "tauri-plugin-icon",
- "tauri-plugin-importer",
  "tauri-plugin-js",
  "tauri-plugin-local-api",
  "tauri-plugin-local-auth",
@@ -7945,22 +7940,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "meeting-import"
-version = "0.1.0"
-dependencies = [
- "anlg-http-utils",
- "chrono",
- "dirs 6.0.0",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "url",
- "urlencoding",
- "zoom",
-]
-
-[[package]]
 name = "memchr"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8557,25 +8536,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c7398b9c8b70908f6371f47ed36737907c87c52af34c268fed0bf0ceb92ead9"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "oauth2"
-version = "5.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51e219e79014df21a225b1860a479e2dcd7cbd9130f4defd4bd0e191ea31d67d"
-dependencies = [
- "base64 0.22.1",
- "chrono",
- "getrandom 0.2.17",
- "http 1.4.0",
- "rand 0.8.6",
- "serde",
- "serde_json",
- "serde_path_to_error",
- "sha2 0.10.9",
- "thiserror 1.0.69",
- "url",
 ]
 
 [[package]]
@@ -10940,28 +10900,21 @@ version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42b6914fac0be956fe704a38239c3f44a9f841d1b06a5713d2f638065593f5b5"
 dependencies = [
- "async-trait",
  "base64 0.23.1",
- "bytes",
  "chrono",
  "futures",
- "http 1.4.0",
  "indexmap 2.14.0",
- "oauth2",
  "pastey",
  "pin-project-lite",
- "reqwest 0.13.2",
  "rmcp-macros",
  "schemars 1.2.1",
  "serde",
  "serde_json",
- "sse-stream",
  "thiserror 2.0.18",
  "tokio",
  "tokio-stream",
  "tokio-util",
  "tracing",
- "url",
  "uuid",
 ]
 
@@ -12442,19 +12395,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sse-stream"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c25ac7aff0abd1dbc474536e40416e1102c7dd9bfba0b9861c6d357f835dcfb4"
-dependencies = [
- "bytes",
- "futures-util",
- "http-body 1.0.1",
- "http-body-util",
- "pin-project-lite",
-]
-
-[[package]]
 name = "stable_deref_trait"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13636,12 +13576,8 @@ dependencies = [
 name = "tauri-plugin-detect"
 version = "0.1.0"
 dependencies = [
- "base64 0.22.1",
  "detect",
  "notification-interface",
- "objc2",
- "objc2-app-kit",
- "objc2-foundation",
  "serde",
  "serde_json",
  "specta",
@@ -13861,24 +13797,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.18",
  "tokio",
-]
-
-[[package]]
-name = "tauri-plugin-importer"
-version = "0.1.0"
-dependencies = [
- "meeting-import",
- "rmcp",
- "serde",
- "serde_json",
- "specta",
- "specta-typescript",
- "tauri",
- "tauri-plugin",
- "tauri-specta",
- "tokio",
- "tokio-util",
- "url",
 ]
 
 [[package]]
@@ -18424,19 +18342,6 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
-
-[[package]]
-name = "zoom"
-version = "0.1.0"
-dependencies = [
- "anlg-http-utils",
- "chrono",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "urlencoding",
-]
 
 [[package]]
 name = "zopfli"

@@ -65,7 +65,6 @@ anlg-gbnf = { path = "crates/gbnf", package = "gbnf" }
 anlg-gguf = { path = "crates/gguf", package = "gguf" }
 anlg-hooks = { path = "crates/hooks", package = "hooks" }
 anlg-host = { path = "crates/host", package = "host" }
-anlg-http = { path = "crates/http", package = "anlg-http-utils" }
 anlg-intercept = { path = "crates/intercept", package = "intercept" }
 anlg-language = { path = "crates/language", package = "language" }
 anlg-listener-core = { path = "crates/listener-core", package = "listener-core" }
@@ -74,7 +73,6 @@ anlg-lmstudio = { path = "crates/lmstudio", package = "lmstudio" }
 anlg-local-llm-core = { path = "crates/local-llm-core", package = "local-llm-core" }
 anlg-local-model = { path = "crates/local-model", package = "local-model" }
 anlg-local-stt-core = { path = "crates/local-stt-core", package = "local-stt-core" }
-anlg-meeting-import = { path = "crates/meeting-import", package = "meeting-import" }
 anlg-model-downloader = { path = "crates/model-downloader", package = "model-downloader" }
 anlg-model-manager = { path = "crates/model-manager", package = "model-manager" }
 anlg-mp3 = { path = "crates/mp3", package = "mp3" }
@@ -111,7 +109,6 @@ anlg-whisper-local = { path = "crates/whisper-local", package = "whisper-local" 
 anlg-whisper-local-model = { path = "crates/whisper-local-model", package = "whisper-local-model" }
 anlg-ws-client = { path = "crates/ws-client", package = "ws-client" }
 anlg-ws-utils = { path = "crates/ws-utils", package = "ws-utils" }
-anlg-zoom = { path = "crates/zoom", package = "zoom" }
 keyring = "4.1.4"
 
 openai-transcription = { path = "crates/openai-transcription", package = "openai-transcription" }
@@ -153,7 +150,6 @@ tauri-plugin-fs-sync = { path = "plugins/fs-sync" }
 tauri-plugin-fs2 = { path = "plugins/fs2" }
 tauri-plugin-hooks = { path = "plugins/hooks" }
 tauri-plugin-icon = { path = "plugins/icon" }
-tauri-plugin-importer = { path = "plugins/importer" }
 tauri-plugin-js = { path = "plugins/js" }
 tauri-plugin-local-api = { path = "plugins/local-api" }
 tauri-plugin-local-auth = { path = "plugins/local-auth" }
@@ -237,7 +233,6 @@ toml = "0.8"
 unicode-normalization = "0.1.25"
 unicode-width = "0.2"
 url = "2"
-urlencoding = "2.1"
 uuid = "1"
 
 criterion = "0.8"

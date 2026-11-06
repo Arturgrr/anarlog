@@ -17,7 +17,6 @@ import {
   getStepStatus,
 } from "./config";
 import { FinalDescription, FinalSection, finishOnboarding } from "./final";
-import { ImportSection } from "./imports";
 import { WelcomeLanguagePicker } from "./language-picker";
 import { PermissionsSection } from "./permissions";
 import { OnboardingSection } from "./shared";
@@ -228,23 +227,6 @@ function OnboardingScreenContent({
             onSkip={goNext}
           >
             <CalendarSection onContinue={goNext} />
-          </OnboardingSection>
-
-          <OnboardingSection
-            title={<Trans>Bring your meeting history</Trans>}
-            description={
-              <Trans>
-                Import notes and transcripts from the meeting apps you already
-                use.
-              </Trans>
-            }
-            completedTitle={<Trans>Meeting history imported</Trans>}
-            status={getStepStatus("imports", currentStep)}
-            onBack={goBack}
-            onNext={goNext}
-            onSkip={goNext}
-          >
-            <ImportSection onContinue={goNext} onSkip={goNext} />
           </OnboardingSection>
 
           <OnboardingSection

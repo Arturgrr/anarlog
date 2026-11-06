@@ -2,7 +2,6 @@
 description = "Default permissions for the plugin"
 permissions = [
     "allow-list-installed-applications",
-    "allow-get-installed-application-icons",
     "allow-list-mic-using-applications",
     "allow-inspect-meeting-accessibility",
     "allow-send-meeting-chat-message",

@@ -138,7 +138,6 @@ jobs:
             --exclude tauri-plugin-fs2 \
             --exclude tauri-plugin-hooks \
             --exclude tauri-plugin-icon \
-            --exclude tauri-plugin-importer \
             --exclude tauri-plugin-js \
             --exclude tauri-plugin-listener \
             --exclude tauri-plugin-listener2 \

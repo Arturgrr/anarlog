@@ -14,14 +14,6 @@ async listInstalledApplications() : Promise<Result<InstalledApp[], string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async getInstalledApplicationIcons(appIds: string[]) : Promise<Result<InstalledApplicationIcon[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:detect|get_installed_application_icons", { appIds }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async listMicUsingApplications() : Promise<Result<InstalledApp[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:detect|list_mic_using_applications") };
@@ -141,7 +133,6 @@ detectEvent: "plugin:detect:detect-event"
 
 export type DetectEvent = { type: "micDetected"; key: string; apps: InstalledApp[]; duration_secs: number } | { type: "micStopped"; apps: InstalledApp[] } | { type: "micMuted"; value: boolean } | { type: "sleepStateChanged"; value: boolean }
 export type InstalledApp = { id: string; name: string }
-export type InstalledApplicationIcon = { id: string; dataUrl: string }
 export type MeetingAccessibilityInspection = { activeCall: boolean; app: MeetingApp; pid: number; platform: MeetingPlatform; surface: MeetingSurface; accessibilityTrusted: boolean; windowTitle: string | null; remoteScreenShare: boolean; warnings: string[] }
 export type MeetingApp = { id: string; name: string }
 export type MeetingCapturedChatMessage = { id: string; platform: MeetingPlatform; surface: MeetingSurface; sender: string | null; timestamp: string | null; direction: MeetingChatDirection | null; text: string; links: string[] }

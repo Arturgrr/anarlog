@@ -40,7 +40,6 @@
     "@anlg/plugin-fs2": "workspace:*",
     "@anlg/plugin-hooks": "workspace:*",
     "@anlg/plugin-icon": "workspace:*",
-    "@anlg/plugin-importer": "workspace:*",
     "@anlg/plugin-local-api": "workspace:*",
     "@anlg/plugin-local-auth": "workspace:*",
     "@anlg/plugin-local-llm": "workspace:*",

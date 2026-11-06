@@ -190,9 +190,6 @@ importers:
       '@anlg/plugin-icon':
         specifier: workspace:*
         version: link:../../plugins/icon
-      '@anlg/plugin-importer':
-        specifier: workspace:*
-        version: link:../../plugins/importer
       '@anlg/plugin-local-api':
         specifier: workspace:*
         version: link:../../plugins/local-api
@@ -922,12 +919,6 @@ importers:
         version: 2.10.1
 
   plugins/icon:
-    dependencies:
-      '@tauri-apps/api':
-        specifier: ^2.10.1
-        version: 2.10.1
-
-  plugins/importer:
     dependencies:
       '@tauri-apps/api':
         specifier: ^2.10.1

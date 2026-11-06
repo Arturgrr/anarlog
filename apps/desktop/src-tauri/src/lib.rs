@@ -166,7 +166,6 @@ pub fn main() {
         .plugin(tauri_plugin_bedrock::init());
 
     builder = builder
-        .plugin(tauri_plugin_importer::init())
         .plugin(tauri_plugin_calendar::init())
         .plugin(tauri_plugin_todo::init());
 

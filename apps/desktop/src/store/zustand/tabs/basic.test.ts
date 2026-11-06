@@ -363,7 +363,8 @@ describe("Basic Tab Actions", () => {
   test.each([
     [undefined, "app"],
     ["lab", "app"],
-    ["data", "imports"],
+    ["data", "app"],
+    ["imports", "app"],
     ["personalization", "dictionary"],
     ["audio", "meetings"],
     ["billing", "app"],

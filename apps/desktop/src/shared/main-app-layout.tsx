@@ -1,10 +1,7 @@
 import { Outlet, useNavigate } from "@tanstack/react-router";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import {
-  events as windowsEvents,
-  getCurrentWebviewWindowLabel,
-} from "@anlg/plugin-windows";
+import { events as windowsEvents } from "@anlg/plugin-windows";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import {
@@ -13,7 +10,6 @@ import {
   useNewNote,
 } from "./useNewNote";
 
-import { MeetingImportSync } from "~/services/meeting-import-sync";
 import { getOrCreateSessionForEventId } from "~/session/queries";
 import { openFoldersFromNavigation } from "~/shared/folders-navigation";
 import { leaveAllOverlayTabs } from "~/shared/leave-overlay-tab";
@@ -29,12 +25,10 @@ import {
 export default function MainAppLayout() {
   useNavigationEvents();
   useZoomShortcuts();
-  const isMainWindow = getCurrentWebviewWindowLabel() === "main";
 
   return (
     <>
       <Outlet />
-      {isMainWindow ? <MeetingImportSync /> : null}
       <UndoDeleteToast />
     </>
   );
