@@ -10,7 +10,6 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
         .commands(tauri_specta::collect_commands![
             commands::create_human::<tauri::Wry>,
             commands::create_organization::<tauri::Wry>,
-            commands::save_personal_contact::<tauri::Wry>,
             commands::update_human::<tauri::Wry>,
             commands::update_organization::<tauri::Wry>,
             commands::soft_delete_contact::<tauri::Wry>,

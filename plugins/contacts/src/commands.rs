@@ -28,11 +28,6 @@ contacts_command!(
     crate::contacts::create_organization
 );
 contacts_command!(
-    save_personal_contact,
-    crate::contacts::SavePersonalContactRequest,
-    crate::contacts::save_personal_contact
-);
-contacts_command!(
     update_human,
     crate::contacts::UpdateHumanRequest,
     crate::contacts::update_human
