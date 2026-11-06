@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { filterProviders } from "./provider-search";
+import { normalizeSearch, providerMatchesSearch } from "./provider-search";
 
 const providers = [
   { id: "moonshot", displayName: "Moonshot AI" },
@@ -13,16 +13,18 @@ const providers = [
   },
 ];
 
-describe("filterProviders", () => {
+describe("providerMatchesSearch", () => {
   test.each([
     ["MOON", [0]],
     ["alibaba_cloud", [1]],
     ["  ", [0, 1, 2, 3]],
     ["whisper", [3]],
     [".bin", [3]],
-  ])("filters providers for %s", (query, expectedIndexes) => {
-    expect(filterProviders(providers, query)).toEqual(
-      expectedIndexes.map((index) => providers[index]),
-    );
+  ])("matches providers for %s", (query, expectedIndexes) => {
+    expect(
+      providers.filter((provider) =>
+        providerMatchesSearch(provider, normalizeSearch(query)),
+      ),
+    ).toEqual(expectedIndexes.map((index) => providers[index]));
   });
 });

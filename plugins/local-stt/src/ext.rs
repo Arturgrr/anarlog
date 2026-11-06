@@ -428,9 +428,34 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
     pub async fn cancel_download(&self, model: LocalModel) -> Result<bool, crate::Error> {
         Self::ensure_stt_model(&model)?;
 
-        if matches!(model, LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_)) {
+        // Native downloads run in a Swift task; resetting the model (Soniqo) or
+        // releasing the locale (Apple Speech) cancels it. Only while it is
+        // downloading, so a cancel never unloads a model that is in use.
+        if let LocalModel::Soniqo(soniqo) = model {
             self.download_pollers().await.cancel(&model);
-            return Ok(false);
+            if soniqo_download_state(soniqo).await?.status != "downloading" {
+                return Ok(false);
+            }
+            run_soniqo_blocking(
+                move || anlg_transcribe_soniqo::reset_model(soniqo),
+                crate::Error::ServerStopFailed,
+            )
+            .await?;
+            return Ok(true);
+        }
+
+        if matches!(model, LocalModel::AppleSpeech(_)) {
+            self.download_pollers().await.cancel(&model);
+            if apple_speech_download_state().await?.status != "downloading" {
+                return Ok(false);
+            }
+            let locale = apple_speech_settings_locale()?;
+            run_apple_speech_blocking(
+                move || anlg_transcribe_speechanalyzer::release_locale(&locale),
+                crate::Error::ServerStopFailed,
+            )
+            .await?;
+            return Ok(true);
         }
 
         let downloader = {

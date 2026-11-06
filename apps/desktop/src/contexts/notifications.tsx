@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useMemo,
   useState,
@@ -35,6 +36,7 @@ interface NotificationState {
   shouldShowBadge: boolean;
   localSttStatus: ServerStatus | null;
   isLocalSttModel: boolean;
+  dismissDownload: (model: LocalModel) => void;
 }
 
 const NotificationContext = createContext<NotificationState | null>(null);
@@ -158,6 +160,19 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
   });
 
+  // Cancelling a poll-based download stops its progress events without a
+  // final one, so the cancelled entry has to be dropped here.
+  const dismissDownload = useCallback((model: LocalModel) => {
+    setActiveDownloads((prev) => {
+      if (!prev.has(model)) {
+        return prev;
+      }
+      const next = new Map(prev);
+      next.delete(model);
+      return next;
+    });
+  }, []);
+
   const hasActiveEnhancement = false;
 
   const currentTab = useTabs(
@@ -210,6 +225,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       shouldShowBadge: notificationCount > 0,
       localSttStatus,
       isLocalSttModel,
+      dismissDownload,
     };
   }, [
     hasConfigBanner,
@@ -219,6 +235,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     isAiTab,
     localSttStatus,
     isLocalSttModel,
+    dismissDownload,
   ]);
 
   return (
@@ -238,6 +255,7 @@ const DEFAULT_NOTIFICATION_STATE: NotificationState = {
   shouldShowBadge: false,
   localSttStatus: null,
   isLocalSttModel: false,
+  dismissDownload: () => {},
 };
 
 export function useNotifications() {

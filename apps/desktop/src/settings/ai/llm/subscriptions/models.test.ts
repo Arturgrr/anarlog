@@ -69,6 +69,11 @@ describe("ChatGPT subscription models", () => {
         "https://api.openai.com/v1",
         "stored-credential",
       ),
-    ).resolves.toEqual({ models: [], ignored: [], metadata: {} });
+    ).resolves.toEqual({
+      models: [],
+      ignored: [],
+      metadata: {},
+      error: "unavailable",
+    });
   });
 });

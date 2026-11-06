@@ -2,9 +2,8 @@ import { Effect, pipe, Schema } from "effect";
 
 import {
   DEFAULT_RESULT,
-  extractMetadataMap,
+  listModelsFailure,
   fetchJson,
-  type InputModality,
   isDateSnapshot,
   isNonChatModel,
   isOldModel,
@@ -74,19 +73,11 @@ export async function listGoogleModels(
       return {
         models: sortModelsByRecency(result.models),
         ignored: result.ignored,
-        metadata: extractMetadataMap(models, extractModelId, (model) => ({
-          input_modalities: getInputModalities(extractModelId(model)),
-        })),
+        metadata: {},
       };
     }),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }
-
-const getInputModalities = (modelId: string): InputModality[] => {
-  const normalizedId = modelId.toLowerCase();
-  const supportsMultimodal = /gemini/.test(normalizedId);
-  return supportsMultimodal ? ["text", "image"] : ["text"];
-};

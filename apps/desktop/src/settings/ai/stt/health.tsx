@@ -3,26 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 
 import { usesDeferredProviderAuthentication } from "@anlg/provider-validation";
-import { Spinner } from "@anlg/ui/components/ui/spinner";
 
 import { useConfigValues } from "~/shared/config";
 import { isLocalFileSttModel, isOnDeviceSttModel } from "~/stt/capabilities";
 import { useSTTConnection } from "~/stt/useSTTConnection";
 
-export type HealthStatus = {
+type HealthStatus = {
   status: "pending" | "error" | "success" | null;
   message?: string;
 };
-
-export function HealthStatusIndicator() {
-  const health = useConnectionHealth();
-
-  if (health.status === "pending") {
-    return <Spinner size={14} className="text-muted-foreground shrink-0" />;
-  }
-
-  return null;
-}
 
 function useDeepgramHealth(enabled: boolean, apiKey?: string) {
   return useQuery({

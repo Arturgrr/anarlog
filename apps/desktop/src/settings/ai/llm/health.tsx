@@ -4,24 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { generateText } from "ai";
 import { useEffect } from "react";
 
-import { Spinner } from "@anlg/ui/components/ui/spinner";
-
 import { useLanguageModel } from "~/ai/hooks";
 
-export type LlmHealthStatus = {
+type LlmHealthStatus = {
   status: "pending" | "error" | "success" | null;
   message?: string;
 };
-
-export function HealthStatusIndicator() {
-  const health = useConnectionHealth();
-
-  if (health.status === "pending") {
-    return <Spinner size={14} className="text-muted-foreground shrink-0" />;
-  }
-
-  return null;
-}
 
 export function useConnectionHealth(): LlmHealthStatus {
   const { t } = useLingui();

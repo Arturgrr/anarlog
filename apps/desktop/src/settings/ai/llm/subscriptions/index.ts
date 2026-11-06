@@ -6,4 +6,4 @@ export {
   type SubscriptionProviderId,
   usesSubscriptionFetch,
 } from "./oauth";
-export { shouldShowInProviderList, subscriptionTwinId } from "./twins";
+export { apiTwinId, subscriptionTwinId } from "./twins";

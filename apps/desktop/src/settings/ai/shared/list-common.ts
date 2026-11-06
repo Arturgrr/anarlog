@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Effect } from "effect";
 
 import { modelName } from "./model-id";
@@ -27,6 +28,7 @@ export type ListModelsResult = {
   models: string[];
   ignored: IgnoredModel[];
   metadata: Record<string, ModelMetadata>;
+  error?: string;
 };
 
 export const DEFAULT_RESULT: ListModelsResult = {
@@ -37,6 +39,69 @@ export const DEFAULT_RESULT: ListModelsResult = {
 export const REQUEST_TIMEOUT = "5 seconds";
 const MAX_MODEL_RESPONSE_BYTES = 8 * 1024 * 1024;
 const MAX_ERROR_RESPONSE_BYTES = 64 * 1024;
+
+// Listing failures stay a usable (empty) result so selection fallbacks keep
+// working, while the settings page can still say why the list is empty.
+export const listModelsFailure = (error: unknown): ListModelsResult => ({
+  ...DEFAULT_RESULT,
+  error: describeListModelsError(error),
+});
+
+export function describeListModelsError(error: unknown): string {
+  const tag =
+    error && typeof error === "object" && "_tag" in error
+      ? String(error._tag)
+      : "";
+  if (tag === "TimeoutException") {
+    return t`The provider didn’t answer within 5 seconds.`;
+  }
+  if (tag === "ParseError") {
+    return t`The provider returned a model list Librelog can’t read.`;
+  }
+
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
+  const http = /^HTTP (\d{3}): ?([\s\S]*)$/.exec(message.trim());
+  if (http) {
+    const detail = httpErrorDetail(http[2] ?? "");
+    return detail ? `HTTP ${http[1]} · ${detail}` : `HTTP ${http[1]}`;
+  }
+
+  return firstLine(message) || t`Unknown error`;
+}
+
+function httpErrorDetail(body: string): string {
+  try {
+    const parsed = JSON.parse(body) as Record<string, unknown>;
+    const nested = parsed.error;
+    const candidates = [
+      nested && typeof nested === "object"
+        ? (nested as Record<string, unknown>).message
+        : nested,
+      parsed.message,
+      parsed.detail,
+    ];
+    const found = candidates.find(
+      (value): value is string => typeof value === "string" && !!value.trim(),
+    );
+    return found ? firstLine(found) : "";
+  } catch {
+    return firstLine(body);
+  }
+}
+
+function firstLine(value: string): string {
+  const line =
+    value
+      .split("\n")
+      .map((part) => part.trim())
+      .find(Boolean) ?? "";
+  return line.length > 200 ? `${line.slice(0, 197)}...` : line;
+}
 
 const commonIgnoreKeywords = [
   "embed",
@@ -196,6 +261,7 @@ export const removeNonStreamingModels = (
   result: ListModelsResult,
 ): ListModelsResult => {
   return {
+    ...result,
     models: result.models.filter((id) => !isNonStreamingModel(id)),
     ignored: result.ignored.filter(({ id }) => !isNonStreamingModel(id)),
     metadata: Object.fromEntries(

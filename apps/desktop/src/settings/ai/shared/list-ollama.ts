@@ -4,6 +4,7 @@ import { Ollama } from "ollama/browser";
 
 import {
   DEFAULT_RESULT,
+  listModelsFailure,
   type IgnoredModel,
   type ListModelsResult,
   type ModelIgnoreReason,
@@ -33,7 +34,7 @@ export async function listOllamaModels(
       ),
     ),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }
@@ -118,8 +119,11 @@ const summarizeOllamaDetails = (
 
     if (hasCompletion && hasTools) {
       supported.push({ name: detail.name, isRunning: detail.isRunning });
-      // TODO: Seems like Ollama do not have way to know input modality.
-      metadata[detail.name] = { input_modalities: ["text"] };
+      metadata[detail.name] = {
+        input_modalities: detail.capabilities.includes("vision")
+          ? ["text", "image"]
+          : ["text"],
+      };
     } else {
       const reasons: ModelIgnoreReason[] = [];
       if (!hasCompletion) {
