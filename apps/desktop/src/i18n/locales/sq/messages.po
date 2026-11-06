@@ -867,10 +867,6 @@ msgstr ""
 msgid "Bright canvas"
 msgstr ""
 
-#: src/onboarding/index.tsx
-msgid "Bring your meeting history"
-msgstr ""
-
 #: src/settings/general/audio-settings.tsx
 msgid "Build voiceprints from meeting audio so speakers you name in a transcript are recognized in later meetings. Voiceprints never leave this device, and unnamed ones are deleted after 45 days."
 msgstr ""
@@ -910,7 +906,6 @@ msgstr ""
 
 #: src/calendar/components/apple/permission.tsx
 #: src/i18n/native-labels.tsx
-#: src/imports/screen.tsx
 #: src/settings/ai/llm/subscriptions/connect.tsx
 #: src/settings/dictionary/index.tsx
 #: src/settings/general/storage/legacy-cleanup.tsx
@@ -986,7 +981,6 @@ msgstr ""
 
 #: src/contacts/details.tsx
 #: src/contacts/organization-details.tsx
-#: src/contacts/profile-photo.tsx
 msgid "Change photo"
 msgstr ""
 
@@ -1022,14 +1016,6 @@ msgstr ""
 msgid "Check that your vault folder is available and your disk has free space, then try again."
 msgstr ""
 
-#: src/imports/screen.tsx
-msgid "Checking connection"
-msgstr ""
-
-#: src/imports/screen.tsx
-msgid "Checking installed meeting assistants…"
-msgstr ""
-
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "Checking migration..."
 msgstr ""
@@ -1048,11 +1034,6 @@ msgstr ""
 
 #: src/settings/general/timezone.tsx
 msgid "China"
-msgstr ""
-
-#. placeholder {0}: provider.name
-#: src/imports/screen.tsx
-msgid "Choose {0} export files"
 msgstr ""
 
 #: src/settings/ai/stt/local-file-model.tsx
@@ -1126,10 +1107,6 @@ msgstr ""
 
 #: src/settings/appearance/sidebar-item-fields.tsx
 msgid "Choose extra fields to show on each note."
-msgstr ""
-
-#: src/imports/screen.tsx
-msgid "Choose files"
 msgstr ""
 
 #: src/settings/automations/starter-config.tsx
@@ -1297,7 +1274,6 @@ msgid "Comment"
 msgstr ""
 
 #: src/contacts/details.tsx
-#: src/settings/general/account-profile.tsx
 msgid "Company"
 msgstr ""
 
@@ -1338,7 +1314,6 @@ msgstr ""
 msgid "Confirm"
 msgstr ""
 
-#: src/imports/screen.tsx
 #: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Connect"
 msgstr ""
@@ -1362,10 +1337,6 @@ msgstr ""
 
 #: src/settings/ai/stt/configure.tsx
 msgid "Connect to your [NVIDIA Speech NIM](https://docs.nvidia.com/nim/speech/latest/get-started/tutorials/asr.html) WebSocket server, for example `http://localhost:9000`. Choose the model served by your deployment. The API key is optional for servers without authentication. This requires a deployed NIM server; NVIDIA's hosted gRPC endpoint is not supported here."
-msgstr ""
-
-#: src/imports/screen.tsx
-msgid "Connected"
 msgstr ""
 
 #. placeholder {0}: subscriptionProvider.displayName
@@ -1414,7 +1385,6 @@ msgstr ""
 msgid "Context length too small"
 msgstr ""
 
-#: src/imports/screen.tsx
 #: src/onboarding/calendar.tsx
 msgid "Continue"
 msgstr ""
@@ -1642,21 +1612,12 @@ msgstr ""
 msgid "Couldn't load your insights. Reopen this page to try again."
 msgstr ""
 
-#: src/settings/general/account-profile.tsx
-msgid "Couldn't load your profile. Reopen this page to try again."
-msgstr ""
-
 #: src/onboarding/final.tsx
 msgid "Couldn't open Librelog. Please try again."
 msgstr ""
 
 #: src/settings/stats/badge-collection.tsx
 msgid "Couldn't save your new badges."
-msgstr ""
-
-#: src/contacts/profile-photo.tsx
-#: src/settings/general/account-profile.tsx
-msgid "Couldn't save your profile. Try again."
 msgstr ""
 
 #: src/folders/sidebar.tsx
@@ -1737,10 +1698,6 @@ msgstr ""
 
 #: src/settings/appearance/theme.tsx
 msgid "Dark"
-msgstr ""
-
-#: src/sidebar/settings-nav-groups.ts
-msgid "Data"
 msgstr ""
 
 #: src/settings/automations/markdown-export-options.tsx
@@ -1918,7 +1875,6 @@ msgid "Disable all notifications"
 msgstr ""
 
 #: src/calendar/components/sidebar.tsx
-#: src/imports/screen.tsx
 msgid "Disconnect"
 msgstr ""
 
@@ -1936,7 +1892,6 @@ msgid "Divider"
 msgstr ""
 
 #: src/main/windows-title-bar.tsx
-#: src/settings/imports/index.tsx
 msgid "Documentation"
 msgstr ""
 
@@ -2067,7 +2022,6 @@ msgid "Edit: {term}"
 msgstr ""
 
 #: src/contacts/details.tsx
-#: src/settings/general/account-profile.tsx
 msgid "Email"
 msgstr ""
 
@@ -2678,29 +2632,12 @@ msgstr ""
 msgid "Images must be 8 MB or smaller."
 msgstr ""
 
-#: src/onboarding/index.tsx
-msgid "Import notes and transcripts from the meeting apps you already use."
-msgstr ""
-
-#. placeholder {0}: result.imported
-#. placeholder {1}: result.matched
-#. placeholder {2}: result.conflicts
-#. placeholder {3}: result.errors
-#: src/imports/screen.tsx
-msgid "Imported: {0}. Unchanged: {1}. Needs review: {2}. Failed: {3}."
-msgstr ""
-
 #: src/session/components/note-input/transcript/screens/empty.tsx
 msgid "Importing audio..."
 msgstr ""
 
 #: src/shared/long-load-gate.tsx
 msgid "Importing your existing notes. This may take a few minutes."
-msgstr ""
-
-#: src/settings/imports/index.tsx
-#: src/sidebar/settings-nav-groups.ts
-msgid "Imports"
 msgstr ""
 
 #: src/templates/auto-format-examples-dialog.tsx
@@ -2786,7 +2723,6 @@ msgid "Invalid dictation shortcut: {rest}"
 msgstr ""
 
 #: src/contacts/details.tsx
-#: src/settings/general/account-profile.tsx
 msgid "Job Title"
 msgstr ""
 
@@ -2844,6 +2780,10 @@ msgstr ""
 msgid "Language model needed"
 msgstr ""
 
+#: src/onboarding/language-picker.tsx
+msgid "Language: {languageName}"
+msgstr ""
+
 #. placeholder {0}: webhook.last_delivery_status
 #: src/settings/developers/webhooks.tsx
 msgid "Last delivery {0}"
@@ -2851,14 +2791,6 @@ msgstr ""
 
 #: src/settings/dictation.tsx
 msgid "Last dictation"
-msgstr ""
-
-#. placeholder {0}: lastRun.imported
-#. placeholder {0}: result.imported
-#. placeholder {1}: lastRun.matched
-#. placeholder {1}: result.matched
-#: src/imports/screen.tsx
-msgid "Last import: {0} added, {1} unchanged"
 msgstr ""
 
 #. placeholder {0}: lastRun.detail
@@ -3010,7 +2942,6 @@ msgid "Limit: {limit}"
 msgstr ""
 
 #: src/contacts/details.tsx
-#: src/settings/general/account-profile.tsx
 msgid "LinkedIn"
 msgstr ""
 
@@ -3137,7 +3068,6 @@ msgstr ""
 
 #: src/changelog/index.tsx
 #: src/contacts/details.tsx
-#: src/settings/general/account-profile.tsx
 msgid "Loading..."
 msgstr ""
 
@@ -3262,14 +3192,6 @@ msgstr ""
 
 #: src/automations/starters.tsx
 msgid "Meeting ends"
-msgstr ""
-
-#: src/imports/screen.tsx
-msgid "Meeting exports"
-msgstr ""
-
-#: src/onboarding/index.tsx
-msgid "Meeting history imported"
 msgstr ""
 
 #: src/session/components/outer-header/overflow/index.tsx
@@ -3422,10 +3344,6 @@ msgstr ""
 msgid "More"
 msgstr ""
 
-#: src/imports/screen.tsx
-msgid "More options"
-msgstr ""
-
 #: src/settings/general/timezone.tsx
 msgid "Moscow"
 msgstr ""
@@ -3460,7 +3378,6 @@ msgstr ""
 
 #: src/contacts/details.tsx
 #: src/contacts/organization-details.tsx
-#: src/settings/general/account-profile.tsx
 msgid "Name"
 msgstr ""
 
@@ -3479,10 +3396,6 @@ msgstr ""
 
 #: src/folders/sidebar.tsx
 msgid "New folder"
-msgstr ""
-
-#: src/imports/screen.tsx
-msgid "New meetings are imported automatically while Librelog is running."
 msgstr ""
 
 #: src/main/sidebar-timeline-chrome.tsx
@@ -3535,7 +3448,6 @@ msgstr ""
 msgid "No AI model configured"
 msgstr ""
 
-#: src/imports/screen.tsx
 #: src/settings/general/notification.tsx
 msgid "No apps found."
 msgstr ""
@@ -3620,10 +3532,6 @@ msgstr ""
 msgid "No icons found"
 msgstr ""
 
-#: src/imports/screen.tsx
-msgid "No imports yet."
-msgstr ""
-
 #: src/sidebar/timeline/index.tsx
 msgid "No items today"
 msgstr ""
@@ -3632,6 +3540,7 @@ msgstr ""
 msgid "No match"
 msgstr ""
 
+#: src/onboarding/language-picker.tsx
 #: src/settings/general/main-language.tsx
 #: src/settings/general/spoken-languages.tsx
 msgid "No matching languages found"
@@ -3771,7 +3680,6 @@ msgid "Note is Locked"
 msgstr ""
 
 #: src/contacts/details.tsx
-#: src/settings/general/account-profile.tsx
 msgid "Notes"
 msgstr ""
 
@@ -4061,7 +3969,6 @@ msgid "Permissions granted"
 msgstr ""
 
 #: src/contacts/details.tsx
-#: src/settings/general/account-profile.tsx
 msgid "Phone"
 msgstr ""
 
@@ -4083,10 +3990,6 @@ msgstr ""
 
 #: src/contacts/organization-item.tsx
 msgid "Pin Organization"
-msgstr ""
-
-#: src/contacts/person-item.tsx
-msgid "Pinned contact"
 msgstr ""
 
 #: src/contacts/organization-item.tsx
@@ -4418,7 +4321,6 @@ msgid "Remove example {0}"
 msgstr ""
 
 #: src/contacts/contact-page-header.tsx
-#: src/contacts/profile-photo.tsx
 msgid "Remove photo"
 msgstr ""
 
@@ -4548,9 +4450,7 @@ msgid "Resume listening"
 msgstr ""
 
 #: src/chat/components/message/error.tsx
-#: src/contacts/profile-photo.tsx
 #: src/session/components/note-input/enhanced/enhance-error.tsx
-#: src/settings/general/account-profile.tsx
 #: src/settings/general/storage/legacy-cleanup.tsx
 #: src/sidebar/toast/registry.tsx
 #: src/store/zustand/listener/general-live.ts
@@ -4625,13 +4525,7 @@ msgid "Save visible chat from supported meetings using Accessibility."
 msgstr ""
 
 #: src/settings/ai/shared/index.tsx
-#: src/settings/general/account-profile.tsx
 msgid "Saved"
-msgstr ""
-
-#: src/contacts/profile-photo.tsx
-#: src/settings/general/account-profile.tsx
-msgid "Saving..."
 msgstr ""
 
 #: src/session/components/note-input/transcript/renderer/index.tsx
@@ -4683,6 +4577,7 @@ msgstr ""
 msgid "Search installed apps..."
 msgstr ""
 
+#: src/onboarding/language-picker.tsx
 #: src/settings/general/main-language.tsx
 msgid "Search language..."
 msgstr "Kërko gjuhën..."
@@ -5051,10 +4946,6 @@ msgstr ""
 msgid "Skip"
 msgstr ""
 
-#: src/onboarding/imports.tsx
-msgid "Skip for now"
-msgstr ""
-
 #: src/templates/template-icon-picker.tsx
 msgid "Smileys & People"
 msgstr ""
@@ -5363,10 +5254,6 @@ msgstr ""
 
 #: src/templates/template-icon-picker.tsx
 msgid "Symbols"
-msgstr ""
-
-#: src/imports/screen.tsx
-msgid "Sync now"
 msgstr ""
 
 #: src/session/components/version-history-dialog.tsx
@@ -5875,10 +5762,6 @@ msgstr ""
 msgid "Update v{version} is available!"
 msgstr ""
 
-#: src/settings/general/account-profile.tsx
-msgid "Update your personal contact card."
-msgstr ""
-
 #: src/chat/components/message/tool/update-prompt-template.tsx
 msgid "Updating prompt draft"
 msgstr ""
@@ -5999,10 +5882,6 @@ msgstr ""
 
 #: src/settings/ai/stt/configure.tsx
 msgid "Use Alibaba Cloud Model Studio's Qwen ASR for **live transcription**. The default endpoint is the Singapore region; change it under Advanced when your API key belongs to another region."
-msgstr ""
-
-#: src/imports/screen.tsx
-msgid "Use files"
 msgstr ""
 
 #: src/settings/general/index.tsx
@@ -6245,6 +6124,8 @@ msgstr ""
 
 #: src/i18n/external-messages.ts
 #: src/meeting-float/route-state.ts
+#: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
+#: src/session/components/outer-header/metadata/participants/chip.tsx
 #: src/stt/live-segment.ts
 msgid "You"
 msgstr ""
@@ -6287,10 +6168,6 @@ msgstr ""
 
 #: src/shared/long-load-gate.tsx
 msgid "Your existing data was left unchanged. Please restart the app. If the problem continues, contact support."
-msgstr ""
-
-#: src/settings/general/account-profile.tsx
-msgid "Your info"
 msgstr ""
 
 #: src/settings/stats/index.tsx
