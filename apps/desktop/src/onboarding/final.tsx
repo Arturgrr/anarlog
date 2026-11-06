@@ -5,6 +5,7 @@ import { commands as openerCommands } from "@anlg/plugin-opener2";
 import { commands as sfxCommands } from "@anlg/plugin-sfx";
 import { CircleNotch, GithubLogo } from "@anlg/ui/components/icons";
 
+import { saveOnboardingStep } from "./config";
 import { OnboardingButton } from "./shared";
 import {
   getOrCreateWelcomeSession,
@@ -103,6 +104,7 @@ export async function finishOnboarding(
   if (result.status === "error") {
     throw new Error(result.error);
   }
+  saveOnboardingStep(null);
   await new Promise((resolve) => setTimeout(resolve, 100));
   setPendingWelcomeSession(welcomeSessionId);
   if (await flushAutomaticRelaunch()) {

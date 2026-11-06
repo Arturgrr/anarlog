@@ -17,23 +17,29 @@ const SCROLL_DELAY_MS = 350;
 export type SectionStatus = "completed" | "active" | "upcoming";
 
 export function OnboardingSection({
+  eyebrow,
   title,
   completedTitle,
   description,
   status,
+  fill = false,
   onBack,
   onNext,
   onSkip,
+  onEdit,
   skippable = true,
   children,
 }: {
+  eyebrow?: ReactNode;
   title: ReactNode;
   completedTitle?: ReactNode;
   description?: ReactNode;
   status: SectionStatus | null;
+  fill?: boolean;
   onBack?: () => void;
   onNext?: () => void;
   onSkip?: () => void;
+  onEdit?: () => void;
   skippable?: boolean;
   children: ReactNode;
 }) {
@@ -57,7 +63,10 @@ export function OnboardingSection({
   if (!status || status === "upcoming") return null;
 
   return (
-    <section ref={sectionRef}>
+    <section
+      ref={sectionRef}
+      className={cn([isActive && fill && "flex min-h-[26rem] flex-1 flex-col"])}
+    >
       <div
         className={cn([
           "flex items-center gap-2 transition-all duration-300",
@@ -68,54 +77,70 @@ export function OnboardingSection({
           <Check className="text-foreground size-4 shrink-0" weight="bold" />
         )}
         <div className="flex min-w-0 flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <h2
-              className={cn([
-                "transition-all duration-300",
-                isCompleted
-                  ? "text-muted-foreground/70 text-xs font-normal"
-                  : "text-foreground font-sans text-xl font-semibold",
-              ])}
-            >
-              {isCompleted ? (completedTitle ?? title) : title}
-            </h2>
-            {isActive && (
-              <div className="flex items-center gap-2">
-                {import.meta.env.DEV && onBack && (
-                  <button
-                    onClick={onBack}
-                    aria-label={t`Go to previous section`}
-                    className="text-muted-foreground hover:text-muted-foreground rounded p-0.5 transition-colors"
-                  >
-                    <CaretLeft className="size-3" />
-                  </button>
-                )}
-                {onNext &&
-                  (skippable ? (
+          <div className="flex flex-col gap-0.5">
+            {isActive && eyebrow ? (
+              <span className="text-small text-faint font-medium tracking-[0.04em] uppercase">
+                {eyebrow}
+              </span>
+            ) : null}
+            <div className="flex items-center gap-2">
+              <h2
+                className={cn([
+                  "transition-all duration-300",
+                  isCompleted
+                    ? "text-muted-foreground/70 text-xs font-normal"
+                    : "text-foreground font-sans text-xl font-semibold",
+                ])}
+              >
+                {isCompleted ? (completedTitle ?? title) : title}
+              </h2>
+              {isCompleted && onEdit ? (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
+                >
+                  <Trans>Change</Trans>
+                </button>
+              ) : null}
+              {isActive && (
+                <div className="flex items-center gap-2">
+                  {import.meta.env.DEV && onBack && (
                     <button
-                      onClick={() => {
-                        if (onSkip) {
-                          onSkip();
-                        } else {
-                          onNext?.();
-                        }
-                      }}
-                      className="text-muted-foreground hover:text-muted-foreground flex items-center gap-1 text-sm transition-colors"
-                    >
-                      <Trans>Skip</Trans>
-                      <CaretRight className="size-3" />
-                    </button>
-                  ) : import.meta.env.DEV ? (
-                    <button
-                      onClick={onNext}
-                      aria-label={t`Go to next section`}
+                      onClick={onBack}
+                      aria-label={t`Go to previous section`}
                       className="text-muted-foreground hover:text-muted-foreground rounded p-0.5 transition-colors"
                     >
-                      <CaretRight className="size-3" />
+                      <CaretLeft className="size-3" />
                     </button>
-                  ) : null)}
-              </div>
-            )}
+                  )}
+                  {onNext &&
+                    (skippable ? (
+                      <button
+                        onClick={() => {
+                          if (onSkip) {
+                            onSkip();
+                          } else {
+                            onNext?.();
+                          }
+                        }}
+                        className="text-muted-foreground hover:text-muted-foreground flex items-center gap-1 text-sm transition-colors"
+                      >
+                        <Trans>Skip</Trans>
+                        <CaretRight className="size-3" />
+                      </button>
+                    ) : import.meta.env.DEV ? (
+                      <button
+                        onClick={onNext}
+                        aria-label={t`Go to next section`}
+                        className="text-muted-foreground hover:text-muted-foreground rounded p-0.5 transition-colors"
+                      >
+                        <CaretRight className="size-3" />
+                      </button>
+                    ) : null)}
+                </div>
+              )}
+            </div>
           </div>
           {isActive && description && (
             <div className="text-muted-foreground text-sm">{description}</div>
@@ -131,7 +156,10 @@ export function OnboardingSection({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="-mx-5 -mb-5 overflow-hidden px-5 pt-3 pb-5"
+            className={cn([
+              "-mx-5 -mb-5 overflow-hidden px-5 pt-3 pb-5",
+              fill && "flex min-h-0 flex-1 flex-col",
+            ])}
           >
             {children}
           </motion.div>

@@ -14,8 +14,8 @@ vi.mock("./general", () => ({
 }));
 
 vi.mock("./todo", () => ({ SettingsTodo: () => null }));
-vi.mock("~/settings/ai/llm", () => ({ LLM: () => null }));
-vi.mock("~/settings/ai/stt", () => ({ STT: () => null }));
+vi.mock("~/settings/ai/llm", () => ({ LlmModelPicker: () => null }));
+vi.mock("~/settings/ai/stt", () => ({ SttModelPicker: () => null }));
 vi.mock("~/settings/appearance", () => ({ SettingsAppearance: () => null }));
 vi.mock("~/settings/developers", () => ({ SettingsDevelopers: () => null }));
 vi.mock("~/settings/dictionary", () => ({ SettingsDictionary: () => null }));

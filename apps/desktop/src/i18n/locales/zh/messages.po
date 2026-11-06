@@ -251,12 +251,20 @@ msgstr ""
 msgid "1 month"
 msgstr ""
 
+#: src/onboarding/index.tsx
+msgid "1 of 2 · Transcription"
+msgstr ""
+
 #: src/session/components/pending-proposals-banner.tsx
 msgid "1 pending edit"
 msgstr ""
 
 #: src/settings/general/audio-settings.tsx
 msgid "1 week"
+msgstr ""
+
+#: src/onboarding/index.tsx
+msgid "2 of 2 · Intelligence"
 msgstr ""
 
 #: src/settings/general/audio-settings.tsx
@@ -810,6 +818,7 @@ msgstr ""
 msgid "Average across the capture days counted above."
 msgstr ""
 
+#: src/onboarding/model-setup.tsx
 #: src/settings/todo/permission.tsx
 #: src/sidebar/custom-sidebar-header.tsx
 msgid "Back"
@@ -975,6 +984,7 @@ msgstr ""
 msgid "Central Time"
 msgstr ""
 
+#: src/onboarding/shared.tsx
 #: src/stt/useStartListening.ts
 msgid "Change"
 msgstr ""
@@ -1024,6 +1034,7 @@ msgstr ""
 msgid "Checking migration..."
 msgstr ""
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/llm/in-use.tsx
 #: src/settings/ai/llm/models.tsx
 #: src/settings/ai/stt/detail.tsx
@@ -1067,6 +1078,10 @@ msgstr ""
 
 #: src/settings/ai/stt/health.tsx
 msgid "Choose a local transcription model file."
+msgstr ""
+
+#: src/onboarding/model-setup.tsx
+msgid "Choose a model to continue"
 msgstr ""
 
 #: src/i18n/external-messages.ts
@@ -1166,6 +1181,10 @@ msgstr ""
 
 #: src/settings/general/week-start.tsx
 msgid "Choose which day begins your calendar week."
+msgstr ""
+
+#: src/onboarding/model-setup.tsx
+msgid "Chosen:"
 msgstr ""
 
 #: src/settings/ai/llm/shared.tsx
@@ -1400,6 +1419,14 @@ msgstr ""
 
 #: src/settings/ai/llm/models.tsx
 msgid "Context length too small"
+msgstr ""
+
+#: src/onboarding/model-setup.tsx
+msgid "Continue"
+msgstr ""
+
+#: src/onboarding/model-setup.tsx
+msgid "Continue to Intelligence"
 msgstr ""
 
 #: src/settings/general/meeting-settings.tsx
@@ -2307,6 +2334,7 @@ msgstr ""
 msgid "Finish the connection above to see the models."
 msgstr ""
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/stt/detail.tsx
 msgid "Finish the connection above to use these models."
 msgstr ""
@@ -2635,6 +2663,10 @@ msgstr ""
 msgid "How to get a Kimi Code key"
 msgstr ""
 
+#: src/onboarding/index.tsx
+msgid "How your meetings become text"
+msgstr ""
+
 #: src/contacts/humans.tsx
 msgid "Human"
 msgstr ""
@@ -2745,6 +2777,10 @@ msgstr ""
 msgid "Install"
 msgstr ""
 
+#: src/onboarding/index.tsx
+msgid "Install a model on your Mac or connect a cloud provider. It’s the same list as Settings › Transcription."
+msgstr ""
+
 #: src/settings/developers/skills.tsx
 msgid "Install to all agents"
 msgstr ""
@@ -2753,9 +2789,17 @@ msgstr ""
 msgid "Installed"
 msgstr ""
 
+#: src/onboarding/model-setup.tsx
+msgid "installing {percent}"
+msgstr ""
+
 #: src/settings/ai/llm/index.tsx
 #: src/sidebar/settings-nav-groups.ts
 msgid "Intelligence"
+msgstr ""
+
+#: src/onboarding/model-setup.tsx
+msgid "Intelligence: <0/>"
 msgstr ""
 
 #: src/i18n/external-messages.ts
@@ -3721,6 +3765,7 @@ msgstr ""
 msgid "Not available on this Mac"
 msgstr ""
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/stt/detail.tsx
 msgid "Not available on this Mac."
 msgstr ""
@@ -3743,6 +3788,10 @@ msgstr ""
 
 #: src/settings/developers/webhooks.tsx
 msgid "not receiving events"
+msgstr ""
+
+#: src/onboarding/model-setup.tsx
+msgid "not set up"
 msgstr ""
 
 #: src/settings/ai/shared/provider-setup-label.tsx
@@ -4206,6 +4255,10 @@ msgstr ""
 msgid "Reads images"
 msgstr ""
 
+#: src/onboarding/model-setup.tsx
+msgid "ready"
+msgstr ""
+
 #: src/settings/ai/shared/in-use-bar.tsx
 #: src/settings/general/notification.tsx
 msgid "Ready"
@@ -4552,6 +4605,10 @@ msgstr ""
 msgid "Right Command"
 msgstr ""
 
+#: src/onboarding/index.tsx
+msgid "Run a model on your Mac, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
+msgstr ""
+
 #. placeholder {0}: formatToolName(toolName)
 #: src/chat/components/message/tool/generic.tsx
 msgid "Running {0}…"
@@ -4786,6 +4843,7 @@ msgstr ""
 msgid "Seoul"
 msgstr ""
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/llm/index.tsx
 msgid "Server stopped"
 msgstr ""
@@ -5130,6 +5188,10 @@ msgstr ""
 msgid "Starting"
 msgstr ""
 
+#: src/onboarding/model-setup.tsx
+msgid "starting download…"
+msgstr ""
+
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Starting download…"
 msgstr ""
@@ -5416,6 +5478,7 @@ msgstr ""
 msgid "The focused text field changed. Copy your last dictation from Settings > Dictation."
 msgstr ""
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/llm/models.tsx
 msgid "The key was rejected. Check it above."
 msgstr ""
@@ -5635,6 +5698,15 @@ msgstr ""
 msgid "Transcription failed"
 msgstr ""
 
+#. placeholder {0}: status.message
+#: src/onboarding/model-setup.tsx
+msgid "Transcription isn’t ready: {0}"
+msgstr ""
+
+#: src/onboarding/model-setup.tsx
+msgid "Transcription isn’t set up yet."
+msgstr ""
+
 #: src/sidebar/toast/registry.tsx
 msgid "Transcription provider needed"
 msgstr ""
@@ -5649,6 +5721,10 @@ msgstr ""
 
 #: src/sidebar/toast/registry.tsx
 msgid "Transcription unavailable"
+msgstr ""
+
+#: src/onboarding/model-setup.tsx
+msgid "Transcription: <0/>"
 msgstr ""
 
 #: src/templates/template-icon-picker.tsx
@@ -5716,6 +5792,7 @@ msgstr ""
 #: src/chat/components/message/tool/generic.tsx
 #: src/chat/components/message/tool/shared.tsx
 #: src/chat/components/message/tool/update-prompt-template.tsx
+#: src/onboarding/model-status.ts
 #: src/settings/ai/llm/health.tsx
 #: src/settings/ai/shared/list-common.ts
 msgid "Unknown error"
@@ -6107,6 +6184,14 @@ msgstr ""
 msgid "Waiting for authorization in your browser…"
 msgstr ""
 
+#: src/onboarding/model-setup.tsx
+msgid "Waiting for transcription to finish installing"
+msgstr ""
+
+#: src/onboarding/model-setup.tsx
+msgid "Waiting for transcription to finish installing ({percent})"
+msgstr ""
+
 #: src/settings/ai/llm/provider-context.ts
 msgid "We only support **OpenAI-compatible** endpoints for now."
 msgstr ""
@@ -6194,6 +6279,10 @@ msgstr ""
 
 #: src/settings/ai/stt/local-file-model.tsx
 msgid "whisper.cpp models"
+msgstr ""
+
+#: src/onboarding/index.tsx
+msgid "Who writes your summaries"
 msgstr ""
 
 #: src/i18n/native-labels.tsx

@@ -117,6 +117,8 @@ describe("NotificationProvider", () => {
 
   it("selects the pending download only after completion and honors a newer choice", async () => {
     const queryClient = new QueryClient();
+    const connectionKey = ["stt-connection", "soniqo", "soniqo-parakeet-batch"];
+    queryClient.setQueryData(connectionKey, { status: "not_downloaded" });
     render(
       <QueryClientProvider client={queryClient}>
         <NotificationProvider>
@@ -159,6 +161,7 @@ describe("NotificationProvider", () => {
     expect(mocks.toastSuccess).toHaveBeenCalledWith("Model downloaded", {
       description: "Soniqo Parakeet Batch",
     });
+    expect(queryClient.getQueryState(connectionKey)?.isInvalidated).toBe(true);
     expect(screen.getByTestId("download-status").textContent).toBe("");
 
     mocks.setDownloadedSttSelection.mockClear();

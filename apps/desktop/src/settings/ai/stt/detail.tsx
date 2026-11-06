@@ -30,6 +30,7 @@ export function SttProviderDetail({
   freeformModel,
   languages,
   languageSupport,
+  promptToSelect,
   onSelect,
 }: {
   entry: SttEntry;
@@ -38,6 +39,7 @@ export function SttProviderDetail({
   freeformModel: string;
   languages: readonly string[];
   languageSupport: Map<string, LanguageSupport>;
+  promptToSelect: boolean;
   onSelect: (provider: string, model: string) => void;
 }) {
   const { i18n, t } = useLingui();
@@ -72,6 +74,7 @@ export function SttProviderDetail({
             config={provider}
             providerType="stt"
             currentProvider={current?.provider}
+            promptToSelect={promptToSelect}
           />
         </DetailSection>
       )}

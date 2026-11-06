@@ -43,18 +43,21 @@ import {
   type ProviderListItem,
 } from "~/settings/ai/shared/provider-list";
 import { MissingSetupLabel } from "~/settings/ai/shared/provider-setup-label";
-import { ModelSettingsShell } from "~/settings/ai/shared/settings-shell";
+import {
+  type ModelPickerVariant,
+  ModelSettingsShell,
+} from "~/settings/ai/shared/settings-shell";
 import { useConfigValue } from "~/shared/config";
 
-export function STT() {
+export function SttModelPicker({ variant }: { variant: ModelPickerVariant }) {
   return (
     <SttSettingsProvider>
-      <SttSettings />
+      <SttPickerBody variant={variant} />
     </SttSettingsProvider>
   );
 }
 
-function SttSettings() {
+function SttPickerBody({ variant }: { variant: ModelPickerVariant }) {
   const { t, i18n } = useLingui();
   const catalog = useSttCatalog();
   const selection = useSttSelection(catalog);
@@ -147,6 +150,7 @@ function SttSettings() {
     <>
       {selection.persistDefault}
       <ModelSettingsShell
+        variant={variant}
         title={<Trans>Transcription</Trans>}
         subtitle={<Trans>Where and how your meetings become text.</Trans>}
         search={search}
@@ -261,6 +265,7 @@ function SttSettings() {
               freeformModel={selection.lastUsedModel(focused.provider.id)}
               languages={languages}
               languageSupport={languageSupport}
+              promptToSelect={variant === "page"}
               onSelect={selection.select}
             />
           ) : null

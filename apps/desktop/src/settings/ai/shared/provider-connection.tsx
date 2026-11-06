@@ -64,11 +64,13 @@ export function ProviderConnectionForm({
   config,
   providerType,
   currentProvider,
+  promptToSelect,
   onConnect,
 }: {
   config: ConnectionProvider;
   providerType: ProviderType;
   currentProvider?: string;
+  promptToSelect: boolean;
   onConnect?: () => void;
 }) {
   const { t, i18n } = useLingui();
@@ -90,6 +92,7 @@ export function ProviderConnectionForm({
   const showBaseUrl = requiredFields.includes("base_url") && !isSubscription;
   const hasStoredConfig = hasStoredProviderConfig(config, parsedProvider);
   const notifyProviderSelection = useProviderSelectionPrompt({
+    enabled: promptToSelect,
     providerType,
     providerId: config.id,
     providerName: displayName,
