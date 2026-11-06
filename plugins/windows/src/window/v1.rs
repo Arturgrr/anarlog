@@ -211,7 +211,9 @@ impl AppWindow {
                 .visible(false)
                 .decorations(true)
                 .hidden_title(true)
-                .theme(Some(tauri::Theme::Light))
+                // Follow the system appearance from the first frame; the
+                // frontend applies an explicit light/dark preference.
+                .theme(None)
                 .traffic_light_position(tauri::LogicalPosition::new(12.0, traffic_light_y))
                 .title_bar_style(tauri::TitleBarStyle::Overlay);
         }
