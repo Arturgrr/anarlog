@@ -77,7 +77,6 @@
     "permissions:default",
     "settings:default",
     "sfx:default",
-    "path2:default",
     "export:default",
     "autostart:default",
     "local-api:default",

@@ -3347,7 +3347,6 @@ dependencies = [
  "tauri-plugin-opener2",
  "tauri-plugin-os",
  "tauri-plugin-overlay",
- "tauri-plugin-path2",
  "tauri-plugin-permissions",
  "tauri-plugin-prevent-default",
  "tauri-plugin-process",
@@ -11018,15 +11017,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sanitize-filename"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc984f4f9ceb736a7bb755c3e3bd17dc56370af2600c9780dcc48c66453da34d"
-dependencies = [
- "regex",
-]
-
-[[package]]
 name = "scc"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13706,19 +13696,6 @@ dependencies = [
  "tauri-specta",
  "tokio",
  "tracing",
-]
-
-[[package]]
-name = "tauri-plugin-path2"
-version = "0.1.0"
-dependencies = [
- "sanitize-filename",
- "specta",
- "specta-typescript",
- "tauri",
- "tauri-plugin",
- "tauri-specta",
- "tokio",
 ]
 
 [[package]]
