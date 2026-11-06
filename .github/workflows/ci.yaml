@@ -19,4 +19,5 @@ jobs:
       - run: >-
           node --test
           scripts/dev.test.mjs
+          scripts/release.test.mjs
           scripts/security-dependencies.test.mjs
