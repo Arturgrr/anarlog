@@ -46,9 +46,23 @@ export function isBeta(version) {
   return version.includes("-beta.");
 }
 
-export function stripFrontmatter(markdown) {
+// Turns an in-app changelog entry into GitHub markdown: drops the frontmatter
+// and renders <banner> tags, which GitHub would strip, as alerts.
+export function changelogToGithubMarkdown(markdown) {
   const match = markdown.trim().match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/);
-  return (match ? match[1] : markdown).trim();
+  const body = (match ? match[1] : markdown).trim();
+  return body.replace(
+    /<banner(?:\s+title="([^"]*)")?(?:\s+variant="([^"]*)")?\s*>([\s\S]*?)<\/banner>/g,
+    (_, title, variant, content) =>
+      [
+        variant === "warning" ? "> [!WARNING]" : "> [!NOTE]",
+        ...(title ? [`> **${title}**`, ">"] : []),
+        ...content
+          .trim()
+          .split("\n")
+          .map((line) => (line ? `> ${line}` : ">")),
+      ].join("\n"),
+  );
 }
 
 export function releaseNotes({ version, repository, changelog }) {
@@ -102,7 +116,7 @@ export function releaseNotes({ version, repository, changelog }) {
     "",
     "## What's new",
     "",
-    stripFrontmatter(changelog),
+    changelogToGithubMarkdown(changelog),
     "",
   ].join("\n");
 }

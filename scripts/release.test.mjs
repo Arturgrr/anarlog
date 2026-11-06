@@ -68,7 +68,7 @@ test("release notes explain the macOS 15 first launch and include the changelog"
     version: "0.1.0-beta.1",
     repository: "Arturgrr/librelog",
     changelog:
-      '---\ndate: "2026-11-06"\nsummary: "First beta."\n---\n\n## Hello\n',
+      '---\ndate: "2026-11-06"\nsummary: "First beta."\n---\n\n<banner title="Welcome">\nLine one.\n\nLine two.\n</banner>\n\n## Hello\n',
   });
 
   assert.match(notes, /This is a beta/);
@@ -76,8 +76,11 @@ test("release notes explain the macOS 15 first launch and include the changelog"
   assert.match(notes, /Librelog_0\.1\.0-beta\.1_x64\.dmg/);
   assert.match(notes, /Privacy & Security.*Open Anyway/);
   assert.doesNotMatch(notes, /right-click/i);
-  assert.match(notes, /## What's new\n\n## Hello\n$/);
-  assert.doesNotMatch(notes, /summary:/);
+  assert.match(
+    notes,
+    /## What's new\n\n> \[!NOTE\]\n> \*\*Welcome\*\*\n>\n> Line one\.\n>\n> Line two\.\n\n## Hello\n$/,
+  );
+  assert.doesNotMatch(notes, /summary:|<banner/);
   assert.doesNotMatch(
     releaseNotes({ version: "0.1.0", repository: "a/b", changelog: "" }),
     /This is a beta/,
