@@ -29,7 +29,6 @@
     "core:window:allow-set-always-on-top",
     "core:window:allow-is-always-on-top",
     "core:webview:allow-set-webview-zoom",
-    "audio-priority:default",
     "contacts:default",
     "db:default",
     "windows:default",

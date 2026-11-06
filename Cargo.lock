@@ -2920,7 +2920,6 @@ dependencies = [
  "tauri-plugin-agent",
  "tauri-plugin-anlg-tray",
  "tauri-plugin-apple-foundation",
- "tauri-plugin-audio-priority",
  "tauri-plugin-autostart",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-contacts",
@@ -12570,24 +12569,6 @@ dependencies = [
  "tauri-plugin",
  "tauri-specta",
  "tokio",
-]
-
-[[package]]
-name = "tauri-plugin-audio-priority"
-version = "0.1.0"
-dependencies = [
- "audio-device",
- "serde",
- "serde_json",
- "specta",
- "specta-typescript",
- "tauri",
- "tauri-plugin",
- "tauri-plugin-settings",
- "tauri-specta",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
 ]
 
 [[package]]
