@@ -1,4 +1,3 @@
-import { getIdentifier } from "@tauri-apps/api/app";
 import {
   getCurrentWindow,
   type Theme,
@@ -134,14 +133,8 @@ function applyAppearance(theme: ThemePreference, systemIsDark: boolean) {
 }
 
 export async function applyAppIconPreference(appIcon: AppIconPreference) {
-  const appIdentifier = await getIdentifier().catch(
-    () => "com.arturgrr.librelog",
-  );
-
   try {
-    const result = await iconCommands.setDockIcon(
-      resolveAppIconName(appIcon, appIdentifier),
-    );
+    const result = await iconCommands.setDockIcon(resolveAppIconName(appIcon));
     if (result.status === "error") {
       console.error("[theme] failed to update Dock icon", result.error);
     }

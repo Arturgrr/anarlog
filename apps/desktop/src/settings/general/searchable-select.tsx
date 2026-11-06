@@ -1,5 +1,5 @@
 import { useLingui } from "@lingui/react/macro";
-import { useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 
 import { CaretDown, Check } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
@@ -34,6 +34,8 @@ interface SearchableSelectProps {
   emptyMessage?: string;
   className?: string;
   dropdownClassName?: string;
+  align?: "start" | "end";
+  trigger?: ReactNode;
   "aria-labelledby"?: string;
   "aria-describedby"?: string;
 }
@@ -56,6 +58,8 @@ export function SearchableSelect({
   emptyMessage,
   className,
   dropdownClassName,
+  align = "start",
+  trigger,
   "aria-labelledby": ariaLabelledBy,
   "aria-describedby": ariaDescribedBy,
 }: SearchableSelectProps) {
@@ -80,28 +84,30 @@ export function SearchableSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          aria-labelledby={ariaLabelledBy}
-          aria-describedby={ariaDescribedBy}
-          className={cn(["justify-between px-2.5 font-normal", className])}
-        >
-          <span className="truncate">
-            {selectedOption
-              ? selectedOption.detail
-                ? `${selectedOption.label} (${selectedOption.detail})`
-                : selectedOption.label
-              : (placeholder ?? t`Select...`)}
-          </span>
-          <CaretDown className="-mr-1 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+        {trigger ?? (
+          <Button
+            type="button"
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            aria-labelledby={ariaLabelledBy}
+            aria-describedby={ariaDescribedBy}
+            className={cn(["justify-between px-2.5 font-normal", className])}
+          >
+            <span className="truncate">
+              {selectedOption
+                ? selectedOption.detail
+                  ? `${selectedOption.label} (${selectedOption.detail})`
+                  : selectedOption.label
+                : (placeholder ?? t`Select...`)}
+            </span>
+            <CaretDown className="-mr-1 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        )}
       </PopoverTrigger>
       <PopoverContent
         variant="app"
-        align="start"
+        align={align}
         className={dropdownClassName}
         style={{
           width: dropdownClassName

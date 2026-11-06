@@ -6,15 +6,6 @@ const mocks = vi.hoisted(() => ({
   setAppIcon: vi.fn(),
   applyAppIconPreference: vi.fn(),
   appIcon: "default",
-  appIdentifier: "com.arturgrr.librelog" as string | undefined,
-}));
-
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({ data: mocks.appIdentifier }),
-}));
-
-vi.mock("@tauri-apps/api/app", () => ({
-  getIdentifier: vi.fn(),
 }));
 
 vi.mock("@tauri-apps/plugin-os", () => ({
@@ -41,7 +32,6 @@ describe("AppIconSelector", () => {
     vi.clearAllMocks();
     mocks.platform.mockReturnValue("macos");
     mocks.appIcon = "default";
-    mocks.appIdentifier = "com.arturgrr.librelog";
   });
 
   it("applies and stores the selected icon", () => {
@@ -59,22 +49,15 @@ describe("AppIconSelector", () => {
     expect(mocks.setAppIcon).toHaveBeenCalledWith("light");
   });
 
-  it.each([
-    ["a removed icon variant", "walnut", "com.arturgrr.librelog", "Graphite"],
-    [
-      "the dev channel default",
-      "default",
-      "com.arturgrr.librelog.dev",
-      "Light",
-    ],
-  ])("selects the resolved icon for %s", (_, appIcon, identifier, label) => {
-    mocks.appIcon = appIcon;
-    mocks.appIdentifier = identifier;
+  it("selects Graphite for a removed icon variant", () => {
+    mocks.appIcon = "walnut";
 
     render(<AppIconSelector />);
 
     expect(
-      screen.getByRole("radio", { name: label }).getAttribute("aria-checked"),
+      screen
+        .getByRole("radio", { name: "Graphite" })
+        .getAttribute("aria-checked"),
     ).toBe("true");
   });
 });

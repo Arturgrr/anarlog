@@ -12,21 +12,8 @@ describe("app icon preference", () => {
     expect(normalizeAppIconPreference("light")).toBe("light");
   });
 
-  it("resolves the default icon from the app channel", () => {
-    expect(resolveAppIconName("default", "com.arturgrr.librelog")).toBe(
-      "graphite",
-    );
-    expect(resolveAppIconName("default", "com.arturgrr.librelog.nightly")).toBe(
-      "graphite",
-    );
-    expect(resolveAppIconName("default", "com.arturgrr.librelog.staging")).toBe(
-      "graphite",
-    );
-    expect(resolveAppIconName("default", "com.arturgrr.librelog.dev")).toBe(
-      "light",
-    );
-    expect(resolveAppIconName("graphite", "com.arturgrr.librelog.dev")).toBe(
-      "graphite",
-    );
+  it("resolves the default icon to graphite on every channel", () => {
+    expect(resolveAppIconName("default")).toBe("graphite");
+    expect(resolveAppIconName("light")).toBe("light");
   });
 });

@@ -88,7 +88,7 @@
       },
       "files": {
         "Resources/mlx-swift_Cmlx.bundle/default.metallib": "resources/mlx.metallib",
-        "Resources/AppIcon.icns": "resources/light/AppIcon.icns"
+        "Resources/AppIcon.icns": "resources/graphite/AppIcon.icns"
       }
     }
   },
