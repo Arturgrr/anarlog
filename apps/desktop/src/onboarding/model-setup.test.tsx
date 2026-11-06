@@ -134,7 +134,7 @@ test("Continue to Intelligence stays disabled until a transcription model is rea
   );
 });
 
-test("the final Continue waits for the transcription download, then enables once both models are ready", () => {
+test("Intelligence Continue lets people move on while the transcription model is still downloading", () => {
   const onContinue = vi.fn();
   mocks.config = {
     current_llm_provider: "openai",
@@ -147,28 +147,17 @@ test("the final Continue waits for the transcription download, then enables once
       api_key: "sk-key",
     },
   };
-  mocks.availability.llm = { openai: true };
-  mocks.llmHealth = { status: "success" };
+  mocks.availability.llm = { openai: false };
   render(<IntelligenceStep onBack={vi.fn()} onContinue={onContinue} />);
 
   startParakeetDownload(42);
   expect(continueButton("Continue").disabled).toBe(true);
-  expect(screen.getByRole("status").textContent).toContain(
-    "Waiting for transcription to finish installing (42%)",
-  );
 
-  mocks.activeDownloads = [];
-  mocks.config = {
-    ...mocks.config,
-    current_stt_provider: "soniqo",
-    current_stt_model: "soniqo-parakeet-batch",
-  };
-  mocks.sttHealth = { status: "success" };
-  act(() => {
-    usePendingSttSelection.setState({ selection: null });
-  });
-
+  mocks.availability.llm = { openai: true };
+  mocks.llmHealth = { status: "success" };
+  startParakeetDownload(43);
   expect(continueButton("Continue").disabled).toBe(false);
+  expect(screen.getByRole("status").textContent).not.toContain("Transcription");
   act(() => continueButton("Continue").click());
   expect(onContinue).toHaveBeenCalledTimes(1);
 });

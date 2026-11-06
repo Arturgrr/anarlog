@@ -7,6 +7,7 @@ vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => mocks.platform }));
 import {
   getInitialStep,
   getOnboardingSteps,
+  limitToMissingSelection,
   saveOnboardingStep,
 } from "./config";
 
@@ -27,13 +28,20 @@ it.each([
   },
 );
 
-it("resumes at the saved step after a restart without skipping the model checks", () => {
+it("resumes at the saved step after a restart, or at the step whose choice is missing", () => {
   mocks.platform = "macos";
   saveOnboardingStep("transcription");
   expect(getInitialStep()).toBe("transcription");
 
   saveOnboardingStep("final");
-  expect(getInitialStep()).toBe("intelligence");
+  expect(getInitialStep()).toBe("final");
+  expect(limitToMissingSelection("final", null)).toBe("final");
+  expect(limitToMissingSelection("final", "transcription")).toBe(
+    "transcription",
+  );
+  expect(limitToMissingSelection("permissions", "transcription")).toBe(
+    "permissions",
+  );
 
   mocks.platform = "windows";
   saveOnboardingStep("permissions");

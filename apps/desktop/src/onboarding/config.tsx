@@ -29,11 +29,19 @@ export function getOnboardingSteps(): OnboardingStep[] {
 export function getInitialStep(): OnboardingStep {
   const steps = getOnboardingSteps();
   const saved = readSavedStep();
-  // A download can stop or a key can change while the app is closed, so a
-  // restart on the last step goes back to Intelligence, which checks both
-  // models again before letting people finish.
-  const resumed = saved === "final" ? "intelligence" : saved;
-  return resumed && steps.includes(resumed) ? resumed : steps[0];
+  return saved && steps.includes(saved) ? saved : steps[0];
+}
+
+// Choices live in settings, so a restart can land after a step whose choice
+// was cleared in the meantime; that step is shown again until it is made.
+export function limitToMissingSelection(
+  step: OnboardingStep,
+  missing: OnboardingStep | null,
+): OnboardingStep {
+  const steps = getOnboardingSteps();
+  return missing && steps.indexOf(step) > steps.indexOf(missing)
+    ? missing
+    : step;
 }
 
 export function saveOnboardingStep(step: OnboardingStep | null) {

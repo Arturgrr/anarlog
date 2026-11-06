@@ -101,11 +101,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const { model: eventModel, status } = event.payload;
       const isFailed = typeof status === "object" && "failed" in status;
       const modelName = MODEL_DISPLAY_NAMES[eventModel] ?? eventModel;
-      usePendingSttSelection.setState((state) => ({
-        queuedDownloads: state.queuedDownloads.filter(
-          (model) => model !== eventModel,
-        ),
-      }));
+      usePendingSttSelection.setState((state) => {
+        const { [eventModel]: _, ...failedDownloads } = state.failedDownloads;
+        return {
+          queuedDownloads: state.queuedDownloads.filter(
+            (model) => model !== eventModel,
+          ),
+          failedDownloads: isFailed
+            ? { ...failedDownloads, [eventModel]: status.failed }
+            : failedDownloads,
+        };
+      });
       if (status === "completed") {
         queryClient.setQueryData(
           localSttQueries.isDownloaded(eventModel).queryKey,

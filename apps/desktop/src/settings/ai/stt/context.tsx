@@ -14,6 +14,7 @@ import {
 import { toast } from "@anlg/ui/components/ui/toast";
 
 import { useNotifications } from "~/contexts/notifications";
+import { setSettingValues } from "~/settings/queries";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 
 type SttSettingsContextType = {
@@ -27,8 +28,10 @@ const SttSettingsContext = createContext<SttSettingsContextType | null>(null);
 const DOWNLOAD_PROGRESS_GRACE_MS = 10_000;
 
 export function SttSettingsProvider({
+  selectOnDownload = false,
   children,
 }: {
+  selectOnDownload?: boolean;
   children: React.ReactNode;
 }) {
   const { dismissDownload } = useNotifications();
@@ -57,14 +60,31 @@ export function SttSettingsProvider({
 
       queuedDownloadsRef.current.add(model);
       setQueuedDownloads([...queuedDownloadsRef.current]);
+      // Selecting first: saving a transcription choice drops the pending one,
+      // so it has to happen before the pending selection below is set.
+      if (selectOnDownload) {
+        void setSettingValues({
+          current_stt_provider: provider,
+          current_stt_model: model,
+        }).catch((error) => {
+          console.error(
+            "[settings] failed to select the downloading model",
+            error,
+          );
+        });
+      }
       const selection = { provider, model };
-      usePendingSttSelection.setState((state) => ({
-        selection,
-        queuedDownloads: [
-          ...state.queuedDownloads.filter((queued) => queued !== model),
-          model,
-        ],
-      }));
+      usePendingSttSelection.setState((state) => {
+        const { [model]: _, ...failedDownloads } = state.failedDownloads;
+        return {
+          selection,
+          queuedDownloads: [
+            ...state.queuedDownloads.filter((queued) => queued !== model),
+            model,
+          ],
+          failedDownloads,
+        };
+      });
       const failToStart = (description: string) => {
         toast.error(t`Model download couldn’t start`, { description });
         dequeue(model);
@@ -73,6 +93,7 @@ export function SttSettingsProvider({
             (queued) => queued !== model,
           ),
           selection: state.selection === selection ? null : state.selection,
+          failedDownloads: { ...state.failedDownloads, [model]: description },
         }));
       };
       void (async () => {
@@ -93,7 +114,7 @@ export function SttSettingsProvider({
         setTimeout(() => dequeue(model), DOWNLOAD_PROGRESS_GRACE_MS);
       })();
     },
-    [dequeue],
+    [dequeue, selectOnDownload],
   );
 
   const cancelDownload = useCallback(

@@ -34,7 +34,11 @@ function Probe() {
 describe("SttSettingsProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    usePendingSttSelection.setState({ selection: null, queuedDownloads: [] });
+    usePendingSttSelection.setState({
+      selection: null,
+      queuedDownloads: [],
+      failedDownloads: {},
+    });
   });
 
   it("shows the command error and makes a failed model retryable", async () => {
@@ -62,5 +66,10 @@ describe("SttSettingsProvider", () => {
     });
     expect(screen.getByTestId("queued").textContent).toBe("");
     expect(usePendingSttSelection.getState().selection).toBeNull();
+    expect(
+      usePendingSttSelection.getState().failedDownloads[
+        "soniqo-parakeet-batch"
+      ],
+    ).toBe("batch model is unavailable");
   });
 });

@@ -1,4 +1,7 @@
 import { useLingui } from "@lingui/react/macro";
+import { useQueries, useQuery } from "@tanstack/react-query";
+
+import type { LocalModel } from "@anlg/plugin-local-stt";
 
 import { useNotifications } from "~/contexts/notifications";
 import { useConnectionHealth as useLlmConnectionHealth } from "~/settings/ai/llm/health";
@@ -10,6 +13,7 @@ import {
   getProviderSetup,
   type ProviderSetup,
 } from "~/settings/ai/shared/provider-setup";
+import { useSttSettings } from "~/settings/ai/stt/context";
 import { useConnectionHealth as useSttConnectionHealth } from "~/settings/ai/stt/health";
 import {
   displayModelLabel,
@@ -18,7 +22,8 @@ import {
 import { useAiProviders } from "~/settings/providers";
 import { useConfigValues } from "~/shared/config";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
-import { isConfiguredSttModel } from "~/stt/capabilities";
+import { isConfiguredSttModel, isOnDeviceSttModel } from "~/stt/capabilities";
+import { localSttQueries } from "~/stt/useLocalSttModel";
 
 export type ModelSetupStatus =
   | { kind: "none" }
@@ -35,6 +40,24 @@ export type ModelSetupStatus =
       message: string;
     }
   | { kind: "ready"; model: string; provider: string };
+
+export type ModelInstall = {
+  id: string;
+  name: string;
+  provider: string;
+  sizeBytes: number | null;
+  state: InstallState;
+  start: () => void;
+};
+
+type InstallState =
+  | { kind: "checking" | "queued" | "interrupted" }
+  | { kind: "downloading" | "preparing"; progress: number }
+  | { kind: "error"; message: string };
+
+// The last percent covers unpacking and loading the model, which reports no
+// progress of its own.
+const PREPARING_FROM_PERCENT = 99;
 
 type ProviderHealth = {
   status: "pending" | "error" | "success" | null;
@@ -188,4 +211,96 @@ function useDescribeSetup() {
     }
     return { kind: "ready", ...labels };
   };
+}
+
+// Selected local models that still have to be installed before onboarding can
+// finish. Only on-device transcription is downloaded by Librelog today; cloud
+// providers and models built into macOS never appear here.
+export function useModelInstalls(): ModelInstall[] {
+  const { i18n } = useLingui();
+  const { current_stt_provider, current_stt_model } = useConfigValues([
+    "current_stt_provider",
+    "current_stt_model",
+  ] as const);
+  const pending = usePendingSttSelection((state) => state.selection);
+  const failures = usePendingSttSelection((state) => state.failedDownloads);
+  const { activeDownloads } = useNotifications();
+  const { startDownload } = useSttSettings();
+  const supportedModels = useQuery(localSttQueries.supportedModels());
+
+  const selections: Array<{ provider: string; model: LocalModel }> = pending
+    ? [pending]
+    : isOnDeviceSttModel(current_stt_provider, current_stt_model)
+      ? [{ provider: current_stt_provider ?? "", model: current_stt_model }]
+      : [];
+  const downloaded = useQueries({
+    queries: selections.map(({ model }) => localSttQueries.isDownloaded(model)),
+  });
+  const downloading = useQueries({
+    queries: selections.map(({ model }) =>
+      localSttQueries.isDownloading(model),
+    ),
+  });
+
+  return selections.flatMap(({ provider, model }, index) => {
+    const state = getInstallState({
+      download: activeDownloads.find((entry) => entry.model === model),
+      downloaded: downloaded[index],
+      downloading: downloading[index]?.data,
+      failure: failures[model],
+    });
+    if (!state) {
+      return [];
+    }
+
+    const info = supportedModels.data?.find(({ key }) => key === model);
+    const providerInfo = STT_PROVIDERS.find(({ id }) => id === provider);
+    return [
+      {
+        id: model,
+        name: displayModelLabel(model, info?.display_name),
+        provider: providerInfo
+          ? providerDisplayName(providerInfo, i18n)
+          : provider,
+        sizeBytes: info?.size_bytes ?? null,
+        state,
+        start: () => startDownload(model, provider),
+      },
+    ];
+  });
+}
+
+function getInstallState({
+  download,
+  downloaded,
+  downloading,
+  failure,
+}: {
+  download: { progress: number; isStarting?: boolean } | undefined;
+  downloaded: { data?: boolean; isError: boolean } | undefined;
+  downloading: boolean | undefined;
+  failure: string | undefined;
+}): InstallState | null {
+  if (download) {
+    if (download.isStarting) {
+      return { kind: "queued" };
+    }
+    return {
+      kind:
+        download.progress >= PREPARING_FROM_PERCENT
+          ? "preparing"
+          : "downloading",
+      progress: download.progress,
+    };
+  }
+  if (downloaded?.data === undefined && !downloaded?.isError) {
+    return { kind: "checking" };
+  }
+  if (downloaded.data) {
+    return null;
+  }
+  if (failure) {
+    return { kind: "error", message: failure };
+  }
+  return downloading ? { kind: "queued" } : { kind: "interrupted" };
 }

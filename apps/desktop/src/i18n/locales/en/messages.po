@@ -536,6 +536,10 @@ msgstr "All"
 msgid "All events"
 msgstr "All events"
 
+#: src/onboarding/model-setup.tsx
+msgid "All models"
+msgstr "All models"
+
 #: src/shared/open-note-dialog.tsx
 msgid "All Notes"
 msgstr "All Notes"
@@ -555,6 +559,10 @@ msgstr "Allow Accessibility"
 #: src/stt/start-failure.ts
 msgid "Allow microphone access for Librelog, then try again."
 msgstr "Allow microphone access for Librelog, then try again."
+
+#: src/onboarding/final.tsx
+msgid "Almost ready"
+msgstr "Almost ready"
 
 #: src/session/components/outer-header/overflow/always-on-top.tsx
 msgid "Always on Top"
@@ -1003,6 +1011,10 @@ msgstr "Change"
 msgid "change lock settings"
 msgstr "change lock settings"
 
+#: src/onboarding/model-setup.tsx
+msgid "Change model"
+msgstr "Change model"
+
 #: src/contacts/details.tsx
 #: src/contacts/organization-details.tsx
 msgid "Change photo"
@@ -1059,6 +1071,7 @@ msgstr "Checking the key…"
 msgid "Checking your local database. This is taking longer than expected."
 msgstr "Checking your local database. This is taking longer than expected."
 
+#: src/onboarding/model-setup.tsx
 #: src/settings/ai/llm/index.tsx
 #: src/settings/ai/shared/in-use-bar.tsx
 #: src/settings/ai/stt/index.tsx
@@ -1650,6 +1663,10 @@ msgstr "Could not use the selected model"
 msgid "Couldn’t download {modelName}"
 msgstr "Couldn’t download {modelName}"
 
+#: src/onboarding/model-setup.tsx
+msgid "Couldn’t install"
+msgstr "Couldn’t install"
+
 #: src/settings/ai/llm/index.tsx
 msgid "Couldn’t load models"
 msgstr "Couldn’t load models"
@@ -1976,6 +1993,10 @@ msgstr "Download LM Studio"
 msgid "Download Ollama"
 msgstr "Download Ollama"
 
+#: src/onboarding/model-setup.tsx
+msgid "Download stopped"
+msgstr "Download stopped"
+
 #: src/settings/ai/llm/shared.tsx
 msgid "Download Unsloth"
 msgstr "Download Unsloth"
@@ -1983,6 +2004,10 @@ msgstr "Download Unsloth"
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Downloaded"
 msgstr "Downloaded"
+
+#: src/onboarding/model-setup.tsx
+msgid "Downloading"
+msgstr "Downloading"
 
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Downloading · {progressLabel}"
@@ -2799,9 +2824,18 @@ msgstr "Install to all agents"
 msgid "Installed"
 msgstr "Installed"
 
+#. placeholder {0}: install.name
+#: src/onboarding/model-setup.tsx
+msgid "Installing {0}"
+msgstr "Installing {0}"
+
 #: src/onboarding/model-setup.tsx
 msgid "installing {percent}"
 msgstr "installing {percent}"
+
+#: src/onboarding/model-setup.tsx
+msgid "Installing all models"
+msgstr "Installing all models"
 
 #: src/settings/ai/llm/index.tsx
 #: src/sidebar/settings-nav-groups.ts
@@ -3437,6 +3471,10 @@ msgstr "Model downloaded"
 msgid "Model ID"
 msgstr "Model ID"
 
+#: src/onboarding/model-setup.tsx
+msgid "Model installation"
+msgstr "Model installation"
+
 #: src/session/components/note-input/enhanced/streaming.tsx
 msgid "Model is thinking..."
 msgstr "Model is thinking..."
@@ -3948,6 +3986,10 @@ msgstr "Opens System Settings and guides you to add Librelog to the {0} list"
 msgid "Opens System Settings and guides you to add Librelog to the {0} list."
 msgstr "Opens System Settings and guides you to add Librelog to the {0} list."
 
+#: src/onboarding/final.tsx
+msgid "Opens when the models finish installing"
+msgstr "Opens when the models finish installing"
+
 #: src/settings/todo/permission.tsx
 msgid "or"
 msgstr "or"
@@ -4139,6 +4181,7 @@ msgstr "Preparing search..."
 msgid "Preparing transcript..."
 msgstr "Preparing transcript..."
 
+#: src/onboarding/model-setup.tsx
 #: src/settings/dictation-shortcut.tsx
 msgid "Preparing…"
 msgstr "Preparing…"
@@ -4217,6 +4260,10 @@ msgstr "Query: {rawQuery}"
 msgid "Query: none"
 msgstr "Query: none"
 
+#: src/onboarding/model-setup.tsx
+msgid "Queued"
+msgstr "Queued"
+
 #: src/i18n/native-labels.tsx
 msgid "Quit"
 msgstr "Quit"
@@ -4278,7 +4325,7 @@ msgstr "Ready"
 msgid "Ready to dictate"
 msgstr "Ready to dictate"
 
-#: src/onboarding/index.tsx
+#: src/onboarding/final.tsx
 msgid "Ready to go"
 msgstr "Ready to go"
 
@@ -4564,6 +4611,10 @@ msgstr "Resume"
 #: src/i18n/component-labels.tsx
 msgid "Resume auto-dismiss"
 msgstr "Resume auto-dismiss"
+
+#: src/onboarding/model-setup.tsx
+msgid "Resume download"
+msgstr "Resume download"
 
 #: src/session/components/note-input/header-transcript.tsx
 #: src/session/components/outer-header/overflow/listening.tsx
@@ -5480,6 +5531,10 @@ msgstr "The Apple Foundation Models experiment currently supports text only."
 msgid "The Apple Intelligence model is still downloading."
 msgstr "The Apple Intelligence model is still downloading."
 
+#: src/onboarding/model-setup.tsx
+msgid "The download stopped before it finished."
+msgstr "The download stopped before it finished."
+
 #: src/i18n/component-labels.tsx
 msgid "The editor failed to render. Your recording is still running."
 msgstr "The editor failed to render. Your recording is still running."
@@ -5747,6 +5802,7 @@ msgid "Trigger"
 msgstr "Trigger"
 
 #: src/contacts/details.tsx
+#: src/onboarding/model-setup.tsx
 #: src/onboarding/permissions.tsx
 #: src/settings/stats/badge-collection.tsx
 msgid "Try again"
@@ -6193,14 +6249,6 @@ msgstr "Waiting for authorization in the browser."
 #: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Waiting for authorization in your browser…"
 msgstr "Waiting for authorization in your browser…"
-
-#: src/onboarding/model-setup.tsx
-msgid "Waiting for transcription to finish installing"
-msgstr "Waiting for transcription to finish installing"
-
-#: src/onboarding/model-setup.tsx
-msgid "Waiting for transcription to finish installing ({percent})"
-msgstr "Waiting for transcription to finish installing ({percent})"
 
 #: src/settings/ai/llm/provider-context.ts
 msgid "We only support **OpenAI-compatible** endpoints for now."
