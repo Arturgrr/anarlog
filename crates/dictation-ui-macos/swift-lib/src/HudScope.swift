@@ -1,11 +1,14 @@
 import Foundation
 import simd
 
-// Dot scope, the dictation HUD's field of dots lit by a braided pair of
-// oscilloscope traces that follow the voice. Ported from Hex (MIT,
-// © 2026 Christopher Langton): `src/rune_hud/spring.rs`,
-// `src/rune_hud/dot_scope.rs` and `src/rune_hud/dot_scope/scope.rs`, with
-// Hex's default tuning and its default processing look (Flow).
+// The dictation HUD's scope: a braided pair of oscilloscope traces that
+// follow the voice, drawn as smooth lines across the plate. The motion
+// (springs, auto level, voices, traces and the enter/work/clear scans) is
+// ported from Hex's Dot scope (MIT, © 2026 Christopher Langton):
+// `src/rune_hud/spring.rs`, `src/rune_hud/dot_scope.rs` and
+// `src/rune_hud/dot_scope/scope.rs`, with Hex's default tuning and its
+// default processing look (Flow). The Windows and Linux HUD runs the same
+// simulation in TypeScript (`apps/desktop/src/dictation/hud`).
 
 private let tau: Float = 2 * .pi
 
@@ -123,7 +126,7 @@ enum HudStage {
   case failed
 }
 
-/// The plate's pose and the field's global terms, for the shader.
+/// The plate's pose and the colour terms, for the shader.
 struct HudPose {
   var width: Float
   var height: Float
@@ -132,16 +135,18 @@ struct HudPose {
   var softness: Float
   var cool: Float
   var fail: Float
-  var glow: Float
-  var grid: Float
-  var live: Float
 }
 
-/// Hex's default `Tuning`.
+/// Hex's default `Tuning`, with the traces' sampling and strokes.
 enum HudTuning {
-  static let columns = 43
-  static let rows = 9
-  static let spacing: Float = 2.6
+  /// Points sampled along each trace.
+  static let samples = 127
+  /// Half the sampled span, pt: a little inside the recording plate.
+  static let span: Float = 54.6
+  /// The farthest a trace swings from the middle, pt.
+  static let swing: Float = 9
+  /// The front trace's stroke, pt; the back one is a little thinner.
+  static let lineWidth: Float = 1.5
   static let width: Float = 112
   static let processingWidth: Float = 76
   static let height: Float = 26
@@ -151,9 +156,6 @@ enum HudTuning {
   static let response: Float = 6.5
   static let release: Float = 0.15
   static let historySpeed: Float = 150
-  static let phosphor: Float = 0.6
-  static let glow: Float = 1
-  static let saturation: Float = 1
   static let shimmerPass: Float = 0.55
   static let shimmer: Float = 1
   static let transition: Float = 0.3
@@ -166,20 +168,12 @@ private struct Voice {
   var level: Float = 0
   var reservoir: Float = 0
   var energy: Float = 0
-  var kick: Float = 0
-  var kickVelocity: Float = 0
   var band: Float = 0
 
   mutating func step(raw: Float, h: Float) {
-    let previous = level
     level += (raw - level) * (1 - exp(-h / (raw > level ? 0.035 : 0.095)))
-    let rise = max((level - previous) / h, 0)
     reservoir += (1.75 * level * level - reservoir / 1.8) * h
     energy = 1 - exp(-reservoir * 1.45)
-    let w = tau * 1.3
-    let z: Float = 0.22
-    kickVelocity += (-w * w * kick - 2 * z * w * kickVelocity + 15 * rise + 2.2 * level) * h
-    kick += kickVelocity * h
     band += (raw - band) * (1 - exp(-h / (raw > band ? 0.025 : 0.14)))
   }
 }
@@ -190,11 +184,6 @@ private struct Trace {
   var envelope: Float = 0
   var amplitude: Float = 0
   var amplitudeVelocity: Float = 0
-  var glowFast: Float = 0
-  var glowSpring: Float = 0
-  var glowSpringVelocity: Float = 0
-  var glowSlow: Float = 0
-  var glow: Float = 0
   var phases: [Float]
   var history = [Float](repeating: 0, count: Trace.history * 5)
   var head = 0
@@ -204,23 +193,12 @@ private struct Trace {
   }
 
   mutating func tick(voice: Voice, live: Float, speed: Float, h: Float) {
-    func follow(_ value: inout Float, _ target: Float, _ rise: Float, _ fall: Float) {
-      value += (target - value) * (1 - exp(-h / (target > value ? rise : fall)))
-    }
-    follow(&envelope, voice.level, 0.022, HudTuning.release)
+    let rise = voice.level > envelope ? 0.022 : HudTuning.release
+    envelope += (voice.level - envelope) * (1 - exp(-h / rise))
     let w = tau * HudTuning.response
     let z: Float = 0.52
     amplitudeVelocity += (-w * w * (amplitude - envelope) - 2 * z * w * amplitudeVelocity) * h
     amplitude += amplitudeVelocity * h
-    follow(&glowFast, voice.level, 0.045, 0.13)
-    let gw = tau * 3.6
-    let gz: Float = 0.5
-    glowSpringVelocity +=
-      (-gw * gw * (glowSpring - glowFast) - 2 * gz * gw * glowSpringVelocity) * h
-    glowSpring += glowSpringVelocity * h
-    follow(&glowSlow, voice.level, 0.15, 0.7)
-    let swell = 0.8 * max(glowSpring - 0.25, 0) + 0.04 * max(voice.kick, -0.5)
-    glow = min(max(swell, 0) + 0.42 * glowSlow + 0.2 * voice.energy, 1.15) * live
     let go = 0.6 + 1.1 * min(envelope * 1.6, 1)
     for lane in 0..<4 {
       phases[lane] = fmodf(phases[lane] + h * tau * HudScope.speeds[lane] * go * speed, tau)
@@ -262,18 +240,16 @@ private func remEuclid(_ a: Float, _ b: Float) -> Float {
   return r < 0 ? r + abs(b) : r
 }
 
-/// The Dot scope simulation, stepped at a fixed 240 Hz so any frame rate
-/// draws the same picture. Yields one (brightness, freshness) pair per dot.
+/// The scope simulation, stepped at a fixed 240 Hz so any frame rate draws
+/// the same picture. Yields both traces as (y, intensity) samples.
 final class HudScope {
   static let step: Float = 1 / 240
   fileprivate static let speeds: [Float] = [0.8, 1.25, 1.85, 2.6]
   fileprivate static let base: [Float] = [0.55, 0.42, 0.3, 0.2]
   private static let spatial: [Float] = [1.4, 2.4, 3.8, 5.6]
-  private static let samplesPerColumn = 3
   private static let startWidth: Float = 30
   private static let enter: Float = 0.42
   private static let wipe: Float = 0.3
-  private static let phosphorHead: Float = 0.15
   private static let breathPeriod: Float = 5.5
   private static let hiddenScale: Float = 0.9
   private static let hiddenSoftness: Float = 3
@@ -284,12 +260,15 @@ final class HudScope {
   /// The recording carrier's slowest turn, Hz.
   private static let carrierRest: Float = 0.14
 
-  let columns = HudTuning.columns
-  let rows = HudTuning.rows
+  /// The x of trace sample `s`, pt from the plate's middle.
+  static func sampleX(_ s: Int) -> Float {
+    (Float(s) / Float(HudTuning.samples - 1) - 0.5) * 2 * HudTuning.span
+  }
+
   private(set) var stage: HudStage = .recording
-  /// Each dot's (brightness, freshness), row by row, as normalized u16s.
-  private(set) var dots: [SIMD2<UInt16>]
-  private(set) var grid: Float = 0
+  /// Trace by trace, each sample's (y, intensity): y in pt from the plate's
+  /// middle, down; intensity 0–1 for the stroke, above 1 where a light passes.
+  private(set) var lines = [SIMD2<Float>](repeating: .zero, count: 2 * HudTuning.samples)
 
   private var elapsed: Float = 0
   private var speedAtDone: Float = 0
@@ -304,10 +283,6 @@ final class HudScope {
   private var steps: UInt64 = 0
   private var pending: Float = 0
   private var reduceMotion = false
-  private var heads: [[Float]]
-  private var tails: [[Float]]
-  private var ys: [[Float]]
-  private var brightness: [[Float]]
   private var width = HudSpring(at: HudScope.startWidth)
   private var opacity = HudSpring(at: 0)
   private var scale = HudSpring(at: HudScope.hiddenScale)
@@ -319,21 +294,9 @@ final class HudScope {
     [Trace(phases: [0.1, 1.7, 3.3, 4.6]), Trace(phases: [2.4, 0.6, 5.1, 1.9])]
   }
 
-  init() {
-    let count = columns * rows
-    let samples = (columns - 1) * Self.samplesPerColumn + 1
-    dots = Array(repeating: .zero, count: count)
-    heads = Array(repeating: Array(repeating: 0, count: count), count: 2)
-    tails = heads
-    ys = Array(repeating: Array(repeating: 0, count: samples), count: 2)
-    brightness = ys
-  }
-
   /// Starts a recording from nothing: the scanner unfolds the trace again.
   /// The auto level remembers the speaker.
   func restart(reduceMotion reduce: Bool) {
-    let count = columns * rows
-    let samples = (columns - 1) * Self.samplesPerColumn + 1
     stage = .recording
     elapsed = 0
     speedAtDone = 0
@@ -347,12 +310,7 @@ final class HudScope {
     steps = 0
     pending = 0
     reduceMotion = false
-    dots = Array(repeating: .zero, count: count)
-    heads = Array(repeating: Array(repeating: 0, count: count), count: 2)
-    tails = heads
-    ys = Array(repeating: Array(repeating: 0, count: samples), count: 2)
-    brightness = ys
-    grid = 0
+    lines = [SIMD2<Float>](repeating: .zero, count: 2 * HudTuning.samples)
     width = HudSpring(at: Self.startWidth)
     opacity = HudSpring(at: 0)
     scale = HudSpring(at: Self.hiddenScale)
@@ -374,10 +332,7 @@ final class HudScope {
       scale: max(scale.x, 0.01),
       softness: min(max(softness.x, 0), Self.hiddenSoftness),
       cool: min(max(cool.x, 0), 1),
-      fail: min(max(fail.x, 0), 1),
-      glow: (traces[0].glow + traces[1].glow) / 2 * HudTuning.glow,
-      grid: grid,
-      live: live)
+      fail: min(max(fail.x, 0), 1))
   }
 
   /// Whether the scope has faded out after being hidden.
@@ -471,7 +426,7 @@ final class HudScope {
     time += h
     steps &+= 1
     if steps % 2 == 0 {
-      beam(hb: 2 * h)
+      trace()
     }
   }
 
@@ -483,7 +438,7 @@ final class HudScope {
       + (3 * t2 - 2 * t3) * end
   }
 
-  /// Flow's bands, as light along the plate.
+  /// Flow's bands, as light along the traces.
   private func flowLight(_ x: Float) -> Float {
     let spacing = flowSpacing
     return bump(remEuclid(x - flowOffset + spacing / 2, spacing) - spacing / 2, 7)
@@ -492,21 +447,17 @@ final class HudScope {
   private enum Envelope {
     case enter(reach: Float, head: Float, unfold: Float)
     case work(head: Float, swell: Float)
-    case clear(front: Float, head: Float, glow: Float, swell: Float)
+    case clear(front: Float, head: Float, shine: Float, swell: Float)
   }
 
   private struct Scan {
     var helix: Float
-    var decay: Float
-    var tail: Float
-    var grid: Float
     var envelope: Envelope
   }
 
   private func scan(width: Float) -> Scan {
     let e = elapsed
-    let still = Scan(
-      helix: 1, decay: 1, tail: 1, grid: 1, envelope: .enter(reach: 1e4, head: 0, unfold: 1))
+    let still = Scan(helix: 1, envelope: .enter(reach: 1e4, head: 0, unfold: 1))
     if stage == .failed || reduceMotion {
       return still
     }
@@ -514,7 +465,7 @@ final class HudScope {
     case .recording:
       let pass = 0.5 - 0.5 * cos(.pi * min(max(e / Self.enter, 0), 1))
       return Scan(
-        helix: 1, decay: 1, tail: 1, grid: min(e / 0.3, 1),
+        helix: 1,
         envelope: .enter(
           reach: (width / 2 + 12) * pass,
           head: 2.8 * (1 - smoothstep(0.08, Self.enter, e)),
@@ -522,28 +473,25 @@ final class HudScope {
     case .processing:
       let enter = smoothstep(0, 0.35, e)
       return Scan(
-        helix: 1 + (Self.workHelix - 1) * enter, decay: 1, tail: 1, grid: 1,
+        helix: 1 + (Self.workHelix - 1) * enter,
         envelope: .work(
           head: 2.5 * smoothstep(0.05, 0.3, e) * HudTuning.shimmer, swell: 0.9 * enter))
     case .done:
-      // A front clears the field from the middle out as it collapses, while
-      // the light ahead of it fades.
+      // A front clears the traces from the middle out as the plate
+      // collapses, while the light ahead of it fades.
       return Scan(
         helix: Self.workHelix,
-        decay: 1 - 0.6 * smoothstep(0, 0.12, e),
-        tail: 1 - smoothstep(0, 0.15, e),
-        grid: 1 - smoothstep(0.2, 0.4, e),
         envelope: .clear(
           front: hermite(start: 0, speed: speedAtDone, end: width / 2 + 8, t: e / Self.wipe),
           head: 2.8 * smoothstep(0, 0.04, e) * (1 - smoothstep(0.22, 0.32, e)),
-          glow: 2.5 * HudTuning.shimmer * (1 - smoothstep(0, 0.18, e)),
+          shine: 2.5 * HudTuning.shimmer * (1 - smoothstep(0, 0.18, e)),
           swell: 0.9))
     case .failed:
       return still
     }
   }
 
-  /// (amplitude, brightness, swell) at `x`.
+  /// (amplitude, intensity, swell) at `x`.
   private func scanAt(_ scan: Scan, _ x: Float) -> (Float, Float, Float) {
     switch scan.envelope {
     case .enter(let reach, let head, let unfold):
@@ -556,35 +504,30 @@ final class HudScope {
     case .work(let head, let swell):
       let light = flowLight(x)
       return (1, 1 + head * light, swell * light)
-    case .clear(let front, let head, let glow, let swell):
+    case .clear(let front, let head, let shine, let swell):
       let d = abs(x)
       let keep = smoothstep(front - 12, front - 2, d)
       let light = flowLight(x)
-      return (keep, keep * (1 + glow * light) + head * bump(d - front, 6), keep * swell * light)
+      return (keep, keep * (1 + shine * light) + head * bump(d - front, 6), keep * swell * light)
     }
   }
 
-  /// Draws both traces into the dot field and decays the phosphor.
-  private func beam(hb: Float) {
-    let sub = Self.samplesPerColumn
-    let samples = (columns - 1) * sub + 1
-    let pitch = HudTuning.spacing
+  /// Samples both traces into `lines`.
+  private func trace() {
     let width = max(self.width.x, HudTuning.height)
     let scan = scan(width: width)
-    grid = scan.grid
-    let mid = Float(rows - 1) / 2
-    let half = mid - 0.55
+    let half = HudTuning.swing
     let breath: Float = reduceMotion ? 0.5 : 0.5 + 0.5 * sin(time * tau / Self.breathPeriod)
     let rest = (0.55 + 0.35 * breath) * (0.4 + 0.6 * live) * scan.helix
     let halfWidth = width / 2
     for k in 0..<2 {
       let trace = traces[k]
       let sign: Float = k == 0 ? 1 : -1
-      for s in 0..<samples {
-        let x = (Float(s) / Float(sub) - Float(columns - 1) / 2) * pitch
+      let offset = k * HudTuning.samples
+      for s in 0..<HudTuning.samples {
+        let x = Self.sampleX(s)
         if abs(x) > halfWidth {
-          ys[k][s] = mid
-          brightness[k][s] = 0
+          lines[offset + s] = .zero
           continue
         }
         let (amplitude, bright, swell) = scanAt(scan, x)
@@ -605,92 +548,40 @@ final class HudScope {
         let helix =
           (rest + swell + half * 0.55 * a * reach) * sin(tau * HudTuning.helixCycles * xn - carrier)
         let y = half * tanh((helix + half * 0.7 * spread * reach) / half) * ends * amplitude
-        ys[k][s] = mid - sign * y
-        let spatial = (0.3 + 0.7 * min(a * 1.8, 1)) * (0.45 + 0.55 * ends)
-        brightness[k][s] = spatial * amplitude + 0.36 * max(bright - amplitude, 0)
-      }
-      for s in 0..<samples {
-        let slope = (ys[k][min(s + 1, samples - 1)] - ys[k][max(s - 1, 0)]) * Float(sub) / 2
-        brightness[k][s] *= 1 - 0.55 + 0.55 / (1 + 0.22 * slope * slope).squareRoot()
-      }
-    }
-
-    let headKeep = exp(-hb / (Self.phosphorHead * scan.decay))
-    let tailKeep = exp(-hb / (HudTuning.phosphor * scan.decay))
-    let dx = 1 / Float(sub)
-    for i in 0..<columns {
-      let s0 = max(i - 3, 0) * sub
-      let s1 = min((i + 3) * sub, samples - 1)
-      for j in 0..<rows {
-        let n = j * columns + i
-        var now: Float = 0
-        var total: Float = 0
-        var lit: (Float, Float) = (0, 0)
-        for k in 0..<2 {
-          var best = Float.greatestFiniteMagnitude
-          var nearest = i * sub
-          for s in s0..<s1 {
-            let ay = ys[k][s]
-            let dy = ys[k][s + 1] - ay
-            let px = Float(i) - Float(s) * dx
-            let py = Float(j) - ay
-            let t = min(max((px * dx + py * dy) / (dx * dx + dy * dy), 0), 1)
-            let ex = px - t * dx
-            let ey = py - t * dy
-            let d2 = ex * ex + ey * ey
-            if d2 < best {
-              best = d2
-              nearest = s
-            }
-          }
-          let shine = brightness[k][nearest]
-          let onBeam = exp(-best / 0.25)
-          let instant = min(onBeam + 0.5 * exp(-best.squareRoot() / 0.8), 1.2) * shine
-          let core = onBeam * shine
-          heads[k][n] = max(heads[k][n] * headKeep, core)
-          tails[k][n] = max(tails[k][n] * tailKeep, core)
-          let light = max(instant, max(heads[k][n], 0.55 * scan.tail * tails[k][n]))
-          if k == 0 { lit.0 = light } else { lit.1 = light }
-          now += instant
-          total += light
-        }
-        let power = min(max(1 - (1 - min(lit.0, 1)) * (1 - min(lit.1, 1)), 0), 1)
-        let fresh = min(now / max(total, 1e-4), 1)
-        dots[n] = SIMD2(
-          UInt16((power * 65535).rounded()), UInt16((max(fresh, 0) * 65535).rounded()))
+        let voiced = 0.45 + 0.55 * min(a * 1.8, 1)
+        lines[offset + s] = SIMD2(
+          -sign * y,
+          voiced * amplitude * (0.35 + 0.65 * ends) + 0.36 * max(bright - amplitude, 0))
       }
     }
   }
 }
 
-// MARK: - Palette (`scope.rs`)
+// MARK: - Palette
 
-/// Dot scope's colours for one frame, sRGB: warm pearl while recording,
-/// cooling to agent blue while processing, and coral on failure.
+/// The scope's colours for one frame, sRGB, from the graphite design tokens
+/// (`packages/design-system/src/tokens.css`): the text colour while
+/// recording, faint graphite with the text colour passing through it while
+/// processing, and danger on failure.
 struct HudPalette {
-  var base: SIMD3<Float>
-  var core: SIMD3<Float>
+  var line: SIMD3<Float>
+  var light: SIMD3<Float>
   var plate: SIMD4<Float>
   var rim: SIMD4<Float>
   var shadow: SIMD4<Float>
 
-  init(dark: Bool, pose: HudPose, saturation: Float = HudTuning.saturation) {
-    let you: SIMD3<Float> = dark ? [0.86, 0.83, 0.77] : [0.62, 0.53, 0.40]
-    let youCore: SIMD3<Float> = dark ? [0.98, 0.96, 0.92] : [0.47, 0.38, 0.26]
-    let agent: SIMD3<Float> = dark ? [0.70, 0.78, 0.90] : [0.40, 0.47, 0.58]
-    let agentCore: SIMD3<Float> = dark ? [0.92, 0.95, 1.0] : [0.24, 0.31, 0.43]
-    let coral: SIMD3<Float> = dark ? [1.0, 0.38, 0.31] : [0.9, 0.27, 0.21]
-    let coralCore: SIMD3<Float> = dark ? [1.0, 0.66, 0.6] : [0.7, 0.18, 0.13]
-    func mix(_ a: SIMD3<Float>, _ b: SIMD3<Float>, _ t: Float) -> SIMD3<Float> { a + (b - a) * t }
-    func saturate(_ c: SIMD3<Float>) -> SIMD3<Float> {
-      let luma = 0.2126 * c.x + 0.7152 * c.y + 0.0722 * c.z
-      let out = SIMD3(repeating: luma) + (c - SIMD3(repeating: luma)) * saturation
-      return simd_clamp(out, SIMD3(repeating: 0), SIMD3(repeating: 1))
+  init(dark: Bool, pose: HudPose) {
+    func hex(_ value: UInt32) -> SIMD3<Float> {
+      SIMD3(Float(value >> 16), Float((value >> 8) & 0xFF), Float(value & 0xFF)) / 255
     }
-    base = saturate(mix(mix(you, agent, pose.cool), coral, pose.fail))
-    core = saturate(mix(mix(youCore, agentCore, pose.cool), coralCore, pose.fail))
-    plate = dark ? [17 / 255, 17 / 255, 20 / 255, 0.94] : [252 / 255, 251 / 255, 249 / 255, 0.96]
-    rim = dark ? [1, 1, 1, 0.11] : [0, 0, 0, 0.09]
-    shadow = dark ? [0, 0, 0, 0.5] : [20 / 255, 24 / 255, 40 / 255, 0.2]
+    func mix(_ a: SIMD3<Float>, _ b: SIMD3<Float>, _ t: Float) -> SIMD3<Float> { a + (b - a) * t }
+    let strong = hex(dark ? 0xFAFAFA : 0x161616)
+    let faint = hex(dark ? 0x5C5C5C : 0xAEAEAE)
+    let danger = hex(dark ? 0xF17471 : 0xB82D35)
+    line = mix(mix(strong, faint, pose.cool), danger, pose.fail)
+    light = mix(strong, danger, pose.fail)
+    plate = SIMD4(hex(dark ? 0x191919 : 0xFFFFFF), 1)
+    rim = dark ? [1, 1, 1, 0.16] : [0, 0, 0, 0.12]
+    shadow = dark ? [0, 0, 0, 0.45] : [0, 0, 0, 0.12]
   }
 }

@@ -22,7 +22,7 @@ function high(levels: number[]) {
   return sorted[Math.floor((sorted.length * 9) / 10)]!;
 }
 
-describe("Dot scope", () => {
+describe("dictation HUD scope", () => {
   it("moves a quiet microphone as far as a loud one without boosting the room", () => {
     const quiet = new AutoLevel();
     speak(quiet, -36, -58, 4);

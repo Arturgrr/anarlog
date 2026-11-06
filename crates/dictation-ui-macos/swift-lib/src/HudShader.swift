@@ -1,28 +1,27 @@
 import simd
 
-/// `HudUniforms` in `hudShaderSource`: nine float4s, 144 bytes.
+/// `HudUniforms` in `hudShaderSource`: eight float4s, 128 bytes.
 struct HudUniforms {
-  /// resolution (device px), backing scale, dot pitch (pt)
+  /// resolution (device px), backing scale, span (pt)
   var metrics0: SIMD4<Float>
   /// plate width, height, opacity, scale
   var metrics1: SIMD4<Float>
-  /// softness, columns, rows, corner radius
+  /// softness, samples, line width (pt), corner radius
   var metrics2: SIMD4<Float>
-  /// glow, grid, live, cool
-  var state: SIMD4<Float>
-  /// rgb, w: 1 in the dark appearance
-  var base: SIMD4<Float>
-  var core: SIMD4<Float>
+  var line: SIMD4<Float>
+  var light: SIMD4<Float>
   var plate: SIMD4<Float>
   var rim: SIMD4<Float>
   var shadow: SIMD4<Float>
 }
 
-/// Dot scope's plate, glow and dots: Hex's `src/rune_hud.wgsl`
-/// (`dot_scope_fragment`, MIT, © 2026 Christopher Langton) in Metal, without
-/// the notch island. Compiled at runtime (`MTLDevice.makeLibrary(source:)`).
-/// Positions are in points from the view's middle, y down; colours are
-/// sRGB-encoded and premultiplied.
+/// The scope's plate and its two traces as anti-aliased strokes, in Metal.
+/// The plate follows Hex's `src/rune_hud.wgsl` (MIT, © 2026 Christopher
+/// Langton) without the notch island. Compiled at runtime
+/// (`MTLDevice.makeLibrary(source:)`). Positions are in points from the
+/// view's middle, y down; colours are sRGB-encoded and premultiplied. The
+/// Windows and Linux HUD draws the same shader in GLSL
+/// (`apps/desktop/src/dictation/hud/shader.ts`).
 let hudShaderSource = """
   #include <metal_stdlib>
   using namespace metal;
@@ -36,15 +35,14 @@ let hudShaderSource = """
     float4 metrics0;
     float4 metrics1;
     float4 metrics2;
-    float4 state;
-    float4 base;
-    float4 core;
+    float4 line;
+    float4 light;
     float4 plate;
     float4 rim;
     float4 shadow;
   };
 
-  static_assert(sizeof(HudUniforms) == 144, "HudUniforms must match Swift");
+  static_assert(sizeof(HudUniforms) == 128, "HudUniforms must match Swift");
 
   vertex Varyings hud_vertex(uint vertex_id [[vertex_id]]) {
     const float2 positions[3] = { float2(-1.0, -1.0), float2(3.0, -1.0), float2(-1.0, 3.0) };
@@ -76,39 +74,21 @@ let hudShaderSource = """
       alpha + destination.a * (1.0f - alpha));
   }
 
-  static float4 dithered(float4 result_in, float2 position) {
-    float4 result = result_in;
-    if (result.a > 0.0f) {
-      float2 pixel = floor(position);
-      float n1 = fract(52.9829189f * fract(dot(pixel, float2(0.06711056f, 0.00583715f))));
-      float n2 = fract(
-        52.9829189f * fract(dot(pixel + float2(17.0f, 31.0f), float2(0.06711056f, 0.00583715f))));
-      float dither = ((n1 - n2) / 255.0f) * result.a;
-      result = float4(clamp(result.rgb + float3(dither), float3(0.0f), float3(result.a)), result.a);
-    }
-    return result;
-  }
-
   fragment float4 hud_fragment(
     Varyings in [[stage_in]],
     constant HudUniforms &u [[buffer(0)]],
-    constant ushort2 *dots [[buffer(1)]]
+    constant float2 *lines [[buffer(1)]]
   ) {
     float2 resolution = u.metrics0.xy;
     float backing_scale = u.metrics0.z;
-    float pitch = u.metrics0.w;
+    float span = u.metrics0.w;
     float width = u.metrics1.x;
     float height = u.metrics1.y;
     float opacity = u.metrics1.z;
     float scale = max(u.metrics1.w, 0.001f);
     float softness = max(u.metrics2.x, 0.0f);
-    int columns = int(u.metrics2.y + 0.5f);
-    int rows = int(u.metrics2.z + 0.5f);
-    float glow = u.state.x;
-    float grid = u.state.y;
-    float live = u.state.z;
-    float cool = u.state.w;
-    bool dark = u.base.w > 0.5f;
+    int samples = int(u.metrics2.y + 0.5f);
+    float line_width = u.metrics2.z;
 
     float2 position = in.uv * resolution;
     float2 window_point = (position - resolution * 0.5f) / backing_scale;
@@ -120,63 +100,46 @@ let hudShaderSource = """
     float distance = rounded_box(point, half_size, radius);
     float4 result = float4(0.0f);
 
-    // A soft drop shadow 3 pt below.
-    float shadow_distance = rounded_box(point - float2(0.0f, 3.0f), half_size, radius);
+    // A soft drop shadow 4 pt below.
+    float shadow_distance = rounded_box(point - float2(0.0f, 4.0f), half_size, radius);
     composite(result, u.shadow.rgb,
-      u.shadow.a * (0.5f - 0.5f * precise::tanh(clamp(shadow_distance / 6.5f, -10.0f, 10.0f))));
+      u.shadow.a * (0.5f - 0.5f * precise::tanh(clamp(shadow_distance / 7.0f, -10.0f, 10.0f))));
 
     float shape = coverage(distance, aa);
     composite(result, u.plate.rgb, u.plate.a * shape);
-    composite(result, u.rim.rgb, u.rim.a * coverage(abs(distance) - 0.3f, aa));
+    composite(result, u.rim.rgb, u.rim.a * coverage(abs(distance) - 0.25f, aa));
 
-    if (glow > 0.01f) {
-      float reach = 34.0f + 20.0f * glow;
-      float t = clamp(length(point) / reach, 0.0f, 1.0f);
-      float strength = (dark ? 0.3f : 0.19f) * 0.55f * min(1.0f, glow);
-      float3 middle = mix(u.base.rgb, u.core.rgb, 0.5f);
-      composite(result, mix(middle, u.base.rgb, t), strength * (1.0f - t) * shape);
-    }
-
-    float2 center_offset = float2(float(columns) - 1.0f, float(rows) - 1.0f) * 0.5f;
-    int i0 = int(rint(point.x / pitch + center_offset.x));
-    int j0 = int(rint(point.y / pitch + center_offset.y));
-    float unlit = dark ? 0.07f : 0.085f;
-    float full = dark ? 0.96f : 1.0f;
-    float curve = dark ? 0.9f : 0.75f;
-    float presence = 0.5f + 0.5f * max(live, cool);
-    for (int dj = -1; dj <= 1; dj++) {
-      for (int di = -1; di <= 1; di++) {
-        int i = i0 + di;
-        int j = j0 + dj;
-        if (i < 0 || j < 0 || i >= columns || j >= rows) {
-          continue;
+    // The strokes thin out before the plate's edge.
+    float inside = shape * sstep(2.0f, 7.0f, -distance);
+    if (inside > 0.0f) {
+      float step_x = 2.0f * span / float(samples - 1);
+      int nearest = int(floor((point.x + span) / step_x));
+      // The back trace first, a little thinner and fainter.
+      for (int k = 1; k >= 0; k--) {
+        float best = 1e9f;
+        float intensity = 0.0f;
+        for (int s = nearest - 3; s <= nearest + 3; s++) {
+          if (s < 0 || s + 1 >= samples) {
+            continue;
+          }
+          float2 a_value = lines[k * samples + s];
+          float2 b_value = lines[k * samples + s + 1];
+          float2 a = float2(-span + float(s) * step_x, a_value.x);
+          float2 ab = float2(step_x, b_value.x - a_value.x);
+          float t = clamp(dot(point - a, ab) / dot(ab, ab), 0.0f, 1.0f);
+          float d = length(point - a - ab * t);
+          if (d < best) {
+            best = d;
+            intensity = mix(a_value.y, b_value.y, t);
+          }
         }
-        float2 center = (float2(float(i), float(j)) - center_offset) * pitch;
-        float cap = -rounded_box(center, half_size, radius);
-        float mask = sstep(1.4f, 4.6f, cap);
-        if (mask <= 0.0f) {
-          continue;
-        }
-        float2 value = float2(dots[j * columns + i]) / 65535.0f;
-        float power = max(value.x, 1e-5f);
-        float fresh = value.y;
-        float row = abs(center.y) / half_size.y;
-        float floor_alpha = unlit * (1.0f - 0.7f * sstep(0.35f, 0.95f, row)) * presence * grid;
-        float alpha = floor_alpha + (full - floor_alpha) * pow(power, curve * mix(1.4f, 1.0f, fresh));
-        float dot_radius = (0.25f + 0.17f * pow(power, 0.6f))
-          * mix(1.0f, mix(0.82f, 1.0f, fresh), sstep(0.03f, 0.2f, power)) * pitch;
-        float core = clamp(power * power * 1.1f, 0.0f, 0.9f) * mix(0.3f, 1.0f, fresh);
-        float3 color = mix(u.base.rgb, u.core.rgb, core);
-        float from_center = length(point - center);
-        if (power > 0.05f) {
-          composite(result, color,
-            0.132f * power * power * mask * shape * coverage(from_center - dot_radius * 2.0f, aa));
-        }
-        composite(result, color, alpha * mask * shape * coverage(from_center - dot_radius, aa));
+        float half_width = line_width * (k == 0 ? 0.5f : 0.4f);
+        float strength = k == 0 ? 1.0f : 0.5f;
+        float alpha = min(intensity, 1.0f) * strength * inside * coverage(best - half_width, aa);
+        composite(result, mix(u.line.rgb, u.light.rgb, sstep(0.5f, 1.1f, intensity)), alpha);
       }
     }
 
-    result *= opacity;
-    return dithered(result, position);
+    return result * opacity;
   }
   """

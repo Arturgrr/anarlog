@@ -1,6 +1,6 @@
 // The HUD's lifecycle, ported from Hex's `src/dictation/indicator.rs` (MIT,
 // © 2026 Christopher Langton) for one dictation at a time: the phase
-// bookkeeping and how long each look shows, driving Dot scope. Time is passed
+// bookkeeping and how long each look shows, driving the scope. Time is passed
 // in, never read. The macOS HUD keeps the same model in Swift
 // (`crates/dictation-ui-macos`).
 
@@ -11,8 +11,8 @@ import { loudness, Scope, type Stage } from "./scope";
 /** The loudness before any meter arrives, dBFS. */
 const SILENT = -120;
 /**
- * The shortest processing look: a fast transcription still shows the field
- * turning blue before done clears it.
+ * The shortest processing look: a fast transcription still shows the light
+ * passing along the traces before done clears them.
  */
 const PROCESSING_MINIMUM = 0.2;
 /**

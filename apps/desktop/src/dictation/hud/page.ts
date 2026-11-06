@@ -1,4 +1,4 @@
-// The dictation HUD's page on Windows and Linux (`dictation-hud.html`): Dot
+// The dictation HUD's page on Windows and Linux (`dictation-hud.html`): the
 // scope in a transparent, click-through window the dictation plugin places at
 // the top of the display under the pointer, and Hex's live text plate under
 // it. The page keeps the HUD's clock and says when it has faded out.

@@ -3,7 +3,7 @@ import Metal
 import QuartzCore
 
 enum HudLayout {
-  /// Hex's HUD window on macOS: room for Dot scope's widest plate and its
+  /// Hex's HUD window on macOS: room for the scope's widest plate and its
   /// drop shadow, with the plate in the middle.
   static let scopeSize = NSSize(width: 320, height: 128)
   /// Wide enough for the live text plate under the HUD (Hex's live text
@@ -70,7 +70,7 @@ final class HudPanel: NSPanel {
   }
 }
 
-/// A view backed by the `CAMetalLayer` Dot scope draws into.
+/// A view backed by the `CAMetalLayer` the scope draws into.
 final class HudMetalView: NSView {
   var metalLayer: CAMetalLayer {
     // swiftlint:disable:next force_cast
@@ -174,23 +174,25 @@ final class HudLiveTextView: NSView {
       x: padding, y: ((height - labelHeight) / 2).rounded(), width: width - padding * 2,
       height: labelHeight)
     layer?.backgroundColor =
-      dark ? CGColor(srgbRed: 0x16 / 255, green: 0x16 / 255, blue: 0x16 / 255, alpha: 1) : .white
+      dark ? CGColor(srgbRed: 0x19 / 255, green: 0x19 / 255, blue: 0x19 / 255, alpha: 1) : .white
     layer?.borderColor =
       dark
-      ? CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.1)
-      : CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.1)
+      ? CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.16)
+      : CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.12)
     layer?.borderWidth = 1 / max(scale, 1)
     isHidden = false
   }
 
+  /// `--text-base` from the graphite design tokens.
   private static func textBase(dark: Bool) -> NSColor {
     dark
-      ? NSColor(srgbRed: 0xED / 255, green: 0xED / 255, blue: 0xED / 255, alpha: 1)
-      : NSColor(srgbRed: 0x17 / 255, green: 0x17 / 255, blue: 0x17 / 255, alpha: 1)
+      ? NSColor(srgbRed: 0xFA / 255, green: 0xFA / 255, blue: 0xFA / 255, alpha: 1)
+      : NSColor(srgbRed: 0x16 / 255, green: 0x16 / 255, blue: 0x16 / 255, alpha: 1)
   }
 
+  /// `--text-faint` from the graphite design tokens.
   private static let textFaint = NSColor(
-    srgbRed: 0x8F / 255, green: 0x8F / 255, blue: 0x8F / 255, alpha: 1)
+    srgbRed: 0x80 / 255, green: 0x80 / 255, blue: 0x80 / 255, alpha: 1)
 
   /// 13 pt at weight 440, as Hex's UI type, on the system font's weight axis.
   private static let font: NSFont = {
