@@ -84,7 +84,7 @@ Librelog checks GitHub Releases for new versions. With **Settings â†’ General â†
 | App state, caches, and web view data                        | `~/Library/Application Support/com.arturgrr.librelog`, `~/Library/Caches/com.arturgrr.librelog`, `~/Library/WebKit/com.arturgrr.librelog` |
 | Logs                                                       | `~/Library/Logs/com.arturgrr.librelog`                   |
 | API keys                                                   | Keychain items for `com.arturgrr.librelog.secure-store`  |
-| CLI, if you installed it from Settings â†’ Developers        | `~/.local/bin/librelog`                                  |
+| `librelog` CLI, which the app installs on launch           | `~/.local/bin/librelog`, `~/.local/bin/.librelog-cli`    |
 
 ### Uninstall or reset
 
@@ -98,7 +98,7 @@ Librelog checks GitHub Releases for new versions. With **Settings â†’ General â†
      ~/Library/Caches/com.arturgrr.librelog \
      ~/Library/Logs/com.arturgrr.librelog \
      ~/Library/WebKit/com.arturgrr.librelog \
-     ~/.local/bin/librelog
+     ~/.local/bin/librelog ~/.local/bin/.librelog-cli
    tccutil reset All com.arturgrr.librelog
    ```
 

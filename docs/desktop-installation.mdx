@@ -55,6 +55,7 @@ Because the builds are not notarized, macOS may ask again for microphone, screen
 2. Move Librelog from **Applications** to the Trash.
 3. To delete your notes, recordings, settings, and models as well, export anything you want to keep, then delete `~/Library/Application Support/librelog`. App state, caches, and logs live in `~/Library/Application Support/com.arturgrr.librelog`, `~/Library/Caches/com.arturgrr.librelog`, `~/Library/WebKit/com.arturgrr.librelog`, and `~/Library/Logs/com.arturgrr.librelog`.
 4. Run `tccutil reset All com.arturgrr.librelog` to clear permission grants, and delete the `com.arturgrr.librelog` items in **Keychain Access** to remove saved API keys.
+5. Delete `~/.local/bin/librelog` and `~/.local/bin/.librelog-cli`, where Librelog installs its [CLI](/installation).
 
 ## Build from source
 
