@@ -951,12 +951,6 @@ importers:
         specifier: ^2.10.1
         version: 2.10.1
 
-  plugins/mcp:
-    dependencies:
-      '@tauri-apps/api':
-        specifier: ^2.10.1
-        version: 2.10.1
-
   plugins/messenger:
     dependencies:
       '@tauri-apps/api':
