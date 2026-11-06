@@ -1,13 +1,8 @@
 #![forbid(unsafe_code)]
 
 mod attachment_ops;
-mod calendar_ops;
-mod calendar_sync_ops;
-mod calendar_types;
 mod capture_lifecycle_ops;
 mod contact_ops;
-mod event_ops;
-mod event_types;
 mod folder_catalog_ops;
 mod legacy_cloudsync;
 mod legacy_import;
@@ -36,13 +31,8 @@ mod webhook_types;
 mod workspace_binding;
 
 pub use attachment_ops::*;
-pub use calendar_ops::*;
-pub use calendar_sync_ops::*;
-pub use calendar_types::*;
 pub use capture_lifecycle_ops::*;
 pub use contact_ops::*;
-pub use event_ops::*;
-pub use event_types::*;
 pub use folder_catalog_ops::*;
 pub use legacy_cloudsync::*;
 pub use legacy_import::*;

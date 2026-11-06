@@ -355,18 +355,6 @@
           "markdownDescription": "Denies the create_session command without any pre-configured scope."
         },
         {
-          "description": "Enables the create_session_for_event command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-create-session-for-event",
-          "markdownDescription": "Enables the create_session_for_event command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the create_session_for_event command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-create-session-for-event",
-          "markdownDescription": "Denies the create_session_for_event command without any pre-configured scope."
-        },
-        {
           "description": "Enables the delete_folder_catalog command without any pre-configured scope.",
           "type": "string",
           "const": "allow-delete-folder-catalog",
@@ -583,10 +571,10 @@
           "markdownDescription": "Denies the update_folder_workspace command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-create-session`\n- `allow-create-session-for-event`\n- `allow-soft-delete-session`\n- `allow-restore-deleted-session`\n- `allow-add-session-participant`\n- `allow-remove-session-participant`\n- `allow-persist-chat-session-proposal`\n- `allow-set-session-proposal-status`\n- `allow-resolve-session-conflicts`\n- `allow-resolve-session-conflict`\n- `allow-move-session-contents`\n- `allow-catalog-note-attachment`\n- `allow-catalog-session-audio`\n- `allow-mark-session-audio-transcription-complete`\n- `allow-tombstone-session-audio`\n- `allow-mark-session-audio-absent`\n- `allow-catalog-folder-material`\n- `allow-tombstone-folder-material`\n- `allow-ensure-folder-catalog`\n- `allow-rename-folder-catalog`\n- `allow-delete-folder-catalog`\n- `allow-update-folder-instructions`\n- `allow-update-folder-workspace`\n- `allow-update-folder-icon`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-create-session`\n- `allow-soft-delete-session`\n- `allow-restore-deleted-session`\n- `allow-add-session-participant`\n- `allow-remove-session-participant`\n- `allow-persist-chat-session-proposal`\n- `allow-set-session-proposal-status`\n- `allow-resolve-session-conflicts`\n- `allow-resolve-session-conflict`\n- `allow-move-session-contents`\n- `allow-catalog-note-attachment`\n- `allow-catalog-session-audio`\n- `allow-mark-session-audio-transcription-complete`\n- `allow-tombstone-session-audio`\n- `allow-mark-session-audio-absent`\n- `allow-catalog-folder-material`\n- `allow-tombstone-folder-material`\n- `allow-ensure-folder-catalog`\n- `allow-rename-folder-catalog`\n- `allow-delete-folder-catalog`\n- `allow-update-folder-instructions`\n- `allow-update-folder-workspace`\n- `allow-update-folder-icon`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-create-session`\n- `allow-create-session-for-event`\n- `allow-soft-delete-session`\n- `allow-restore-deleted-session`\n- `allow-add-session-participant`\n- `allow-remove-session-participant`\n- `allow-persist-chat-session-proposal`\n- `allow-set-session-proposal-status`\n- `allow-resolve-session-conflicts`\n- `allow-resolve-session-conflict`\n- `allow-move-session-contents`\n- `allow-catalog-note-attachment`\n- `allow-catalog-session-audio`\n- `allow-mark-session-audio-transcription-complete`\n- `allow-tombstone-session-audio`\n- `allow-mark-session-audio-absent`\n- `allow-catalog-folder-material`\n- `allow-tombstone-folder-material`\n- `allow-ensure-folder-catalog`\n- `allow-rename-folder-catalog`\n- `allow-delete-folder-catalog`\n- `allow-update-folder-instructions`\n- `allow-update-folder-workspace`\n- `allow-update-folder-icon`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-create-session`\n- `allow-soft-delete-session`\n- `allow-restore-deleted-session`\n- `allow-add-session-participant`\n- `allow-remove-session-participant`\n- `allow-persist-chat-session-proposal`\n- `allow-set-session-proposal-status`\n- `allow-resolve-session-conflicts`\n- `allow-resolve-session-conflict`\n- `allow-move-session-contents`\n- `allow-catalog-note-attachment`\n- `allow-catalog-session-audio`\n- `allow-mark-session-audio-transcription-complete`\n- `allow-tombstone-session-audio`\n- `allow-mark-session-audio-absent`\n- `allow-catalog-folder-material`\n- `allow-tombstone-folder-material`\n- `allow-ensure-folder-catalog`\n- `allow-rename-folder-catalog`\n- `allow-delete-folder-catalog`\n- `allow-update-folder-instructions`\n- `allow-update-folder-workspace`\n- `allow-update-folder-icon`"
         }
       ]
     }

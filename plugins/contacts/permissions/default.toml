@@ -1,0 +1,15 @@
+[default]
+description = "Default permissions for the plugin"
+permissions = [
+    "allow-create-human",
+    "allow-create-organization",
+    "allow-save-personal-contact",
+    "allow-update-human",
+    "allow-update-organization",
+    "allow-soft-delete-contact",
+    "allow-update-contact-avatar",
+    "allow-update-human-contact-summary",
+    "allow-toggle-contact-pin",
+    "allow-reorder-pinned-contacts",
+    "allow-merge-humans",
+]

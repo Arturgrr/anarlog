@@ -28,11 +28,6 @@ fn main() {
             .source(NotificationSource::MicDetected {
                 app_names: vec!["Zoom".to_string()],
                 app_ids: vec!["us.zoom.xos".to_string()],
-                event_ids: vec![
-                    "team-standup".to_string(),
-                    "alice-1-1".to_string(),
-                    "sprint-planning".to_string(),
-                ],
             })
             .options(vec![
                 "Team Standup".to_string(),

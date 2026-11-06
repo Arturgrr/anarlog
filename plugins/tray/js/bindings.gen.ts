@@ -14,14 +14,6 @@ async setTrayIconVisible(visible: boolean) : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async setTraySchedule(events: TrayScheduleEvent[]) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:anlg-tray|set_tray_schedule", { events }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async setTrayRecordingTitle(title: string | null) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:anlg-tray|set_tray_recording_title", { title }) };
@@ -42,7 +34,7 @@ async setTrayRecordingTitle(title: string | null) : Promise<Result<null, string>
 
 /** user-defined types **/
 
-export type TrayScheduleEvent = { id: string; title: string; meetingLink: string | null; startsAtMs: number; endsAtMs: number | null; dayStartMs: number; previousDayStartMs: number; timeLabel: string }
+
 
 /** tauri-specta globals **/
 

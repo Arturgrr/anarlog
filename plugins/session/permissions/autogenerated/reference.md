@@ -5,7 +5,6 @@ Default permissions for the plugin
 #### This default permission set includes the following:
 
 - `allow-create-session`
-- `allow-create-session-for-event`
 - `allow-soft-delete-session`
 - `allow-restore-deleted-session`
 - `allow-add-session-participant`
@@ -164,32 +163,6 @@ Enables the create_session command without any pre-configured scope.
 <td>
 
 Denies the create_session command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`session:allow-create-session-for-event`
-
-</td>
-<td>
-
-Enables the create_session_for_event command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`session:deny-create-session-for-event`
-
-</td>
-<td>
-
-Denies the create_session_for_event command without any pre-configured scope.
 
 </td>
 </tr>

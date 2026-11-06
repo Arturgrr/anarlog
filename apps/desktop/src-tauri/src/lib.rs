@@ -167,7 +167,7 @@ pub fn main() {
 
     builder = builder
         .plugin(tauri_plugin_importer::init())
-        .plugin(tauri_plugin_calendar::init())
+        .plugin(tauri_plugin_contacts::init())
         .plugin(tauri_plugin_todo::init());
 
     #[cfg(not(feature = "app-store"))]
@@ -341,8 +341,6 @@ pub fn main() {
                 app_handle.on_menu_event(|app, event| {
                     if let Ok(item) = AnlgMenuItem::try_from(event.id().clone()) {
                         item.handle(app);
-                    } else {
-                        tauri_plugin_tray::handle_agenda_menu_event(app, event.id());
                     }
                 });
             }
@@ -407,7 +405,6 @@ pub fn main() {
                 let _ = permissions.reset(Permission::SystemAudio).await;
                 let _ = permissions.reset(Permission::ScreenRecording).await;
                 let _ = permissions.reset(Permission::Accessibility).await;
-                let _ = permissions.reset(Permission::Calendar).await;
                 let _ = permissions.reset(Permission::Reminders).await;
             });
         }

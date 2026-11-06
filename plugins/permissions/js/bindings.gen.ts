@@ -66,7 +66,7 @@ async closePermissionAssistant() : Promise<Result<null, string>> {
 
 /** user-defined types **/
 
-export type Permission = "calendar" | "reminders" | "contacts" | "microphone" | "systemAudio" | "screenRecording" | "accessibility" | "inputMonitoring"
+export type Permission = "reminders" | "microphone" | "systemAudio" | "screenRecording" | "accessibility" | "inputMonitoring"
 /**
  * Serializable projection of [`SettingsGuidance`] so the renderer can explain
  * how a permission is granted without duplicating this table in TypeScript.

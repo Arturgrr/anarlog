@@ -14,14 +14,6 @@ async createSession(request: CreateSessionRequest) : Promise<Result<string, stri
     else return { status: "error", error: e  as any };
 }
 },
-async createSessionForEvent(request: CreateEventSessionRequest) : Promise<Result<EventSessionResult | null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:session|create_session_for_event", { request }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async softDeleteSession(request: TombstoneSessionRequest) : Promise<Result<DeletedSessionRow | null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:session|soft_delete_session", { request }) };
@@ -214,13 +206,10 @@ export type AddSessionParticipantRequest = { session_id: string; human_id: strin
 export type CatalogFolderMaterialRequest = { folder_path: string; attachment_id: string; filename: string; content_type: string; size_bytes: number; sha256: string }
 export type CatalogNoteAttachmentRequest = { session_id: string; attachment_id: string; filename: string; content_type: string; size_bytes: number; sha256: string }
 export type CatalogSessionAudioRequest = { session_id: string; filename: string; content_type: string; size_bytes: number; sha256: string }
-export type CreateEventSessionRequest = { event_id: string; user_id: string; title: string | null; participants: EventParticipantIdentity[] }
 export type CreateSessionRequest = { title: string; user_id: string; event_json: string; folder_path: string; raw_md: string }
 export type DeleteFolderCatalogRequest = { path: string }
 export type DeletedSessionRow = { id: string; title: string }
 export type EnsureFolderCatalogRequest = { paths: string[] }
-export type EventParticipantIdentity = { email: string; name: string; company_name: string | null }
-export type EventSessionResult = { session_id: string; created: boolean }
 export type MoveSessionContentsRequest = { source_session_id: string; target_session_id: string; rewrite_audio_ids: boolean; next_target_note: string | null; empty_source_note: string | null }
 export type PersistChatSessionProposalRequest = { id: string; session_id: string; kind: string; target_id: string; base_updated_at: string; current_markdown: string; proposed_markdown: string; source: string }
 export type RemoveSessionParticipantRequest = { mapping_id: string }
