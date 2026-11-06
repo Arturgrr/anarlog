@@ -39,8 +39,6 @@ import {
 import { RelatedNotesSection } from "./related-notes";
 import { ContactFacehash } from "./shared";
 
-import { useLocalUserId } from "~/shared/owner-user";
-
 export function DetailsColumn({
   human,
   humans,
@@ -54,9 +52,6 @@ export function DetailsColumn({
   handleSessionClick: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const ownerUserId = useLocalUserId();
-  const readOnly = human?.id === ownerUserId;
-  const user = humans.find((candidate) => candidate.id === ownerUserId) ?? null;
   const { t } = useLingui();
   const [showCompactIdentity, setShowCompactIdentity] = useState(false);
   const [addingEmail, setAddingEmail] = useState(false);
@@ -94,7 +89,6 @@ export function DetailsColumn({
     )?.name ?? null;
   const contactSummary = useContactSummary({
     human,
-    user,
     organizationName,
     sessions: personSessions,
   });
@@ -103,7 +97,7 @@ export function DetailsColumn({
     const humanEmails = contactEmails(human);
     const humanName = human.name.trim().toLowerCase();
     return humans.filter((candidate) => {
-      if (candidate.id === human.id || candidate.id === ownerUserId) {
+      if (candidate.id === human.id) {
         return false;
       }
       const candidateEmails = contactEmails(candidate);
@@ -113,7 +107,7 @@ export function DetailsColumn({
       const candidateName = candidate.name.trim().toLowerCase();
       return humanName !== "" && candidateName === humanName;
     });
-  }, [human, humans, ownerUserId]);
+  }, [human, humans]);
 
   const handleMergeContacts = useCallback(
     (duplicateId: string) => {
@@ -132,7 +126,6 @@ export function DetailsColumn({
       {human ? (
         <>
           <ContactPageHeader
-            readOnly={readOnly}
             title={human.name || human.email || t`Unnamed`}
             compactIdentity={
               human.avatarDataUrl ? (
@@ -163,29 +156,21 @@ export function DetailsColumn({
             }}
           >
             <div className="border-border flex items-center justify-center border-b py-6">
-              {readOnly ? (
-                human.avatarDataUrl ? (
+              <AvatarUploadButton
+                label={t`Change photo`}
+                onUpload={(dataUrl) =>
+                  persistContactAvatar("human", human.id, dataUrl)
+                }
+              >
+                {human.avatarDataUrl ? (
                   <ContactImage src={human.avatarDataUrl} size={64} />
                 ) : (
                   <ContactFacehash name={facehashName} size={64} />
-                )
-              ) : (
-                <AvatarUploadButton
-                  label={t`Change photo`}
-                  onUpload={(dataUrl) =>
-                    persistContactAvatar("human", human.id, dataUrl)
-                  }
-                >
-                  {human.avatarDataUrl ? (
-                    <ContactImage src={human.avatarDataUrl} size={64} />
-                  ) : (
-                    <ContactFacehash name={facehashName} size={64} />
-                  )}
-                </AvatarUploadButton>
-              )}
+                )}
+              </AvatarUploadButton>
             </div>
 
-            {!readOnly && duplicatesWithData.length > 0 && (
+            {duplicatesWithData.length > 0 && (
               <div className="border-border bg-layer-2 border-b px-6 py-4">
                 <h4 className="text-foreground mb-1 text-sm font-semibold">
                   Duplicate Contact
@@ -236,156 +221,125 @@ export function DetailsColumn({
               </div>
             )}
 
-            {readOnly ? (
-              <div>
-                {[
-                  [t`Name`, human.name],
-                  [t`Job Title`, human.jobTitle],
-                  [t`Company`, organizationName],
-                  [
-                    t`Email`,
-                    [human.email, ...human.additionalEmails]
-                      .filter((email) => email.trim() !== "")
-                      .join("\n"),
-                  ],
-                  [t`Phone`, human.phone],
-                  [t`LinkedIn`, human.linkedinUsername],
-                  [t`Notes`, human.memo],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="border-border flex items-center border-b px-4 py-3"
-                  >
-                    <div className="text-muted-foreground w-28 text-sm">
-                      {label}
-                    </div>
-                    <div className="min-w-0 flex-1 text-base break-words whitespace-pre-wrap">
-                      {value}
-                    </div>
-                  </div>
-                ))}
+            <div>
+              <div className="border-border flex items-center border-b px-4 py-3">
+                <div className="text-muted-foreground w-28 text-sm">
+                  <Trans>Name</Trans>
+                </div>
+                <div className="flex-1">
+                  <EditablePersonNameField
+                    key={`${human.id}:name`}
+                    personId={human.id}
+                    value={human.name}
+                  />
+                </div>
               </div>
-            ) : (
-              <div>
+              <EditablePersonJobTitleField
+                key={`${human.id}:job-title`}
+                personId={human.id}
+                value={human.jobTitle}
+              />
+
+              <div className="border-border flex items-center border-b px-4 py-3">
+                <div className="text-muted-foreground w-28 text-sm">
+                  <Trans>Company</Trans>
+                </div>
+                <div className="flex-1">
+                  <ContactOrganizationSelector
+                    onChange={(organizationId) =>
+                      persistHumanUpdate(human.id, {
+                        organizationId: organizationId ?? "",
+                      })
+                    }
+                    organization={
+                      organizations.find(
+                        (organization) =>
+                          organization.id === human.organizationId,
+                      ) ?? null
+                    }
+                    organizations={organizations}
+                  />
+                </div>
+              </div>
+
+              <EditablePersonEmailField
+                key={`${human.id}:email`}
+                personId={human.id}
+                value={human.email}
+              />
+              {human.additionalEmails.map((email) => (
+                <EditableAdditionalEmailRow
+                  key={`${human.id}:${email}`}
+                  value={email}
+                  onCommit={(next, previous) => {
+                    const trimmed = next.trim();
+                    if (trimmed === previous) return;
+                    const current = currentAdditionalEmails();
+                    persistAdditionalEmails(
+                      trimmed
+                        ? current.map((entry) =>
+                            entry === previous ? trimmed : entry,
+                          )
+                        : current.filter((entry) => entry !== previous),
+                    );
+                  }}
+                  onRemove={(current) => {
+                    persistAdditionalEmails(
+                      currentAdditionalEmails().filter(
+                        (entry) => entry !== current,
+                      ),
+                    );
+                  }}
+                />
+              ))}
+              {addingEmail ? (
+                <EditableAdditionalEmailRow
+                  key={`${human.id}:new-email`}
+                  value=""
+                  autoFocus
+                  onCommit={(next) => {
+                    setAddingEmail(false);
+                    const trimmed = next.trim();
+                    if (trimmed) {
+                      persistAdditionalEmails([
+                        ...currentAdditionalEmails(),
+                        trimmed,
+                      ]);
+                    }
+                  }}
+                />
+              ) : (
                 <div className="border-border flex items-center border-b px-4 py-3">
-                  <div className="text-muted-foreground w-28 text-sm">
-                    <Trans>Name</Trans>
-                  </div>
+                  <div className="w-28" />
                   <div className="flex-1">
-                    <EditablePersonNameField
-                      key={`${human.id}:name`}
-                      personId={human.id}
-                      value={human.name}
-                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground -ml-2 h-7 px-2"
+                      onClick={() => setAddingEmail(true)}
+                    >
+                      <Trans>Add email</Trans>
+                    </Button>
                   </div>
                 </div>
-                <EditablePersonJobTitleField
-                  key={`${human.id}:job-title`}
-                  personId={human.id}
-                  value={human.jobTitle}
-                />
-
-                <div className="border-border flex items-center border-b px-4 py-3">
-                  <div className="text-muted-foreground w-28 text-sm">
-                    <Trans>Company</Trans>
-                  </div>
-                  <div className="flex-1">
-                    <ContactOrganizationSelector
-                      onChange={(organizationId) =>
-                        persistHumanUpdate(human.id, {
-                          organizationId: organizationId ?? "",
-                        })
-                      }
-                      organization={
-                        organizations.find(
-                          (organization) =>
-                            organization.id === human.organizationId,
-                        ) ?? null
-                      }
-                      organizations={organizations}
-                    />
-                  </div>
-                </div>
-
-                <EditablePersonEmailField
-                  key={`${human.id}:email`}
-                  personId={human.id}
-                  value={human.email}
-                />
-                {human.additionalEmails.map((email) => (
-                  <EditableAdditionalEmailRow
-                    key={`${human.id}:${email}`}
-                    value={email}
-                    onCommit={(next, previous) => {
-                      const trimmed = next.trim();
-                      if (trimmed === previous) return;
-                      const current = currentAdditionalEmails();
-                      persistAdditionalEmails(
-                        trimmed
-                          ? current.map((entry) =>
-                              entry === previous ? trimmed : entry,
-                            )
-                          : current.filter((entry) => entry !== previous),
-                      );
-                    }}
-                    onRemove={(current) => {
-                      persistAdditionalEmails(
-                        currentAdditionalEmails().filter(
-                          (entry) => entry !== current,
-                        ),
-                      );
-                    }}
-                  />
-                ))}
-                {addingEmail ? (
-                  <EditableAdditionalEmailRow
-                    key={`${human.id}:new-email`}
-                    value=""
-                    autoFocus
-                    onCommit={(next) => {
-                      setAddingEmail(false);
-                      const trimmed = next.trim();
-                      if (trimmed) {
-                        persistAdditionalEmails([
-                          ...currentAdditionalEmails(),
-                          trimmed,
-                        ]);
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="border-border flex items-center border-b px-4 py-3">
-                    <div className="w-28" />
-                    <div className="flex-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground -ml-2 h-7 px-2"
-                        onClick={() => setAddingEmail(true)}
-                      >
-                        <Trans>Add email</Trans>
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                <EditablePersonPhoneField
-                  key={`${human.id}:phone`}
-                  personId={human.id}
-                  value={human.phone}
-                />
-                <EditablePersonLinkedInField
-                  key={`${human.id}:linkedin`}
-                  personId={human.id}
-                  value={human.linkedinUsername}
-                />
-                <EditablePersonMemoField
-                  key={`${human.id}:memo`}
-                  personId={human.id}
-                  value={human.memo}
-                />
-              </div>
-            )}
+              )}
+              <EditablePersonPhoneField
+                key={`${human.id}:phone`}
+                personId={human.id}
+                value={human.phone}
+              />
+              <EditablePersonLinkedInField
+                key={`${human.id}:linkedin`}
+                personId={human.id}
+                value={human.linkedinUsername}
+              />
+              <EditablePersonMemoField
+                key={`${human.id}:memo`}
+                personId={human.id}
+                value={human.memo}
+              />
+            </div>
 
             {personSessions.length > 0 && (
               <ContactSummarySection summary={contactSummary} />

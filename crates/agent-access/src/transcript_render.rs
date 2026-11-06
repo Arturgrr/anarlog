@@ -308,7 +308,7 @@ mod tests {
         let interval = &mut export.speaker_context.as_mut().unwrap()["intervals"][0];
         interval["shared_microphone"] = json!(false);
         interval["mic_isolated"] = json!(true);
-        assert_eq!(render_transcripts_markdown(&export), "Me: Hello Bob");
+        assert_eq!(render_transcripts_markdown(&export), "You: Hello Bob");
     }
 
     #[test]

@@ -46,6 +46,7 @@ function participant(
     linkedinUsername: "",
     organizationId: "",
     organizationName: "",
+    isSelf: false,
     ...overrides,
   };
 }
@@ -75,5 +76,23 @@ describe("ParticipantChip", () => {
     render(<ParticipantChip mappingId="mapping-1" />);
 
     expect(screen.getByText("lex@example.com")).toBeTruthy();
+  });
+
+  it("shows the local user as You without contact actions", () => {
+    mocks.participant = participant({
+      humanId: "owner-1",
+      name: "",
+      email: "",
+      isSelf: true,
+    });
+
+    render(
+      <ParticipantChip mappingId="mapping-1" onEnhanceContact={vi.fn()} />,
+    );
+
+    expect(screen.getByText("You")).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: /Enhance contact/ }),
+    ).toBeNull();
   });
 });

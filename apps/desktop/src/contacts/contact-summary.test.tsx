@@ -60,7 +60,7 @@ beforeEach(() => {
 describe("contact summary", () => {
   it("changes the source fingerprint when related meeting content changes", () => {
     const sessions = makeSessions();
-    const promptKey = createContactSummaryPromptKey(null);
+    const promptKey = createContactSummaryPromptKey();
     const first = createContactSummarySourceHash(sessions, promptKey);
 
     expect(first).toBe(createContactSummarySourceHash(sessions, promptKey));
@@ -70,41 +70,6 @@ describe("contact summary", () => {
         promptKey,
       ),
     ).not.toBe(first);
-  });
-
-  it("changes the source fingerprint when the user identity changes", () => {
-    const sessions = makeSessions();
-    const user = makeUser();
-    const withUser = createContactSummarySourceHash(
-      sessions,
-      createContactSummaryPromptKey(user),
-    );
-
-    const withoutUser = createContactSummarySourceHash(
-      sessions,
-      createContactSummaryPromptKey(null),
-    );
-    expect(withoutUser).not.toBe(withUser);
-    // A self contact with blank name and email is still a known user.
-    expect(
-      createContactSummarySourceHash(
-        sessions,
-        createContactSummaryPromptKey({ ...user, name: "", email: "" }),
-      ),
-    ).not.toBe(withoutUser);
-    for (const changed of [
-      { ...user, id: "user-2" },
-      { ...user, name: "Johnny" },
-      { ...user, email: "john@other.com" },
-      { ...user, name: "", email: "" },
-    ]) {
-      expect(
-        createContactSummarySourceHash(
-          sessions,
-          createContactSummaryPromptKey(changed),
-        ),
-      ).not.toBe(withUser);
-    }
   });
 
   it("uses generated meeting summaries and transcript fallbacks", () => {
@@ -162,18 +127,15 @@ describe("contact summary", () => {
       "human-1",
       expect.objectContaining({
         sourceHash: "source-1",
-        promptKey: createContactSummaryPromptKey(null),
+        promptKey: createContactSummaryPromptKey(),
         sources: [{ id: "session-1", updatedAt: "2026-08-11T12:00:00.000Z" }],
       }),
     );
   });
 
-  it("includes the user context and addresses them in the second person", async () => {
-    const user = makeUser();
-
+  it("keeps the local user's identity out of the brief prompt", async () => {
     await generateAndSaveContactSummary({
       human: makeHuman(),
-      user,
       organizationName: "Fastrepl",
       sessions: makeSessions(),
       sourceHash: "source-1",
@@ -182,42 +144,10 @@ describe("contact summary", () => {
 
     const call = mocks.generateText.mock.calls[0]?.[0];
     expect(call.system).toContain("second person");
-    const prompt = JSON.parse(call.prompt);
-    expect(prompt.user).toEqual({
-      name: "John",
-      email: "john@example.com",
-    });
-    expect(prompt.target_is_user).toBe(false);
-  });
-
-  it("marks the brief as about the user when target and user match", async () => {
-    const user = makeUser();
-
-    await generateAndSaveContactSummary({
-      human: user,
-      user,
-      organizationName: "Fastrepl",
-      sessions: makeSessions(),
-      sourceHash: "source-1",
-      model: { id: "model-1" } as never,
-    });
-
-    const prompt = JSON.parse(mocks.generateText.mock.calls[0]?.[0].prompt);
-    expect(prompt.target_is_user).toBe(true);
-  });
-
-  it("sends a null user when no user contact is known", async () => {
-    await generateAndSaveContactSummary({
-      human: makeHuman(),
-      organizationName: "Fastrepl",
-      sessions: makeSessions(),
-      sourceHash: "source-1",
-      model: { id: "model-1" } as never,
-    });
-
-    const prompt = JSON.parse(mocks.generateText.mock.calls[0]?.[0].prompt);
-    expect(prompt.user).toBeNull();
-    expect(prompt.target_is_user).toBe(false);
+    expect(Object.keys(JSON.parse(call.prompt)).sort()).toEqual([
+      "meetings",
+      "target",
+    ]);
   });
 
   it("rebuilds in full when only the prompt version changed the hash", async () => {
@@ -286,7 +216,7 @@ describe("contact summary", () => {
       summary: {
         facts: ["Fact one.", "Fact two.", "Fact three."],
         sourceHash: "source-old",
-        promptKey: createContactSummaryPromptKey(null),
+        promptKey: createContactSummaryPromptKey(),
         generatedAt: "2026-08-11T12:00:00.000Z",
         sources: [{ id: "session-1", updatedAt: "2026-08-11T12:00:00.000Z" }],
       },
@@ -337,7 +267,7 @@ describe("contact summary", () => {
       summary: {
         facts: ["Fact one.", "Fact two.", "Fact three."],
         sourceHash: "source-old",
-        promptKey: createContactSummaryPromptKey(null),
+        promptKey: createContactSummaryPromptKey(),
         generatedAt: "2026-08-11T12:00:00.000Z",
         sources,
       },
@@ -383,7 +313,6 @@ describe("contact summary", () => {
 
     const props = {
       human: makeHuman(),
-      user: makeUser(),
       organizationName: "Fastrepl",
       sessions: makeSessions(),
       settleMs: 200,
@@ -456,7 +385,7 @@ describe("contact summary", () => {
             ...session,
             sourceUpdatedAt: "2026-08-11T12:00:04.000Z",
           })),
-          createContactSummaryPromptKey(makeUser()),
+          createContactSummaryPromptKey(),
         ),
       }),
     );
@@ -474,7 +403,6 @@ describe("contact summary", () => {
       () =>
         useContactSummary({
           human: makeHuman(),
-          user: makeUser(),
           organizationName: "Fastrepl",
           sessions: makeSessions(),
         }),
@@ -506,15 +434,6 @@ function makeHuman(): HumanRecord {
     avatarDataUrl: null,
     summary: null,
     additionalEmails: [],
-  };
-}
-
-function makeUser(): HumanRecord {
-  return {
-    ...makeHuman(),
-    id: "user-1",
-    name: "John",
-    email: "john@example.com",
   };
 }
 

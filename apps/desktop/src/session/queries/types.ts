@@ -56,4 +56,5 @@ export type SessionParticipantRecord = {
   linkedinUsername: string;
   organizationId: string;
   organizationName: string;
+  isSelf: boolean;
 };

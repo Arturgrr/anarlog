@@ -2,6 +2,10 @@ use std::collections::HashMap;
 
 use crate::{ChannelProfile, Segment, SegmentKey};
 
+/// The local user is always labeled generically; their stored name is never
+/// rendered as a speaker.
+pub(crate) const SELF_SPEAKER_LABEL: &str = "You";
+
 #[derive(Debug, Clone, Default)]
 pub struct SpeakerLabelContext {
     pub self_human_id: Option<String>,
@@ -85,19 +89,17 @@ pub fn render_speaker_label(
 ) -> String {
     if let Some(ctx) = ctx {
         if let Some(human_id) = key.speaker_human_id.as_ref() {
+            if ctx.self_human_id.as_ref() == Some(human_id) {
+                return SELF_SPEAKER_LABEL.to_string();
+            }
             if let Some(name) = ctx.human_name_by_id.get(human_id) {
                 return name.clone();
             }
             return human_id.clone();
         }
 
-        if key.channel == ChannelProfile::DirectMic
-            && let Some(self_human_id) = ctx.self_human_id.as_ref()
-        {
-            if let Some(name) = ctx.human_name_by_id.get(self_human_id) {
-                return name.clone();
-            }
-            return "You".to_string();
+        if key.channel == ChannelProfile::DirectMic && ctx.self_human_id.is_some() {
+            return SELF_SPEAKER_LABEL.to_string();
         }
     } else if let Some(human_id) = key.speaker_human_id.as_ref() {
         return human_id.clone();

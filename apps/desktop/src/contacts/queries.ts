@@ -127,6 +127,11 @@ const TEAM_WORKSPACE_SQL = `CASE
   ELSE 0
 END AS team_workspace`;
 
+// Sessions anchor the local user to a humans row whose id is its own owner.
+// That row only identifies "you" as a participant and speaker; it is never a
+// contact, so its personal columns are not read.
+const NOT_LOCAL_USER_SQL = "humans.id <> humans.owner_user_id";
+
 type HumanSessionSqlRow = {
   id: string;
   title: string;
@@ -187,7 +192,7 @@ export function useHumans(): HumanRecord[] {
         ${CONTACT_SUMMARY_SQL},
         ${ADDITIONAL_EMAILS_SQL}
       FROM humans
-      WHERE deleted_at IS NULL
+      WHERE deleted_at IS NULL AND ${NOT_LOCAL_USER_SQL}
       ORDER BY name, email, id
     `,
     mapRows: (rows) => rows.map(mapHumanRow),
@@ -225,6 +230,7 @@ export function useHumanDisplayRecordsByIds(
       FROM humans
       WHERE id IN (${placeholders || "NULL"})
         AND deleted_at IS NULL
+        AND ${NOT_LOCAL_USER_SQL}
       ORDER BY id
     `,
     params: uniqueIds,
@@ -300,6 +306,7 @@ export async function loadHumansByIds(
       FROM humans
       WHERE id IN (${uniqueIds.map(() => "?").join(", ")})
         AND deleted_at IS NULL
+        AND ${NOT_LOCAL_USER_SQL}
       ORDER BY id
     `,
     uniqueIds,
@@ -403,6 +410,7 @@ export async function searchContacts(
         ON organizations.id = humans.organization_id
         AND organizations.deleted_at IS NULL
       WHERE humans.deleted_at IS NULL
+        AND ${NOT_LOCAL_USER_SQL}
         AND (
           ? = '' OR lower(
             humans.name || char(10) ||
@@ -477,49 +485,6 @@ export function createOrganization({
       throw new Error(result.error);
     }
     return organizationId;
-  });
-}
-
-export function usePersonalContact(humanId: string) {
-  return useLiveQuery<HumanSqlRow, HumanRecord | null>({
-    sql: `SELECT *, ${AVATAR_SQL}, ${CONTACT_SUMMARY_SQL},
-        ${ADDITIONAL_EMAILS_SQL}
-      FROM humans WHERE id = ? AND deleted_at IS NULL`,
-    params: [humanId],
-    mapRows: (rows) => (rows[0] ? mapHumanRow(rows[0]) : null),
-  });
-}
-
-export function savePersonalContact(
-  humanId: string,
-  values: Pick<
-    HumanRecord,
-    | "name"
-    | "email"
-    | "phone"
-    | "jobTitle"
-    | "linkedinUsername"
-    | "memo"
-    | "organizationId"
-  > & { avatarDataUrl?: string | null },
-): Promise<void> {
-  return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    const result = await calendarCommands.savePersonalContact({
-      human_id: humanId,
-      name: values.name,
-      email: values.email,
-      phone: values.phone,
-      job_title: values.jobTitle,
-      linkedin_username: values.linkedinUsername,
-      memo: values.memo,
-      organization_id: values.organizationId,
-      avatar_data_url:
-        typeof values.avatarDataUrl === "string" ? values.avatarDataUrl : null,
-      remove_avatar: values.avatarDataUrl === null,
-    });
-    if (result.status === "error") {
-      throw new Error(result.error);
-    }
   });
 }
 

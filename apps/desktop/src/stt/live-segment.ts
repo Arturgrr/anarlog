@@ -130,6 +130,11 @@ export const SegmentKeyUtils = {
     manager?: SpeakerLabelManager,
   ): string => {
     const assignedHumanId = key.speaker_human_id;
+    const selfHumanId = ctx?.getSelfHumanId();
+
+    if (selfHumanId && assignedHumanId === selfHumanId) {
+      return "You";
+    }
 
     if (ctx && assignedHumanId != null) {
       const human = ctx.getHumanName(assignedHumanId);
@@ -138,15 +143,8 @@ export const SegmentKeyUtils = {
       }
     }
 
-    if (ctx && key.channel === "DirectMic") {
-      const selfHumanId = ctx.getSelfHumanId();
-      if (
-        selfHumanId &&
-        (assignedHumanId == null || assignedHumanId === selfHumanId)
-      ) {
-        const selfHuman = ctx.getHumanName(selfHumanId);
-        return selfHuman || "You";
-      }
+    if (selfHumanId && key.channel === "DirectMic" && assignedHumanId == null) {
+      return "You";
     }
 
     if (ctx && key.channel === "RemoteParty" && assignedHumanId == null) {

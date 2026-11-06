@@ -41,18 +41,27 @@ const SESSION_TRANSCRIPT_COLUMNS: &str = "
     JOIN sessions AS session ON session.id = transcript.session_id AND session.deleted_at IS NULL
 ";
 
+// The session owner's participant row only marks the local user; its contact
+// and the name and email copied onto the mapping are never read.
 const SESSION_PARTICIPANT_COLUMNS: &str = "
     SELECT participant.id, participant.workspace_id, participant.owner_user_id,
            participant.session_id, participant.human_id,
-           COALESCE(NULLIF(human.name, ''), participant.display_name) AS display_name,
-           COALESCE(NULLIF(human.email, ''), participant.email) AS email,
+           CASE WHEN participant.human_id <> '' AND participant.human_id = session.owner_user_id THEN ''
+             ELSE COALESCE(NULLIF(human.name, ''), participant.display_name)
+           END AS display_name,
+           CASE WHEN participant.human_id <> '' AND participant.human_id = session.owner_user_id THEN ''
+             ELSE COALESCE(NULLIF(human.email, ''), participant.email)
+           END AS email,
            participant.role, participant.source, COALESCE(human.job_title, '') AS job_title,
            COALESCE(human.organization_id, '') AS organization_id,
            COALESCE(organization.name, '') AS organization_name, participant.metadata_json,
            participant.created_at, participant.updated_at
     FROM session_participants AS participant
     JOIN sessions AS session ON session.id = participant.session_id AND session.deleted_at IS NULL
-    LEFT JOIN humans AS human ON human.id = participant.human_id AND human.deleted_at IS NULL
+    LEFT JOIN humans AS human
+      ON human.id = participant.human_id
+      AND human.deleted_at IS NULL
+      AND participant.human_id <> session.owner_user_id
     LEFT JOIN organizations AS organization
       ON organization.id = human.organization_id AND organization.deleted_at IS NULL
 ";
@@ -707,6 +716,51 @@ mod tests {
                 .await
                 .unwrap()
                 .is_empty()
+        );
+    }
+
+    #[tokio::test]
+    async fn participants_never_expose_the_local_user_profile() {
+        let db = test_db().await;
+        sqlx::query("INSERT INTO sessions (id, owner_user_id) VALUES ('session-1', 'owner-1')")
+            .execute(db.pool())
+            .await
+            .unwrap();
+        sqlx::query("INSERT INTO organizations (id, name) VALUES ('org-1', 'Acme')")
+            .execute(db.pool())
+            .await
+            .unwrap();
+        sqlx::query(
+            "INSERT INTO humans (id, owner_user_id, organization_id, name, email, job_title)
+             VALUES ('owner-1', 'owner-1', 'org-1', 'Ada Owner', 'ada@example.com', 'CEO')",
+        )
+        .execute(db.pool())
+        .await
+        .unwrap();
+        sqlx::query(
+            "INSERT INTO session_participants (id, session_id, human_id, display_name, email)
+             VALUES ('self', 'session-1', 'owner-1', 'Ada Owner', 'ada@example.com')",
+        )
+        .execute(db.pool())
+        .await
+        .unwrap();
+
+        let participants = list_session_participants(db.pool(), "session-1")
+            .await
+            .unwrap();
+
+        assert_eq!(participants.len(), 1);
+        let owner = &participants[0];
+        assert_eq!(owner.human_id, "owner-1");
+        assert_eq!(
+            [
+                owner.display_name.as_str(),
+                owner.email.as_str(),
+                owner.job_title.as_str(),
+                owner.organization_id.as_str(),
+                owner.organization_name.as_str(),
+            ],
+            [""; 5]
         );
     }
 

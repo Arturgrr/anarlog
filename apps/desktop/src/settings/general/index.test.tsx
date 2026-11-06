@@ -32,7 +32,6 @@ vi.mock("~/settings/queries", () => ({
   useStoredSettingValuesQuery: mocks.useStoredSettingValuesQuery,
 }));
 
-vi.mock("./account-profile", () => ({ AccountProfile: () => null }));
 vi.mock("./app-settings", () => ({ AppSettingsView: () => null }));
 vi.mock("./audio-settings", () => ({
   AudioSettingsView: () => <span>Audio settings</span>,
