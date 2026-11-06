@@ -59,6 +59,15 @@ pub(crate) async fn permission_guidance<R: tauri::Runtime>(
 
 #[tauri::command]
 #[specta::specta]
+pub(crate) async fn set_permission_assistant_labels(
+    labels: crate::assistant::labels::AssistantLabels,
+) -> Result<(), String> {
+    crate::assistant::labels::set_labels(labels);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub(crate) async fn close_permission_assistant<R: tauri::Runtime>(
     app: tauri::AppHandle<R>,
 ) -> Result<(), String> {

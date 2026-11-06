@@ -240,8 +240,9 @@ struct NotificationPayload: Codable {
     return actionVariant == .destructive
   }
 
+  // The label is translated, so the destructive variant marks the stop prompt.
   var showsStopCountdown: Bool {
-    return isDestructiveAction && actionLabel == "Stop" && timeoutSeconds > 0
+    return isDestructiveAction && timeoutSeconds > 0
   }
 
   var hasOptions: Bool {

@@ -390,6 +390,23 @@ export type EditorView =
   | { type: "shared"; id: string };
 export type ExtensionsState = { selectedExtension: string | null };
 export type FloatingBarColorScheme = "light" | "dark";
+export type FloatingBarLabels = {
+  stop: string;
+  stopListening: string;
+  reconnectingStopListening: string;
+  errorStopListening: string;
+  errorHelp: string;
+  collapseTranscript: string;
+  expandTranscript: string;
+  goToBottom: string;
+  scrollTranscriptToBottom: string;
+  overlappingSpeech: string;
+  settingsTitle: string;
+  closeSettings: string;
+  barOpacity: string;
+  showTranscript: string;
+  hideTranscript: string;
+};
 export type FloatingBarOpenMain = Record<string, never>;
 export type FloatingBarOverlayAmplitude = { amplitude: number };
 export type FloatingBarOverlayLayout = {
@@ -421,6 +438,7 @@ export type FloatingBarState = {
   transcriptNotice?: string | null;
   layout?: FloatingBarOverlayLayout | null;
   sessionId?: string | null;
+  labels?: FloatingBarLabels | null;
 };
 export type FloatingBarStatus = "recording" | "reconnecting" | "error";
 export type FloatingBarStop = Record<string, never>;

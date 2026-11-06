@@ -27,6 +27,7 @@ final class FloatingOverlaySettingsModel: ObservableObject {
   @Published var liveCaptionLineCount: Int = LiveCaptionLayout.defaultLineCount
   @Published var liveCaptionPosition: LiveCaptionPosition = .topCenter
   @Published var liveCaptionMinimized: Bool = true
+  @Published var labels = FloatingBarLabels()
 
   private var pendingFloatingBarOpacity: Double?
   private var pendingLiveCaptionOpacity: Double?
@@ -38,6 +39,9 @@ final class FloatingOverlaySettingsModel: ObservableObject {
   private init() {}
 
   func apply(floatingBarState state: FloatingBarStatePayload) {
+    if let labels = state.labels, self.labels != labels {
+      self.labels = labels
+    }
     applyFloatingBarOpacity(state.opacity)
     applyLiveCaptionOpacity(state.liveCaptionOpacity)
     applyLiveCaptionWidth(state.liveCaptionWidth)

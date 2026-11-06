@@ -29,6 +29,14 @@ async setTrayRecordingTitle(title: string | null) : Promise<Result<null, string>
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async setTrayLabels(labels: TrayLabels) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:anlg-tray|set_tray_labels", { labels }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -42,6 +50,27 @@ async setTrayRecordingTitle(title: string | null) : Promise<Result<null, string>
 
 /** user-defined types **/
 
+export type TrayLabels = { 
+/**
+ * Contains `{app}`, like the other `*_app` and `quit_completely_*` labels.
+ */
+openApp: string; startMeeting: string; settings: string; checkForUpdates: string; downloadingUpdate: string; restartToApplyUpdate: string; hide: string; quit: string; quitCompletely: string; quitCompletelyTitle: string; quitCompletelyMessage: string; quitCompletelyConfirm: string; cancel: string; aboutApp: string; copy: string; newNote: string; reportBug: string; suggestFeature: string; fileMenu: string; editMenu: string; viewMenu: string; windowMenu: string; helpMenu: string; services: string; hideApp: string; hideOthers: string; showAll: string; closeWindow: string; undo: string; redo: string; cut: string; paste: string; selectAll: string; fullscreen: string; minimize: string; zoom: string; 
+/**
+ * Contains `{version}`.
+ */
+updateAvailableMessage: string; updateAvailableTitle: string; download: string; later: string; updateFailedTitle: string; 
+/**
+ * Contains `{error}`.
+ */
+installFailedMessage: string; 
+/**
+ * Contains `{error}`.
+ */
+downloadFailedMessage: string; noUpdatesMessage: string; updateCheckFailedTitle: string; 
+/**
+ * Contains `{error}`.
+ */
+checkFailedMessage: string }
 export type TrayScheduleEvent = { id: string; title: string; meetingLink: string | null; startsAtMs: number; endsAtMs: number | null; dayStartMs: number; previousDayStartMs: number; timeLabel: string }
 
 /** tauri-specta globals **/

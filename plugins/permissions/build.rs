@@ -5,6 +5,7 @@ const COMMANDS: &[&str] = &[
     "reset_permission",
     "permission_guidance",
     "close_permission_assistant",
+    "set_permission_assistant_labels",
 ];
 
 fn main() {

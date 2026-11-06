@@ -11,7 +11,13 @@ impl MenuItemHandler for AppNew {
     const ID: &'static str = "anlg_app_new";
 
     fn build(app: &AppHandle<tauri::Wry>) -> Result<MenuItemKind<tauri::Wry>> {
-        let item = MenuItem::with_id(app, Self::ID, "New Note", true, Some("CmdOrCtrl+N"))?;
+        let item = MenuItem::with_id(
+            app,
+            Self::ID,
+            crate::labels::labels().new_note,
+            true,
+            Some("CmdOrCtrl+N"),
+        )?;
         Ok(MenuItemKind::MenuItem(item))
     }
 

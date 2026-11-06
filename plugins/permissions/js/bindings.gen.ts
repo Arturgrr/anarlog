@@ -53,6 +53,14 @@ async closePermissionAssistant() : Promise<Result<null, string>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async setPermissionAssistantLabels(labels: AssistantLabels) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:permissions|set_permission_assistant_labels", { labels }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -66,6 +74,7 @@ async closePermissionAssistant() : Promise<Result<null, string>> {
 
 /** user-defined types **/
 
+export type AssistantLabels = { allowAccessibility: string; dragHint: string; dismiss: string }
 export type Permission = "calendar" | "reminders" | "contacts" | "microphone" | "systemAudio" | "screenRecording" | "accessibility" | "inputMonitoring"
 /**
  * Serializable projection of [`SettingsGuidance`] so the renderer can explain

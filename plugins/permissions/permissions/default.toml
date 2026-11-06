@@ -7,4 +7,5 @@ permissions = [
     "allow-reset-permission",
     "allow-permission-guidance",
     "allow-close-permission-assistant",
+    "allow-set-permission-assistant-labels",
 ]

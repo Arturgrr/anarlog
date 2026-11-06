@@ -52,21 +52,29 @@ static MENU_DIRTY: AtomicBool = AtomicBool::new(false);
 
 #[cfg(target_os = "macos")]
 pub fn build_app_menu(app: &AppHandle<tauri::Wry>) -> Result<Menu<tauri::Wry>> {
+    let labels = crate::labels::labels();
+    let app_name = app.package_info().name.clone();
+    let hide_app = crate::labels::fill(&labels.hide_app, &[("app", app_name.as_str())]);
+
+    let services = PredefinedMenuItem::services(app, Some(&labels.services))?;
+    let hide = PredefinedMenuItem::hide(app, Some(&hide_app))?;
+    let hide_others = PredefinedMenuItem::hide_others(app, Some(&labels.hide_others))?;
+    let show_all = PredefinedMenuItem::show_all(app, Some(&labels.show_all))?;
     let app_submenu = if crate::updates_enabled() {
         Submenu::with_items(
             app,
-            app.package_info().name.clone(),
+            app_name,
             true,
             &[
                 &AppInfo::build(app)?,
                 &TrayCheckUpdate::build(app)?,
                 &TraySettings::build(app)?,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::services(app, None)?,
+                &services,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::hide(app, None)?,
-                &PredefinedMenuItem::hide_others(app, None)?,
-                &PredefinedMenuItem::show_all(app, None)?,
+                &hide,
+                &hide_others,
+                &show_all,
                 &PredefinedMenuItem::separator(app)?,
                 &TrayQuit::build(app)?,
             ],
@@ -74,17 +82,17 @@ pub fn build_app_menu(app: &AppHandle<tauri::Wry>) -> Result<Menu<tauri::Wry>> {
     } else {
         Submenu::with_items(
             app,
-            app.package_info().name.clone(),
+            app_name,
             true,
             &[
                 &AppInfo::build(app)?,
                 &TraySettings::build(app)?,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::services(app, None)?,
+                &services,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::hide(app, None)?,
-                &PredefinedMenuItem::hide_others(app, None)?,
-                &PredefinedMenuItem::show_all(app, None)?,
+                &hide,
+                &hide_others,
+                &show_all,
                 &PredefinedMenuItem::separator(app)?,
                 &TrayQuit::build(app)?,
             ],
@@ -92,49 +100,52 @@ pub fn build_app_menu(app: &AppHandle<tauri::Wry>) -> Result<Menu<tauri::Wry>> {
     };
     let file_submenu = Submenu::with_items(
         app,
-        "File",
+        &labels.file_menu,
         true,
         &[
             &AppNew::build(app)?,
-            &PredefinedMenuItem::close_window(app, None)?,
+            &PredefinedMenuItem::close_window(app, Some(&labels.close_window))?,
         ],
     )?;
     let edit_submenu = Submenu::with_items(
         app,
-        "Edit",
+        &labels.edit_menu,
         true,
         &[
-            &PredefinedMenuItem::undo(app, None)?,
-            &PredefinedMenuItem::redo(app, None)?,
+            &PredefinedMenuItem::undo(app, Some(&labels.undo))?,
+            &PredefinedMenuItem::redo(app, Some(&labels.redo))?,
             &PredefinedMenuItem::separator(app)?,
-            &PredefinedMenuItem::cut(app, None)?,
-            &PredefinedMenuItem::copy(app, None)?,
-            &PredefinedMenuItem::paste(app, None)?,
-            &PredefinedMenuItem::select_all(app, None)?,
+            &PredefinedMenuItem::cut(app, Some(&labels.cut))?,
+            &PredefinedMenuItem::copy(app, Some(&labels.copy))?,
+            &PredefinedMenuItem::paste(app, Some(&labels.paste))?,
+            &PredefinedMenuItem::select_all(app, Some(&labels.select_all))?,
         ],
     )?;
     let view_submenu = Submenu::with_items(
         app,
-        "View",
+        &labels.view_menu,
         true,
-        &[&PredefinedMenuItem::fullscreen(app, None)?],
+        &[&PredefinedMenuItem::fullscreen(
+            app,
+            Some(&labels.fullscreen),
+        )?],
     )?;
     let window_submenu = Submenu::with_id_and_items(
         app,
         WINDOW_SUBMENU_ID,
-        "Window",
+        &labels.window_menu,
         true,
         &[
-            &PredefinedMenuItem::minimize(app, None)?,
-            &PredefinedMenuItem::maximize(app, None)?,
+            &PredefinedMenuItem::minimize(app, Some(&labels.minimize))?,
+            &PredefinedMenuItem::maximize(app, Some(&labels.zoom))?,
             &PredefinedMenuItem::separator(app)?,
-            &PredefinedMenuItem::close_window(app, None)?,
+            &PredefinedMenuItem::close_window(app, Some(&labels.close_window))?,
         ],
     )?;
     let help_submenu = Submenu::with_id_and_items(
         app,
         HELP_SUBMENU_ID,
-        "Help",
+        &labels.help_menu,
         true,
         &[
             &HelpReportBug::build(app)?,
@@ -535,6 +546,18 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
             (!title.is_empty()).then(|| title.to_string())
         });
         Self::refresh_menu_bar_title(self.manager.app_handle())
+    }
+
+    pub fn set_labels(&self, labels: crate::labels::TrayLabels) -> Result<()> {
+        if !crate::labels::set_labels(labels) {
+            return Ok(());
+        }
+
+        #[cfg(target_os = "macos")]
+        on_main_thread(self.manager.app_handle(), |app| {
+            app.set_menu(build_app_menu(app)?).map(|_| ())
+        })?;
+        self.refresh_menu()
     }
 
     pub fn set_degraded(&self, degraded: bool) -> Result<()> {

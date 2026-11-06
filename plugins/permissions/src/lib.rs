@@ -22,6 +22,7 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::reset_permission::<tauri::Wry>,
             commands::permission_guidance::<tauri::Wry>,
             commands::close_permission_assistant::<tauri::Wry>,
+            commands::set_permission_assistant_labels,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }

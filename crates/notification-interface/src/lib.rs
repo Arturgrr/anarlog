@@ -301,10 +301,9 @@ impl Notification {
         )
     }
 
+    // The label is translated, so the destructive variant marks the stop prompt.
     pub fn shows_stop_countdown(&self) -> bool {
-        self.is_destructive_action()
-            && self.action_label.as_deref() == Some("Stop")
-            && self.timeout.is_some_and(|timeout| !timeout.is_zero())
+        self.is_destructive_action() && self.timeout.is_some_and(|timeout| !timeout.is_zero())
     }
 
     pub fn has_options(&self) -> bool {
@@ -378,7 +377,11 @@ impl Notification {
         }
 
         if self.shows_stop_countdown() {
-            return stop_countdown_text(remaining.unwrap_or(Duration::ZERO));
+            return stop_countdown_text(
+                &self.message,
+                self.timeout,
+                remaining.unwrap_or(Duration::ZERO),
+            );
         }
 
         self.message.clone()
@@ -403,8 +406,19 @@ pub fn expanded_schedule_text(remaining: Duration) -> String {
     format!("Begins in {}:{:02}", total_seconds / 60, total_seconds % 60)
 }
 
-pub fn stop_countdown_text(remaining: Duration) -> String {
+// The frontend sends the message in the app language with the full timeout
+// in it; counting that number down keeps the text translated.
+pub fn stop_countdown_text(
+    message: &str,
+    timeout: Option<Duration>,
+    remaining: Duration,
+) -> String {
     let seconds = remaining.as_secs_f64().ceil() as u64;
+    if let Some(total) = timeout.map(|timeout| timeout.as_secs().to_string())
+        && message.contains(&total)
+    {
+        return message.replacen(&total, &seconds.to_string(), 1);
+    }
     format!("Librelog will stop listening in {seconds} seconds.")
 }
 
@@ -776,6 +790,20 @@ mod tests {
         assert_eq!(
             notification.compact_message(Some(Duration::from_secs_f64(4.2))),
             "Librelog will stop listening in 5 seconds."
+        );
+
+        let translated = Notification::builder()
+            .title("A reunião terminou?")
+            .message("O Librelog vai parar de ouvir em 30 segundos.")
+            .action_label("Parar")
+            .action_variant(NotificationActionVariant::Destructive)
+            .timeout(Duration::from_secs(30))
+            .build();
+
+        assert!(translated.shows_stop_countdown());
+        assert_eq!(
+            translated.compact_message(Some(Duration::from_secs_f64(4.2))),
+            "O Librelog vai parar de ouvir em 5 segundos."
         );
         assert_eq!(
             compact_schedule_text(Duration::from_secs(90)),
