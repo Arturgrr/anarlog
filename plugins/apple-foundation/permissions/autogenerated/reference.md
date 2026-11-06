@@ -21,7 +21,7 @@ Default permissions for the plugin
 <tr>
 <td>
 
-`local-llm:allow-foundation-model-availability`
+`apple-foundation:allow-foundation-model-availability`
 
 </td>
 <td>
@@ -34,7 +34,7 @@ Enables the foundation_model_availability command without any pre-configured sco
 <tr>
 <td>
 
-`local-llm:deny-foundation-model-availability`
+`apple-foundation:deny-foundation-model-availability`
 
 </td>
 <td>
@@ -47,7 +47,7 @@ Denies the foundation_model_availability command without any pre-configured scop
 <tr>
 <td>
 
-`local-llm:allow-foundation-model-begin`
+`apple-foundation:allow-foundation-model-begin`
 
 </td>
 <td>
@@ -60,7 +60,7 @@ Enables the foundation_model_begin command without any pre-configured scope.
 <tr>
 <td>
 
-`local-llm:deny-foundation-model-begin`
+`apple-foundation:deny-foundation-model-begin`
 
 </td>
 <td>
@@ -73,7 +73,7 @@ Denies the foundation_model_begin command without any pre-configured scope.
 <tr>
 <td>
 
-`local-llm:allow-foundation-model-cancel`
+`apple-foundation:allow-foundation-model-cancel`
 
 </td>
 <td>
@@ -86,7 +86,7 @@ Enables the foundation_model_cancel command without any pre-configured scope.
 <tr>
 <td>
 
-`local-llm:deny-foundation-model-cancel`
+`apple-foundation:deny-foundation-model-cancel`
 
 </td>
 <td>
@@ -99,7 +99,7 @@ Denies the foundation_model_cancel command without any pre-configured scope.
 <tr>
 <td>
 
-`local-llm:allow-foundation-model-generate`
+`apple-foundation:allow-foundation-model-generate`
 
 </td>
 <td>
@@ -112,7 +112,7 @@ Enables the foundation_model_generate command without any pre-configured scope.
 <tr>
 <td>
 
-`local-llm:deny-foundation-model-generate`
+`apple-foundation:deny-foundation-model-generate`
 
 </td>
 <td>

@@ -160,6 +160,9 @@ importers:
       '@anlg/editor':
         specifier: workspace:^
         version: link:../../packages/editor
+      '@anlg/plugin-apple-foundation':
+        specifier: workspace:*
+        version: link:../../plugins/apple-foundation
       '@anlg/plugin-contacts':
         specifier: workspace:*
         version: link:../../plugins/contacts
@@ -196,9 +199,6 @@ importers:
       '@anlg/plugin-local-auth':
         specifier: workspace:*
         version: link:../../plugins/local-auth
-      '@anlg/plugin-local-llm':
-        specifier: workspace:*
-        version: link:../../plugins/local-llm
       '@anlg/plugin-local-stt':
         specifier: workspace:*
         version: link:../../plugins/local-stt
@@ -849,6 +849,12 @@ importers:
         specifier: ^2.10.1
         version: 2.10.1
 
+  plugins/apple-foundation:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: ^2.10.1
+        version: 2.10.1
+
   plugins/audio-priority:
     dependencies:
       '@tauri-apps/api':
@@ -934,12 +940,6 @@ importers:
         version: 2.10.1
 
   plugins/local-auth:
-    dependencies:
-      '@tauri-apps/api':
-        specifier: ^2.10.1
-        version: 2.10.1
-
-  plugins/local-llm:
     dependencies:
       '@tauri-apps/api':
         specifier: ^2.10.1

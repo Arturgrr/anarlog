@@ -3,11 +3,11 @@
 import PackageDescription
 
 let package = Package(
-  name: "local-llm-swift",
+  name: "apple-foundation-swift",
   platforms: [.macOS("14.2")],
   products: [
     .library(
-      name: "local-llm-swift",
+      name: "apple-foundation-swift",
       type: .static,
       targets: ["swift-lib"])
   ],

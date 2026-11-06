@@ -23,6 +23,7 @@ tauri-build = { workspace = true, features = [] }
 tauri = { workspace = true, features = ["specta", "protocol-asset"] }
 
 tauri-plugin-agent = { workspace = true }
+tauri-plugin-apple-foundation = { workspace = true }
 tauri-plugin-audio-priority = { workspace = true }
 tauri-plugin-autostart = { workspace = true }
 tauri-plugin-bedrock = { workspace = true }
@@ -44,7 +45,6 @@ tauri-plugin-icon = { workspace = true }
 tauri-plugin-js = { workspace = true }
 tauri-plugin-local-api = { workspace = true }
 tauri-plugin-local-auth = { workspace = true }
-tauri-plugin-local-llm = { workspace = true }
 tauri-plugin-local-stt = { workspace = true }
 tauri-plugin-messenger = { workspace = true }
 tauri-plugin-misc = { workspace = true }

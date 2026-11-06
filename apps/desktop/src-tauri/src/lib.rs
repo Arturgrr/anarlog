@@ -232,7 +232,7 @@ pub fn main() {
         .plugin(tauri_plugin_transcription::init())
         .plugin(tauri_plugin_tantivy::init())
         .plugin(tauri_plugin_audio_priority::init())
-        .plugin(tauri_plugin_local_llm::init())
+        .plugin(tauri_plugin_apple_foundation::init())
         .plugin(tauri_plugin_local_stt::init(
             tauri_plugin_local_stt::InitOptions {
                 parent_supervisor: root_supervisor_ctx

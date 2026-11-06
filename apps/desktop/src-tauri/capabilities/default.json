@@ -49,7 +49,7 @@
     "store:default",
     "store2:default",
     "process:default",
-    "local-llm:default",
+    "apple-foundation:default",
     "local-stt:default",
     "dialog:default",
     "hooks:default",

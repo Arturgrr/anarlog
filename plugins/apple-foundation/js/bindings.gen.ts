@@ -8,7 +8,7 @@
 export const commands = {
 async foundationModelAvailability() : Promise<Result<FoundationModelAvailability, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|foundation_model_availability") };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:apple-foundation|foundation_model_availability") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -16,7 +16,7 @@ async foundationModelAvailability() : Promise<Result<FoundationModelAvailability
 },
 async foundationModelBegin(requestId: string) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|foundation_model_begin", { requestId }) };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:apple-foundation|foundation_model_begin", { requestId }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -24,7 +24,7 @@ async foundationModelBegin(requestId: string) : Promise<Result<null, string>> {
 },
 async foundationModelCancel(requestId: string) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|foundation_model_cancel", { requestId }) };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:apple-foundation|foundation_model_cancel", { requestId }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -32,7 +32,7 @@ async foundationModelCancel(requestId: string) : Promise<Result<null, string>> {
 },
 async foundationModelGenerate(request: FoundationModelRequest) : Promise<Result<FoundationModelResponse, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|foundation_model_generate", { request }) };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:apple-foundation|foundation_model_generate", { request }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

@@ -1,10 +1,10 @@
 [package]
-name = "tauri-plugin-local-llm"
+name = "tauri-plugin-apple-foundation"
 version = "0.1.0"
 authors = ["You"]
 edition = "2024"
 exclude = ["/js", "/node_modules"]
-links = "tauri-plugin-local-llm"
+links = "tauri-plugin-apple-foundation"
 description = ""
 
 [build-dependencies]

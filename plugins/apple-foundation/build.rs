@@ -9,7 +9,7 @@ fn main() {
     #[cfg(target_os = "macos")]
     {
         swift_rs::SwiftLinker::new("14.2")
-            .with_package("local-llm-swift", "./swift-lib/")
+            .with_package("apple-foundation-swift", "./swift-lib/")
             .link();
 
         println!("cargo:rerun-if-changed=swift-lib/src");

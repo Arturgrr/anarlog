@@ -3327,6 +3327,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-agent",
  "tauri-plugin-anlg-tray",
+ "tauri-plugin-apple-foundation",
  "tauri-plugin-audio-priority",
  "tauri-plugin-autostart",
  "tauri-plugin-bedrock",
@@ -3348,7 +3349,6 @@ dependencies = [
  "tauri-plugin-js",
  "tauri-plugin-local-api",
  "tauri-plugin-local-auth",
- "tauri-plugin-local-llm",
  "tauri-plugin-local-stt",
  "tauri-plugin-messenger",
  "tauri-plugin-misc",
@@ -13178,6 +13178,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-apple-foundation"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "specta",
+ "specta-typescript",
+ "swift-rs 1.0.7 (git+https://github.com/Brendonovich/swift-rs?rev=41a1605)",
+ "tauri",
+ "tauri-plugin",
+ "tauri-specta",
+ "tokio",
+]
+
+[[package]]
 name = "tauri-plugin-audio-priority"
 version = "0.1.0"
 dependencies = [
@@ -13616,21 +13631,6 @@ dependencies = [
  "tauri-specta",
  "thiserror 2.0.18",
  "windows 0.62.2",
-]
-
-[[package]]
-name = "tauri-plugin-local-llm"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "specta",
- "specta-typescript",
- "swift-rs 1.0.7 (git+https://github.com/Brendonovich/swift-rs?rev=41a1605)",
- "tauri",
- "tauri-plugin",
- "tauri-specta",
- "tokio",
 ]
 
 [[package]]

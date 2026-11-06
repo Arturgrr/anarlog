@@ -1,9 +1,9 @@
 {
-  "name": "@anlg/plugin-local-llm",
+  "name": "@anlg/plugin-apple-foundation",
   "private": true,
   "main": "./js/index.ts",
   "scripts": {
-    "codegen": "cargo test -p tauri-plugin-local-llm",
+    "codegen": "cargo test -p tauri-plugin-apple-foundation",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

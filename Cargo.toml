@@ -132,6 +132,7 @@ tauri-plugin-updater = "2.10"
 tauri-plugin-window-state = "2.4"
 
 tauri-plugin-agent = { path = "plugins/agent" }
+tauri-plugin-apple-foundation = { path = "plugins/apple-foundation" }
 tauri-plugin-audio-priority = { path = "plugins/audio-priority" }
 tauri-plugin-bedrock = { path = "plugins/bedrock" }
 tauri-plugin-contacts = { path = "plugins/contacts" }
@@ -148,7 +149,6 @@ tauri-plugin-icon = { path = "plugins/icon" }
 tauri-plugin-js = { path = "plugins/js" }
 tauri-plugin-local-api = { path = "plugins/local-api" }
 tauri-plugin-local-auth = { path = "plugins/local-auth" }
-tauri-plugin-local-llm = { path = "plugins/local-llm" }
 tauri-plugin-local-stt = { path = "plugins/local-stt" }
 tauri-plugin-messenger = { path = "plugins/messenger" }
 tauri-plugin-misc = { path = "plugins/misc" }

@@ -5,7 +5,7 @@ pub use foundation_models::{
     FoundationModelAvailability, FoundationModelRequest, FoundationModelResponse,
 };
 
-const PLUGIN_NAME: &str = "local-llm";
+const PLUGIN_NAME: &str = "apple-foundation";
 
 fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
     tauri_specta::Builder::<R>::new()
