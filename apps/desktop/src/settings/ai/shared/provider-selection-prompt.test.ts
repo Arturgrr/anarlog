@@ -36,6 +36,7 @@ describe("useProviderSelectionPrompt", () => {
   it("offers to switch to a provider after its first API key is saved", () => {
     const { result } = renderHook(() =>
       useProviderSelectionPrompt({
+        enabled: true,
         providerType: "llm",
         providerId: "openai",
         providerName: "OpenAI",
@@ -69,6 +70,7 @@ describe("useProviderSelectionPrompt", () => {
   it("sets a transcription provider and lets model resolution choose its model", () => {
     const { result } = renderHook(() =>
       useProviderSelectionPrompt({
+        enabled: true,
         providerType: "stt",
         providerId: "deepgram",
         providerName: "Deepgram",
@@ -88,9 +90,10 @@ describe("useProviderSelectionPrompt", () => {
     });
   });
 
-  it("does not prompt for the current provider or an existing API key", () => {
+  it("does not prompt for the current provider, an existing API key or a picker that selects on its own", () => {
     const currentProvider = renderHook(() =>
       useProviderSelectionPrompt({
+        enabled: true,
         providerType: "llm",
         providerId: "openai",
         providerName: "OpenAI",
@@ -101,6 +104,7 @@ describe("useProviderSelectionPrompt", () => {
     );
     const existingKey = renderHook(() =>
       useProviderSelectionPrompt({
+        enabled: true,
         providerType: "stt",
         providerId: "deepgram",
         providerName: "Deepgram",
@@ -110,8 +114,21 @@ describe("useProviderSelectionPrompt", () => {
       }),
     );
 
+    const onboarding = renderHook(() =>
+      useProviderSelectionPrompt({
+        enabled: false,
+        providerType: "stt",
+        providerId: "deepgram",
+        providerName: "Deepgram",
+        currentProvider: "soniqo",
+        providerStateReady: true,
+        storedApiKey: "",
+      }),
+    );
+
     act(() => currentProvider.result.current("sk-new"));
     act(() => existingKey.result.current("dg-replaced"));
+    act(() => onboarding.result.current("dg-new"));
 
     expect(mocks.toastSuccess).not.toHaveBeenCalled();
   });
@@ -119,6 +136,7 @@ describe("useProviderSelectionPrompt", () => {
   it("prompts only once while the same new key is being saved", () => {
     const { result } = renderHook(() =>
       useProviderSelectionPrompt({
+        enabled: true,
         providerType: "llm",
         providerId: "openai",
         providerName: "OpenAI",

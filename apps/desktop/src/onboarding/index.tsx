@@ -14,12 +14,21 @@ import {
   getNextStep,
   getPrevStep,
   getStepStatus,
+  type OnboardingStep,
+  saveOnboardingStep,
 } from "./config";
 import { FinalDescription, FinalSection, finishOnboarding } from "./final";
 import { WelcomeLanguagePicker } from "./language-picker";
+import {
+  IntelligenceStep,
+  IntelligenceSummary,
+  TranscriptionStep,
+  TranscriptionSummary,
+} from "./model-setup";
 import { PermissionsSection } from "./permissions";
 import { OnboardingSection } from "./shared";
 
+import { NotificationProvider } from "~/contexts/notifications";
 import { StandaloneWindowShell } from "~/shared/window-shell";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
 
@@ -59,13 +68,17 @@ export function StandaloneOnboardingScreen({
 }: {
   onFinish: (sessionId: string) => void;
 }) {
+  // The main window's provider is not mounted yet, and model downloads started
+  // here report their progress and select the model through this one.
   return (
     <StandaloneWindowShell>
-      <OnboardingScreenContent
-        onFinish={onFinish}
-        headerClassName="px-12 pt-4 pb-8"
-        headerDragRegion
-      />
+      <NotificationProvider>
+        <OnboardingScreenContent
+          onFinish={onFinish}
+          headerClassName="px-12 pt-4 pb-8"
+          headerDragRegion
+        />
+      </NotificationProvider>
     </StandaloneWindowShell>
   );
 }
@@ -86,15 +99,21 @@ function OnboardingScreenContent({
   const onboardingVideoRef = useRef<HTMLVideoElement>(null);
   const currentPlatform = platform();
 
-  const goNext = useCallback(() => {
-    const next = getNextStep(currentStep);
-    if (next) setCurrentStep(next);
-  }, [currentStep]);
+  const goTo = useCallback((step: OnboardingStep | null) => {
+    if (!step) return;
+    saveOnboardingStep(step);
+    setCurrentStep(step);
+  }, []);
 
-  const goBack = useCallback(() => {
-    const prev = getPrevStep(currentStep);
-    if (prev) setCurrentStep(prev);
-  }, [currentStep]);
+  const goNext = useCallback(
+    () => goTo(getNextStep(currentStep)),
+    [currentStep, goTo],
+  );
+
+  const goBack = useCallback(
+    () => goTo(getPrevStep(currentStep)),
+    [currentStep, goTo],
+  );
 
   useMountEffect(() => {
     sfxCommands.play("BGM").catch(console.error);
@@ -186,8 +205,8 @@ function OnboardingScreenContent({
         </h1>
       </div>
 
-      <div className="scroll-fade-y relative z-10 flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-4 px-12 pb-16">
+      <div className="scroll-fade-y relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="flex flex-1 flex-col gap-4 px-12 pb-8">
           <OnboardingSection
             title={<Trans>Start with permissions</Trans>}
             completedTitle={<Trans>Permissions granted</Trans>}
@@ -211,6 +230,46 @@ function OnboardingScreenContent({
             onNext={goNext}
           >
             <PermissionsSection onContinue={goNext} />
+          </OnboardingSection>
+
+          <OnboardingSection
+            eyebrow={<Trans>1 of 2 · Transcription</Trans>}
+            title={<Trans>How your meetings become text</Trans>}
+            completedTitle={<TranscriptionSummary />}
+            description={
+              <Trans>
+                Install a model on your Mac or connect a cloud provider. It’s
+                the same list as Settings › Transcription.
+              </Trans>
+            }
+            status={getStepStatus("transcription", currentStep)}
+            fill
+            skippable={false}
+            onBack={goBack}
+            onNext={goNext}
+            onEdit={() => goTo("transcription")}
+          >
+            <TranscriptionStep onContinue={goNext} />
+          </OnboardingSection>
+
+          <OnboardingSection
+            eyebrow={<Trans>2 of 2 · Intelligence</Trans>}
+            title={<Trans>Who writes your summaries</Trans>}
+            completedTitle={<IntelligenceSummary />}
+            description={
+              <Trans>
+                Run a model on your Mac, sign in with a subscription or use an
+                API key. It’s the same list as Settings › Intelligence.
+              </Trans>
+            }
+            status={getStepStatus("intelligence", currentStep)}
+            fill
+            skippable={false}
+            onBack={goBack}
+            onNext={goNext}
+            onEdit={() => goTo("intelligence")}
+          >
+            <IntelligenceStep onBack={goBack} onContinue={goNext} />
           </OnboardingSection>
 
           <OnboardingSection

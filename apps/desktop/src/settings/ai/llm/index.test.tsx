@@ -53,7 +53,7 @@ vi.mock("./health", () => ({
   useConnectionHealth: () => ({ status: null }),
 }));
 
-import { LLM } from "./index";
+import { LlmModelPicker } from "./index";
 
 afterEach(cleanup);
 
@@ -69,7 +69,7 @@ test("shows why the model list failed to load instead of an empty list", async (
   });
   render(
     <QueryClientProvider client={client}>
-      <LLM />
+      <LlmModelPicker variant="page" />
     </QueryClientProvider>,
   );
 

@@ -22,6 +22,7 @@ export function LlmProviderDetail({
   setup,
   current,
   filtering,
+  promptToSelect,
   onSelect,
   onConnect,
   onFocusProvider,
@@ -30,6 +31,7 @@ export function LlmProviderDetail({
   setup: ProviderSetup;
   current: { provider: string; model: string } | null;
   filtering: boolean;
+  promptToSelect: boolean;
   onSelect: (provider: string, model: string) => void;
   onConnect: (providerId: string) => void;
   onFocusProvider: (providerId: string) => void;
@@ -91,6 +93,7 @@ export function LlmProviderDetail({
           config={provider}
           providerType="llm"
           currentProvider={current?.provider}
+          promptToSelect={promptToSelect}
           onConnect={isSubscription ? () => onConnect(provider.id) : undefined}
         />
       </DetailSection>

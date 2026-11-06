@@ -42,9 +42,11 @@ import { getScheme } from "~/shared/utils";
 
 export function ConnectSubscriptionDialog({
   provider,
+  promptToSelect,
   onOpenChange,
 }: {
   provider?: Provider;
+  promptToSelect: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useLingui();
@@ -53,6 +55,7 @@ export function ConnectSubscriptionDialog({
     provider && isSubscriptionProviderId(provider.id) ? provider.id : null;
   const saveProvider = useSetAiProvider("llm", providerId ?? "claude");
   const notifyProviderSelection = useProviderSelectionPrompt({
+    enabled: promptToSelect,
     providerType: "llm",
     providerId: providerId ?? "claude",
     providerName: provider?.displayName ?? "Claude",

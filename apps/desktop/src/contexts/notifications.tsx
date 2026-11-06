@@ -111,6 +111,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           localSttQueries.isDownloaded(eventModel).queryKey,
           { status: "ok", data: true },
         );
+        // A model that was already selected keeps its connection query key, so
+        // its cached "not downloaded" status would otherwise outlive the download.
+        void queryClient.invalidateQueries({ queryKey: ["stt-connection"] });
         toast.success(t`Model downloaded`, { description: modelName });
       }
       const pendingSelection = usePendingSttSelection.getState().selection;

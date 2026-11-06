@@ -261,6 +261,10 @@ msgstr "1 day"
 msgid "1 month"
 msgstr "1 month"
 
+#: src/onboarding/index.tsx
+msgid "1 of 2 · Transcription"
+msgstr "1 of 2 · Transcription"
+
 #: src/session/components/pending-proposals-banner.tsx
 msgid "1 pending edit"
 msgstr "1 pending edit"
@@ -268,6 +272,10 @@ msgstr "1 pending edit"
 #: src/settings/general/audio-settings.tsx
 msgid "1 week"
 msgstr "1 week"
+
+#: src/onboarding/index.tsx
+msgid "2 of 2 · Intelligence"
+msgstr "2 of 2 · Intelligence"
 
 #: src/settings/general/audio-settings.tsx
 msgid "3 days"
@@ -820,6 +828,7 @@ msgstr "Available models"
 msgid "Average across the capture days counted above."
 msgstr "Average across the capture days counted above."
 
+#: src/onboarding/model-setup.tsx
 #: src/settings/todo/permission.tsx
 #: src/sidebar/custom-sidebar-header.tsx
 msgid "Back"
@@ -985,6 +994,7 @@ msgstr "Capture your first conversation. Every collection starts somewhere."
 msgid "Central Time"
 msgstr "Central Time"
 
+#: src/onboarding/shared.tsx
 #: src/stt/useStartListening.ts
 msgid "Change"
 msgstr "Change"
@@ -1034,6 +1044,7 @@ msgstr "Check that your vault folder is available and your disk has free space, 
 msgid "Checking migration..."
 msgstr "Checking migration..."
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/llm/in-use.tsx
 #: src/settings/ai/llm/models.tsx
 #: src/settings/ai/stt/detail.tsx
@@ -1078,6 +1089,10 @@ msgstr "Choose a language model for summaries and chat."
 #: src/settings/ai/stt/health.tsx
 msgid "Choose a local transcription model file."
 msgstr "Choose a local transcription model file."
+
+#: src/onboarding/model-setup.tsx
+msgid "Choose a model to continue"
+msgstr "Choose a model to continue"
 
 #: src/i18n/external-messages.ts
 msgid "Choose a shortcut with Control, Alt, Shift, or Command."
@@ -1177,6 +1192,10 @@ msgstr "Choose the microphone that captures your voice."
 #: src/settings/general/week-start.tsx
 msgid "Choose which day begins your calendar week."
 msgstr "Choose which day begins your calendar week."
+
+#: src/onboarding/model-setup.tsx
+msgid "Chosen:"
+msgstr "Chosen:"
 
 #: src/settings/ai/llm/shared.tsx
 msgid "Claude Pro / Max"
@@ -1411,6 +1430,14 @@ msgstr "Context"
 #: src/settings/ai/llm/models.tsx
 msgid "Context length too small"
 msgstr "Context length too small"
+
+#: src/onboarding/model-setup.tsx
+msgid "Continue"
+msgstr "Continue"
+
+#: src/onboarding/model-setup.tsx
+msgid "Continue to Intelligence"
+msgstr "Continue to Intelligence"
 
 #: src/settings/general/meeting-settings.tsx
 msgid "Control listening without reopening Librelog."
@@ -2317,6 +2344,7 @@ msgstr "Finding Your Rhythm"
 msgid "Finish the connection above to see the models."
 msgstr "Finish the connection above to see the models."
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/stt/detail.tsx
 msgid "Finish the connection above to use these models."
 msgstr "Finish the connection above to use these models."
@@ -2645,6 +2673,10 @@ msgstr "How much the model thinks before answering. Default leaves it to the pro
 msgid "How to get a Kimi Code key"
 msgstr "How to get a Kimi Code key"
 
+#: src/onboarding/index.tsx
+msgid "How your meetings become text"
+msgstr "How your meetings become text"
+
 #: src/contacts/humans.tsx
 msgid "Human"
 msgstr "Human"
@@ -2755,6 +2787,10 @@ msgstr "Insights"
 msgid "Install"
 msgstr "Install"
 
+#: src/onboarding/index.tsx
+msgid "Install a model on your Mac or connect a cloud provider. It’s the same list as Settings › Transcription."
+msgstr "Install a model on your Mac or connect a cloud provider. It’s the same list as Settings › Transcription."
+
 #: src/settings/developers/skills.tsx
 msgid "Install to all agents"
 msgstr "Install to all agents"
@@ -2763,10 +2799,18 @@ msgstr "Install to all agents"
 msgid "Installed"
 msgstr "Installed"
 
+#: src/onboarding/model-setup.tsx
+msgid "installing {percent}"
+msgstr "installing {percent}"
+
 #: src/settings/ai/llm/index.tsx
 #: src/sidebar/settings-nav-groups.ts
 msgid "Intelligence"
 msgstr "Intelligence"
+
+#: src/onboarding/model-setup.tsx
+msgid "Intelligence: <0/>"
+msgstr "Intelligence: <0/>"
 
 #: src/i18n/external-messages.ts
 msgid "Invalid dictation shortcut: {rest}"
@@ -3731,6 +3775,7 @@ msgstr "Not available"
 msgid "Not available on this Mac"
 msgstr "Not available on this Mac"
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/stt/detail.tsx
 msgid "Not available on this Mac."
 msgstr "Not available on this Mac."
@@ -3754,6 +3799,10 @@ msgstr "Not installed"
 #: src/settings/developers/webhooks.tsx
 msgid "not receiving events"
 msgstr "not receiving events"
+
+#: src/onboarding/model-setup.tsx
+msgid "not set up"
+msgstr "not set up"
 
 #: src/settings/ai/shared/provider-setup-label.tsx
 msgid "Not signed in"
@@ -4216,6 +4265,10 @@ msgstr "Read meeting controls and visible chat."
 msgid "Reads images"
 msgstr "Reads images"
 
+#: src/onboarding/model-setup.tsx
+msgid "ready"
+msgstr "ready"
+
 #: src/settings/ai/shared/in-use-bar.tsx
 #: src/settings/general/notification.tsx
 msgid "Ready"
@@ -4562,6 +4615,10 @@ msgstr "Right ⌥"
 msgid "Right Command"
 msgstr "Right Command"
 
+#: src/onboarding/index.tsx
+msgid "Run a model on your Mac, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
+msgstr "Run a model on your Mac, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
+
 #. placeholder {0}: formatToolName(toolName)
 #: src/chat/components/message/tool/generic.tsx
 msgid "Running {0}…"
@@ -4796,6 +4853,7 @@ msgstr "sent"
 msgid "Seoul"
 msgstr "Seoul"
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/llm/index.tsx
 msgid "Server stopped"
 msgstr "Server stopped"
@@ -5140,6 +5198,10 @@ msgstr "Start writing..."
 msgid "Starting"
 msgstr "Starting"
 
+#: src/onboarding/model-setup.tsx
+msgid "starting download…"
+msgstr "starting download…"
+
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Starting download…"
 msgstr "Starting download…"
@@ -5426,6 +5488,7 @@ msgstr "The editor failed to render. Your recording is still running."
 msgid "The focused text field changed. Copy your last dictation from Settings > Dictation."
 msgstr "The focused text field changed. Copy your last dictation from Settings > Dictation."
 
+#: src/onboarding/model-status.ts
 #: src/settings/ai/llm/models.tsx
 msgid "The key was rejected. Check it above."
 msgstr "The key was rejected. Check it above."
@@ -5645,6 +5708,15 @@ msgstr "Transcription"
 msgid "Transcription failed"
 msgstr "Transcription failed"
 
+#. placeholder {0}: status.message
+#: src/onboarding/model-setup.tsx
+msgid "Transcription isn’t ready: {0}"
+msgstr "Transcription isn’t ready: {0}"
+
+#: src/onboarding/model-setup.tsx
+msgid "Transcription isn’t set up yet."
+msgstr "Transcription isn’t set up yet."
+
 #: src/sidebar/toast/registry.tsx
 msgid "Transcription provider needed"
 msgstr "Transcription provider needed"
@@ -5660,6 +5732,10 @@ msgstr "Transcription stopped."
 #: src/sidebar/toast/registry.tsx
 msgid "Transcription unavailable"
 msgstr "Transcription unavailable"
+
+#: src/onboarding/model-setup.tsx
+msgid "Transcription: <0/>"
+msgstr "Transcription: <0/>"
 
 #: src/templates/template-icon-picker.tsx
 msgid "Travel & Places"
@@ -5726,6 +5802,7 @@ msgstr "Unknown date"
 #: src/chat/components/message/tool/generic.tsx
 #: src/chat/components/message/tool/shared.tsx
 #: src/chat/components/message/tool/update-prompt-template.tsx
+#: src/onboarding/model-status.ts
 #: src/settings/ai/llm/health.tsx
 #: src/settings/ai/shared/list-common.ts
 msgid "Unknown error"
@@ -6117,6 +6194,14 @@ msgstr "Waiting for authorization in the browser."
 msgid "Waiting for authorization in your browser…"
 msgstr "Waiting for authorization in your browser…"
 
+#: src/onboarding/model-setup.tsx
+msgid "Waiting for transcription to finish installing"
+msgstr "Waiting for transcription to finish installing"
+
+#: src/onboarding/model-setup.tsx
+msgid "Waiting for transcription to finish installing ({percent})"
+msgstr "Waiting for transcription to finish installing ({percent})"
+
 #: src/settings/ai/llm/provider-context.ts
 msgid "We only support **OpenAI-compatible** endpoints for now."
 msgstr "We only support **OpenAI-compatible** endpoints for now."
@@ -6215,6 +6300,10 @@ msgstr "Where it runs"
 #: src/settings/ai/stt/local-file-model.tsx
 msgid "whisper.cpp models"
 msgstr "whisper.cpp models"
+
+#: src/onboarding/index.tsx
+msgid "Who writes your summaries"
+msgstr "Who writes your summaries"
 
 #: src/i18n/native-labels.tsx
 msgid "Window"

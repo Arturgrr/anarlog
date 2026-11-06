@@ -37,9 +37,12 @@ import {
 } from "~/settings/ai/shared/provider-list";
 import type { ProviderSetup } from "~/settings/ai/shared/provider-setup";
 import { MissingSetupLabel } from "~/settings/ai/shared/provider-setup-label";
-import { ModelSettingsShell } from "~/settings/ai/shared/settings-shell";
+import {
+  type ModelPickerVariant,
+  ModelSettingsShell,
+} from "~/settings/ai/shared/settings-shell";
 
-export function LLM() {
+export function LlmModelPicker({ variant }: { variant: ModelPickerVariant }) {
   const { t, i18n } = useLingui();
   const statuses = useLlmProviderStatuses();
   const lists = useLlmModelLists(statuses.providers);
@@ -101,6 +104,7 @@ export function LLM() {
     <>
       {selection.persistDefault}
       <ModelSettingsShell
+        variant={variant}
         title={<Trans>Intelligence</Trans>}
         subtitle={
           <Trans>
@@ -189,6 +193,7 @@ export function LLM() {
               setup={statuses.providers[focused.provider.id]!.setup}
               current={current}
               filtering={filtering}
+              promptToSelect={variant === "page"}
               onSelect={selection.select}
               onConnect={(providerId) => {
                 if (isSubscriptionProviderId(providerId)) {
@@ -201,6 +206,7 @@ export function LLM() {
         }
       />
       <ConnectSubscriptionDialog
+        promptToSelect={variant === "page"}
         provider={
           connectingId
             ? PROVIDERS.find((provider) => provider.id === connectingId)

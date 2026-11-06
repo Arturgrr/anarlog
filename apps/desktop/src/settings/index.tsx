@@ -8,8 +8,8 @@ import {
 } from "./general";
 import { SettingsTodo } from "./todo";
 
-import { LLM } from "~/settings/ai/llm";
-import { STT } from "~/settings/ai/stt";
+import { LlmModelPicker } from "~/settings/ai/llm";
+import { SttModelPicker } from "~/settings/ai/stt";
 import { SettingsAppearance } from "~/settings/appearance";
 import { SettingsDevelopers } from "~/settings/developers";
 import { SettingsDictation } from "~/settings/dictation";
@@ -67,9 +67,9 @@ function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
       case "dictation":
         return <SettingsDictation />;
       case "transcription":
-        return <STT />;
+        return <SttModelPicker variant="page" />;
       case "intelligence":
-        return <LLM />;
+        return <LlmModelPicker variant="page" />;
       case "todo":
         return <SettingsTodo />;
       default:

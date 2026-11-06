@@ -60,7 +60,28 @@ vi.mock("~/settings/queries", () => ({
   setSettingValues: mocks.setSettingValues,
   setSettingValue: vi.fn(),
   useSetSettingValues: () => mocks.setSettingValues,
+  useStoredSettingValuesQuery: () => ({ data: {}, isLoading: false }),
 }));
+
+vi.mock("./shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./shared")>();
+  return {
+    ...actual,
+    PROVIDERS: [
+      ...actual.PROVIDERS,
+      {
+        disabled: false,
+        id: "acme",
+        displayName: "Acme Speech",
+        badge: null,
+        icon: null,
+        baseUrl: "https://acme.test/v1",
+        models: ["acme-live-1"],
+        requirements: [{ kind: "requires_config", fields: ["api_key"] }],
+      },
+    ],
+  };
+});
 
 vi.mock("./health", () => ({
   useConnectionHealth: () => ({ status: "success" }),
@@ -136,8 +157,9 @@ vi.mock("~/stt/capabilities", async (importOriginal) => {
   };
 });
 
-import { STT } from "./index";
+import { SttModelPicker } from "./index";
 
+import { TranscriptionStep } from "~/onboarding/model-setup";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 
 beforeEach(() => {
@@ -162,14 +184,12 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-function renderPage() {
+function renderPage(ui = <SttModelPicker variant="page" />) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
-    <QueryClientProvider client={client}>
-      <STT />
-    </QueryClientProvider>,
+    <QueryClientProvider client={client}>{ui}</QueryClientProvider>,
   );
 }
 
@@ -178,6 +198,25 @@ function providerList() {
 }
 
 describe("Transcription settings", () => {
+  test("a provider added to the catalog is listed in Settings and in onboarding", async () => {
+    for (const ui of [
+      <SttModelPicker key="settings" variant="page" />,
+      <TranscriptionStep key="onboarding" onContinue={vi.fn()} />,
+    ]) {
+      renderPage(ui);
+      fireEvent.change(
+        screen.getByRole("searchbox", { name: "Search providers or models" }),
+        { target: { value: "Acme" } },
+      );
+      expect(
+        await within(providerList()).findByRole("button", {
+          name: /Acme Speech/,
+        }),
+      ).toBeTruthy();
+      cleanup();
+    }
+  });
+
   test("an unconfigured provider can be focused and configured from the list", async () => {
     renderPage();
 
