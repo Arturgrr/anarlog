@@ -44,6 +44,7 @@ export async function getSessionKeywords({
               ON human.id = participant.human_id
               AND human.deleted_at IS NULL
             WHERE participant.session_id = session.id
+              AND participant.human_id <> session.owner_user_id
               AND participant.source <> 'excluded'
               AND participant.deleted_at IS NULL
               AND COALESCE(NULLIF(human.name, ''), participant.display_name) <> ''

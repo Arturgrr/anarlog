@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const execute = vi.hoisted(() => vi.fn());
@@ -19,6 +20,10 @@ import {
   extractKeywordsFromMarkdown,
   getSessionKeywords,
 } from "./useKeywords";
+
+const { DatabaseSync } = createRequire(import.meta.url)(
+  "node:sqlite",
+) as typeof import("node:sqlite");
 
 beforeEach(() => {
   execute.mockReset();
@@ -206,6 +211,51 @@ describe("getSessionKeywords", () => {
     expect(result.slice(0, 3)).toEqual(["Alice Kim", "Mina Park", "Librelog"]);
     expect(result).toEqual(expect.arrayContaining(["Launch"]));
     expect(result).not.toContain("John Jeong");
+  });
+
+  it("never sends the local user's name as a transcription keyword", async () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec(`
+        CREATE TABLE sessions (
+          id TEXT, owner_user_id TEXT, title TEXT, event_json TEXT,
+          event_id TEXT, deleted_at TEXT
+        );
+        CREATE TABLE session_documents (
+          id TEXT, kind TEXT, body TEXT, deleted_at TEXT
+        );
+        CREATE TABLE session_participants (
+          id TEXT, session_id TEXT, human_id TEXT, display_name TEXT,
+          source TEXT, deleted_at TEXT
+        );
+        CREATE TABLE humans (id TEXT, name TEXT, deleted_at TEXT);
+        CREATE TABLE events (
+          id TEXT, tracking_id_event TEXT, calendar_id TEXT,
+          participants_json TEXT, started_at TEXT, deleted_at TEXT
+        );
+        INSERT INTO sessions VALUES
+          ('session-1', 'owner-1', 'Sync', '{}', '', NULL);
+        INSERT INTO humans VALUES
+          ('owner-1', 'Ada Owner', NULL),
+          ('human-1', 'Alice Kim', NULL);
+        INSERT INTO session_participants VALUES
+          ('mapping-self', 'session-1', 'owner-1', 'Ada Owner', 'manual', NULL),
+          ('mapping-1', 'session-1', 'human-1', '', 'manual', NULL);
+      `);
+      execute.mockImplementationOnce((sql: string, params: unknown[]) =>
+        Promise.resolve(db.prepare(sql).all(...(params as string[]))),
+      );
+
+      const result = await getSessionKeywords({
+        sessionId: "session-1",
+        dictionaryTerms: [],
+      });
+
+      expect(result).toContain("Alice Kim");
+      expect(result).not.toContain("Ada Owner");
+    } finally {
+      db.close();
+    }
   });
 });
 

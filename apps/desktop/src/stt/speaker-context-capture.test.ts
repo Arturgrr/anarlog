@@ -32,10 +32,7 @@ vi.mock("~/db", () => ({
         : [
             {
               title: "John x Alex",
-              name: "John",
               event_json: mocks.eventJson,
-              owner_user_id: "self",
-              aliases: null,
             },
           ],
   },

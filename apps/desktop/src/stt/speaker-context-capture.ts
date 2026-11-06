@@ -93,14 +93,8 @@ function createCapture(sessionId: string) {
       await Promise.all([
         detectCommands.listMicUsingApplications().catch(() => null),
         detectCommands.inspectMeetingAccessibility().catch(() => null),
-        liveQueryClient.execute<{
-          title: string;
-          event_json: string;
-          owner_user_id: string;
-          name: string;
-          aliases: string | null;
-        }>(
-          "SELECT s.title, s.event_json, s.owner_user_id, COALESCE(h.name, '') AS name, json_extract(h.metadata_json, '$.aliases') AS aliases FROM sessions s LEFT JOIN humans h ON h.id = s.owner_user_id AND h.deleted_at IS NULL WHERE s.id = ? AND s.deleted_at IS NULL",
+        liveQueryClient.execute<{ title: string; event_json: string }>(
+          "SELECT title, event_json FROM sessions WHERE id = ? AND deleted_at IS NULL",
           [sessionId],
         ),
         getSessionParticipantHumanIds(sessionId),
@@ -124,14 +118,6 @@ function createCapture(sessionId: string) {
       meetingLink = JSON.parse(row.event_json).meeting_link ?? "";
     } catch {
       /* No calendar context. */
-    }
-    let aliases: string[] = [];
-    try {
-      const value = JSON.parse(row.aliases ?? "[]");
-      if (Array.isArray(value))
-        aliases = value.filter((name) => typeof name === "string");
-    } catch {
-      /* Invalid aliases provide no identity evidence. */
     }
     const participants = participantIds.length
       ? await liveQueryClient.execute<{ human_id: string; name: string }>(
@@ -178,7 +164,8 @@ function createCapture(sessionId: string) {
           : null,
         shared_microphone: isSharedMicrophone(inputDevice),
         title: row.title,
-        self_names: [row.name, ...aliases].filter(Boolean),
+        // The local user's own name is never read or stored.
+        self_names: [],
         participants,
       },
       at,
