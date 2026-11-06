@@ -50,7 +50,6 @@ export type SettingsTab =
   | "audio"
   | "appearance"
   | "notifications"
-  | "imports"
   | "developers"
   | "privacy"
   | "permissions"
@@ -68,7 +67,6 @@ const normalizeSettingsTab = (tab: string | null | undefined): SettingsTab => {
     case "meetings":
     case "appearance":
     case "notifications":
-    case "imports":
     case "developers":
     case "privacy":
     case "permissions":
@@ -82,8 +80,6 @@ const normalizeSettingsTab = (tab: string | null | undefined): SettingsTab => {
       return "meetings";
     case "personalization":
       return "dictionary";
-    case "data":
-      return "imports";
     default:
       return "app";
   }

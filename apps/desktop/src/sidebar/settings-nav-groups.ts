@@ -6,7 +6,6 @@ import {
   CalendarDots,
   ChartLineUp,
   Code,
-  DownloadSimple,
   FileText,
   FolderSimple,
   Gear,
@@ -97,10 +96,6 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
           destination: { type: "automations" },
         },
       ],
-    },
-    {
-      label: t`Data`,
-      items: [{ id: "imports", label: t`Imports`, icon: DownloadSimple }],
     },
     {
       label: t`Advanced`,
