@@ -99,28 +99,6 @@ export function normalizeStoredSttModel(
   return model;
 }
 
-export function normalizeStoredSttSelection(
-  provider: string | undefined,
-  model: string | undefined,
-) {
-  const normalizedModel = normalizeStoredSttModel(provider, model);
-
-  if (provider === "anarlog" && normalizedModel?.startsWith("soniqo-")) {
-    return { provider: "soniqo", model: normalizedModel };
-  }
-
-  if (provider === "anarlog" && normalizedModel === "apple-speech") {
-    return { provider: "apple_speech", model: normalizedModel };
-  }
-
-  // The hosted cloud model and Argmax models no longer exist.
-  if (provider === "anarlog") {
-    return { provider: "", model: "" };
-  }
-
-  return { provider, model: normalizedModel };
-}
-
 const normalizeSavedModel = (
   savedModel: string | undefined,
   models: ModelEntry[],

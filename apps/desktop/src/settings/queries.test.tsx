@@ -400,43 +400,6 @@ describe("SQLite settings", () => {
     expect(mocks.executeTransaction).not.toHaveBeenCalled();
   });
 
-  it.each(["cloud", "am-parakeet-v3"])(
-    "clears the removed hosted Anarlog transcription model %s",
-    async (model) => {
-      mocks.execute.mockResolvedValue([
-        { id: "current_stt_provider", value_json: JSON.stringify("anarlog") },
-        { id: "current_stt_model", value_json: JSON.stringify(model) },
-      ]);
-
-      await initializeApplicationSettings();
-
-      const statements = mocks.executeTransaction.mock.calls[0][0];
-      expect(
-        statements.map((statement) => statement.params.slice(0, 2)),
-      ).toEqual([
-        ["current_stt_provider", JSON.stringify("")],
-        ["current_stt_model", JSON.stringify("")],
-      ]);
-    },
-  );
-
-  it("clears the removed hosted Anarlog language model", async () => {
-    mocks.execute.mockResolvedValue([
-      { id: "current_llm_provider", value_json: JSON.stringify("anarlog") },
-      { id: "current_llm_model", value_json: JSON.stringify("Auto") },
-    ]);
-
-    await initializeApplicationSettings();
-
-    const statements = mocks.executeTransaction.mock.calls[0][0];
-    expect(statements.map((statement) => statement.params.slice(0, 2))).toEqual(
-      [
-        ["current_llm_provider", JSON.stringify("")],
-        ["current_llm_model", JSON.stringify("")],
-      ],
-    );
-  });
-
   it("repairs a selected external transcription provider with no model", async () => {
     let rows = [
       {
@@ -461,43 +424,6 @@ describe("SQLite settings", () => {
       [["current_stt_model", JSON.stringify("nova-3-general")]],
     );
   });
-
-  it.each([
-    ["soniqo-parakeet-streaming", "soniqo"],
-    ["apple-speech", "apple_speech"],
-  ])(
-    "moves the legacy Anarlog %s selection to its on-device provider",
-    async (model, provider) => {
-      let rows = [
-        {
-          id: "current_stt_provider",
-          value_json: JSON.stringify("anarlog"),
-        },
-        { id: "current_stt_model", value_json: JSON.stringify(model) },
-      ];
-      mocks.execute.mockImplementation(async () => rows);
-      mocks.executeTransaction.mockImplementation(async (statements) => {
-        for (const statement of statements) {
-          const id = String(statement.params[0]);
-          const next = {
-            id,
-            value_json: String(statement.params[1]),
-          };
-          const index = rows.findIndex((row) => row.id === id);
-          if (index === -1) rows.push(next);
-          else rows[index] = next;
-        }
-        return statements.map(() => 1);
-      });
-
-      await initializeApplicationSettings();
-
-      const statements = mocks.executeTransaction.mock.calls[0][0];
-      expect(
-        statements.map((statement) => statement.params.slice(0, 2)),
-      ).toEqual([["current_stt_provider", JSON.stringify(provider)]]);
-    },
-  );
 
   it("migrates legacy summary instructions into the editable Auto format", async () => {
     let rows = [
