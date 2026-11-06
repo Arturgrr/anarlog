@@ -20,10 +20,17 @@ export const SETTING_DEFINITIONS = {
     path: ["dictation", "enabled"],
     default: false as boolean,
   },
+  // The first dictation shortcut, kept for builds that read a single one and
+  // for migrating to `dictation_shortcuts`.
   dictation_shortcut: {
     type: "string",
     path: ["dictation", "shortcut"],
     default: DEFAULT_DICTATION_SHORTCUT as string,
+  },
+  dictation_shortcuts: {
+    type: "string",
+    path: ["dictation", "shortcuts"],
+    default: JSON.stringify([DEFAULT_DICTATION_SHORTCUT]) as string,
   },
   dictation_hands_free: {
     type: "boolean",

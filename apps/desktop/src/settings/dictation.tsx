@@ -8,7 +8,7 @@ import { commands as transcription } from "@anlg/plugin-transcription";
 import { Button } from "@anlg/ui/components/ui/button";
 import { Textarea } from "@anlg/ui/components/ui/textarea";
 
-import { DictationShortcut, isDoubleTapShortcut } from "./dictation-shortcut";
+import { DictationShortcuts, isDoubleTapShortcut } from "./dictation-shortcut";
 
 import { useDictationStatus } from "~/dictation/state";
 import { AudioDeviceRow } from "~/settings/general/audio-settings";
@@ -21,7 +21,8 @@ import { useTabs } from "~/store/zustand/tabs";
 export function SettingsDictation() {
   const { t } = useLingui();
   const enabled = useConfigValue("dictation_enabled");
-  const shortcut = useConfigValue("dictation_shortcut");
+  const shortcuts = useConfigValue("dictation_shortcuts");
+  const doubleTaps = shortcuts.filter(isDoubleTapShortcut).length;
   const handsFree = useConfigValue("dictation_hands_free");
   const livePreview = useConfigValue("dictation_live_preview");
   const setLivePreview = useSetSettingValue("dictation_live_preview");
@@ -67,13 +68,14 @@ export function SettingsDictation() {
           title={<Trans>Enable dictation</Trans>}
           description={
             <Trans>
-              Keep Librelog running to use your shortcut in other apps.
+              Keep Librelog running to use your dictation shortcuts in other
+              apps.
             </Trans>
           }
           checked={enabled}
           onChange={setEnabled}
         />
-        <DictationShortcut shortcut={shortcut} />
+        <DictationShortcuts shortcuts={shortcuts} />
         <AudioDeviceRow
           title={<Trans>Microphone</Trans>}
           description={
@@ -98,24 +100,38 @@ export function SettingsDictation() {
         <SettingSwitchRow
           title={<Trans>Hands-free dictation</Trans>}
           description={
-            isDoubleTapShortcut(shortcut) ? (
+            doubleTaps > 0 && doubleTaps === shortcuts.length ? (
               handsFree ? (
                 <Trans>
-                  Press the key twice to start, then press it once to finish.
+                  Press a shortcut key twice to start, then press it once to
+                  finish.
                 </Trans>
               ) : (
                 <Trans>
-                  Press the key twice and keep holding it while speaking, then
-                  release it to finish.
+                  Press a shortcut key twice and keep holding it while speaking,
+                  then release it to finish.
+                </Trans>
+              )
+            ) : doubleTaps > 0 ? (
+              handsFree ? (
+                <Trans>
+                  Press a shortcut to start, then press it again to finish.
+                  Double-tap shortcuts start with two quick presses.
+                </Trans>
+              ) : (
+                <Trans>
+                  Hold a shortcut while speaking, then release it to finish.
+                  Double-tap shortcuts start with two quick presses; keep
+                  holding the second one.
                 </Trans>
               )
             ) : handsFree ? (
               <Trans>
-                Press your shortcut to start, then press it again to finish.
+                Press a shortcut to start, then press it again to finish.
               </Trans>
             ) : (
               <Trans>
-                Hold your shortcut while speaking, then release it to finish.
+                Hold a shortcut while speaking, then release it to finish.
               </Trans>
             )
           }
@@ -207,7 +223,7 @@ export function SettingsDictation() {
             <Trans>Try dictation</Trans>
           </span>
           <Textarea
-            placeholder={t`Click here, then use your dictation shortcut.`}
+            placeholder={t`Click here, then use a dictation shortcut.`}
           />
         </label>
         <p className="text-muted-foreground text-xs">

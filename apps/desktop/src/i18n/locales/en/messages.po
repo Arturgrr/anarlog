@@ -455,6 +455,10 @@ msgstr "Add person"
 msgid "Add Section"
 msgstr "Add Section"
 
+#: src/settings/dictation-shortcut.tsx
+msgid "Add shortcut"
+msgstr "Add shortcut"
+
 #: src/settings/developers/skills.tsx
 msgid "Add skill to…"
 msgstr "Add skill to…"
@@ -587,6 +591,10 @@ msgstr "Animals & Nature"
 #: src/stt/start-failure.ts
 msgid "Another recording is still running"
 msgstr "Another recording is still running"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Any of these shortcuts starts dictation. Click one to change it. You can add up to {MAX_SHORTCUTS}."
+msgstr "Any of these shortcuts starts dictation. Click one to change it. You can add up to {MAX_SHORTCUTS}."
 
 #: src/settings/ai/stt/shared.tsx
 msgid "API documentation"
@@ -1020,6 +1028,10 @@ msgstr "Change model"
 msgid "Change photo"
 msgstr "Change photo"
 
+#: src/settings/dictation-shortcut.tsx
+msgid "Change shortcut {keys}"
+msgstr "Change shortcut {keys}"
+
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
 msgid "Change speaker"
 msgstr "Change speaker"
@@ -1258,16 +1270,8 @@ msgid "CLI & MCP"
 msgstr "CLI & MCP"
 
 #: src/settings/dictation.tsx
-msgid "Click here, then use your dictation shortcut."
-msgstr "Click here, then use your dictation shortcut."
-
-#: src/settings/dictation-shortcut.tsx
-msgid "Click the shortcut to record a new key combination, or press one modifier key twice quickly. Press Escape to cancel."
-msgstr "Click the shortcut to record a new key combination, or press one modifier key twice quickly. Press Escape to cancel."
-
-#: src/settings/dictation-shortcut.tsx
-msgid "Click the shortcut to record a new key combination. Press Escape to cancel."
-msgstr "Click the shortcut to record a new key combination. Press Escape to cancel."
+msgid "Click here, then use a dictation shortcut."
+msgstr "Click here, then use a dictation shortcut."
 
 #: src/changelog/index.tsx
 #: src/i18n/component-labels.tsx
@@ -1921,8 +1925,8 @@ msgid "Dictation is unavailable while Librelog is recording a meeting."
 msgstr "Dictation is unavailable while Librelog is recording a meeting."
 
 #: src/settings/dictation-shortcut.tsx
-msgid "Dictation shortcut"
-msgstr "Dictation shortcut"
+msgid "Dictation shortcuts"
+msgstr "Dictation shortcuts"
 
 #: src/settings/dictation.tsx
 msgid "Dictation uses your microphone, transcription provider, languages, and dictionary. Temporary audio is deleted after transcription. Your last transcript stays in memory until dictation is disabled or Librelog closes."
@@ -2683,8 +2687,12 @@ msgid "History {0}/{1}"
 msgstr "History {0}/{1}"
 
 #: src/settings/dictation.tsx
-msgid "Hold your shortcut while speaking, then release it to finish."
-msgstr "Hold your shortcut while speaking, then release it to finish."
+msgid "Hold a shortcut while speaking, then release it to finish."
+msgstr "Hold a shortcut while speaking, then release it to finish."
+
+#: src/settings/dictation.tsx
+msgid "Hold a shortcut while speaking, then release it to finish. Double-tap shortcuts start with two quick presses; keep holding the second one."
+msgstr "Hold a shortcut while speaking, then release it to finish. Double-tap shortcuts start with two quick presses; keep holding the second one."
 
 #: src/settings/stats/index.tsx
 msgid "Hours transcribed"
@@ -2859,8 +2867,8 @@ msgid "Join our community and stay updated:"
 msgstr "Join our community and stay updated:"
 
 #: src/settings/dictation.tsx
-msgid "Keep Librelog running to use your shortcut in other apps."
-msgstr "Keep Librelog running to use your shortcut in other apps."
+msgid "Keep Librelog running to use your dictation shortcuts in other apps."
+msgstr "Keep Librelog running to use your dictation shortcuts in other apps."
 
 #: src/session/components/note-conflict-banner.tsx
 msgid "Keep this version"
@@ -3551,6 +3559,10 @@ msgstr "New automation"
 msgid "New chat"
 msgstr "New chat"
 
+#: src/settings/dictation-shortcut.tsx
+msgid "New dictation shortcut"
+msgstr "New dictation shortcut"
+
 #: src/folders/sidebar.tsx
 msgid "New folder"
 msgstr "New folder"
@@ -4186,6 +4198,22 @@ msgstr "Preparing transcript..."
 msgid "Preparing…"
 msgstr "Preparing…"
 
+#: src/settings/dictation.tsx
+msgid "Press a shortcut key twice and keep holding it while speaking, then release it to finish."
+msgstr "Press a shortcut key twice and keep holding it while speaking, then release it to finish."
+
+#: src/settings/dictation.tsx
+msgid "Press a shortcut key twice to start, then press it once to finish."
+msgstr "Press a shortcut key twice to start, then press it once to finish."
+
+#: src/settings/dictation.tsx
+msgid "Press a shortcut to start, then press it again to finish."
+msgstr "Press a shortcut to start, then press it again to finish."
+
+#: src/settings/dictation.tsx
+msgid "Press a shortcut to start, then press it again to finish. Double-tap shortcuts start with two quick presses."
+msgstr "Press a shortcut to start, then press it again to finish. Double-tap shortcuts start with two quick presses."
+
 #: src/settings/ai/stt/detail.tsx
 msgid "Press Enter to use this model ID."
 msgstr "Press Enter to use this model ID."
@@ -4195,20 +4223,16 @@ msgid "Press Escape to cancel. Dictation stops after five minutes and pauses whi
 msgstr "Press Escape to cancel. Dictation stops after five minutes and pauses while Librelog records a meeting."
 
 #: src/settings/dictation-shortcut.tsx
-msgid "Press shortcut…"
-msgstr "Press shortcut…"
+msgid "Press the keys you want, or press one modifier key twice quickly, then press Enter to save. Enter can't be part of a shortcut. Press Backspace to clear or Escape to cancel."
+msgstr "Press the keys you want, or press one modifier key twice quickly, then press Enter to save. Enter can't be part of a shortcut. Press Backspace to clear or Escape to cancel."
 
-#: src/settings/dictation.tsx
-msgid "Press the key twice and keep holding it while speaking, then release it to finish."
-msgstr "Press the key twice and keep holding it while speaking, then release it to finish."
+#: src/settings/dictation-shortcut.tsx
+msgid "Press the keys you want, then press Enter to save. Enter can't be part of a shortcut. Press Backspace to clear or Escape to cancel."
+msgstr "Press the keys you want, then press Enter to save. Enter can't be part of a shortcut. Press Backspace to clear or Escape to cancel."
 
-#: src/settings/dictation.tsx
-msgid "Press the key twice to start, then press it once to finish."
-msgstr "Press the key twice to start, then press it once to finish."
-
-#: src/settings/dictation.tsx
-msgid "Press your shortcut to start, then press it again to finish."
-msgstr "Press your shortcut to start, then press it again to finish."
+#: src/settings/dictation-shortcut.tsx
+msgid "Press the shortcut…"
+msgstr "Press the shortcut…"
 
 #: src/settings/general/notification.tsx
 msgid "Prevent selected apps from triggering meeting detection."
@@ -4497,6 +4521,10 @@ msgstr "Remove photo"
 #: src/chat/components/content.tsx
 msgid "Remove queued message: {0}"
 msgstr "Remove queued message: {0}"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Remove shortcut {keys}"
+msgstr "Remove shortcut {keys}"
 
 #: src/settings/automations/workflow-builder.tsx
 msgid "Remove step"
@@ -5648,6 +5676,10 @@ msgstr "This provider uses a different sign-in flow."
 #: src/chat/components/session-provider.tsx
 msgid "This recording is using batch transcription, so the transcript isn't available to chat yet. Ask again after transcription finishes, or switch to a Pro model for live transcription."
 msgstr "This recording is using batch transcription, so the transcript isn't available to chat yet. Ask again after transcription finishes, or switch to a Pro model for live transcription."
+
+#: src/settings/dictation-shortcut.tsx
+msgid "This shortcut is already in your list."
+msgstr "This shortcut is already in your list."
 
 #: src/settings/ai/llm/subscriptions/connect.tsx
 #: src/settings/ai/llm/subscriptions/oauth.ts

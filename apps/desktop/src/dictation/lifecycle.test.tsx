@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   platform: "macos",
   settings: {
     dictation_enabled: true,
-    dictation_shortcut: "Control+Alt+Space",
+    dictation_shortcuts: ["Control+Alt+Space"],
     dictation_hands_free: false,
     microphone_device: "",
   } as Record<string, unknown>,
@@ -99,10 +99,13 @@ describe("dictation access and lifecycle", () => {
     const { rerender } = render(<DictationLifecycle />);
     await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
     useDictationStatus.setState({ lastTranscript: "Recover this text" });
-    mocks.settings.dictation_shortcut = "Control+Alt+D";
+    mocks.settings.dictation_shortcuts = ["Control+Alt+Space", "Fn"];
     rerender(<DictationLifecycle />);
     await waitFor(() =>
-      expect(mocks.configure).toHaveBeenLastCalledWith("Control+Alt+D"),
+      expect(mocks.configure).toHaveBeenLastCalledWith([
+        "Control+Alt+Space",
+        "Fn",
+      ]),
     );
     expect(useDictationStatus.getState().lastTranscript).toBe(
       "Recover this text",
@@ -116,11 +119,11 @@ describe("dictation access and lifecycle", () => {
     render(<DictationLifecycle />);
     await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
     act(() => useDictationStatus.setState({ capturingShortcut: true }));
-    await waitFor(() => expect(mocks.configure).toHaveBeenLastCalledWith(null));
+    await waitFor(() => expect(mocks.configure).toHaveBeenLastCalledWith([]));
     expect(useDictationStatus.getState().ready).toBe(false);
     act(() => useDictationStatus.setState({ capturingShortcut: false }));
     await waitFor(() =>
-      expect(mocks.configure).toHaveBeenLastCalledWith("Control+Alt+Space"),
+      expect(mocks.configure).toHaveBeenLastCalledWith(["Control+Alt+Space"]),
     );
     expect(mocks.startSystemRecording).not.toHaveBeenCalled();
   });
@@ -132,7 +135,7 @@ describe("dictation access and lifecycle", () => {
     mocks.connection = null;
     mocks.settings.dictation_live_preview = false;
     mocks.settings.dictation_enabled = true;
-    mocks.settings.dictation_shortcut = "Control+Alt+Space";
+    mocks.settings.dictation_shortcuts = ["Control+Alt+Space"];
     mocks.settings.microphone_device = "";
     mocks.meeting = { status: "inactive", loading: false };
     mocks.listener = null;
@@ -188,7 +191,7 @@ describe("dictation access and lifecycle", () => {
   it("registers without an account or plan and inserts into the captured field", async () => {
     render(<DictationLifecycle />);
     await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
-    expect(mocks.configure).toHaveBeenCalledWith("Control+Alt+Space");
+    expect(mocks.configure).toHaveBeenCalledWith(["Control+Alt+Space"]);
     await act(async () => {
       mocks.listener?.({ payload: { type: "pressed" } });
     });
@@ -318,7 +321,7 @@ describe("dictation access and lifecycle", () => {
     );
     mocks.settings.dictation_enabled = false;
     view.rerender(<DictationLifecycle />);
-    await waitFor(() => expect(mocks.configure).toHaveBeenLastCalledWith(null));
+    await waitFor(() => expect(mocks.configure).toHaveBeenLastCalledWith([]));
     expect(mocks.cancelRecording).toHaveBeenCalledWith(
       expect.stringMatching(/^system-dictation-/u),
     );

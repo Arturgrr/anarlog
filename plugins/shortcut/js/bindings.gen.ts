@@ -32,11 +32,16 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
-  async configure(shortcut: string | null): Promise<Result<null, string>> {
+  /**
+   * Registers every shortcut in `shortcuts`; any of them starts and stops
+   * dictation. An empty list unregisters them all. If one cannot be
+   * registered, none stay registered.
+   */
+  async configure(shortcuts: string[]): Promise<Result<null, string>> {
     try {
       return {
         status: "ok",
-        data: await TAURI_INVOKE("plugin:shortcut|configure", { shortcut }),
+        data: await TAURI_INVOKE("plugin:shortcut|configure", { shortcuts }),
       };
     } catch (e) {
       if (e instanceof Error) throw e;
