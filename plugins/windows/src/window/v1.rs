@@ -3,6 +3,9 @@ use crate::WindowImpl;
 const MAIN_WINDOW_WIDTH: f64 = 910.0;
 pub(crate) const MAIN_WINDOW_MIN_SIZE: (f64, f64) = (500.0, 500.0);
 const MAIN_WINDOW_HEIGHT: f64 = 600.0;
+/// Share of the screen's usable area a new main window takes, when no saved
+/// window state overrides it.
+const MAIN_WINDOW_SCREEN_SHARE: f64 = 0.9;
 const NOTE_WINDOW_WIDTH: f64 = 720.0;
 const NOTE_WINDOW_HEIGHT: f64 = 820.0;
 const NOTE_WINDOW_POSITION_TOLERANCE: f64 = 1.0;
@@ -246,12 +249,17 @@ impl WindowImpl for AppWindow {
 
         let window = match self {
             Self::Main => {
-                let builder = self
+                let mut builder = self
                     .window_builder(app, "/app")
                     .maximizable(true)
                     .minimizable(true)
                     .min_inner_size(MAIN_WINDOW_MIN_SIZE.0, MAIN_WINDOW_MIN_SIZE.1)
                     .inner_size(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT);
+                if let Some(frame) = default_main_window_frame(app) {
+                    builder = builder
+                        .inner_size(frame.width, frame.height)
+                        .position(frame.x, frame.y);
+                }
                 builder.build()?
             }
             Self::Composer => {
@@ -528,6 +536,32 @@ fn recenter_work_area(
         .or_else(|| work_areas.first().copied())
 }
 
+/// The main window's default frame in logical points: a share of the primary
+/// screen's usable area, centred on it.
+fn default_main_window_frame(app: &tauri::AppHandle<tauri::Wry>) -> Option<WindowFrame> {
+    let monitor = app.primary_monitor().ok().flatten()?;
+    let scale = monitor.scale_factor();
+    let area = monitor.work_area();
+    let work_area = WindowFrame::new(
+        f64::from(area.position.x) / scale,
+        f64::from(area.position.y) / scale,
+        f64::from(area.size.width) / scale,
+        f64::from(area.size.height) / scale,
+    );
+    Some(main_window_frame_in(work_area))
+}
+
+fn main_window_frame_in(work_area: WindowFrame) -> WindowFrame {
+    let width = (work_area.width * MAIN_WINDOW_SCREEN_SHARE).max(MAIN_WINDOW_MIN_SIZE.0);
+    let height = (work_area.height * MAIN_WINDOW_SCREEN_SHARE).max(MAIN_WINDOW_MIN_SIZE.1);
+    WindowFrame::new(
+        work_area.x + ((work_area.width - width).max(0.0) / 2.0),
+        work_area.y + ((work_area.height - height).max(0.0) / 2.0),
+        width,
+        height,
+    )
+}
+
 fn centered_window_position(window: WindowFrame, work_area: WindowFrame) -> (i32, i32) {
     let x = work_area.x + ((work_area.width - window.width).max(0.0) / 2.0);
     let y = work_area.y + ((work_area.height - window.height).max(0.0) / 2.0);
@@ -551,6 +585,22 @@ fn window_frame_at_scale(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_main_window_opens_at_ninety_percent_of_the_screen_centred() {
+        let frame = main_window_frame_in(WindowFrame::new(0.0, 25.0, 1512.0, 920.0));
+        let expected = [75.6, 71.0, 1360.8, 828.0];
+        for (actual, expected) in [frame.x, frame.y, frame.width, frame.height]
+            .into_iter()
+            .zip(expected)
+        {
+            assert!((actual - expected).abs() < 1e-9, "{frame:?}");
+        }
+
+        let small = main_window_frame_in(WindowFrame::new(0.0, 0.0, 520.0, 480.0));
+        assert_eq!(small.width, MAIN_WINDOW_MIN_SIZE.0);
+        assert_eq!(small.height, MAIN_WINDOW_MIN_SIZE.1);
+    }
 
     type StaggerCase<'a> = (f64, f64, &'a [(f64, f64)], usize, (f64, f64));
 
