@@ -22,14 +22,6 @@ async createOrganization(request: CreateOrganizationRequest) : Promise<Result<nu
     else return { status: "error", error: e  as any };
 }
 },
-async savePersonalContact(request: SavePersonalContactRequest) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:contacts|save_personal_contact", { request }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async updateHuman(request: UpdateHumanRequest) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:contacts|update_human", { request }) };
@@ -112,7 +104,6 @@ export type CreateOrganizationRequest = { id: string; owner_user_id: string; nam
 export type MergeHumansRequest = { selected_human_id: string; duplicate_human_id: string }
 export type PinnedContactEntry = { kind: ContactKind; id: string }
 export type ReorderPinnedContactsRequest = { contacts: PinnedContactEntry[] }
-export type SavePersonalContactRequest = { human_id: string; name: string; email: string; phone: string; job_title: string; linkedin_username: string; memo: string; organization_id: string; avatar_data_url: string | null; remove_avatar: boolean }
 export type SoftDeleteContactRequest = { kind: ContactKind; contact_id: string }
 export type ToggleContactPinRequest = { kind: ContactKind; contact_id: string }
 export type UpdateContactAvatarRequest = { kind: ContactKind; contact_id: string; avatar_data_url: string | null }

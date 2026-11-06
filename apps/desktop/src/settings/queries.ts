@@ -36,7 +36,6 @@ import {
 import {
   getDefaultSttModel,
   normalizeStoredSttModel,
-  normalizeStoredSttSelection,
 } from "~/stt/model-selection";
 
 type AppSettingRow = { id: string; value_json: string };
@@ -111,10 +110,13 @@ export async function initializeApplicationSettings(): Promise<void> {
     .getPreferredLanguages()
     .catch(() => null);
   const updates: SettingValues = {};
-  const storedSttSelection = normalizeStoredSttSelection(
-    stored.values.current_stt_provider,
-    stored.values.current_stt_model,
-  );
+  const storedSttSelection = {
+    provider: stored.values.current_stt_provider,
+    model: normalizeStoredSttModel(
+      stored.values.current_stt_provider,
+      stored.values.current_stt_model,
+    ),
+  };
   const normalizedSttSelection =
     getUnsupportedDesktopLocalSttRepair(
       platform(),
@@ -128,15 +130,6 @@ export async function initializeApplicationSettings(): Promise<void> {
   }
   if (normalizedSttSelection.model !== stored.values.current_stt_model) {
     updates.current_stt_model = normalizedSttSelection.model;
-  }
-
-  // The hosted Anarlog LLM (formerly "hyprnote") no longer exists.
-  if (
-    stored.values.current_llm_provider === "anarlog" ||
-    stored.values.current_llm_provider === "hyprnote"
-  ) {
-    updates.current_llm_provider = "";
-    updates.current_llm_model = "";
   }
 
   if (languageResult?.status === "ok" && languageResult.data.length > 0) {

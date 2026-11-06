@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { wrapLanguageModel } from "ai";
 
-import { commands as localLlmCommands } from "@anlg/plugin-local-llm";
+import { commands as foundationModelCommands } from "@anlg/plugin-apple-foundation";
 
 type LanguageModelV3 = Parameters<typeof wrapLanguageModel>[0]["model"];
 type CallOptions = Parameters<LanguageModelV3["doGenerate"]>[0];
@@ -18,14 +18,14 @@ export function createAppleFoundationModel(
     throwIfAborted(options.abortSignal);
     const requestId = crypto.randomUUID();
     const request = prepareFoundationModelRequest(options);
-    const begin = await localLlmCommands.foundationModelBegin(requestId);
+    const begin = await foundationModelCommands.foundationModelBegin(requestId);
     if (begin.status === "error") {
       throw new Error(begin.error);
     }
 
     let cancellation: Promise<void> | undefined;
     const cancel = () => {
-      cancellation ??= localLlmCommands
+      cancellation ??= foundationModelCommands
         .foundationModelCancel(requestId)
         .then(() => undefined);
       return cancellation;
@@ -39,7 +39,7 @@ export function createAppleFoundationModel(
         throwAbort(options.abortSignal);
       }
 
-      const result = await localLlmCommands.foundationModelGenerate({
+      const result = await foundationModelCommands.foundationModelGenerate({
         ...request,
         requestId,
       });

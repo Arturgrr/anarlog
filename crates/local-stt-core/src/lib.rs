@@ -37,7 +37,6 @@ const fn recommended_memory_bytes(model: &LocalModel) -> u64 {
         LocalModel::Soniqo(SoniqoModel::Qwen3Large) => 32 * GIB,
         LocalModel::AppleSpeech(_) => 8 * GIB,
         LocalModel::Whisper(_) => 8 * GIB,
-        LocalModel::GgufLlm(_) => unreachable!(),
     }
 }
 
@@ -71,7 +70,6 @@ pub fn stt_model_info(model: &LocalModel) -> SttModelInfo {
             supports_realtime: false,
             recommended_memory_bytes: recommended_memory_bytes(model),
         },
-        LocalModel::GgufLlm(_) => unreachable!(),
     }
 }
 
@@ -102,7 +100,6 @@ mod tests {
                 LocalModel::Soniqo(model) => model.supports_live(),
                 LocalModel::AppleSpeech(model) => model.supports_live(),
                 LocalModel::Whisper(_) => false,
-                LocalModel::GgufLlm(_) => unreachable!(),
             };
 
             assert!(keys.insert(info.key.cli_name()));

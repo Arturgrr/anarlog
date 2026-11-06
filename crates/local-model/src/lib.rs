@@ -8,83 +8,11 @@ pub use anlg_whisper_local_model::WhisperModel;
 pub const APPLE_SPEECH_DEFAULT_LOCALE: &str = "en-US";
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type, Eq, Hash, PartialEq)]
-pub enum GgufLlmModel {
-    Llama3p2_3bQ4,
-    Gemma3_4bQ4,
-    #[serde(alias = "HyprLLM")]
-    AnarlogLLM,
-}
-
-impl GgufLlmModel {
-    pub fn file_name(&self) -> &str {
-        match self {
-            GgufLlmModel::Llama3p2_3bQ4 => "llm.gguf",
-            GgufLlmModel::AnarlogLLM => "hypr-llm.gguf",
-            GgufLlmModel::Gemma3_4bQ4 => "gemma-3-4b-it-Q4_K_M.gguf",
-        }
-    }
-
-    pub fn model_url(&self) -> &str {
-        match self {
-            GgufLlmModel::Llama3p2_3bQ4 => {
-                "https://huggingface.co/lmstudio-community/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf"
-            }
-            GgufLlmModel::AnarlogLLM => {
-                "https://huggingface.co/yujonglee/hypr-llm-sm/resolve/main/model_q4_k_m.gguf"
-            }
-            GgufLlmModel::Gemma3_4bQ4 => {
-                "https://huggingface.co/unsloth/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf"
-            }
-        }
-    }
-
-    pub fn model_size(&self) -> u64 {
-        match self {
-            GgufLlmModel::Llama3p2_3bQ4 => 2019377440,
-            GgufLlmModel::AnarlogLLM => 1107409056,
-            GgufLlmModel::Gemma3_4bQ4 => 2489894016,
-        }
-    }
-
-    pub fn model_checksum(&self) -> u32 {
-        match self {
-            GgufLlmModel::Llama3p2_3bQ4 => 2831308098,
-            GgufLlmModel::AnarlogLLM => 4037351144,
-            GgufLlmModel::Gemma3_4bQ4 => 2760830291,
-        }
-    }
-
-    pub fn display_name(&self) -> &'static str {
-        match self {
-            GgufLlmModel::Llama3p2_3bQ4 => "Llama 3.2 3B Q4",
-            GgufLlmModel::AnarlogLLM => "HyprLLM",
-            GgufLlmModel::Gemma3_4bQ4 => "Gemma 3 4B Q4",
-        }
-    }
-
-    pub fn description(&self) -> String {
-        let mb = self.model_size() as f64 / (1024.0 * 1024.0);
-        if mb >= 1024.0 {
-            format!("{:.1} GB", mb / 1024.0)
-        } else {
-            format!("{:.0} MB", mb)
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
-pub enum LocalModelKind {
-    Stt,
-    Llm,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type, Eq, Hash, PartialEq)]
 #[serde(untagged)]
 pub enum LocalModel {
     Soniqo(SoniqoModel),
     AppleSpeech(AppleSpeechModel),
     Whisper(WhisperModel),
-    GgufLlm(GgufLlmModel),
 }
 
 impl std::fmt::Display for LocalModel {
@@ -93,7 +21,6 @@ impl std::fmt::Display for LocalModel {
             LocalModel::Soniqo(model) => write!(f, "{model}"),
             LocalModel::AppleSpeech(model) => write!(f, "{model}"),
             LocalModel::Whisper(model) => write!(f, "whisper-{model}"),
-            LocalModel::GgufLlm(model) => write!(f, "llm-{model:?}"),
         }
     }
 }
@@ -123,12 +50,6 @@ impl LocalModel {
             LocalModel::Whisper(WhisperModel::QuantizedLargeTurbo),
         ]);
 
-        models.extend([
-            LocalModel::GgufLlm(GgufLlmModel::Llama3p2_3bQ4),
-            LocalModel::GgufLlm(GgufLlmModel::AnarlogLLM),
-            LocalModel::GgufLlm(GgufLlmModel::Gemma3_4bQ4),
-        ]);
-
         models
     }
 
@@ -137,16 +58,6 @@ impl LocalModel {
             LocalModel::Soniqo(_) => "stt-soniqo",
             LocalModel::AppleSpeech(_) => "stt-apple-speech",
             LocalModel::Whisper(_) => "stt-whisper",
-            LocalModel::GgufLlm(_) => "llm",
-        }
-    }
-
-    pub fn model_kind(&self) -> LocalModelKind {
-        match self {
-            LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) | LocalModel::Whisper(_) => {
-                LocalModelKind::Stt
-            }
-            LocalModel::GgufLlm(_) => LocalModelKind::Llm,
         }
     }
 
@@ -161,9 +72,6 @@ impl LocalModel {
             LocalModel::Whisper(WhisperModel::QuantizedSmall) => "whisper-small",
             LocalModel::Whisper(WhisperModel::QuantizedSmallEn) => "whisper-small-en",
             LocalModel::Whisper(WhisperModel::QuantizedLargeTurbo) => "whisper-large-turbo",
-            LocalModel::GgufLlm(GgufLlmModel::Llama3p2_3bQ4) => "llm-llama3-2-3b-q4",
-            LocalModel::GgufLlm(GgufLlmModel::AnarlogLLM) => "llm-hypr-llm",
-            LocalModel::GgufLlm(GgufLlmModel::Gemma3_4bQ4) => "llm-gemma3-4b-q4",
         }
     }
 
@@ -172,7 +80,6 @@ impl LocalModel {
             LocalModel::Soniqo(model) => models_base.join("soniqo").join(model.as_str()),
             LocalModel::AppleSpeech(model) => models_base.join("apple-speech").join(model.as_str()),
             LocalModel::Whisper(model) => models_base.join("stt").join(model.file_name()),
-            LocalModel::GgufLlm(model) => models_base.join("llm").join(model.file_name()),
         }
     }
 
@@ -181,7 +88,6 @@ impl LocalModel {
             LocalModel::Soniqo(model) => model.display_name().to_string(),
             LocalModel::AppleSpeech(model) => model.display_name().to_string(),
             LocalModel::Whisper(model) => model.display_name().to_string(),
-            LocalModel::GgufLlm(model) => model.display_name().to_string(),
         }
     }
 
@@ -190,7 +96,6 @@ impl LocalModel {
             LocalModel::Soniqo(model) => model.description().to_string(),
             LocalModel::AppleSpeech(model) => model.description().to_string(),
             LocalModel::Whisper(model) => model.description(),
-            LocalModel::GgufLlm(model) => model.description(),
         }
     }
 
@@ -201,49 +106,7 @@ impl LocalModel {
             LocalModel::Soniqo(model) => model.is_available_on_current_platform(),
             LocalModel::AppleSpeech(model) => model.is_available_on_current_platform(),
             LocalModel::Whisper(_) => is_apple_silicon,
-            LocalModel::GgufLlm(_) => cfg!(target_arch = "aarch64"),
         }
-    }
-}
-
-impl DownloadableModel for GgufLlmModel {
-    fn download_key(&self) -> String {
-        format!("llm:{}", self.file_name())
-    }
-
-    fn download_url(&self) -> Option<String> {
-        Some(self.model_url().to_string())
-    }
-
-    fn download_checksum(&self) -> Option<u32> {
-        Some(self.model_checksum())
-    }
-
-    fn download_destination(&self, models_base: &Path) -> PathBuf {
-        models_base.join("llm").join(self.file_name())
-    }
-
-    fn is_downloaded(&self, models_base: &Path) -> Result<bool, Error> {
-        let path = models_base.join("llm").join(self.file_name());
-        if !path.exists() {
-            return Ok(false);
-        }
-
-        let actual =
-            anlg_file::file_size(&path).map_err(|e| Error::OperationFailed(e.to_string()))?;
-        Ok(actual == self.model_size())
-    }
-
-    fn finalize_download(&self, _downloaded_path: &Path, _models_base: &Path) -> Result<(), Error> {
-        Ok(())
-    }
-
-    fn delete_downloaded(&self, models_base: &Path) -> Result<(), Error> {
-        let path = models_base.join("llm").join(self.file_name());
-        if path.exists() {
-            std::fs::remove_file(&path).map_err(|e| Error::DeleteFailed(e.to_string()))?;
-        }
-        Ok(())
     }
 }
 
@@ -253,7 +116,6 @@ impl DownloadableModel for LocalModel {
             LocalModel::Soniqo(model) => format!("soniqo:{}", model.as_str()),
             LocalModel::AppleSpeech(model) => format!("apple-speech:{}", model.as_str()),
             LocalModel::Whisper(model) => format!("whisper:{}", model.file_name()),
-            LocalModel::GgufLlm(model) => model.download_key(),
         }
     }
 
@@ -261,7 +123,6 @@ impl DownloadableModel for LocalModel {
         match self {
             LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) => None,
             LocalModel::Whisper(model) => Some(model.model_url().to_string()),
-            LocalModel::GgufLlm(model) => model.download_url(),
         }
     }
 
@@ -269,7 +130,6 @@ impl DownloadableModel for LocalModel {
         match self {
             LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) => None,
             LocalModel::Whisper(model) => Some(model.checksum()),
-            LocalModel::GgufLlm(model) => model.download_checksum(),
         }
     }
 
@@ -278,7 +138,6 @@ impl DownloadableModel for LocalModel {
             LocalModel::Soniqo(model) => models_base.join("soniqo").join(model.as_str()),
             LocalModel::AppleSpeech(model) => models_base.join("apple-speech").join(model.as_str()),
             LocalModel::Whisper(model) => models_base.join("stt").join(model.file_name()),
-            LocalModel::GgufLlm(model) => model.download_destination(models_base),
         }
     }
 
@@ -296,11 +155,10 @@ impl DownloadableModel for LocalModel {
             LocalModel::Whisper(model) => {
                 Ok(models_base.join("stt").join(model.file_name()).exists())
             }
-            LocalModel::GgufLlm(model) => model.is_downloaded(models_base),
         }
     }
 
-    fn finalize_download(&self, downloaded_path: &Path, models_base: &Path) -> Result<(), Error> {
+    fn finalize_download(&self, _downloaded_path: &Path, _models_base: &Path) -> Result<(), Error> {
         match self {
             LocalModel::Soniqo(_) => Err(Error::FinalizeFailed(
                 "Soniqo models are downloaded through the Soniqo bridge".to_string(),
@@ -309,7 +167,6 @@ impl DownloadableModel for LocalModel {
                 "Apple Speech assets are installed by macOS".to_string(),
             )),
             LocalModel::Whisper(_) => Ok(()),
-            LocalModel::GgufLlm(model) => model.finalize_download(downloaded_path, models_base),
         }
     }
 
@@ -332,7 +189,6 @@ impl DownloadableModel for LocalModel {
                 }
                 Ok(())
             }
-            LocalModel::GgufLlm(model) => model.delete_downloaded(models_base),
         }
     }
 }
@@ -340,18 +196,6 @@ impl DownloadableModel for LocalModel {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn librelog_llm_accepts_legacy_serialized_name() {
-        assert_eq!(
-            serde_json::from_str::<GgufLlmModel>("\"HyprLLM\"").unwrap(),
-            GgufLlmModel::AnarlogLLM,
-        );
-        assert_eq!(
-            serde_json::to_string(&GgufLlmModel::AnarlogLLM).unwrap(),
-            "\"AnarlogLLM\"",
-        );
-    }
 
     #[test]
     fn soniqo_models_reject_generic_download_finalize() {

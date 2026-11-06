@@ -6,7 +6,6 @@ Default permissions for the plugin
 
 - `allow-create-human`
 - `allow-create-organization`
-- `allow-save-personal-contact`
 - `allow-update-human`
 - `allow-update-organization`
 - `allow-soft-delete-contact`
@@ -125,32 +124,6 @@ Enables the reorder_pinned_contacts command without any pre-configured scope.
 <td>
 
 Denies the reorder_pinned_contacts command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`contacts:allow-save-personal-contact`
-
-</td>
-<td>
-
-Enables the save_personal_contact command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`contacts:deny-save-personal-contact`
-
-</td>
-<td>
-
-Denies the save_personal_contact command without any pre-configured scope.
 
 </td>
 </tr>

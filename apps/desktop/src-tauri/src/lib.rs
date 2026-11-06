@@ -161,9 +161,7 @@ pub fn main() {
         builder = builder.plugin(tauri_plugin_agent::init());
     }
 
-    builder = builder
-        .plugin(tauri_plugin_db::init(db.clone()))
-        .plugin(tauri_plugin_bedrock::init());
+    builder = builder.plugin(tauri_plugin_db::init(db.clone()));
 
     builder = builder
         .plugin(tauri_plugin_contacts::init())
@@ -191,13 +189,10 @@ pub fn main() {
         .plugin(tauri_plugin_fs_sync::init())
         .plugin(tauri_plugin_fs2::init())
         .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_path2::init())
         .plugin(tauri_plugin_export::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_local_api::init())
         .plugin(tauri_plugin_local_auth::init())
-        .plugin(tauri_plugin_mcp::init())
-        .plugin(tauri_plugin_messenger::init())
         .plugin(tauri_plugin_misc::init())
         .plugin(tauri_plugin_template::init())
         .plugin(tauri_plugin_session::init())
@@ -206,7 +201,6 @@ pub fn main() {
         .plugin(tauri_plugin_dock::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_notify::init())
-        .plugin(tauri_plugin_overlay::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_store2::init());
@@ -223,7 +217,6 @@ pub fn main() {
         .plugin(tauri_plugin_shortcut::init())
         .plugin(tauri_plugin_dictation::init())
         .plugin(tauri_plugin_windows::init())
-        .plugin(tauri_plugin_js::init())
         .plugin(
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(tauri_plugin_windows::persisted_window_state_flags())
@@ -232,8 +225,7 @@ pub fn main() {
         )
         .plugin(tauri_plugin_transcription::init())
         .plugin(tauri_plugin_tantivy::init())
-        .plugin(tauri_plugin_audio_priority::init())
-        .plugin(tauri_plugin_local_llm::init())
+        .plugin(tauri_plugin_apple_foundation::init())
         .plugin(tauri_plugin_local_stt::init(
             tauri_plugin_local_stt::InitOptions {
                 parent_supervisor: root_supervisor_ctx
@@ -356,13 +348,6 @@ pub fn main() {
 
             if let (Some(ctx), Some(handle)) = (&root_supervisor_ctx, root_supervisor_handle) {
                 supervisor::monitor_supervisor(handle, ctx.is_exiting.clone(), app_handle.clone());
-            }
-
-            {
-                use tauri_plugin_local_llm::LocalLlmPluginExt;
-                if false {
-                    app_handle.local_llm().start_server();
-                }
             }
 
             search_index::spawn(app_handle.clone(), db.clone());

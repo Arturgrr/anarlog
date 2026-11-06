@@ -343,18 +343,6 @@
           "markdownDescription": "Denies the reorder_pinned_contacts command without any pre-configured scope."
         },
         {
-          "description": "Enables the save_personal_contact command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-save-personal-contact",
-          "markdownDescription": "Enables the save_personal_contact command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the save_personal_contact command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-save-personal-contact",
-          "markdownDescription": "Denies the save_personal_contact command without any pre-configured scope."
-        },
-        {
           "description": "Enables the soft_delete_contact command without any pre-configured scope.",
           "type": "string",
           "const": "allow-soft-delete-contact",
@@ -427,10 +415,10 @@
           "markdownDescription": "Denies the update_organization command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-create-human`\n- `allow-create-organization`\n- `allow-save-personal-contact`\n- `allow-update-human`\n- `allow-update-organization`\n- `allow-soft-delete-contact`\n- `allow-update-contact-avatar`\n- `allow-update-human-contact-summary`\n- `allow-toggle-contact-pin`\n- `allow-reorder-pinned-contacts`\n- `allow-merge-humans`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-create-human`\n- `allow-create-organization`\n- `allow-update-human`\n- `allow-update-organization`\n- `allow-soft-delete-contact`\n- `allow-update-contact-avatar`\n- `allow-update-human-contact-summary`\n- `allow-toggle-contact-pin`\n- `allow-reorder-pinned-contacts`\n- `allow-merge-humans`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-create-human`\n- `allow-create-organization`\n- `allow-save-personal-contact`\n- `allow-update-human`\n- `allow-update-organization`\n- `allow-soft-delete-contact`\n- `allow-update-contact-avatar`\n- `allow-update-human-contact-summary`\n- `allow-toggle-contact-pin`\n- `allow-reorder-pinned-contacts`\n- `allow-merge-humans`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-create-human`\n- `allow-create-organization`\n- `allow-update-human`\n- `allow-update-organization`\n- `allow-soft-delete-contact`\n- `allow-update-contact-avatar`\n- `allow-update-human-contact-summary`\n- `allow-toggle-contact-pin`\n- `allow-reorder-pinned-contacts`\n- `allow-merge-humans`"
         }
       ]
     }

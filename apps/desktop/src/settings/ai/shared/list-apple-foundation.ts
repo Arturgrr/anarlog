@@ -1,18 +1,18 @@
 import { t } from "@lingui/core/macro";
 
-import { commands as localLlmCommands } from "@anlg/plugin-local-llm";
+import { commands as foundationModelCommands } from "@anlg/plugin-apple-foundation";
 
 import type { ListModelsResult } from "./list-common";
 
 const MODEL_ID = "System Language Model";
 
 export async function checkAppleFoundationModelAvailability(): Promise<boolean> {
-  const result = await localLlmCommands.foundationModelAvailability();
+  const result = await foundationModelCommands.foundationModelAvailability();
   return result.status === "ok" && result.data.status === "available";
 }
 
 export async function listAppleFoundationModels(): Promise<ListModelsResult> {
-  const result = await localLlmCommands.foundationModelAvailability();
+  const result = await foundationModelCommands.foundationModelAvailability();
   if (result.status === "error") {
     throw new Error(result.error);
   }

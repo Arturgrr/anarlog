@@ -17,11 +17,9 @@ use std::str::FromStr;
 
 use owhisper_client::AdapterKind;
 
-// Local models (whisper.cpp files and legacy "anarlog"/"hyprnote" selections) have no
-// remote adapter; their language support comes from the on-device runtime.
-fn is_local_model_provider(provider: &str) -> bool {
-    matches!(provider, "local_file" | "anarlog" | "hyprnote")
-}
+// whisper.cpp files have no remote adapter; their language support comes from the
+// on-device runtime.
+const LOCAL_FILE_PROVIDER: &str = "local_file";
 
 pub fn is_supported_languages_live(
     provider: &str,
@@ -50,24 +48,8 @@ pub fn is_supported_languages_live(
         return Ok(model.supports_live_on_current_platform() && model.supports_languages(languages));
     }
 
-    if is_local_model_provider(provider) {
-        let Some(model) = model else {
-            return Ok(true);
-        };
-
-        if let Ok(model) = model.parse::<anlg_transcribe_soniqo::SoniqoModel>() {
-            return Ok(
-                model.supports_live_on_current_platform() && model.supports_languages(languages)
-            );
-        }
-
-        if let Ok(model) = model.parse::<anlg_transcribe_speechanalyzer::AppleSpeechModel>() {
-            return Ok(
-                model.supports_live_on_current_platform() && model.supports_languages(languages)
-            );
-        }
-
-        return Ok(!model.starts_with("whisper-"));
+    if provider == LOCAL_FILE_PROVIDER {
+        return Ok(model.is_none_or(|model| !model.starts_with("whisper-")));
     }
 
     let adapter_kind =
@@ -103,21 +85,7 @@ pub fn is_supported_languages_batch(
         return Ok(model.supports_languages(languages));
     }
 
-    if is_local_model_provider(provider) {
-        if let Some(model) =
-            model.and_then(|model| model.parse::<anlg_transcribe_soniqo::SoniqoModel>().ok())
-        {
-            return Ok(model.supports_languages(languages));
-        }
-
-        if let Some(model) = model.and_then(|model| {
-            model
-                .parse::<anlg_transcribe_speechanalyzer::AppleSpeechModel>()
-                .ok()
-        }) {
-            return Ok(model.supports_languages(languages));
-        }
-
+    if provider == LOCAL_FILE_PROVIDER {
         return Ok(true);
     }
 
@@ -221,7 +189,7 @@ mod tests {
     fn batch_language_support_by_provider_and_model() {
         let cases: &[(&str, &str, &[&str], bool)] = &[
             ("soniqo", "soniqo-parakeet-batch", &["fr"], true),
-            ("anarlog", "soniqo-parakeet-batch", &["ko"], false),
+            ("soniqo", "soniqo-parakeet-batch", &["ko"], false),
             ("soniqo", "soniqo-omnilingual", &["fr"], true),
             ("local_file", "local-file", &["ko"], true),
             ("mistral", "voxtral-mini-2602", &["de-DE", "en-US"], true),
@@ -243,9 +211,9 @@ mod tests {
     #[test]
     fn live_language_support_by_provider_and_model() {
         let cases: &[(&str, &str, &[&str], bool)] = &[
-            ("anarlog", "soniqo-parakeet-streaming", &["ko"], false),
+            ("soniqo", "soniqo-parakeet-streaming", &["ko"], false),
             (
-                "anarlog",
+                "soniqo",
                 "soniqo-parakeet-streaming",
                 &["fr"],
                 cfg!(all(target_os = "macos", target_arch = "aarch64")),
@@ -295,11 +263,11 @@ mod tests {
         assert!(
             !is_supported_languages_live("apple-speech", Some("apple-speech"), &hindi).unwrap()
         );
-
-        // Local models are surfaced under the Anarlog provider in settings.
-        assert!(is_supported_languages_live("anarlog", Some("apple-speech"), &korean).unwrap());
-        assert!(!is_supported_languages_live("anarlog", Some("apple-speech"), &hindi).unwrap());
-        assert!(is_supported_languages_batch("anarlog", Some("apple-speech"), &korean).unwrap());
-        assert!(!is_supported_languages_batch("anarlog", Some("apple-speech"), &hindi).unwrap());
+        assert!(
+            is_supported_languages_batch("apple-speech", Some("apple-speech"), &korean).unwrap()
+        );
+        assert!(
+            !is_supported_languages_batch("apple-speech", Some("apple-speech"), &hindi).unwrap()
+        );
     }
 }

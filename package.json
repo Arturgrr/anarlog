@@ -6,8 +6,7 @@
     "fmt": "dprint fmt",
     "lint": "pnpm lint:oxlint && pnpm lint:eslint",
     "lint:eslint": "eslint",
-    "lint:oxlint": "oxlint --type-aware",
-    "plugin:hello-world:install": "pnpm --dir examples/plugins/hello-world install:dev"
+    "lint:oxlint": "oxlint --type-aware"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.61.0",

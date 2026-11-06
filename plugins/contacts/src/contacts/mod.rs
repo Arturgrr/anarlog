@@ -4,8 +4,7 @@ mod pin;
 mod update;
 
 pub use create::{
-    CreateHumanRequest, CreateOrganizationRequest, SavePersonalContactRequest, create_human,
-    create_organization, save_personal_contact,
+    CreateHumanRequest, CreateOrganizationRequest, create_human, create_organization,
 };
 pub use merge::{MergeHumansRequest, merge_humans};
 pub use pin::{

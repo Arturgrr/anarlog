@@ -3,7 +3,6 @@ description = "Default permissions for the plugin"
 permissions = [
     "allow-create-human",
     "allow-create-organization",
-    "allow-save-personal-contact",
     "allow-update-human",
     "allow-update-organization",
     "allow-soft-delete-contact",

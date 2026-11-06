@@ -1,7 +1,6 @@
 const COMMANDS: &[&str] = &[
     "create_human",
     "create_organization",
-    "save_personal_contact",
     "update_human",
     "update_organization",
     "soft_delete_contact",
