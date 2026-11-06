@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   type OAuthCredential,
   parseOAuthCredential,
@@ -133,7 +135,7 @@ export function parseAuthorizationInput(input: string): {
 } {
   const trimmed = input.trim();
   if (!trimmed) {
-    throw new Error("Paste the authorization code to continue.");
+    throw new Error(t`Paste the authorization code to continue.`);
   }
 
   try {
@@ -154,7 +156,7 @@ export function parseAuthorizationInput(input: string): {
     const code = trimmed.slice(0, hashIndex).trim();
     const state = trimmed.slice(hashIndex + 1).trim();
     if (!code) {
-      throw new Error("Paste the authorization code to continue.");
+      throw new Error(t`Paste the authorization code to continue.`);
     }
     return { code, state: state || undefined };
   }
@@ -252,7 +254,7 @@ export function assertAuthorizationState(
   parsed: { state?: string },
 ) {
   if (parsed.state && parsed.state !== session.state) {
-    throw new Error("This sign-in expired. Try connecting again.");
+    throw new Error(t`This sign-in expired. Try connecting again.`);
   }
 }
 
@@ -325,7 +327,7 @@ export async function refreshOAuthCredential(
     case "grok":
       return refreshGrok(credential);
     case "kimi_code":
-      throw new Error("Kimi Code uses an API key, not OAuth.");
+      throw new Error(t`Kimi Code uses an API key, not OAuth.`);
   }
 }
 
@@ -374,7 +376,7 @@ async function startCopilotConnect(): Promise<DeviceConnectSession> {
     stringField(json, "verification_uri");
   if (status >= 400 || !userCode || !deviceCode || !verificationUrl) {
     throw new Error(
-      oauthErrorMessage(json, "Could not start GitHub Copilot login."),
+      oauthErrorMessage(json, t`Could not start GitHub Copilot login.`),
     );
   }
 
@@ -398,7 +400,7 @@ async function startGrokConnect(): Promise<DeviceConnectSession> {
     stringField(json, "verification_uri_complete") ??
     stringField(json, "verification_uri");
   if (status >= 400 || !userCode || !deviceCode || !verificationUrl) {
-    throw new Error(oauthErrorMessage(json, "Could not start Grok login."));
+    throw new Error(oauthErrorMessage(json, t`Could not start Grok login.`));
   }
 
   return {
@@ -426,7 +428,7 @@ async function exchangeClaudeCode(input: {
   return credentialFromTokenResponse(
     json,
     status,
-    "Could not connect Claude subscription.",
+    t`Could not connect Claude subscription.`,
   );
 }
 
@@ -444,7 +446,7 @@ async function exchangeChatgptCode(input: {
   return credentialFromTokenResponse(
     json,
     status,
-    "Could not connect ChatGPT subscription.",
+    t`Could not connect ChatGPT subscription.`,
   );
 }
 
@@ -470,7 +472,7 @@ async function pollCopilotDevice(
       return "pending";
     }
     throw new Error(
-      oauthErrorMessage(json, "GitHub Copilot authorization failed."),
+      oauthErrorMessage(json, t`GitHub Copilot authorization failed.`),
     );
   }
 
@@ -498,13 +500,13 @@ async function pollGrokDevice(
     if (status < 400 && !error) {
       return "pending";
     }
-    throw new Error(oauthErrorMessage(json, "Grok authorization failed."));
+    throw new Error(oauthErrorMessage(json, t`Grok authorization failed.`));
   }
 
   return credentialFromTokenResponse(
     json,
     status,
-    "Grok authorization failed.",
+    t`Grok authorization failed.`,
   );
 }
 
@@ -519,7 +521,7 @@ async function refreshClaude(
   return credentialFromTokenResponse(
     json,
     status,
-    "Could not refresh Claude subscription.",
+    t`Could not refresh Claude subscription.`,
     credential,
   );
 }
@@ -535,7 +537,7 @@ async function refreshChatgpt(
   return credentialFromTokenResponse(
     json,
     status,
-    "Could not refresh ChatGPT subscription.",
+    t`Could not refresh ChatGPT subscription.`,
     credential,
   );
 }
@@ -552,7 +554,7 @@ async function refreshCopilot(
   const expiresAt = numberField(json, "expires_at");
   if (status >= 400 || !token) {
     throw new Error(
-      oauthErrorMessage(json, "Could not refresh GitHub Copilot access."),
+      oauthErrorMessage(json, t`Could not refresh GitHub Copilot access.`),
     );
   }
 
@@ -576,7 +578,7 @@ async function refreshGrok(
   return credentialFromTokenResponse(
     json,
     status,
-    "Could not refresh Grok subscription.",
+    t`Could not refresh Grok subscription.`,
     credential,
   );
 }

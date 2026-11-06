@@ -5,6 +5,7 @@ import { Button } from "@anlg/ui/components/ui/button";
 
 import { useAITask } from "~/ai/contexts";
 import { useLanguageModel } from "~/ai/hooks";
+import { localizeExternalMessage } from "~/i18n/external-messages";
 import { useEnhancedNote } from "~/session/queries";
 import { getAIErrorSource } from "~/store/zustand/ai-task/shared/error-source";
 import { createTaskId } from "~/store/zustand/ai-task/task-configs";
@@ -47,7 +48,7 @@ export function EnhanceError({
           <Trans>Summary generation failed</Trans>
         </p>
         <p className="text-muted-foreground text-sm leading-relaxed">
-          {error?.message || (
+          {(error?.message && localizeExternalMessage(error.message)) || (
             <Trans>Something went wrong while generating the summary.</Trans>
           )}
         </p>

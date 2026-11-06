@@ -39,6 +39,27 @@ pub struct FloatingTranscriptBubble {
     pub overlaps_next: bool,
 }
 
+// The macOS bar draws these itself, so the frontend sends them in the app language.
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FloatingBarLabels {
+    pub stop: String,
+    pub stop_listening: String,
+    pub reconnecting_stop_listening: String,
+    pub error_stop_listening: String,
+    pub error_help: String,
+    pub collapse_transcript: String,
+    pub expand_transcript: String,
+    pub go_to_bottom: String,
+    pub scroll_transcript_to_bottom: String,
+    pub overlapping_speech: String,
+    pub settings_title: String,
+    pub close_settings: String,
+    pub bar_opacity: String,
+    pub show_transcript: String,
+    pub hide_transcript: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct FloatingBarState {
@@ -61,6 +82,8 @@ pub struct FloatingBarState {
     pub layout: Option<FloatingBarOverlayLayout>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub labels: Option<FloatingBarLabels>,
 }
 
 pub const WINDOW_LABEL: &str = "floating-bar";

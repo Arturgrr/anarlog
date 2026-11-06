@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { arch, platform } from "@tauri-apps/plugin-os";
 import { useCallback } from "react";
 
@@ -228,7 +229,7 @@ function selectedProviderLabel(
   modelOverride?: string,
 ) {
   if (!conn) {
-    return "the selected speech-to-text provider";
+    return t`the selected speech-to-text provider`;
   }
 
   return modelOverride ?? conn.model ?? conn.provider;
@@ -304,7 +305,7 @@ export const useRunBatch = (sessionId: string) => {
       options?.signal?.throwIfAborted();
       if (!startTranscription) {
         throw new Error(
-          "STT connection is not available. Please configure your speech-to-text provider.",
+          t`STT connection is not available. Please configure your speech-to-text provider.`,
         );
       }
 
@@ -364,20 +365,21 @@ export const useRunBatch = (sessionId: string) => {
           : fallbackTarget;
 
       if (!target) {
+        const providerLabel = selectedProviderLabel(conn, selectedModel);
         throw new Error(
           selectedTarget && !selectedOnDeviceUnsupported
-            ? `${selectedProviderLabel(conn, selectedModel)} is not available for batch transcription with the selected languages. Choose languages it supports, or configure another speech-to-text provider.`
-            : `${selectedProviderLabel(conn, selectedModel)} is not available for batch transcription on this platform. Configure a batch-capable speech-to-text provider.`,
+            ? t`${providerLabel} is not available for batch transcription with the selected languages. Choose languages it supports, or configure another speech-to-text provider.`
+            : t`${providerLabel} is not available for batch transcription on this platform. Configure a batch-capable speech-to-text provider.`,
         );
       }
 
       if (!shouldUseSelectedTarget && !options?.recovery && !options?.resume) {
-        toast.warning("Using a batch transcription provider", {
-          description: `${
-            selectedTarget
-              ? selectedProviderLabel(conn, selectedModel)
-              : selectedProviderLabel(conn)
-          } is not available for batch transcription. Using ${target.label} instead.`,
+        const unavailableLabel = selectedTarget
+          ? selectedProviderLabel(conn, selectedModel)
+          : selectedProviderLabel(conn);
+        const fallbackLabel = target.label;
+        toast.warning(t`Using a batch transcription provider`, {
+          description: t`${unavailableLabel} is not available for batch transcription. Using ${fallbackLabel} instead.`,
         });
       }
 

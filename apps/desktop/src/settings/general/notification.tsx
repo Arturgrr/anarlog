@@ -485,7 +485,7 @@ export function NotificationSettingsView() {
                                               ])}
                                               title={
                                                 isDefault
-                                                  ? "default"
+                                                  ? t`Default`
                                                   : undefined
                                               }
                                             >

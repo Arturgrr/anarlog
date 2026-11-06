@@ -20,6 +20,7 @@ import { appToastSwipeDismissDirection } from "@anlg/ui/lib/toast-gesture";
 import { cn } from "@anlg/utils";
 
 import { buttonVariants } from "./button";
+import { useUiLabels } from "./labels";
 
 export type AppToastTone = "info" | "success" | "warning" | "error";
 
@@ -427,6 +428,7 @@ type AppToastProps = Readonly<{
 
 function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
   const compact = size === "compact";
+  const labels = useUiLabels();
   const reduceMotion = useReducedMotion() ?? false;
   const [expanded, setExpanded] = useState(true);
   const detailsId = useId();
@@ -435,7 +437,7 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
   const secondaryAction =
     toast.secondaryAction ??
     (toast.closeButton && toast.dismissible
-      ? { label: "Dismiss", onClick: () => {} }
+      ? { label: labels.dismiss, onClick: () => {} }
       : undefined);
   const actions = [toast.action, secondaryAction].filter(
     (action): action is AppToastAction => action !== undefined,
@@ -652,7 +654,7 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
             type="button"
             id={toast.description === undefined ? detailsId : undefined}
             aria-label={
-              toast.paused ? "Resume auto-dismiss" : "Pause auto-dismiss"
+              toast.paused ? labels.resumeAutoDismiss : labels.pauseAutoDismiss
             }
             onClick={() => toggleAppToastTimer(toast.id)}
             className={cn([
@@ -663,16 +665,18 @@ function AppToast({ toast, size, stackDepth, stacked }: AppToastProps) {
             ])}
           >
             <span aria-hidden>
-              {toast.paused ? "Timer paused" : "Closing in"}{" "}
-              <span className="text-foreground font-semibold tabular-nums">
-                {Math.max(0, Math.ceil(toast.remainingMs / 1_000))}
-              </span>{" "}
-              {Math.ceil(toast.remainingMs / 1_000) === 1
-                ? "second"
-                : "seconds"}
+              {labels.toastTimer({
+                seconds: Math.max(0, Math.ceil(toast.remainingMs / 1_000)),
+                paused: toast.paused,
+                count: (
+                  <span className="text-foreground font-semibold tabular-nums">
+                    {Math.max(0, Math.ceil(toast.remainingMs / 1_000))}
+                  </span>
+                ),
+              })}
             </span>
             <span aria-hidden className="text-foreground font-medium">
-              {toast.paused ? "Resume" : "Pause"}
+              {toast.paused ? labels.resume : labels.pause}
             </span>
             <motion.span
               aria-hidden

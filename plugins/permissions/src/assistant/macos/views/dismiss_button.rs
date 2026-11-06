@@ -17,12 +17,14 @@ const HOVER_ALPHA: f64 = 0.12;
 pub(crate) fn new(mtm: MainThreadMarker) -> Retained<NSView> {
     let glyph = symbol_image_view(mtm, "xmark", 10.0, 0.4, &NSColor::secondaryLabelColor());
 
+    let dismiss = crate::assistant::labels::labels().dismiss;
+
     overlay_button(
         mtm,
         rect(0.0, 0.0, 0.0, 0.0),
         OverlayButtonConfig {
-            tooltip: Some("Dismiss".to_string()),
-            accessibility_label: Some("Dismiss".to_string()),
+            tooltip: Some(dismiss.clone()),
+            accessibility_label: Some(dismiss),
             content: {
                 // SAFETY: `NSImageView` is an `NSView` subclass.
                 Some(unsafe { Retained::cast_unchecked(glyph) })

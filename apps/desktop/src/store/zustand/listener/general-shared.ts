@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { create as mutate } from "mutative";
 import type { StoreApi } from "zustand";
 
@@ -367,15 +368,15 @@ const getChannelCaptureWarning = (
 ): string | null => {
   const health = live.captureHealth;
   if (health.unavailable || (health.mic === false && health.speaker === false))
-    return "No audio is being captured";
+    return t`No audio is being captured`;
   if (health.mic === false)
     return health.speaker === true
-      ? "Microphone unavailable. System audio continues"
-      : "Microphone unavailable";
+      ? t`Microphone unavailable. System audio continues`
+      : t`Microphone unavailable`;
   if (health.speaker === false)
     return health.mic === true
-      ? "System audio unavailable. Microphone capture continues"
-      : "System audio unavailable";
+      ? t`System audio unavailable. Microphone capture continues`
+      : t`System audio unavailable`;
   return null;
 };
 
@@ -389,7 +390,7 @@ export const getCaptureWarning = (
   (live.lastErrorIsAudioRelated &&
   live.lastError &&
   !live.lastError.startsWith("audio_storage_")
-    ? "Audio capture was interrupted"
+    ? t`Audio capture was interrupted`
     : null);
 
 const updateCaptureHealth = (live: LiveState, error: string): boolean => {

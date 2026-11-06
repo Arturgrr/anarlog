@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useQueryClient } from "@tanstack/react-query";
 import { platform } from "@tauri-apps/plugin-os";
 import { motion } from "motion/react";
@@ -81,6 +81,7 @@ function OnboardingScreenContent({
   headerDragRegion?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const { t } = useLingui();
   const [isMuted, setIsMuted] = useState(false);
   const [currentStep, setCurrentStep] = useState(getInitialStep);
   const onboardingVideoRef = useRef<HTMLVideoElement>(null);
@@ -164,7 +165,7 @@ function OnboardingScreenContent({
           onClick={() => setIsMuted((prev) => !prev)}
           data-tauri-drag-region="false"
           className="hover:bg-hover active:bg-pressed rounded-md p-1.5"
-          aria-label={isMuted ? "Unmute" : "Mute"}
+          aria-label={isMuted ? t`Unmute` : t`Mute`}
         >
           {isMuted ? (
             <SpeakerX size={16} className="text-muted-foreground" />

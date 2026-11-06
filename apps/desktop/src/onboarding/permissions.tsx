@@ -14,6 +14,7 @@ import {
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
+import { localizeSettingsPane } from "~/i18n/external-messages";
 import {
   closePermissionAssistant,
   usePermission,
@@ -214,7 +215,7 @@ function PermissionsSectionContent({
             enabledBody={t`Meeting details access turned on`}
             enableBody={
               accessibilityGuidance
-                ? t`Opens System Settings and guides you to add Librelog to the ${accessibilityGuidance.paneTitle ?? "Privacy"} list`
+                ? t`Opens System Settings and guides you to add Librelog to the ${localizeSettingsPane(accessibilityGuidance.paneTitle)} list`
                 : t`Read meeting controls and visible chat`
             }
             Icon={Cursor}

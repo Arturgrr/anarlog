@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Channel } from "@tauri-apps/api/core";
 import { platform } from "@tauri-apps/plugin-os";
 import { useRef } from "react";
@@ -16,6 +17,7 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { DictationController } from "./controller";
 import { useDictationStatus } from "./state";
 
+import { localizeExternalMessage } from "~/i18n/external-messages";
 import { useSettingsReady } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
 import { useListener } from "~/stt/contexts";
@@ -124,7 +126,9 @@ function ActiveDictation({
     };
     const onError = (error: unknown) => {
       if (disposed) return;
-      const message = error instanceof Error ? error.message : String(error);
+      const message = localizeExternalMessage(
+        error instanceof Error ? error.message : String(error),
+      );
       useDictationStatus.setState({ error: message });
       toast.error(message);
     };
@@ -144,13 +148,13 @@ function ActiveDictation({
           );
           if (permission !== "authorized")
             throw new Error(
-              "Enable microphone permission in Settings > Permissions before dictating.",
+              t`Enable microphone permission in Settings > Permissions before dictating.`,
             );
         }
         const capture = unwrap(await transcription.getCaptureState());
         if (capture !== "inactive")
           throw new Error(
-            "Dictation is unavailable while Librelog is recording a meeting.",
+            t`Dictation is unavailable while Librelog is recording a meeting.`,
           );
         abort.signal.throwIfAborted();
         target = unwrap(await dictation.captureTarget());
@@ -177,7 +181,7 @@ function ActiveDictation({
         const shown = await dictation.hud({ type: "started" });
         if (shown.status === "error")
           throw new Error(
-            "Could not show the dictation indicator. Please try again.",
+            t`Could not show the dictation indicator. Please try again.`,
           );
         hudShown = true;
         abort.signal.throwIfAborted();

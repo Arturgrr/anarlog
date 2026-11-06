@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
 import { toast } from "@anlg/ui/components/ui/toast";
-import { cn, formatDistanceToNow } from "@anlg/utils";
+import { cn } from "@anlg/utils";
 
 import { AutomationLastRunLine, MarkdownExportConfig } from "./starter-config";
 import { useSaveWorkflow, WorkflowBuilder } from "./workflow-builder";
@@ -50,6 +50,7 @@ import {
   useAutomationWorkflows,
 } from "~/automations/workflows";
 import { useChatGroup } from "~/chat/store/queries";
+import { formatRelativeToNow } from "~/i18n/format";
 import { SettingsHydrationBoundary } from "~/settings/hydration-boundary";
 import { SettingsPageTitle } from "~/settings/page-title";
 import {
@@ -237,11 +238,11 @@ function AutomationActionsMenu({
 }
 
 function ChatAutomationDetails({ groupId }: { groupId: string }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const group = useChatGroup(groupId, "automations");
   const deleteChatAutomation = useDeleteChatAutomation();
   const createdAt = group?.createdAt
-    ? formatDistanceToNow(new Date(group.createdAt), { addSuffix: true })
+    ? formatRelativeToNow(new Date(group.createdAt), i18n.locale)
     : "";
   const workflow = useEnsuredWorkflow({
     chatGroupId: groupId,

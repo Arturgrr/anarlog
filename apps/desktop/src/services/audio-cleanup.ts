@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   commands,
   events,
@@ -15,16 +17,16 @@ export async function handleCaptureCleanupStatus(payload: CaptureStatusEvent) {
   if (payload.error.startsWith("audio_deletion_failed:")) {
     toast.error(
       payload.session_id
-        ? "Audio could not be deleted"
-        : "Audio cleanup could not finish",
+        ? t`Audio could not be deleted`
+        : t`Audio cleanup could not finish`,
       {
         id: payload.session_id
           ? `audio-deletion-${payload.session_id}`
           : "audio-cleanup",
         duration: Infinity,
         description: payload.session_id
-          ? "Librelog could not remove temporary audio and will retry cleanup automatically."
-          : "Librelog could not finish audio cleanup or recovery and will retry automatically.",
+          ? t`Librelog could not remove temporary audio and will retry cleanup automatically.`
+          : t`Librelog could not finish audio cleanup or recovery and will retry automatically.`,
       },
     );
     if (payload.session_id) {
@@ -36,11 +38,10 @@ export async function handleCaptureCleanupStatus(payload: CaptureStatusEvent) {
       );
     }
   } else if (payload.error.startsWith("audio_recovery_failed:")) {
-    toast.error("Audio could not be recovered", {
+    toast.error(t`Audio could not be recovered`, {
       id: `audio-recovery-${payload.session_id}`,
       duration: Infinity,
-      description:
-        "Librelog could not restore interrupted audio and will retry recovery automatically.",
+      description: t`Librelog could not restore interrupted audio and will retry recovery automatically.`,
     });
     if (payload.session_id) {
       await saveIncompleteCapture(payload.session_id, "audio-recovery", false);

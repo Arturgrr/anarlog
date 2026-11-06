@@ -7,6 +7,7 @@ import { Button } from "@anlg/ui/components/ui/button";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
+import { localizeSettingsPane } from "~/i18n/external-messages";
 import {
   closePermissionAssistant,
   usePermission,
@@ -85,7 +86,7 @@ function PermissionRow({
         aria-label={
           runtimeCapability
             ? isDenied
-              ? `${t`Try again`}: ${title}`
+              ? t`Try again: ${title}`
               : title
             : assisted || isAuthorized || isDenied
               ? t`Open ${title.toLowerCase()} settings`
@@ -184,7 +185,7 @@ function MacOSPermissions() {
         title={t`Accessibility`}
         description={
           accessibilityGuidance
-            ? t`Opens System Settings and guides you to add Librelog to the ${accessibilityGuidance.paneTitle ?? "Privacy"} list.`
+            ? t`Opens System Settings and guides you to add Librelog to the ${localizeSettingsPane(accessibilityGuidance.paneTitle)} list.`
             : t`Read meeting controls and visible chat.`
         }
         status={accessibility.status}

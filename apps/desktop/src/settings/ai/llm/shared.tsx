@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import {
   AlibabaCloud,
   Anthropic,
@@ -39,13 +41,14 @@ import {
   checkOllamaAvailability,
   checkUnslothAvailability,
 } from "~/settings/ai/shared/local-provider-availability";
+import { SUBSCRIPTION_BADGE } from "~/settings/ai/shared/provider-labels";
 import { sortProviders } from "~/settings/ai/shared/sort-providers";
 import { docsUrl } from "~/shared/links";
 
 export type Provider = {
   id: string;
   displayName: string;
-  badge: string | null;
+  badge: MessageDescriptor | null;
   icon: ReactNode;
   baseUrl?: string;
   authKind?: "api" | "subscription";
@@ -53,9 +56,9 @@ export type Provider = {
   checkAvailability?: (baseUrl: string, apiKey: string) => Promise<boolean>;
   hideAdvanced?: boolean;
   links?: {
-    download?: { label: string; url: string };
-    models?: { label: string; url: string };
-    setup?: { label: string; url: string };
+    download?: { label: MessageDescriptor; url: string };
+    models?: { label: MessageDescriptor; url: string };
+    setup?: { label: MessageDescriptor; url: string };
   };
 };
 
@@ -63,7 +66,7 @@ const _PROVIDERS = [
   {
     id: "claude",
     displayName: "Claude",
-    badge: "Subscription",
+    badge: SUBSCRIPTION_BADGE,
     icon: <ProviderLobeIcon icon={Claude} />,
     baseUrl: "https://api.anthropic.com/v1",
     authKind: "subscription",
@@ -71,7 +74,7 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       setup: {
-        label: "Claude Pro / Max",
+        label: msg`Claude Pro / Max`,
         url: "https://claude.ai/upgrade",
       },
     },
@@ -79,7 +82,7 @@ const _PROVIDERS = [
   {
     id: "chatgpt",
     displayName: "ChatGPT",
-    badge: "Subscription",
+    badge: SUBSCRIPTION_BADGE,
     icon: <ProviderLobeIcon icon={OpenAI} />,
     baseUrl: "https://chatgpt.com/backend-api/codex",
     authKind: "subscription",
@@ -87,7 +90,7 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       setup: {
-        label: "ChatGPT plans",
+        label: msg`ChatGPT plans`,
         url: "https://chatgpt.com/",
       },
     },
@@ -95,7 +98,7 @@ const _PROVIDERS = [
   {
     id: "grok",
     displayName: "Grok",
-    badge: "Subscription",
+    badge: SUBSCRIPTION_BADGE,
     icon: <ProviderLobeIcon icon={Grok} />,
     baseUrl: "https://api.x.ai/v1",
     authKind: "subscription",
@@ -103,7 +106,7 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       setup: {
-        label: "SuperGrok",
+        label: msg`SuperGrok`,
         url: "https://grok.com/",
       },
     },
@@ -111,7 +114,7 @@ const _PROVIDERS = [
   {
     id: "github_copilot",
     displayName: "GitHub Copilot",
-    badge: "Subscription",
+    badge: SUBSCRIPTION_BADGE,
     icon: <ProviderLobeIcon icon={GithubCopilot} />,
     baseUrl: "https://api.githubcopilot.com",
     authKind: "subscription",
@@ -119,7 +122,7 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       setup: {
-        label: "GitHub Copilot",
+        label: msg`GitHub Copilot`,
         url: "https://github.com/features/copilot",
       },
     },
@@ -127,7 +130,7 @@ const _PROVIDERS = [
   {
     id: "kimi_code",
     displayName: "Kimi Code",
-    badge: "Subscription",
+    badge: SUBSCRIPTION_BADGE,
     icon: <ProviderLobeIcon icon={Moonshot} />,
     baseUrl: "https://api.kimi.com/coding/v1",
     authKind: "subscription",
@@ -135,7 +138,7 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       setup: {
-        label: "Kimi Code membership",
+        label: msg`Kimi Code membership`,
         url: "https://www.kimi.com/en/help/kimi-code/membership-guide",
       },
     },
@@ -160,12 +163,15 @@ const _PROVIDERS = [
     checkAvailability: checkLMStudioAvailability,
     links: {
       download: {
-        label: "Download LM Studio",
+        label: msg`Download LM Studio`,
         url: "https://lmstudio.ai/download",
       },
-      models: { label: "Available models", url: "https://lmstudio.ai/models" },
+      models: {
+        label: msg`Available models`,
+        url: "https://lmstudio.ai/models",
+      },
       setup: {
-        label: "Setup guide",
+        label: msg`Setup guide`,
         url: docsUrl("ai-setup", "lm-studio"),
       },
     },
@@ -180,12 +186,15 @@ const _PROVIDERS = [
     checkAvailability: checkOllamaAvailability,
     links: {
       download: {
-        label: "Download Ollama",
+        label: msg`Download Ollama`,
         url: "https://ollama.com/download",
       },
-      models: { label: "Available models", url: "https://ollama.com/library" },
+      models: {
+        label: msg`Available models`,
+        url: "https://ollama.com/library",
+      },
       setup: {
-        label: "Setup guide",
+        label: msg`Setup guide`,
         url: docsUrl("ai-setup", "ollama"),
       },
     },
@@ -206,15 +215,15 @@ const _PROVIDERS = [
     checkAvailability: checkUnslothAvailability,
     links: {
       download: {
-        label: "Download Unsloth",
+        label: msg`Download Unsloth`,
         url: "https://unsloth.ai/docs/desktop",
       },
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://huggingface.co/unsloth",
       },
       setup: {
-        label: "Setup guide",
+        label: msg`Setup guide`,
         url: docsUrl("ai-setup", "unsloth"),
       },
     },
@@ -230,11 +239,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.venice.ai/models/text",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://venice.ai/settings/api",
       },
     },
@@ -248,11 +257,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://openrouter.ai/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://openrouter.ai/settings/keys",
       },
     },
@@ -266,11 +275,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://platform.openai.com/docs/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://platform.openai.com/api-keys",
       },
     },
@@ -284,11 +293,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://platform.kimi.ai/docs/api/list-models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://platform.kimi.ai/docs/overview",
       },
     },
@@ -302,11 +311,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.z.ai/guides/overview/overview",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.z.ai/api-reference/introduction",
       },
     },
@@ -320,11 +329,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://api-docs.deepseek.com/quick_start/pricing",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://platform.deepseek.com/api_keys",
       },
     },
@@ -338,11 +347,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://www.alibabacloud.com/help/en/model-studio/getting-started/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://www.alibabacloud.com/help/en/model-studio/base-url",
       },
     },
@@ -356,11 +365,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.siliconflow.com/en/userguide/introduction",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.siliconflow.com/en/userguide/quickstart",
       },
     },
@@ -374,11 +383,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.cohere.com/docs/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.cohere.com/docs/compatibility-api",
       },
     },
@@ -392,11 +401,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://console.groq.com/docs/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://console.groq.com/keys",
       },
     },
@@ -410,11 +419,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.x.ai/developers/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://console.x.ai/",
       },
     },
@@ -428,11 +437,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.together.ai/docs/serverless-models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://api.together.ai/settings/api-keys",
       },
     },
@@ -446,11 +455,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://fireworks.ai/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://fireworks.ai/account/api-keys",
       },
     },
@@ -464,11 +473,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://inference-docs.cerebras.ai/models/overview",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://cloud.cerebras.ai/",
       },
     },
@@ -484,11 +493,11 @@ const _PROVIDERS = [
     ],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-mantle.html",
       },
     },
@@ -504,11 +513,11 @@ const _PROVIDERS = [
     ],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/call-vertex-using-openai-library",
       },
     },
@@ -524,11 +533,11 @@ const _PROVIDERS = [
     ],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://developers.cloudflare.com/workers-ai/models/",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/",
       },
     },
@@ -542,11 +551,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.anthropic.com/en/docs/about-claude/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://console.anthropic.com/settings/keys",
       },
     },
@@ -560,11 +569,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://docs.mistral.ai/getting-started/models/",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://console.mistral.ai/api-keys",
       },
     },
@@ -585,11 +594,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://dev.meta.ai/docs/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://dev.meta.ai/",
       },
     },
@@ -605,11 +614,11 @@ const _PROVIDERS = [
     ],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://learn.microsoft.com/azure/ai-foundry/openai/concepts/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://learn.microsoft.com/azure/ai-foundry/openai/how-to/create-resource",
       },
     },
@@ -625,11 +634,11 @@ const _PROVIDERS = [
     ],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://learn.microsoft.com/azure/ai-foundry/how-to/model-catalog-overview",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://ai.azure.com/",
       },
     },
@@ -643,11 +652,11 @@ const _PROVIDERS = [
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
     links: {
       models: {
-        label: "Available models",
+        label: msg`Available models`,
         url: "https://ai.google.dev/gemini-api/docs/models",
       },
       setup: {
-        label: "API setup",
+        label: msg`API setup`,
         url: "https://aistudio.google.com/api-keys",
       },
     },

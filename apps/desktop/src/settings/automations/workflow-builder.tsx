@@ -119,7 +119,7 @@ export function WorkflowBuilder({
             </div>
             <WorkflowCard
               kind="action"
-              title={`${t`Then`} ${index + 1}`}
+              title={t`Then ${index + 1}`}
               badge={<Trans>Action</Trans>}
               ready={isWorkflowStepReady(step)}
               onRemove={() => removeStep(step.id)}
@@ -217,6 +217,8 @@ function WorkflowCard({
   onRemove?: () => void;
   children: React.ReactNode;
 }) {
+  const { t } = useLingui();
+
   return (
     <div className="border-border bg-card flex items-start gap-3 rounded-xl border p-4">
       <span
@@ -247,7 +249,7 @@ function WorkflowCard({
               variant="ghost"
               className="text-muted-foreground ml-auto size-7"
               onClick={onRemove}
-              aria-label="Remove step"
+              aria-label={t`Remove step`}
             >
               <Trash size={13} />
             </Button>

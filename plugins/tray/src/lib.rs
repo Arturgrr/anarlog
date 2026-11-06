@@ -1,5 +1,6 @@
 mod commands;
 mod ext;
+mod labels;
 mod macos_position;
 mod menu_items;
 mod schedule;
@@ -76,6 +77,7 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             commands::set_tray_icon_visible,
             commands::set_tray_schedule,
             commands::set_tray_recording_title,
+            commands::set_tray_labels,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }

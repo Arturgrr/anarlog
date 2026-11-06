@@ -117,7 +117,7 @@ private struct FloatingOverlaySettingsPanelView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
       HStack {
-        Text("Floating bar")
+        Text(settings.labels.settingsTitle)
           .font(.system(size: 14, weight: .semibold))
         Spacer()
         Button(action: { FloatingOverlaySettingsPanelManager.shared.hide() }) {
@@ -126,11 +126,11 @@ private struct FloatingOverlaySettingsPanelView: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(.secondary)
-        .accessibilityLabel("Close settings")
+        .accessibilityLabel(settings.labels.closeSettings)
       }
 
       OpacitySlider(
-        title: "Bar opacity",
+        title: settings.labels.barOpacity,
         value: settings.floatingBarOpacity,
         onChange: settings.setFloatingBarOpacity)
 
@@ -140,7 +140,9 @@ private struct FloatingOverlaySettingsPanelView: View {
         HStack {
           Image(systemName: settings.liveCaptionMinimized ? "eye" : "eye.slash")
             .font(.system(size: 11, weight: .bold))
-          Text(settings.liveCaptionMinimized ? "Show transcript" : "Hide transcript")
+          Text(
+            settings.liveCaptionMinimized
+              ? settings.labels.showTranscript : settings.labels.hideTranscript)
           Spacer()
         }
         .font(.system(size: 12, weight: .medium))

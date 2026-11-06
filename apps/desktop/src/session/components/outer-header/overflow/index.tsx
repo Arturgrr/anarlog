@@ -180,7 +180,7 @@ export function OverflowButton({
             size="icon"
             variant="ghost"
             data-tauri-drag-region="false"
-            aria-label="More"
+            aria-label={t`More`}
             className="text-muted-foreground hover:text-foreground [&_svg]:size-4"
           >
             <DotsThree className="size-4" />
@@ -226,7 +226,9 @@ export function OverflowButton({
                 className="cursor-pointer"
               >
                 <ArrowsClockwise />
-                <span>Re-transcribe</span>
+                <span>
+                  <Trans>Re-transcribe</Trans>
+                </span>
               </DropdownMenuItem>
             )}
             {showUploadActions && (

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useQuery } from "@tanstack/react-query";
 
 import { md2json } from "@anlg/editor/markdown";
@@ -124,7 +125,7 @@ export async function persistChatSessionProposal(input: {
 export async function applySessionProposal(proposalId: string): Promise<void> {
   const proposal = await loadSessionProposal(proposalId);
   if (!proposal) {
-    throw new Error("Proposal not found");
+    throw new Error(t`Proposal not found`);
   }
   if (proposal.status === "applied") {
     return;
@@ -136,7 +137,7 @@ export async function applySessionProposal(proposalId: string): Promise<void> {
   const currentUpdatedAt = await loadTargetUpdatedAt(proposal);
   if (currentUpdatedAt && currentUpdatedAt !== proposal.baseUpdatedAt) {
     throw new Error(
-      "This proposal is stale. The meeting changed after it was created.",
+      t`This proposal is stale. The meeting changed after it was created.`,
     );
   }
 

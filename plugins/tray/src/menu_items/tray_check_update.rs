@@ -25,11 +25,14 @@ pub struct TrayCheckUpdate;
 
 impl TrayCheckUpdate {
     pub fn set_state(app: &AppHandle<tauri::Wry>, state: UpdateMenuState) -> Result<()> {
+        let labels = crate::labels::labels();
         let (text, enabled, state_value) = match &state {
-            UpdateMenuState::CheckForUpdate => ("Check for Updates", true, STATE_CHECK_FOR_UPDATE),
-            UpdateMenuState::Downloading => ("Downloading...", false, STATE_DOWNLOADING),
+            UpdateMenuState::CheckForUpdate => {
+                (labels.check_for_updates, true, STATE_CHECK_FOR_UPDATE)
+            }
+            UpdateMenuState::Downloading => (labels.downloading_update, false, STATE_DOWNLOADING),
             UpdateMenuState::RestartToApply(_) => {
-                ("Restart to Apply Update", true, STATE_RESTART_TO_APPLY)
+                (labels.restart_to_apply_update, true, STATE_RESTART_TO_APPLY)
             }
         };
 
@@ -62,9 +65,13 @@ impl TrayCheckUpdate {
 
     async fn apply_update(app: AppHandle<tauri::Wry>, version: String) {
         if let Err(e) = app.updater2().install_and_relaunch(&version).await {
+            let labels = crate::labels::labels();
             app.dialog()
-                .message(format!("Failed to install update: {}", e))
-                .title("Update Failed")
+                .message(crate::labels::fill(
+                    &labels.install_failed_message,
+                    &[("error", &e.to_string())],
+                ))
+                .title(labels.update_failed_title)
                 .show(|_| {});
         }
     }
@@ -82,11 +89,12 @@ impl MenuItemHandler for TrayCheckUpdate {
 
     fn build(app: &AppHandle<tauri::Wry>) -> Result<MenuItemKind<tauri::Wry>> {
         let state = Self::get_state();
+        let labels = crate::labels::labels();
 
         let (text, enabled) = match state {
-            STATE_DOWNLOADING => ("Downloading...", false),
-            STATE_RESTART_TO_APPLY => ("Restart to Apply Update", true),
-            _ => ("Check for Updates", true),
+            STATE_DOWNLOADING => (labels.downloading_update, false),
+            STATE_RESTART_TO_APPLY => (labels.restart_to_apply_update, true),
+            _ => (labels.check_for_updates, true),
         };
         let item = MenuItem::with_id(app, Self::ID, text, enabled, None::<&str>)?;
         Ok(MenuItemKind::MenuItem(item))
@@ -111,6 +119,7 @@ impl MenuItemHandler for TrayCheckUpdate {
 
         let app = app.clone();
         tauri::async_runtime::spawn(async move {
+            let labels = crate::labels::labels();
             match app.updater2().check().await {
                 Ok(Some(version)) => {
                     if app.updater2().has_cached_update(&version) {
@@ -123,12 +132,17 @@ impl MenuItemHandler for TrayCheckUpdate {
 
                     let app_for_dialog = app.clone();
                     let version_for_download = version.clone();
+                    let download_failed_message = labels.download_failed_message.clone();
+                    let update_failed_title = labels.update_failed_title.clone();
                     app.dialog()
-                        .message(format!("Update v{} is available!", version))
-                        .title("Update Available")
+                        .message(crate::labels::fill(
+                            &labels.update_available_message,
+                            &[("version", &version)],
+                        ))
+                        .title(labels.update_available_title)
                         .buttons(MessageDialogButtons::OkCancelCustom(
-                            "Download".to_string(),
-                            "Later".to_string(),
+                            labels.download,
+                            labels.later,
                         ))
                         .show(move |accepted| {
                             if accepted {
@@ -141,8 +155,11 @@ impl MenuItemHandler for TrayCheckUpdate {
                                             UpdateMenuState::CheckForUpdate,
                                         );
                                         app.dialog()
-                                            .message(format!("Failed to download update: {}", e))
-                                            .title("Update Failed")
+                                            .message(crate::labels::fill(
+                                                &download_failed_message,
+                                                &[("error", &e.to_string())],
+                                            ))
+                                            .title(update_failed_title)
                                             .show(|_| {});
                                     }
                                 });
@@ -151,14 +168,17 @@ impl MenuItemHandler for TrayCheckUpdate {
                 }
                 Ok(None) => {
                     app.dialog()
-                        .message("There are currently no updates available.")
-                        .title("Check for Updates")
+                        .message(labels.no_updates_message)
+                        .title(labels.check_for_updates)
                         .show(|_| {});
                 }
                 Err(e) => {
                     app.dialog()
-                        .message(format!("Failed to check for updates: {}", e))
-                        .title("Update Check Failed")
+                        .message(crate::labels::fill(
+                            &labels.check_failed_message,
+                            &[("error", &e.to_string())],
+                        ))
+                        .title(labels.update_check_failed_title)
                         .show(|_| {});
                 }
             }

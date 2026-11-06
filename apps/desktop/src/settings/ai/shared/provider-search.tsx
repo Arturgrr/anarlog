@@ -1,20 +1,33 @@
+import { i18n, type MessageDescriptor } from "@lingui/core";
 import { useLingui } from "@lingui/react/macro";
 
 import { MagnifyingGlass, X } from "@anlg/ui/components/icons";
 
+import { providerDisplayName } from "./provider-labels";
+
 export function filterProviders<
-  T extends { id: string; displayName: string; description?: string },
+  T extends {
+    id: string;
+    displayName: string;
+    description?: string | MessageDescriptor;
+  },
 >(providers: readonly T[], query: string): T[] {
   const normalizedQuery = query.trim().toLocaleLowerCase();
   if (!normalizedQuery) {
     return [...providers];
   }
 
-  return providers.filter((provider) =>
-    `${provider.displayName} ${provider.id} ${provider.description ?? ""}`
+  return providers.filter((provider) => {
+    const description =
+      typeof provider.description === "string"
+        ? provider.description
+        : provider.description
+          ? i18n._(provider.description)
+          : "";
+    return `${provider.displayName} ${providerDisplayName(provider, i18n)} ${provider.id} ${description}`
       .toLocaleLowerCase()
-      .includes(normalizedQuery),
-  );
+      .includes(normalizedQuery);
+  });
 }
 
 export function ProviderSearch({

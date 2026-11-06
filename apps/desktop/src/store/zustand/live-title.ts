@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { create } from "zustand";
 
 const LIVE_TITLE_ACK_WINDOW_MS = 10_000;
@@ -75,7 +76,7 @@ export function resolveLiveSessionTitle(
     | undefined,
   storeTitle: string | undefined,
 ): string {
-  if (!liveTitle) return storeTitle ?? "Untitled";
+  if (!liveTitle) return storeTitle ?? t`Untitled`;
   if (!liveTitle.persisted) return liveTitle.value;
   if (
     storeTitle === liveTitle.previousTitle &&

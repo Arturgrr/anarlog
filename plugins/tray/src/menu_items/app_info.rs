@@ -14,7 +14,10 @@ impl MenuItemHandler for AppInfo {
     const ID: &'static str = "anlg_app_info";
 
     fn build(app: &AppHandle<tauri::Wry>) -> Result<MenuItemKind<tauri::Wry>> {
-        let title = format!("About {}", app.package_info().name);
+        let title = crate::labels::fill(
+            &crate::labels::labels().about_app,
+            &[("app", app.package_info().name.as_str())],
+        );
         let item = MenuItem::with_id(app, Self::ID, title, true, None::<&str>)?;
         Ok(MenuItemKind::MenuItem(item))
     }
@@ -30,13 +33,17 @@ impl MenuItemHandler for AppInfo {
         );
 
         let app_clone = app.clone();
+        let labels = crate::labels::labels();
 
         app.dialog()
             .message(&message)
-            .title(format!("About {}", app_name))
+            .title(crate::labels::fill(
+                &labels.about_app,
+                &[("app", app_name.as_str())],
+            ))
             .buttons(MessageDialogButtons::OkCancelCustom(
-                "Copy".to_string(),
-                "Cancel".to_string(),
+                labels.copy,
+                labels.cancel,
             ))
             .show(move |result| {
                 if result {

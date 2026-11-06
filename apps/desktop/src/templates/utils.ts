@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useCallback } from "react";
 
 import {
@@ -31,6 +32,7 @@ export function resolveSelectedTemplateId({
 }
 
 export function useTemplateTab(tab: Extract<Tab, { type: "templates" }>) {
+  const { t } = useLingui();
   const updateTabState = useTabs((state) => state.updateTemplatesTabState);
   const userTemplates = useUserTemplates();
   const createTemplate = useCreateTemplate();
@@ -50,7 +52,7 @@ export function useTemplateTab(tab: Extract<Tab, { type: "templates" }>) {
 
   const createDefaultTemplate = useCallback(async () => {
     const id = await createTemplate({
-      title: "New Template",
+      title: t`New Template`,
       description: "",
       sections: [],
     });
@@ -60,7 +62,7 @@ export function useTemplateTab(tab: Extract<Tab, { type: "templates" }>) {
     }
 
     return id;
-  }, [createTemplate, setSelectedMineId]);
+  }, [createTemplate, setSelectedMineId, t]);
 
   return {
     userTemplates,

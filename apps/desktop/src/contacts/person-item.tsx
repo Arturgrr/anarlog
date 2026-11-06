@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import React, { useCallback } from "react";
 
 import { PushPin } from "@anlg/ui/components/icons";
@@ -19,6 +20,7 @@ export function PersonItem({
   onClick: () => void;
   onDelete?: (id: string) => void;
 }) {
+  const { t } = useLingui();
   const isPinned = Boolean(person.pinned);
   const personName = person.name;
   const personEmail = person.email;
@@ -33,12 +35,12 @@ export function PersonItem({
   const showContextMenu = useNativeContextMenu([
     {
       id: "toggle-pin-person",
-      text: isPinned ? "Unpin Contact" : "Pin Contact",
+      text: isPinned ? t`Unpin Contact` : t`Pin Contact`,
       action: togglePin,
     },
     {
       id: "delete-person",
-      text: "Delete Contact",
+      text: t`Delete Contact`,
       action: () => onDelete?.(person.id),
     },
   ]);
@@ -75,7 +77,7 @@ export function PersonItem({
       )}
       <div className="min-w-0 flex-1">
         <div className="font-ui-medium flex items-center gap-1 truncate">
-          {personName || personEmail || "Unnamed"}
+          {personName || personEmail || t`Unnamed`}
         </div>
         {personEmail && personName && (
           <div className="text-muted-foreground text-small truncate">
@@ -91,7 +93,7 @@ export function PersonItem({
             ? "text-icon hover:text-foreground"
             : "text-icon-faint hover:text-icon-muted opacity-0 group-hover:opacity-100",
         ])}
-        aria-label={isPinned ? "Unpin contact" : "Pin contact"}
+        aria-label={isPinned ? t`Unpin contact` : t`Pin contact`}
       >
         <PushPin className="size-3.5" weight={isPinned ? "bold" : "regular"} />
       </button>

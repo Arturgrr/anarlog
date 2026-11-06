@@ -34,6 +34,7 @@ import {
 } from "@anlg/ui/components/icons";
 import { cn } from "@anlg/utils";
 
+import { useEditorLabels } from "../labels";
 import { schema } from "../note/schema";
 import { createTaskItemAttrs } from "../tasks";
 
@@ -242,10 +243,18 @@ function findSlashCommand(state: EditorState): SlashCommandState | null {
   return { query, from, to };
 }
 
-function filterCommands(query: string): SlashCommandItem[] {
-  if (!query) return SLASH_COMMANDS;
+function filterCommands(
+  query: string,
+  labels: Readonly<Record<string, string>>,
+): SlashCommandItem[] {
+  const commands = SLASH_COMMANDS.map((cmd) => ({
+    ...cmd,
+    label: labels[cmd.id] ?? cmd.label,
+    keywords: [...cmd.keywords, cmd.label.toLowerCase()],
+  }));
+  if (!query) return commands;
   const q = query.toLowerCase();
-  return SLASH_COMMANDS.filter(
+  return commands.filter(
     (cmd) =>
       cmd.label.toLowerCase().includes(q) ||
       cmd.keywords.some((kw) => kw.includes(q)),
@@ -256,6 +265,7 @@ function filterCommands(query: string): SlashCommandItem[] {
 // React component
 // ---------------------------------------------------------------------------
 export function SlashCommandMenu() {
+  const labels = useEditorLabels();
   const popupRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -266,7 +276,9 @@ export function SlashCommandMenu() {
 
   const dismissed = slashState !== null && dismissedFrom === slashState.from;
   const active = slashState !== null && !dismissed;
-  const items = active ? filterCommands(slashState.query) : [];
+  const items = active
+    ? filterCommands(slashState.query, labels.slashCommands)
+    : [];
 
   if (!active && selectedIndex !== 0) {
     setSelectedIndex(0);
@@ -364,7 +376,7 @@ export function SlashCommandMenu() {
       style={{ top: 0, left: 0 }}
     >
       <div className="text-faint text-small font-ui-medium px-3 pt-1.5 pb-1 select-none">
-        Commands
+        {labels.commands}
       </div>
       <div>
         {items.map((item, index) => (

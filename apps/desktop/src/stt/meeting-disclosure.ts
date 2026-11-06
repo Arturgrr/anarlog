@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { commands as detectCommands } from "@anlg/plugin-detect";
 import { toast } from "@anlg/ui/components/ui/toast";
 
@@ -142,7 +144,7 @@ function meetingDisclosureFailure(reason: unknown): MeetingDisclosureOutcome {
   const detail = reason instanceof Error ? reason.message : String(reason);
   console.warn("[listener] meeting disclosure was not sent", reason);
   toast.warning(
-    "Recording started, but Librelog could not post the meeting chat disclosure.",
+    t`Recording started, but Librelog could not post the meeting chat disclosure.`,
     { id: "meeting-disclosure-send-failed", duration: Infinity },
   );
   return { status: "notSent", reason: detail };

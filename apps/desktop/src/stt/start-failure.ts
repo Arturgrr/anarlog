@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { platform } from "@tauri-apps/plugin-os";
 
 import {
@@ -53,28 +54,25 @@ export function describeStartFailure(kind: StartFailureKind): {
   switch (kind) {
     case "already_running":
       return {
-        title: "Another recording is still running",
-        description:
-          "Stop the current recording, or wait for it to finish saving, then try again.",
+        title: t`Another recording is still running`,
+        description: t`Stop the current recording, or wait for it to finish saving, then try again.`,
       };
     case "storage":
       return {
-        title: "Librelog couldn't prepare storage for this recording",
-        description:
-          "Check that your vault folder is available and your disk has free space, then try again.",
+        title: t`Librelog couldn't prepare storage for this recording`,
+        description: t`Check that your vault folder is available and your disk has free space, then try again.`,
       };
     case "microphone_permission":
       return {
-        title: "Librelog doesn't have microphone access",
-        description: "Allow microphone access for Librelog, then try again.",
-        action: { label: "Open permissions", tab: "permissions" },
+        title: t`Librelog doesn't have microphone access`,
+        description: t`Allow microphone access for Librelog, then try again.`,
+        action: { label: t`Open permissions`, tab: "permissions" },
       };
     case "recorder":
       return {
-        title: "Recording couldn't start",
-        description:
-          "Librelog couldn't open your audio input. Check your microphone selection, then try again.",
-        action: { label: "Audio settings", tab: "meetings" },
+        title: t`Recording couldn't start`,
+        description: t`Librelog couldn't open your audio input. Check your microphone selection, then try again.`,
+        action: { label: t`Audio settings`, tab: "meetings" },
       };
   }
 }

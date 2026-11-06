@@ -10,6 +10,7 @@ Default permissions for the plugin
 - `allow-reset-permission`
 - `allow-permission-guidance`
 - `allow-close-permission-assistant`
+- `allow-set-permission-assistant-labels`
 
 ## Permission Table
 
@@ -172,6 +173,32 @@ Enables the reset_permission command without any pre-configured scope.
 <td>
 
 Denies the reset_permission command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`permissions:allow-set-permission-assistant-labels`
+
+</td>
+<td>
+
+Enables the set_permission_assistant_labels command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`permissions:deny-set-permission-assistant-labels`
+
+</td>
+<td>
+
+Denies the set_permission_assistant_labels command without any pre-configured scope.
 
 </td>
 </tr>

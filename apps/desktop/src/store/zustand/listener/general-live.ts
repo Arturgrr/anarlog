@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { getIdentifier } from "@tauri-apps/api/app";
 import { Cause, Effect, Exit } from "effect";
 import type { StoreApi } from "zustand";
@@ -186,7 +187,7 @@ const getCaptureStartErrorMessage = (cause: Cause.Cause<unknown>): string => {
     return failure;
   }
 
-  return "Recording could not start. Check your audio permissions and devices.";
+  return t`Recording could not start. Check your audio permissions and devices.`;
 };
 
 function getAutoStopTriggerAppIds(
@@ -209,11 +210,10 @@ const clearLiveInterval = (intervalId?: LiveIntervalId) => {
 };
 
 const notifyTranscriptionStalled = () => {
-  toast.warning("Live transcription stalled", {
+  toast.warning(t`Live transcription stalled`, {
     id: "live-transcription-stalled",
     duration: Infinity,
-    description:
-      "Librelog keeps recording while live transcription reconnects. Missing text will be recovered from temporary audio while the meeting continues.",
+    description: t`Librelog keeps recording while live transcription reconnects. Missing text will be recovered from temporary audio while the meeting continues.`,
   });
 };
 
@@ -250,10 +250,9 @@ const notifyCaptureWarning = <T extends GeneralState>(
       duration: Infinity,
       dismissible: false,
       closeButton: false,
-      description:
-        "Choose a working audio device and retry. Audio missing during this interruption cannot be recovered.",
+      description: t`Choose a working audio device and retry. Audio missing during this interruption cannot be recovered.`,
       action: {
-        label: "Retry",
+        label: t`Retry`,
         dismissOnClick: false,
         onClick: () => {
           void import("~/settings/queries")
@@ -269,7 +268,7 @@ const notifyCaptureWarning = <T extends GeneralState>(
                 settings.values.microphone_device || null,
               );
               if (result.status === "error")
-                toast.error("Audio retry failed", {
+                toast.error(t`Audio retry failed`, {
                   description: result.error,
                 });
             })
@@ -280,7 +279,7 @@ const notifyCaptureWarning = <T extends GeneralState>(
       },
       secondaryAction: {
         dismissOnClick: false,
-        label: "Device settings",
+        label: t`Device settings`,
         onClick: () => {
           void import("~/store/zustand/tabs").then(({ useTabs }) =>
             useTabs
@@ -479,11 +478,10 @@ const createSessionEventHandlers = <T extends LiveStore>(
       payload.type === "audio_error" &&
       payload.error.startsWith("audio_saving_delayed")
     ) {
-      toast.warning("Audio saving is delayed", {
+      toast.warning(t`Audio saving is delayed`, {
         id: `audio-saving-delayed-${targetSessionId}`,
         duration: Infinity,
-        description:
-          "Free up disk space. Audio is kept in memory and saved once storage is available. Live transcription continues.",
+        description: t`Free up disk space. Audio is kept in memory and saved once storage is available. Live transcription continues.`,
       });
       return;
     }
@@ -497,11 +495,10 @@ const createSessionEventHandlers = <T extends LiveStore>(
     }
 
     if (payload.type === "audio_error" && payload.error === "audio_disk_low") {
-      toast.warning("Disk almost full", {
+      toast.warning(t`Disk almost full`, {
         id: `audio-disk-low-${targetSessionId}`,
         duration: Infinity,
-        description:
-          "Free up disk space. Audio saving stops if the disk fills up. Live transcription continues.",
+        description: t`Free up disk space. Audio saving stops if the disk fills up. Live transcription continues.`,
       });
       return;
     }
@@ -518,11 +515,10 @@ const createSessionEventHandlers = <T extends LiveStore>(
       toast.dismiss(`audio-saving-delayed-${targetSessionId}`);
       toast.dismiss(`audio-disk-low-${targetSessionId}`);
       setLiveState(set, (live) => updateLiveProgress(live, payload));
-      toast.error("Audio saving was interrupted", {
+      toast.error(t`Audio saving was interrupted`, {
         id: `audio-storage-${targetSessionId}`,
         duration: Infinity,
-        description:
-          "Live transcription continues. Free up disk space to resume audio saving. Audio missing during this interruption cannot be recovered.",
+        description: t`Live transcription continues. Free up disk space to resume audio saving. Audio missing during this interruption cannot be recovered.`,
       });
       return;
     }
@@ -532,11 +528,10 @@ const createSessionEventHandlers = <T extends LiveStore>(
       !payload.is_fatal &&
       payload.error === "recording_recovered"
     ) {
-      toast.warning("The previous recording needs recovery", {
+      toast.warning(t`The previous recording needs recovery`, {
         id: `recording-recovered-${targetSessionId}`,
         duration: Infinity,
-        description:
-          "The unreadable audio was preserved in this note's folder as an audio.recovery-*.wav file. New audio will be recorded separately. Your transcript is unchanged.",
+        description: t`The unreadable audio was preserved in this note's folder as an audio.recovery-*.wav file. New audio will be recorded separately. Your transcript is unchanged.`,
       });
       return;
     }

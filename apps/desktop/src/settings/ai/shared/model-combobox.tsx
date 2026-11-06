@@ -1,4 +1,6 @@
-import { Trans, useLingui } from "@lingui/react/macro";
+import type { I18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useMemo, useState } from "react";
 
 import {
@@ -45,26 +47,26 @@ const filterFunction = (value: string, search: string) => {
   return 0;
 };
 
-const formatIgnoreReason = (reason: ModelIgnoreReason): string => {
+const formatIgnoreReason = (reason: ModelIgnoreReason, i18n: I18n): string => {
   switch (reason) {
     case "common_keyword":
-      return "Contains common ignore keyword";
+      return i18n._(msg`Contains common ignore keyword`);
     case "old_model":
-      return "Old or deprecated model";
+      return i18n._(msg`Old or deprecated model`);
     case "date_snapshot":
-      return "Date-specific snapshot";
+      return i18n._(msg`Date-specific snapshot`);
     case "no_tool":
-      return "No tool support";
+      return i18n._(msg`No tool support`);
     case "no_text_input":
-      return "No text input support";
+      return i18n._(msg`No text input support`);
     case "no_completion":
-      return "No completion support";
+      return i18n._(msg`No completion support`);
     case "not_llm":
-      return "Not an LLM type";
+      return i18n._(msg`Not an LLM type`);
     case "not_chat_model":
-      return "Not a chat model";
+      return i18n._(msg`Not a chat model`);
     case "context_too_small":
-      return "Context length too small";
+      return i18n._(msg`Context length too small`);
   }
 };
 
@@ -87,7 +89,7 @@ export function ModelCombobox({
   suffix?: React.ReactNode;
   isConfigured?: boolean;
 }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [showIgnored, setShowIgnored] = useState(false);
@@ -280,7 +282,7 @@ export function ModelCombobox({
                           <div className="flex flex-col gap-0.5">
                             {option.reasons.map((reason) => (
                               <div key={reason}>
-                                • {formatIgnoreReason(reason)}
+                                • {formatIgnoreReason(reason, i18n)}
                               </div>
                             ))}
                           </div>
@@ -309,7 +311,9 @@ export function ModelCombobox({
                     ])}
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    <span className="truncate">Select "{trimmedQuery}"</span>
+                    <span className="truncate">
+                      <Trans>Select "{trimmedQuery}"</Trans>
+                    </span>
                   </CommandItem>
                 )}
               </CommandGroup>
@@ -319,6 +323,9 @@ export function ModelCombobox({
               <button
                 type="button"
                 onClick={toggleShowIgnored}
+                aria-label={
+                  showIgnored ? t`Hide ignored models` : t`Show ignored models`
+                }
                 className="hover:text-foreground mr-1 flex items-center gap-1 text-xs transition-colors"
               >
                 {showIgnored ? (
@@ -330,9 +337,19 @@ export function ModelCombobox({
 
               {hasIgnoredOptions && (
                 <span>
-                  {showIgnored
-                    ? `Showing total of ${options.length} models.`
-                    : `${ignoredOptions.length} items ignored.`}
+                  {showIgnored ? (
+                    <Plural
+                      value={options.length}
+                      one="Showing total of # model."
+                      other="Showing total of # models."
+                    />
+                  ) : (
+                    <Plural
+                      value={ignoredOptions.length}
+                      one="# item ignored."
+                      other="# items ignored."
+                    />
+                  )}
                 </span>
               )}
 
@@ -340,6 +357,7 @@ export function ModelCombobox({
                 type="button"
                 onClick={() => refetch()}
                 disabled={isFetching}
+                aria-label={t`Refresh models`}
                 className="hover:text-foreground ml-auto flex items-center gap-1 text-xs transition-colors disabled:opacity-50"
               >
                 <ArrowsCounterClockwise

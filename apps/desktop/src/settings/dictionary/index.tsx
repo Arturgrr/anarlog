@@ -212,7 +212,7 @@ function DictionaryTermRow({
               setEditValue(null);
             }
           }}
-          aria-label={`${t`Edit`}: ${term}`}
+          aria-label={t`Edit: ${term}`}
         />
         <Button
           type="button"
@@ -249,7 +249,7 @@ function DictionaryTermRow({
           size="icon"
           className="text-muted-foreground hover:text-foreground size-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           onClick={() => setEditValue(term)}
-          aria-label={`${t`Edit`}: ${term}`}
+          aria-label={t`Edit: ${term}`}
         >
           <PencilSimple className="size-4" />
         </Button>

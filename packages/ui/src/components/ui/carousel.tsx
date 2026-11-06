@@ -7,6 +7,7 @@ import { cn } from "@anlg/utils";
 
 import { ArrowLeft, ArrowRight } from "../icons";
 import { Button } from "./button";
+import { useUiLabels } from "./labels";
 
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
@@ -199,6 +200,7 @@ const CarouselPrevious = React.forwardRef<
   React.ComponentProps<typeof Button>
 >(({ className, variant = "outline", size = "icon", ...props }, ref) => {
   const { orientation, scrollPrev, canScrollPrev } = useCarousel();
+  const labels = useUiLabels();
 
   if (!canScrollPrev) {
     return null;
@@ -221,7 +223,7 @@ const CarouselPrevious = React.forwardRef<
       {...props}
     >
       <ArrowLeft className="h-4 w-4" />
-      <span className="sr-only">Previous slide</span>
+      <span className="sr-only">{labels.previousSlide}</span>
     </Button>
   );
 });
@@ -232,6 +234,7 @@ const CarouselNext = React.forwardRef<
   React.ComponentProps<typeof Button>
 >(({ className, variant = "outline", size = "icon", ...props }, ref) => {
   const { orientation, scrollNext, canScrollNext } = useCarousel();
+  const labels = useUiLabels();
 
   if (!canScrollNext) {
     return null;
@@ -254,7 +257,7 @@ const CarouselNext = React.forwardRef<
       {...props}
     >
       <ArrowRight className="h-4 w-4" />
-      <span className="sr-only">Next slide</span>
+      <span className="sr-only">{labels.nextSlide}</span>
     </Button>
   );
 });

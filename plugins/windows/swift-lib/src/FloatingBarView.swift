@@ -133,7 +133,8 @@ struct FloatingBarView: View {
                 TranscriptBubbleView(
                   bubble: bubble,
                   showsSpeakerLabel: showsSpeakerLabel(at: index),
-                  colorScheme: model.colorScheme
+                  colorScheme: model.colorScheme,
+                  overlappingSpeechLabel: model.labels.overlappingSpeech
                 )
                 .id(bubble.id)
               }
@@ -201,7 +202,8 @@ struct FloatingBarView: View {
         FloatingIconButton(
           systemName: isExpanded
             ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right",
-          accessibilityLabel: isExpanded ? "Collapse live transcript" : "Expand live transcript",
+          accessibilityLabel: isExpanded
+            ? model.labels.collapseTranscript : model.labels.expandTranscript,
           color: primaryContentColor,
           hoverFill: controlHoverFill,
           size: FloatingBarLayout.compactIconSize,
@@ -225,7 +227,7 @@ struct FloatingBarView: View {
           HStack(spacing: 6) {
             Image(systemName: "stop.fill")
               .font(.system(size: FloatingBarLayout.stopSquareSize, weight: .bold))
-            Text("Stop")
+            Text(model.labels.stop)
               .font(.system(size: 12, weight: .semibold))
           }
           .foregroundStyle(dangerColor)
@@ -256,15 +258,15 @@ struct FloatingBarView: View {
     .buttonStyle(.plain)
     .accessibilityLabel(
       model.status == .reconnecting
-        ? "Reconnecting live transcription; stop listening"
+        ? model.labels.reconnectingStopListening
         : model.status == .error
-          ? "\(model.transcriptNotice ?? "Recording needs attention"); stop listening"
-          : "Stop listening"
+          ? model.labels.errorStopListening
+          : model.labels.stopListening
     )
     .help(
       model.status == .error
-        ? "\(model.transcriptNotice ?? "Recording needs attention"). Open Librelog to retry or change devices."
-        : "Stop listening"
+        ? model.labels.errorHelp
+        : model.labels.stopListening
     )
     .onHover { isStopHovered = $0 }
   }
@@ -403,7 +405,7 @@ struct FloatingBarView: View {
       HStack(spacing: 6) {
         Image(systemName: "arrow.down")
           .font(.system(size: 10, weight: .semibold))
-        Text("Go to bottom")
+        Text(model.labels.goToBottom)
           .font(.system(size: 11, weight: .medium))
       }
       .foregroundStyle(primaryContentColor)
@@ -419,7 +421,7 @@ struct FloatingBarView: View {
       )
     }
     .buttonStyle(.plain)
-    .accessibilityLabel("Scroll transcript to bottom")
+    .accessibilityLabel(model.labels.scrollTranscriptToBottom)
   }
 
   private var transcriptChipFillColor: Color {
@@ -587,6 +589,7 @@ private struct TranscriptBubbleView: View {
   let bubble: FloatingTranscriptBubblePayload
   let showsSpeakerLabel: Bool
   let colorScheme: FloatingBarColorScheme
+  let overlappingSpeechLabel: String
 
   var body: some View {
     HStack {
@@ -652,7 +655,7 @@ private struct TranscriptBubbleView: View {
           .font(.system(size: 8, weight: .bold))
           .foregroundStyle(ink.opacity(0.72))
           .frame(width: 12, height: 12)
-          .accessibilityLabel("Overlapping speech")
+          .accessibilityLabel(overlappingSpeechLabel)
       }
     }
   }

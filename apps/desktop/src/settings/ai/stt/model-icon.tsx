@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Apple } from "@lobehub/icons";
 import type { ReactNode } from "react";
 
@@ -105,7 +106,7 @@ function getLocalModelBackendBadge(model: string): ModelIconSpec | null {
   if (value.includes("ggml") || value.includes("gguf")) {
     return {
       label: "GGML",
-      title: "GGML runtime",
+      title: t`GGML runtime`,
       className: "border-border bg-muted text-muted-foreground",
     };
   }

@@ -19,13 +19,14 @@ import {
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
 import { appFloatingItemClassName } from "@anlg/ui/components/ui/floating-content";
-import { cn, formatDistanceToNow } from "@anlg/utils";
+import { cn } from "@anlg/utils";
 
 import {
   type ChatGroupRecord,
   useRecentChatGroups,
 } from "~/chat/store/queries";
 import type { ChatScope } from "~/chat/types";
+import { formatRelativeToNow } from "~/i18n/format";
 
 export function ChatToolbarControls({
   chatScope,
@@ -210,7 +211,7 @@ function ChatGroups({
         <AppFloatingPanel className={appFloatingMenuPanelClassName}>
           <div className="px-2 py-1.5">
             <h4 className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-              Recent Chats
+              <Trans>Recent Chats</Trans>
             </h4>
           </div>
           {recentChatGroups.length > 0 ? (
@@ -250,10 +251,9 @@ function ChatGroupItem({
   isActive: boolean;
   onSelect: (groupId: string) => void;
 }) {
+  const { i18n } = useLingui();
   const formattedTime = chatGroup.createdAt
-    ? formatDistanceToNow(new Date(chatGroup.createdAt), {
-        addSuffix: true,
-      })
+    ? formatRelativeToNow(new Date(chatGroup.createdAt), i18n.locale)
     : "";
 
   return (

@@ -1,3 +1,5 @@
+import type { I18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   useMutation,
@@ -67,6 +69,7 @@ import {
 } from "~/settings/ai/shared";
 import { getProviderSelectionBlockers } from "~/settings/ai/shared/eligibility";
 import { PersistAiSelection } from "~/settings/ai/shared/persist-selection";
+import { providerDisplayName } from "~/settings/ai/shared/provider-labels";
 import {
   getConfiguredProviderIds,
   getConfiguredProviders,
@@ -97,7 +100,7 @@ import {
 } from "~/stt/model-selection";
 
 export function SelectProviderAndModel() {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const { current_stt_provider, current_stt_model } = useConfigValues([
     "current_stt_provider",
     "current_stt_model",
@@ -295,11 +298,11 @@ export function SelectProviderAndModel() {
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2">
                         <ProviderIconSlot>{provider.icon}</ProviderIconSlot>
-                        <span>{provider.displayName}</span>
+                        <span>{providerDisplayName(provider, i18n)}</span>
                       </div>
                       {"description" in provider && provider.description ? (
                         <span className="text-muted-foreground text-[11px]">
-                          {provider.description}
+                          {i18n._(provider.description)}
                         </span>
                       ) : null}
                     </div>
@@ -462,9 +465,9 @@ function TranscriptionLanguageWarningToast() {
 
   const description =
     needsSystemSettings.length > 0
-      ? t`Add ${formatLanguageList(needsSystemSettings)} in System Settings > General > Language & Region to transcribe with ${model}, or choose another model.`
+      ? t`Add ${formatLanguageList(needsSystemSettings, i18n)} in System Settings > General > Language & Region to transcribe with ${model}, or choose another model.`
       : unsupportedLanguages.length > 0
-        ? t`${model} can't transcribe ${formatLanguageList(unsupportedLanguages)}. Try another model or change your spoken languages.`
+        ? t`${model} can't transcribe ${formatLanguageList(unsupportedLanguages, i18n)}. Try another model or change your spoken languages.`
         : t`${model} can't transcribe all selected languages together. Try another model or use fewer spoken languages.`;
 
   return (
@@ -612,12 +615,12 @@ function useTranscriptionLanguageWarning() {
   };
 }
 
-function formatLanguageList(languages: string[]) {
+function formatLanguageList(languages: string[], i18n: I18n) {
   const visibleLanguages = languages.slice(0, 3);
   const remainingCount = languages.length - visibleLanguages.length;
 
   if (remainingCount > 0) {
-    visibleLanguages.push(`${remainingCount} more`);
+    visibleLanguages.push(i18n._(msg`${remainingCount} more`));
   }
 
   return visibleLanguages.join(", ");

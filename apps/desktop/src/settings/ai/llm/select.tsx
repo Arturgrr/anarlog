@@ -59,6 +59,7 @@ import { listUnslothModels } from "~/settings/ai/shared/list-unsloth";
 import { listVeniceModels } from "~/settings/ai/shared/list-venice";
 import { ModelCombobox } from "~/settings/ai/shared/model-combobox";
 import { PersistAiSelection } from "~/settings/ai/shared/persist-selection";
+import { providerDisplayName } from "~/settings/ai/shared/provider-labels";
 import {
   getConfiguredProviderIds,
   getConfiguredProviders,
@@ -75,7 +76,7 @@ import { useConfigValues } from "~/shared/config";
 import { SettingsAlertToast } from "~/shared/ui/settings-alert";
 
 export function SelectProviderAndModel() {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const { providers: configuredProviders, isReady: providerSettingsReady } =
     useConfiguredMapping();
   const intelligenceDisabled = useConfigValues([
@@ -407,7 +408,7 @@ export function SelectProviderAndModel() {
                   >
                     <div className="flex items-center gap-2">
                       <ProviderIconSlot>{provider.icon}</ProviderIconSlot>
-                      <span>{provider.displayName}</span>
+                      <span>{providerDisplayName(provider, i18n)}</span>
                     </div>
                   </SelectItem>
                 );

@@ -1,3 +1,4 @@
+import type { MessageDescriptor } from "@lingui/core";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { type AnyFieldApi, useForm } from "@tanstack/react-form";
 import { useMutation, useQueries } from "@tanstack/react-query";
@@ -40,6 +41,7 @@ import {
   getRequiredConfigFields,
   type ProviderRequirement,
 } from "./eligibility";
+import { AFTER_RECORDING_BADGE, providerDisplayName } from "./provider-labels";
 import { useProviderSelectionPrompt } from "./provider-selection-prompt";
 
 import { providerFetch } from "~/ai/provider-fetch";
@@ -64,7 +66,7 @@ type ProviderConfig = {
   id: string;
   displayName: string;
   icon: ReactNode;
-  badge?: string | null;
+  badge?: MessageDescriptor | null;
   baseUrl?: string;
   authKind?: "api" | "subscription";
   disabled?: boolean;
@@ -72,9 +74,9 @@ type ProviderConfig = {
   checkAvailability?: (baseUrl: string, apiKey: string) => Promise<boolean>;
   hideAdvanced?: boolean;
   links?: {
-    download?: { label: string; url: string };
-    models?: { label: string; url: string };
-    setup?: { label: string; url: string };
+    download?: { label: MessageDescriptor; url: string };
+    models?: { label: MessageDescriptor; url: string };
+    setup?: { label: MessageDescriptor; url: string };
   };
 };
 
@@ -321,7 +323,8 @@ export function ProviderCard({
   onConnectSubscription?: () => void;
   subscriptionProviderId?: string;
 }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
+  const displayName = providerDisplayName(config, i18n);
   const [provider, providerMutation, providerStateReady] = useProvider(
     providerType,
     config,
@@ -355,7 +358,7 @@ export function ProviderCard({
   const notifyProviderSelection = useProviderSelectionPrompt({
     providerType,
     providerId: config.id,
-    providerName: config.displayName,
+    providerName: displayName,
     currentProvider,
     providerStateReady,
     storedApiKey: provider?.api_key,
@@ -517,7 +520,7 @@ export function ProviderCard({
       >
         <div className="flex items-center gap-2">
           <ProviderIconSlot>{config.icon}</ProviderIconSlot>
-          <span>{config.displayName}</span>
+          <span>{displayName}</span>
           {config.badge && <ProviderBadge badge={config.badge} />}
         </div>
       </AccordionTrigger>
@@ -549,7 +552,7 @@ export function ProviderCard({
                 onClick={onConnect}
               >
                 <ProviderButtonIcon>{config.icon}</ProviderButtonIcon>
-                {t`Connect ${config.displayName}`}
+                {t`Connect ${displayName}`}
               </Button>
             )}
           </div>
@@ -635,7 +638,7 @@ export function ProviderCard({
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5 hover:underline"
                 >
-                  {config.links.download.label}
+                  {i18n._(config.links.download.label)}
                   <ArrowSquareOut size={12} />
                 </a>
               )}
@@ -646,7 +649,7 @@ export function ProviderCard({
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5 hover:underline"
                 >
-                  {config.links.models.label}
+                  {i18n._(config.links.models.label)}
                   <ArrowSquareOut size={12} />
                 </a>
               )}
@@ -657,7 +660,7 @@ export function ProviderCard({
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5 hover:underline"
                 >
-                  {config.links.setup.label}
+                  {i18n._(config.links.setup.label)}
                   <ArrowSquareOut size={12} />
                 </a>
               )}
@@ -709,8 +712,9 @@ export function ProviderCard({
   );
 }
 
-function ProviderBadge({ badge }: { badge: string }) {
-  const isAfterRecording = badge === "After recording";
+function ProviderBadge({ badge }: { badge: MessageDescriptor }) {
+  const { i18n } = useLingui();
+  const isAfterRecording = badge.id === AFTER_RECORDING_BADGE.id;
   const badgeNode = (
     <span
       className={cn([
@@ -718,7 +722,7 @@ function ProviderBadge({ badge }: { badge: string }) {
         isAfterRecording && "cursor-help",
       ])}
     >
-      {badge}
+      {i18n._(badge)}
     </span>
   );
 

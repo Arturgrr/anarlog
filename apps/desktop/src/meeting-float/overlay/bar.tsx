@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useRef, useState } from "react";
 
 import type {
@@ -144,6 +145,8 @@ function FloatingControls({
   onStop: () => void;
   onToggleExpanded: (expanded: boolean) => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <div
       className="flex items-center"
@@ -155,7 +158,7 @@ function FloatingControls({
           type="button"
           data-tauri-drag-region="false"
           aria-label={
-            isExpanded ? "Collapse live transcript" : "Expand live transcript"
+            isExpanded ? t`Collapse live transcript` : t`Expand live transcript`
           }
           onClick={() => onToggleExpanded(!isExpanded)}
           className="flex items-center justify-center"
@@ -186,7 +189,9 @@ function StopControl({
   colors: BarColors;
   onStop: () => void;
 }) {
+  const { t } = useLingui();
   const [hovered, setHovered] = useState(false);
+  const notice = state.transcriptNotice ?? t`Recording needs attention`;
   const width = state.liveCaptionToggleVisible
     ? FLOATING_BAR_COMPACT_STOP_WIDTH
     : FLOATING_BAR_COMPACT_SOLO_STOP_WIDTH;
@@ -197,12 +202,12 @@ function StopControl({
       data-tauri-drag-region="false"
       aria-label={
         state.status === "error"
-          ? `${state.transcriptNotice ?? "Recording needs attention"}; stop listening`
-          : "Stop listening"
+          ? t`${notice}; stop listening`
+          : t`Stop listening`
       }
       title={
         state.status === "error"
-          ? `${state.transcriptNotice ?? "Recording needs attention"}. Open Librelog to retry or change devices.`
+          ? t`${notice}. Open Librelog to retry or change devices.`
           : undefined
       }
       onClick={onStop}
@@ -220,7 +225,7 @@ function StopControl({
       {hovered ? (
         <span className="flex items-center gap-1.5 text-xs font-semibold">
           <Square size={9} />
-          Stop
+          <Trans>Stop</Trans>
         </span>
       ) : state.status === "error" ? (
         <WarningCircle size={20} aria-hidden="true" />
@@ -311,7 +316,7 @@ function TranscriptList({
           }}
         >
           <CaretDown size={10} weight="bold" />
-          Go to bottom
+          <Trans>Go to bottom</Trans>
         </button>
       ) : null}
     </div>

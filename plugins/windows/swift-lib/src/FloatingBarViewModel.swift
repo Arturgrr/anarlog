@@ -10,5 +10,6 @@ final class FloatingBarViewModel: ObservableObject {
   @Published var title: String = "Live transcript"
   @Published var transcriptBubbles: [FloatingTranscriptBubblePayload] = []
   @Published var transcriptNotice: String?
+  @Published var labels = FloatingBarLabels()
   @Published var placement: FloatingControlPlacement.Layout?
 }

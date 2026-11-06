@@ -182,7 +182,7 @@ export function SectionsList({
           disabled={disabled}
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Section
+          <Trans>Add Section</Trans>
         </Button>
       )}
     </div>

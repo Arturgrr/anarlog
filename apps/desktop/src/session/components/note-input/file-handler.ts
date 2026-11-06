@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
@@ -60,7 +61,9 @@ export function useNoteFileHandlerConfig(sessionId: string) {
   );
   const handleFileUploadError = useCallback((error: unknown) => {
     toast.error(
-      error instanceof Error ? error.message : "Could not add this attachment.",
+      error instanceof Error
+        ? error.message
+        : t`Could not add this attachment.`,
     );
   }, []);
 

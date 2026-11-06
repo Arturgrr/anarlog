@@ -130,6 +130,9 @@ final class FloatingBarManager {
     if model.transcriptNotice != state.transcriptNotice {
       model.transcriptNotice = state.transcriptNotice
     }
+    if let labels = state.labels, model.labels != labels {
+      model.labels = labels
+    }
     settingsModel.apply(floatingBarState: state)
     let isExpanded = state.liveCaptionToggleVisible && !settingsModel.liveCaptionMinimized
     if model.isExpanded != isExpanded {

@@ -28,6 +28,7 @@ import { useChatGroup } from "~/chat/store/queries";
 import { useChatActions } from "~/chat/store/use-chat-actions";
 import { useShell } from "~/contexts/shell";
 import { useMentionConfig } from "~/editor-bridge/mention-config";
+import { localizeExternalMessage } from "~/i18n/external-messages";
 import { useLocalUserId } from "~/shared/owner-user";
 
 export function ComposerScreen() {
@@ -245,7 +246,9 @@ function ComposerInput({
 
       <ChatEditor
         ref={editorRef}
-        onAttachmentError={(message) => toast.error(message)}
+        onAttachmentError={(message) =>
+          toast.error(localizeExternalMessage(message))
+        }
         className={cn([
           "text-primary-foreground max-h-[88px] min-h-[34px] overflow-y-auto text-[15px] leading-6",
           "[&_.ProseMirror]:min-h-[34px] [&_.ProseMirror]:outline-none",

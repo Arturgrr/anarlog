@@ -1,3 +1,5 @@
+import { Trans, useLingui } from "@lingui/react/macro";
+
 import { commands as openerCommands } from "@anlg/plugin-opener2";
 import { MapPin, VideoCamera } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
@@ -10,6 +12,7 @@ import { safeFormat, safeParseDate, TZDate } from "@anlg/utils";
 import { DateEditor } from "./date";
 import { ParticipantsDisplay } from "./participants";
 
+import { formatMonthDay } from "~/i18n/format";
 import { useSessionEvent } from "~/session/hooks/useSessionEvent";
 import { useConfigValue } from "~/shared/config";
 import { useTimeFormat } from "~/shared/hooks/useTimeFormat";
@@ -73,6 +76,7 @@ export function EventDisplay({
   };
   children?: React.ReactNode;
 }) {
+  const { i18n, t } = useLingui();
   const timeFormat = useTimeFormat();
   const tz = useConfigValue("timezone") || undefined;
 
@@ -98,18 +102,20 @@ export function EventDisplay({
 
     const startDate = toTz(rawStart);
     const endDate = rawEnd ? toTz(rawEnd) : null;
+    const formatDateTime = (raw: Date, zoned: Date) =>
+      `${formatMonthDay(raw, i18n.locale, { year: true, timeZone: tz })} ${safeFormat(zoned, timeFormat)}`;
 
-    const startStr = safeFormat(startDate, `MMM d, yyyy ${timeFormat}`);
-    if (!endDate) {
+    const startStr = formatDateTime(rawStart, startDate);
+    if (!rawEnd || !endDate) {
       return startStr;
     }
 
     const sameDay = startDate.toDateString() === endDate.toDateString();
     const endStr = sameDay
       ? safeFormat(endDate, timeFormat)
-      : safeFormat(endDate, `MMM d, yyyy ${timeFormat}`);
+      : formatDateTime(rawEnd, endDate);
 
-    return `${startStr} to ${endStr}`;
+    return t`${startStr} to ${endStr}`;
   };
 
   const getMeetingLinkDomain = () => {
@@ -140,7 +146,7 @@ export function EventDisplay({
   return (
     <div className="flex flex-col gap-3">
       <div className="text-foreground min-w-0 text-base font-medium break-words">
-        {event.title || "Untitled Event"}
+        {event.title || t`Untitled Event`}
       </div>
 
       <div className="bg-accent h-px" />
@@ -163,7 +169,7 @@ export function EventDisplay({
                 className="text-muted-foreground shrink-0"
               />
               <span className="truncate">
-                {meetingDomain || "Meeting link"}
+                {meetingDomain || t`Meeting link`}
               </span>
             </div>
             <Button
@@ -172,7 +178,7 @@ export function EventDisplay({
               className="shrink-0"
               onClick={handleJoinMeeting}
             >
-              Join
+              <Trans>Join</Trans>
             </Button>
           </div>
         </>

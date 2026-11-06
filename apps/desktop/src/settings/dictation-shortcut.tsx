@@ -9,6 +9,7 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { waitForDictationCleanup } from "~/dictation/lifecycle";
 import { useDictationStatus } from "~/dictation/state";
+import { localizeExternalMessage } from "~/i18n/external-messages";
 import { setSettingValue } from "~/settings/queries";
 
 export function DictationShortcut({ shortcut }: { shortcut: string }) {
@@ -22,7 +23,8 @@ export function DictationShortcut({ shortcut }: { shortcut: string }) {
     mutationFn: async ({ value, token }: { value: string; token: number }) => {
       const result = await shortcuts.validate(value);
       if (token !== attempt.current) return;
-      if (result.status === "error") throw new Error(result.error);
+      if (result.status === "error")
+        throw new Error(localizeExternalMessage(result.error));
       persisting.current = true;
       setRecording(false);
       useDictationStatus.setState({ capturingShortcut: false });

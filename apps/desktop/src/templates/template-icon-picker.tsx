@@ -317,7 +317,7 @@ export function TemplateIconPicker({
                         setCustomColorOpen(false);
                         selectColor(color);
                       }}
-                      aria-label={`Use ${color}`}
+                      aria-label={t`Use ${color}`}
                     >
                       {iconColor.toLowerCase() === color.toLowerCase() ? (
                         <Check className="size-4 text-white" />

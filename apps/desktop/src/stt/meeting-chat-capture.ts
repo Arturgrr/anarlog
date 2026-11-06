@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { commands as detectCommands } from "@anlg/plugin-detect";
 import type { MeetingCapturedChatMessage } from "@anlg/plugin-detect";
 import { toast } from "@anlg/ui/components/ui/toast";
@@ -265,8 +267,8 @@ function showCaptureWarning(warnings: string[], previousWarning: string) {
   ) {
     toast.warning(
       warning.includes("accessibility bus")
-        ? "Meeting chat capture needs the desktop accessibility bus"
-        : "Meeting chat capture needs Accessibility permission in Settings",
+        ? t`Meeting chat capture needs the desktop accessibility bus`
+        : t`Meeting chat capture needs Accessibility permission in Settings`,
       {
         id: "meeting-chat-capture-warning",
         duration: Infinity,

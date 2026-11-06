@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { MarkdownExportOptions } from "@anlg/plugin-local-api";
 
 import {
@@ -42,7 +44,7 @@ export function createEmptyWorkflow(
 ): AutomationWorkflow {
   return {
     id: overrides.id ?? id(),
-    title: overrides.title ?? "Untitled automation",
+    title: overrides.title ?? t`Untitled automation`,
     enabled: overrides.enabled ?? false,
     trigger: overrides.trigger ?? "note_enhanced",
     steps: overrides.steps ?? [],
@@ -132,7 +134,7 @@ function parseWorkflow(value: unknown): AutomationWorkflow | null {
   return {
     id: value.id,
     title:
-      typeof value.title === "string" ? value.title : "Untitled automation",
+      typeof value.title === "string" ? value.title : t`Untitled automation`,
     enabled: value.enabled === true,
     trigger,
     steps,

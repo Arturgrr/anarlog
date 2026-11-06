@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { useQueryClient } from "@tanstack/react-query";
 import { type CSSProperties, useCallback, useMemo } from "react";
 
@@ -142,9 +142,11 @@ function UndoDeleteNotificationToast({ group }: { group: ToastGroup }) {
   const pendingDeletions = useUndoDelete((state) => state.pendingDeletions);
   const title =
     pendingDeletions[group.sessionIds[0]]?.data.session.title || t`Untitled`;
-  const noteLabel = group.sessionIds.length === 1 ? t`note` : t`notes`;
   const label = group.isBatch
-    ? t`${group.sessionIds.length} ${noteLabel} deleted`
+    ? plural(group.sessionIds.length, {
+        one: "# note deleted",
+        other: "# notes deleted",
+      })
     : t`${title} deleted`;
   const remainingDuration = Math.max(
     0,

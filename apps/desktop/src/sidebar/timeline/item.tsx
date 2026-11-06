@@ -31,6 +31,7 @@ import {
 
 import { useIgnoredEvents } from "~/calendar/ignored-events";
 import { writeSessionContextDragData } from "~/chat/context/session-drag";
+import { formatMonthDay } from "~/i18n/format";
 import { DEVICE_AUTH_REASON } from "~/lock/auth";
 import { isLockedFlag } from "~/lock/flag";
 import { revealLockedNote, setSessionLocked } from "~/lock/notes";
@@ -423,7 +424,7 @@ const EventItem = memo(
     isUpcoming?: boolean;
     upcomingProgress?: number;
   }) => {
-    const { t } = useLingui();
+    const { i18n, t } = useLingui();
     const openCurrent = useTabs((state) => state.openCurrent);
 
     const eventId = item.id;
@@ -457,8 +458,9 @@ const EventItem = memo(
           precision,
           timezone,
           timeFormat,
+          i18n.locale,
         ),
-      [item.data.started_at, precision, timezone, timeFormat],
+      [item.data.started_at, precision, timezone, timeFormat, i18n.locale],
     );
 
     const [isOpening, setIsOpening] = useState(false);
@@ -605,7 +607,7 @@ const SessionItem = memo(
     isUpcoming?: boolean;
     upcomingProgress?: number;
   }) => {
-    const { t } = useLingui();
+    const { i18n, t } = useLingui();
     const openCurrent = useTabs((state) => state.openCurrent);
     const deleteSession = useDeleteSession();
 
@@ -655,6 +657,7 @@ const SessionItem = memo(
           precision,
           timezone,
           timeFormat,
+          i18n.locale,
         ),
       [
         sessionEvent?.started_at,
@@ -662,6 +665,7 @@ const SessionItem = memo(
         precision,
         timezone,
         timeFormat,
+        i18n.locale,
       ],
     );
     const muted = isTimelineItemInFuture(item);
@@ -822,6 +826,7 @@ function formatDisplayTime(
   precision: TimelinePrecision,
   timezone: string | undefined,
   timeFormat: string,
+  locale: string,
 ): string {
   const parsed = safeParseDate(timestamp);
   if (!parsed) {
@@ -837,9 +842,10 @@ function formatDisplayTime(
 
   const now = timezone ? new TZDate(new Date(), timezone) : new Date();
   const sameYear = getYear(date) === getYear(now);
-  const dateStr = sameYear
-    ? format(date, "MMM d")
-    : format(date, "MMM d, yyyy");
+  const dateStr = formatMonthDay(parsed, locale, {
+    year: !sameYear,
+    timeZone: timezone,
+  });
 
   return `${dateStr}, ${time}`;
 }

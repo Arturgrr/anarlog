@@ -5,6 +5,7 @@ import { focusRingClassName } from "@anlg/ui/lib/focus-ring";
 import { cn } from "@anlg/utils";
 
 import { X } from "../icons";
+import { useUiLabels } from "./labels";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -72,13 +73,17 @@ const DialogContent = React.forwardRef<
           ])}
         >
           <X className="size-3.5" />
-          <span className="sr-only">Close</span>
+          <CloseLabel />
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>
   ),
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
+
+function CloseLabel() {
+  return <span className="sr-only">{useUiLabels().close}</span>;
+}
 
 const DialogHeader = ({
   className,

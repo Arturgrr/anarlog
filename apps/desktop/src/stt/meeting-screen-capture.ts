@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { platform } from "@tauri-apps/plugin-os";
 
 import { commands as detectCommands } from "@anlg/plugin-detect";
@@ -46,7 +47,7 @@ export function startMeetingScreenCapture({
         if (!permissionWarned) {
           permissionWarned = true;
           toast.warning(
-            "Shared screen capture needs Screen Recording permission in Settings",
+            t`Shared screen capture needs Screen Recording permission in Settings`,
             { id: "meeting-screen-capture-warning", duration: Infinity },
           );
         }

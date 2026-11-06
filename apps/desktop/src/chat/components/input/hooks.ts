@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ChatEditorHandle, JSONContent } from "@anlg/editor/chat";
@@ -294,15 +295,17 @@ function hasAttachmentNode(json: JSONContent | undefined): boolean {
 
 function draftRetentionFailureMessage(failure: DraftRetentionFailure) {
   if (failure.reason === "draft-too-large") {
-    return "This unsent chat draft is too large to keep after closing the editor.";
+    return t`This unsent chat draft is too large to keep after closing the editor.`;
   }
   if (failure.reason === "older-draft-removed") {
-    return failure.removedDraftCount === 1
-      ? "An older unsent chat draft was removed to keep your current draft."
-      : `${failure.removedDraftCount} older unsent chat drafts were removed to keep your current draft.`;
+    return plural(failure.removedDraftCount ?? 0, {
+      one: "An older unsent chat draft was removed to keep your current draft.",
+      other:
+        "# older unsent chat drafts were removed to keep your current draft.",
+    });
   }
 
-  return "This unsent chat draft could not be kept because draft storage is full.";
+  return t`This unsent chat draft could not be kept because draft storage is full.`;
 }
 
 export function extractContextRefsFromTiptapJson(

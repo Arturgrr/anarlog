@@ -7,6 +7,7 @@ import {
   size,
   useFloating,
 } from "@floating-ui/react";
+import { useLingui } from "@lingui/react/macro";
 import { useMutation } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
 
@@ -39,6 +40,7 @@ import { useAutoCloser } from "~/shared/hooks/useAutoCloser";
 import { removeHumanSpeakerAssignments } from "~/stt/queries";
 
 export function ParticipantInput({ sessionId }: { sessionId: string }) {
+  const { t } = useLingui();
   const {
     inputValue,
     showDropdown,
@@ -55,7 +57,7 @@ export function ParticipantInput({ sessionId }: { sessionId: string }) {
   } = useParticipantInput(sessionId);
   const { enhanceContact, enhancingHumanId, showEnhancementButtons } =
     useEventContactEnhancement(sessionId);
-  const placeholder = "Add participants";
+  const placeholder = t`Add participants`;
 
   const inputRef = useRef<HTMLInputElement>(null);
   const autoCloserRef = useAutoCloser(() => setShowDropdown(false), {
@@ -402,6 +404,7 @@ function useParticipantInput(sessionId: string) {
 }
 
 function useEventContactEnhancement(sessionId: string) {
+  const { t } = useLingui();
   const session = useSession(sessionId);
   const userId = session?.user_id;
   const sessionEvent = session ? getSessionEvent(session) : null;
@@ -456,27 +459,27 @@ function useEventContactEnhancement(sessionId: string) {
       const toastId = `event-contact-enhancement-${humanId}`;
 
       if (applied.created > 0) {
-        toast.success("Contact created", { id: toastId });
+        toast.success(t`Contact created`, { id: toastId });
         return;
       }
 
       if (!applied.matched) {
-        toast.info("No contact detail found", { id: toastId });
+        toast.info(t`No contact detail found`, { id: toastId });
         return;
       }
 
       if (changed === 0) {
-        toast.info("Contact already up to date", { id: toastId });
+        toast.info(t`Contact already up to date`, { id: toastId });
         return;
       }
 
-      toast.success("Contact enhanced", { id: toastId });
+      toast.success(t`Contact enhanced`, { id: toastId });
     },
     onError: (error) => {
       const message =
         error instanceof Error && error.message === "Language model needed"
-          ? "Language model needed"
-          : "Could not enhance contact";
+          ? t`Language model needed`
+          : t`Could not enhance contact`;
 
       toast.error(message, {
         id: "event-contact-enhancement",

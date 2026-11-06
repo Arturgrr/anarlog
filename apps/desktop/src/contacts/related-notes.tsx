@@ -22,7 +22,7 @@ export function RelatedNotesSection({
   sessions: HumanSessionRecord[];
   onSessionClick: (id: string) => void;
 }) {
-  const { t } = useLingui();
+  const { i18n, t } = useLingui();
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const visibleSessions = sortAndFilterRelatedNotes(
@@ -109,7 +109,9 @@ export function RelatedNotesSection({
                 </span>
                 {session.createdAt && (
                   <time className="text-muted-foreground shrink-0 text-xs">
-                    {new Date(session.createdAt).toLocaleDateString()}
+                    {new Date(session.createdAt).toLocaleDateString(
+                      i18n.locale,
+                    )}
                   </time>
                 )}
               </button>

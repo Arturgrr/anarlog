@@ -130,7 +130,7 @@ export function TemplatesSidebarContent({
     Array<
       | {
           key: typeof AUTO_TEMPLATE_ID;
-          title: "Auto";
+          title: string;
           selected: boolean;
           source: "auto";
           customized: boolean;
@@ -147,11 +147,11 @@ export function TemplatesSidebarContent({
   >(() => {
     const query = search.trim().toLowerCase();
     const auto =
-      !query || "auto".includes(query)
+      !query || "auto".includes(query) || t`Auto`.toLowerCase().includes(query)
         ? [
             {
               key: AUTO_TEMPLATE_ID as typeof AUTO_TEMPLATE_ID,
-              title: "Auto" as const,
+              title: t`Auto`,
               selected: effectiveSelectedMineId === AUTO_TEMPLATE_ID,
               source: "auto" as const,
               customized: Boolean(autoPrompt.trim()),
@@ -160,7 +160,7 @@ export function TemplatesSidebarContent({
         : [];
     const mine = filteredMine.map((template) => ({
       key: template.id,
-      title: template.title?.trim() || "Untitled",
+      title: template.title?.trim() || t`Untitled`,
       selected: effectiveSelectedMineId === template.id,
       pinned: Boolean(template.pinned),
       source: "user" as const,
@@ -168,7 +168,7 @@ export function TemplatesSidebarContent({
     }));
 
     return [...auto, ...mine];
-  }, [autoPrompt, effectiveSelectedMineId, filteredMine, search]);
+  }, [autoPrompt, effectiveSelectedMineId, filteredMine, search, t]);
 
   const hasResults = combinedTemplates.length > 0;
 
@@ -350,14 +350,18 @@ export function TemplatesSidebarContent({
               className="text-muted-foreground/70 mx-auto mb-2"
             />
             <p className="text-sm">
-              {search ? "No templates found" : "No templates yet"}
+              {search ? (
+                <Trans>No templates found</Trans>
+              ) : (
+                <Trans>No templates yet</Trans>
+              )}
             </p>
             {!search && (
               <button
                 onClick={createDefaultTemplate}
                 className="text-muted-foreground hover:text-foreground mt-3 text-sm underline"
               >
-                Create my first template
+                <Trans>Create my first template</Trans>
               </button>
             )}
           </div>
@@ -427,26 +431,27 @@ function TemplateListItem({
   onDuplicate: (template: UserTemplate) => void;
   onDelete: (id: string) => void;
 }) {
+  const { t } = useLingui();
   const contextMenu = useMemo(
     () => [
       {
         id: `favorite-template-${template.id}`,
-        text: template.pinned ? "Unfavorite" : "Favorite",
+        text: template.pinned ? t`Unfavorite` : t`Favorite`,
         action: () => onToggleFavorite(template.id),
       },
       { separator: true as const },
       {
         id: `duplicate-template-${template.id}`,
-        text: "Duplicate",
+        text: t`Duplicate`,
         action: () => onDuplicate(template),
       },
       {
         id: `delete-template-${template.id}`,
-        text: "Delete",
+        text: t`Delete`,
         action: () => onDelete(template.id),
       },
     ],
-    [onDelete, onDuplicate, onToggleFavorite, template],
+    [onDelete, onDuplicate, onToggleFavorite, template, t],
   );
   const showContextMenu = useNativeContextMenu(contextMenu);
 
@@ -467,7 +472,7 @@ function TemplateListItem({
         <TemplateIconGlyph icon={template.icon} className="size-4 text-sm" />
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium">
-            {template.title?.trim() || "Untitled"}
+            {template.title?.trim() || t`Untitled`}
           </div>
         </div>
       </div>

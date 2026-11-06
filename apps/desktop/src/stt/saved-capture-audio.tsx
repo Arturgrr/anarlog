@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect } from "react";
 
 import { toast } from "@anlg/ui/components/ui/toast";
@@ -85,27 +86,25 @@ export function SavedCaptureAudioPrompt({ sessionId }: { sessionId: string }) {
         console.error("[listener] failed to resume listening", error);
       });
     };
-    toast.warning("Librelog saved this meeting's audio", {
+    toast.warning(t`Librelog saved this meeting's audio`, {
       id,
       duration: Infinity,
       description: (
         <div className="space-y-2">
           <p>
-            Recording stopped unexpectedly, so the audio was kept on purpose.
-            Create the meeting note to transcribe and summarize it, or resume
-            listening. The audio is deleted once it is transcribed.
+            {t`Recording stopped unexpectedly, so the audio was kept on purpose. Create the meeting note to transcribe and summarize it, or resume listening. The audio is deleted once it is transcribed.`}
           </p>
           <button
             type="button"
             onClick={resumeListening}
             className="text-foreground font-medium underline-offset-2 hover:underline"
           >
-            Resume listening
+            {t`Resume listening`}
           </button>
         </div>
       ),
       action: {
-        label: "Create meeting note",
+        label: t`Create meeting note`,
         onClick: () => {
           rememberDismissal = false;
           void requestCaptureRecovery(sessionId).catch((error) => {
