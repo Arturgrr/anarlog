@@ -9,6 +9,7 @@ import {
 } from "~/settings/schema";
 
 type JsonParsedKeys =
+  | "dictation_shortcuts"
   | "spoken_languages"
   | "personalization_dictionary_terms"
   | "ignored_platforms"
@@ -23,6 +24,7 @@ type ConfigValueType<K extends SettingKey> = K extends JsonParsedKeys
     : never;
 
 const JSON_PARSED_KEYS = new Set<SettingKey>([
+  "dictation_shortcuts",
   "spoken_languages",
   "personalization_dictionary_terms",
   "ignored_platforms",
@@ -75,6 +77,13 @@ export function resolveConfigValue<K extends SettingKey>(
       .map((legacyKey) => values[legacyKey]);
     if (legacyValues.length > 0) {
       return legacyValues.every(Boolean) as ConfigValueType<K>;
+    }
+  }
+
+  if (key === "dictation_shortcuts" && !hasValues.has(key)) {
+    const legacy = values.dictation_shortcut;
+    if (hasValues.has("dictation_shortcut") && legacy) {
+      return [legacy] as ConfigValueType<K>;
     }
   }
 

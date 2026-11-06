@@ -5,9 +5,8 @@ use std::sync::{
 
 use tauri::Manager;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
-use tauri_specta::Event;
 
-use crate::{ShortcutEvent, ShortcutPluginExt};
+use crate::{ShortcutEvent, ShortcutPluginExt, press};
 
 pub fn uses_portal() -> bool {
     cfg!(target_os = "linux") && std::env::var_os("WAYLAND_DISPLAY").is_some()
@@ -21,106 +20,91 @@ pub struct GlobalState {
 
 #[derive(Default)]
 struct Registration {
-    shortcut: Option<Shortcut>,
+    shortcuts: Vec<Shortcut>,
     cancel_keys: Vec<Shortcut>,
     #[cfg(target_os = "linux")]
     portal: Option<portal::Registration>,
 }
 
+/// The configured shortcuts, each paired with its position in the list and
+/// registered once.
+#[derive(Default)]
+struct Plan {
+    #[cfg(target_os = "macos")]
+    native: Vec<(usize, anlg_shortcut_macos::Trigger)>,
+    accelerators: Vec<(usize, Shortcut)>,
+}
+
+type GlobalShortcut = tauri_plugin_global_shortcut::GlobalShortcut<tauri::Wry>;
+
+/// Registers every shortcut in `shortcuts`; any of them starts and stops
+/// dictation. An empty list unregisters them all. If one cannot be
+/// registered, none stay registered.
 #[tauri::command]
 #[specta::specta]
-pub async fn configure(app: tauri::AppHandle, shortcut: Option<String>) -> Result<(), String> {
-    if let Some(value) = &shortcut {
-        validate(app.clone(), value.clone())?;
-    }
+pub async fn configure(app: tauri::AppHandle, shortcuts: Vec<String>) -> Result<(), String> {
+    let plan = plan(&shortcuts, app.try_state::<GlobalShortcut>().is_some())?;
     let state = app.state::<GlobalState>();
     let mut registration = state.registration.lock().await;
     state.active.store(false, Ordering::SeqCst);
-    let native_only = cfg!(target_os = "macos") && shortcut.as_deref().is_some_and(is_native);
-    if !uses_portal() {
-        if let Some(global) =
-            app.try_state::<tauri_plugin_global_shortcut::GlobalShortcut<tauri::Wry>>()
-        {
-            while let Some(key) = registration.cancel_keys.last().copied() {
-                global.unregister(key).map_err(|e| e.to_string())?;
-                registration.cancel_keys.pop();
-            }
-        } else if (!native_only && shortcut.is_some())
-            || registration.shortcut.is_some()
-            || !registration.cancel_keys.is_empty()
-        {
-            return Err("Global shortcuts are unavailable in this desktop session.".into());
+    app.state::<press::Presses>().reset();
+    unregister(&app, &mut registration).await?;
+
+    let result = async {
+        #[cfg(target_os = "macos")]
+        if !plan.native.is_empty() {
+            app.shortcut()
+                .register_triggers(plan.native, state.active.clone())
+                .map_err(|e| e.to_string())?;
         }
+        if plan.accelerators.is_empty() {
+            return Ok(());
+        }
+        #[cfg(target_os = "linux")]
+        if uses_portal() {
+            registration.portal = Some(portal::register(app.clone(), plan.accelerators).await?);
+            return Ok(());
+        }
+        for (source, key) in plan.accelerators {
+            app.global_shortcut()
+                .on_shortcut(key, move |app, _, event| {
+                    let event = if event.state == ShortcutState::Pressed {
+                        ShortcutEvent::Pressed
+                    } else {
+                        ShortcutEvent::Released
+                    };
+                    press::emit(app, source, event);
+                })
+                .map_err(|e| {
+                    format!(
+                        "Could not register dictation shortcut. It may be used by another app: {e}"
+                    )
+                })?;
+            registration.shortcuts.push(key);
+        }
+        Ok::<(), String>(())
     }
+    .await;
+    if result.is_err() {
+        let _ = unregister(&app, &mut registration).await;
+    }
+    result
+}
+
+async fn unregister(app: &tauri::AppHandle, registration: &mut Registration) -> Result<(), String> {
     app.shortcut().unregister().map_err(|e| e.to_string())?;
-    if let Some(previous) = registration.shortcut {
-        app.global_shortcut()
-            .unregister(previous)
-            .map_err(|e| e.to_string())?;
-        registration.shortcut = None;
+    if let Some(global) = app.try_state::<GlobalShortcut>() {
+        for keys in [&mut registration.cancel_keys, &mut registration.shortcuts] {
+            while let Some(key) = keys.last().copied() {
+                global.unregister(key).map_err(|e| e.to_string())?;
+                keys.pop();
+            }
+        }
     }
     #[cfg(target_os = "linux")]
     if let Some(portal) = registration.portal.take() {
         portal.close().await;
     }
-    let Some(shortcut) = shortcut else {
-        return Ok(());
-    };
-
-    #[cfg(target_os = "macos")]
-    if let Some(key) = double_tap_key(&shortcut) {
-        return app
-            .shortcut()
-            .register_double_tap(key, state.active.clone())
-            .map_err(|e| e.to_string());
-    }
-
-    #[cfg(target_os = "macos")]
-    if shortcut == "Fn" || shortcut == "RightCommand" {
-        return app
-            .shortcut()
-            .register(
-                crate::HotKey {
-                    key: None,
-                    modifiers: vec![if shortcut == "Fn" {
-                        crate::Modifier::Fn
-                    } else {
-                        crate::Modifier::RightCommand
-                    }],
-                },
-                crate::Options {
-                    double_tap_lock_enabled: false,
-                    ..Default::default()
-                },
-            )
-            .map_err(|e| e.to_string());
-    }
-
-    let key = parse_shortcut(&shortcut)?;
-    #[cfg(target_os = "linux")]
-    if uses_portal() {
-        registration.portal = Some(portal::register(app.clone(), key).await?);
-        return Ok(());
-    }
-
-    let down = Arc::new(AtomicBool::new(false));
-    app.global_shortcut()
-        .on_shortcut(key, move |app, _, event| {
-            let pressed = event.state == ShortcutState::Pressed;
-            if down.swap(pressed, Ordering::SeqCst) == pressed {
-                return;
-            }
-            let event = if pressed {
-                ShortcutEvent::Pressed
-            } else {
-                ShortcutEvent::Released
-            };
-            let _ = event.emit(app);
-        })
-        .map_err(|e| {
-            format!("Could not register dictation shortcut. It may be used by another app: {e}")
-        })?;
-    registration.shortcut = Some(key);
     Ok(())
 }
 
@@ -130,30 +114,34 @@ pub async fn set_active(app: tauri::AppHandle, active: bool) -> Result<(), Strin
     let state = app.state::<GlobalState>();
     let mut registration = state.registration.lock().await;
     state.active.store(active, Ordering::SeqCst);
+    if !active {
+        app.state::<press::Presses>().reset();
+    }
     #[cfg(target_os = "linux")]
     if uses_portal() {
         return Ok(());
     }
-    if app
-        .try_state::<tauri_plugin_global_shortcut::GlobalShortcut<tauri::Wry>>()
-        .is_none()
-    {
+    let Some(global) = app.try_state::<GlobalShortcut>() else {
         return Ok(());
-    }
+    };
     if active {
-        let mut keys = vec![Shortcut::new(None, Code::Escape)];
-        if let Some(shortcut) = registration.shortcut {
-            keys.push(Shortcut::new(Some(shortcut.mods), Code::Escape));
-        }
+        let keys = std::iter::once(Shortcut::new(None, Code::Escape))
+            .chain(
+                registration
+                    .shortcuts
+                    .iter()
+                    .map(|shortcut| Shortcut::new(Some(shortcut.mods), Code::Escape)),
+            )
+            .collect::<Vec<_>>();
         for key in keys {
             if registration.cancel_keys.contains(&key) {
                 continue;
             }
             let enabled = state.active.clone();
-            app.global_shortcut()
+            global
                 .on_shortcut(key, move |app, _, event| {
                     if event.state == ShortcutState::Pressed && enabled.load(Ordering::SeqCst) {
-                        let _ = ShortcutEvent::Cancelled.emit(app);
+                        press::cancel(app);
                     }
                 })
                 .map_err(|e| e.to_string())?;
@@ -161,9 +149,7 @@ pub async fn set_active(app: tauri::AppHandle, active: bool) -> Result<(), Strin
         }
     } else {
         while let Some(key) = registration.cancel_keys.last().copied() {
-            app.global_shortcut()
-                .unregister(key)
-                .map_err(|e| e.to_string())?;
+            global.unregister(key).map_err(|e| e.to_string())?;
             registration.cancel_keys.pop();
         }
     }
@@ -178,11 +164,7 @@ mod trigger;
 #[tauri::command]
 #[specta::specta]
 pub fn validate(app: tauri::AppHandle, shortcut: String) -> Result<(), String> {
-    validate_shortcut(
-        &shortcut,
-        app.try_state::<tauri_plugin_global_shortcut::GlobalShortcut<tauri::Wry>>()
-            .is_some(),
-    )
+    validate_shortcut(&shortcut, app.try_state::<GlobalShortcut>().is_some())
 }
 
 /// `DoubleTap+<KeyboardEvent.code>`: two quick taps of one modifier key.
@@ -190,6 +172,26 @@ const DOUBLE_TAP_PREFIX: &str = "DoubleTap+";
 
 fn is_native(shortcut: &str) -> bool {
     matches!(shortcut, "Fn" | "RightCommand") || shortcut.starts_with(DOUBLE_TAP_PREFIX)
+}
+
+#[cfg(target_os = "macos")]
+fn native_trigger(shortcut: &str) -> Option<anlg_shortcut_macos::Trigger> {
+    use anlg_shortcut_macos::{HotKey, Modifier, Modifiers, Options, Trigger};
+    if let Some(key) = double_tap_key(shortcut) {
+        return Some(Trigger::DoubleTap(key));
+    }
+    let modifier = match shortcut {
+        "Fn" => Modifier::Fn,
+        "RightCommand" => Modifier::RightCommand,
+        _ => return None,
+    };
+    Some(Trigger::HotKey {
+        hotkey: HotKey::modifier_only(Modifiers::from([modifier])),
+        options: Options {
+            double_tap_lock_enabled: false,
+            ..Default::default()
+        },
+    })
 }
 
 #[cfg(target_os = "macos")]
@@ -234,6 +236,25 @@ fn validate_shortcut(shortcut: &str, global_available: bool) -> Result<(), Strin
     Ok(())
 }
 
+fn plan(shortcuts: &[String], global_available: bool) -> Result<Plan, String> {
+    let mut plan = Plan::default();
+    for (source, shortcut) in shortcuts.iter().enumerate() {
+        validate_shortcut(shortcut, global_available)?;
+        #[cfg(target_os = "macos")]
+        if let Some(trigger) = native_trigger(shortcut) {
+            if !plan.native.iter().any(|(_, known)| *known == trigger) {
+                plan.native.push((source, trigger));
+            }
+            continue;
+        }
+        let key = parse_shortcut(shortcut)?;
+        if !plan.accelerators.iter().any(|(_, known)| *known == key) {
+            plan.accelerators.push((source, key));
+        }
+    }
+    Ok(plan)
+}
+
 fn parse_shortcut(shortcut: &str) -> Result<Shortcut, String> {
     let key: Shortcut = shortcut
         .parse()
@@ -266,5 +287,40 @@ mod validation_tests {
             cfg!(target_os = "macos")
         );
         assert!(validate_shortcut("DoubleTap+KeyA", true).is_err());
+    }
+
+    #[test]
+    fn plans_each_listed_shortcut_once_and_rejects_a_list_with_an_invalid_one() {
+        let list = |items: &[&str]| items.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let sources =
+            |items: &[(usize, Shortcut)]| items.iter().map(|(s, _)| *s).collect::<Vec<_>>();
+
+        let accelerators = plan(
+            &list(&["Control+Alt+KeyD", "Alt+Control+KeyD", "Shift+Alt+Space"]),
+            true,
+        )
+        .unwrap()
+        .accelerators;
+        assert_eq!(sources(&accelerators), [0, 2]);
+        assert!(plan(&list(&["Control+Alt+KeyD", "KeyD"]), true).is_err());
+
+        #[cfg(target_os = "macos")]
+        {
+            let plan = plan(
+                &list(&[
+                    "DoubleTap+AltLeft",
+                    "Control+Alt+KeyD",
+                    "Fn",
+                    "DoubleTap+AltLeft",
+                ]),
+                true,
+            )
+            .unwrap();
+            assert_eq!(
+                plan.native.iter().map(|(s, _)| *s).collect::<Vec<_>>(),
+                [0, 2]
+            );
+            assert_eq!(sources(&plan.accelerators), [1]);
+        }
     }
 }

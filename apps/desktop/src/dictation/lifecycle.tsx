@@ -34,7 +34,7 @@ export function waitForDictationCleanup() {
 export function DictationLifecycle() {
   const settingsReady = useSettingsReady();
   const enabled = useConfigValue("dictation_enabled");
-  const shortcut = useConfigValue("dictation_shortcut");
+  const shortcuts = useConfigValue("dictation_shortcuts");
   const handsFree = useConfigValue("dictation_hands_free");
   const capturingShortcut = useDictationStatus(
     (state) => state.capturingShortcut,
@@ -49,8 +49,8 @@ export function DictationLifecycle() {
     <TranscriptRetention>
       {!meetingActive && !capturingShortcut && (
         <ActiveDictation
-          key={`${shortcut}:${handsFree}:${retry}`}
-          shortcut={shortcut}
+          key={`${JSON.stringify(shortcuts)}:${handsFree}:${retry}`}
+          shortcuts={shortcuts}
           handsFree={handsFree}
         />
       )}
@@ -73,10 +73,10 @@ function unwrap<T>(
 }
 
 function ActiveDictation({
-  shortcut,
+  shortcuts: configured,
   handsFree,
 }: {
-  shortcut: string;
+  shortcuts: string[];
   handsFree: boolean;
 }) {
   const id = useRef(`system-dictation-${crypto.randomUUID()}`).current;
@@ -297,7 +297,7 @@ function ActiveDictation({
           unlisten();
           return;
         }
-        unwrap(await shortcuts.configure(shortcut));
+        unwrap(await shortcuts.configure(configured));
         armed = !disposed;
         if (!disposed)
           useDictationStatus.setState({ ready: true, error: null, cancel });
@@ -320,7 +320,7 @@ function ActiveDictation({
           unlisten?.();
           await controller.cancel();
           await presentation;
-          unwrap(await shortcuts.configure(null));
+          unwrap(await shortcuts.configure([]));
         })
         .catch(() => {});
     };

@@ -5,6 +5,7 @@ pub mod key_event;
 pub mod listener;
 pub mod processor;
 pub mod tap;
+pub mod trigger;
 
 pub use decision::*;
 pub use double_tap::{DoubleTapDetector, DoubleTapOutput, ModifierKey};
@@ -13,3 +14,4 @@ pub use key_event::*;
 pub use listener::Listener;
 pub use processor::*;
 pub use tap::{EventTap, TapError, TapEvent};
+pub use trigger::{Trigger, TriggerSet};

@@ -49,6 +49,21 @@ const cases = [
     expected: false,
   },
   {
+    name: "migrates the single legacy dictation shortcut into the list",
+    key: "dictation_shortcuts",
+    values: { dictation_shortcut: "Control+Alt+KeyD" },
+    expected: ["Control+Alt+KeyD"],
+  },
+  {
+    name: "prefers the dictation shortcut list over the legacy shortcut",
+    key: "dictation_shortcuts",
+    values: {
+      dictation_shortcut: "Control+Alt+KeyD",
+      dictation_shortcuts: '["Fn","Control+Alt+KeyD"]',
+    },
+    expected: ["Fn", "Control+Alt+KeyD"],
+  },
+  {
     name: "uses disabled legacy bounce preferences for the general setting",
     key: "notification_bounce",
     values: {

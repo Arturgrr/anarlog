@@ -51,6 +51,7 @@ const EMPTY_STORED_SETTINGS: StoredSettingValues = {
   hasValues: new Set(),
 };
 const JSON_ARRAY_KEYS = new Set<SettingKey>([
+  "dictation_shortcuts",
   "spoken_languages",
   "personalization_dictionary_terms",
   "ignored_platforms",

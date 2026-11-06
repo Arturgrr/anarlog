@@ -455,6 +455,10 @@ msgstr "Adicionar pessoa"
 msgid "Add Section"
 msgstr "Adicionar Seção"
 
+#: src/settings/dictation-shortcut.tsx
+msgid "Add shortcut"
+msgstr "Adicionar atalho"
+
 #: src/settings/developers/skills.tsx
 msgid "Add skill to…"
 msgstr "Adicionar skill a…"
@@ -587,6 +591,10 @@ msgstr "Animais e natureza"
 #: src/stt/start-failure.ts
 msgid "Another recording is still running"
 msgstr "Outra gravação ainda está em andamento"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Any of these shortcuts starts dictation. Click one to change it. You can add up to {MAX_SHORTCUTS}."
+msgstr "Qualquer um destes atalhos inicia o ditado. Clique em um para alterá-lo. Você pode adicionar até {MAX_SHORTCUTS}."
 
 #: src/settings/ai/stt/shared.tsx
 msgid "API documentation"
@@ -1020,6 +1028,10 @@ msgstr "Alterar modelo"
 msgid "Change photo"
 msgstr "Alterar foto"
 
+#: src/settings/dictation-shortcut.tsx
+msgid "Change shortcut {keys}"
+msgstr "Alterar atalho {keys}"
+
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
 msgid "Change speaker"
 msgstr "Alterar falante"
@@ -1258,16 +1270,8 @@ msgid "CLI & MCP"
 msgstr "CLI e MCP"
 
 #: src/settings/dictation.tsx
-msgid "Click here, then use your dictation shortcut."
-msgstr "Clique aqui e use seu atalho de ditado."
-
-#: src/settings/dictation-shortcut.tsx
-msgid "Click the shortcut to record a new key combination, or press one modifier key twice quickly. Press Escape to cancel."
-msgstr "Clique no atalho para gravar uma nova combinação de teclas ou pressione uma tecla modificadora duas vezes rapidamente. Pressione Esc para cancelar."
-
-#: src/settings/dictation-shortcut.tsx
-msgid "Click the shortcut to record a new key combination. Press Escape to cancel."
-msgstr "Clique no atalho para gravar uma nova combinação de teclas. Pressione Escape para cancelar."
+msgid "Click here, then use a dictation shortcut."
+msgstr "Clique aqui e use um atalho de ditado."
 
 #: src/changelog/index.tsx
 #: src/i18n/component-labels.tsx
@@ -1921,8 +1925,8 @@ msgid "Dictation is unavailable while Librelog is recording a meeting."
 msgstr "O ditado não está disponível enquanto o Librelog grava uma reunião."
 
 #: src/settings/dictation-shortcut.tsx
-msgid "Dictation shortcut"
-msgstr "Atalho de ditado"
+msgid "Dictation shortcuts"
+msgstr "Atalhos de ditado"
 
 #: src/settings/dictation.tsx
 msgid "Dictation uses your microphone, transcription provider, languages, and dictionary. Temporary audio is deleted after transcription. Your last transcript stays in memory until dictation is disabled or Librelog closes."
@@ -2683,8 +2687,12 @@ msgid "History {0}/{1}"
 msgstr "Histórico {0}/{1}"
 
 #: src/settings/dictation.tsx
-msgid "Hold your shortcut while speaking, then release it to finish."
-msgstr "Mantenha o atalho pressionado enquanto fala e solte para finalizar."
+msgid "Hold a shortcut while speaking, then release it to finish."
+msgstr "Mantenha um atalho pressionado enquanto fala e solte para finalizar."
+
+#: src/settings/dictation.tsx
+msgid "Hold a shortcut while speaking, then release it to finish. Double-tap shortcuts start with two quick presses; keep holding the second one."
+msgstr "Mantenha um atalho pressionado enquanto fala e solte para finalizar. Atalhos de toque duplo começam com dois toques rápidos; mantenha o segundo pressionado."
 
 #: src/settings/stats/index.tsx
 msgid "Hours transcribed"
@@ -2859,8 +2867,8 @@ msgid "Join our community and stay updated:"
 msgstr "Participe da nossa comunidade e fique por dentro:"
 
 #: src/settings/dictation.tsx
-msgid "Keep Librelog running to use your shortcut in other apps."
-msgstr "Mantenha o Librelog aberto para usar o atalho em outros apps."
+msgid "Keep Librelog running to use your dictation shortcuts in other apps."
+msgstr "Mantenha o Librelog aberto para usar seus atalhos de ditado em outros apps."
 
 #: src/session/components/note-conflict-banner.tsx
 msgid "Keep this version"
@@ -3551,6 +3559,10 @@ msgstr "Nova automação"
 msgid "New chat"
 msgstr "Novo chat"
 
+#: src/settings/dictation-shortcut.tsx
+msgid "New dictation shortcut"
+msgstr "Novo atalho de ditado"
+
 #: src/folders/sidebar.tsx
 msgid "New folder"
 msgstr "Nova pasta"
@@ -4186,6 +4198,22 @@ msgstr "Preparando transcrição..."
 msgid "Preparing…"
 msgstr "Preparando…"
 
+#: src/settings/dictation.tsx
+msgid "Press a shortcut key twice and keep holding it while speaking, then release it to finish."
+msgstr "Pressione uma tecla de atalho duas vezes e mantenha pressionada enquanto fala; solte para finalizar."
+
+#: src/settings/dictation.tsx
+msgid "Press a shortcut key twice to start, then press it once to finish."
+msgstr "Pressione uma tecla de atalho duas vezes para começar e uma vez para finalizar."
+
+#: src/settings/dictation.tsx
+msgid "Press a shortcut to start, then press it again to finish."
+msgstr "Pressione um atalho para começar e pressione-o novamente para terminar."
+
+#: src/settings/dictation.tsx
+msgid "Press a shortcut to start, then press it again to finish. Double-tap shortcuts start with two quick presses."
+msgstr "Pressione um atalho para começar e pressione-o novamente para terminar. Atalhos de toque duplo começam com dois toques rápidos."
+
 #: src/settings/ai/stt/detail.tsx
 msgid "Press Enter to use this model ID."
 msgstr "Pressione Enter para usar este ID de modelo."
@@ -4195,20 +4223,16 @@ msgid "Press Escape to cancel. Dictation stops after five minutes and pauses whi
 msgstr "Pressione Escape para cancelar. O ditado para após cinco minutos e é pausado enquanto o Librelog grava uma reunião."
 
 #: src/settings/dictation-shortcut.tsx
-msgid "Press shortcut…"
+msgid "Press the keys you want, or press one modifier key twice quickly, then press Enter to save. Enter can't be part of a shortcut. Press Backspace to clear or Escape to cancel."
+msgstr "Pressione as teclas que quiser, ou uma tecla modificadora duas vezes rapidamente, e depois pressione Enter para salvar. O Enter não pode fazer parte de um atalho. Pressione Backspace para limpar ou Escape para cancelar."
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Press the keys you want, then press Enter to save. Enter can't be part of a shortcut. Press Backspace to clear or Escape to cancel."
+msgstr "Pressione as teclas que quiser e depois pressione Enter para salvar. O Enter não pode fazer parte de um atalho. Pressione Backspace para limpar ou Escape para cancelar."
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Press the shortcut…"
 msgstr "Pressione o atalho…"
-
-#: src/settings/dictation.tsx
-msgid "Press the key twice and keep holding it while speaking, then release it to finish."
-msgstr "Pressione a tecla duas vezes e mantenha pressionada enquanto fala; solte para finalizar."
-
-#: src/settings/dictation.tsx
-msgid "Press the key twice to start, then press it once to finish."
-msgstr "Pressione a tecla duas vezes para começar e uma vez para finalizar."
-
-#: src/settings/dictation.tsx
-msgid "Press your shortcut to start, then press it again to finish."
-msgstr "Pressione seu atalho para começar e pressione-o novamente para terminar."
 
 #: src/settings/general/notification.tsx
 msgid "Prevent selected apps from triggering meeting detection."
@@ -4497,6 +4521,10 @@ msgstr "Remover foto"
 #: src/chat/components/content.tsx
 msgid "Remove queued message: {0}"
 msgstr "Remover mensagem na fila: {0}"
+
+#: src/settings/dictation-shortcut.tsx
+msgid "Remove shortcut {keys}"
+msgstr "Remover atalho {keys}"
 
 #: src/settings/automations/workflow-builder.tsx
 msgid "Remove step"
@@ -5648,6 +5676,10 @@ msgstr "Este provedor usa outro processo de login."
 #: src/chat/components/session-provider.tsx
 msgid "This recording is using batch transcription, so the transcript isn't available to chat yet. Ask again after transcription finishes, or switch to a Pro model for live transcription."
 msgstr "Esta gravação usa transcrição em lote, então a transcrição ainda não está disponível para o chat. Pergunte novamente quando a transcrição terminar ou mude para um modelo Pro para ter transcrição ao vivo."
+
+#: src/settings/dictation-shortcut.tsx
+msgid "This shortcut is already in your list."
+msgstr "Este atalho já está na sua lista."
 
 #: src/settings/ai/llm/subscriptions/connect.tsx
 #: src/settings/ai/llm/subscriptions/oauth.ts
