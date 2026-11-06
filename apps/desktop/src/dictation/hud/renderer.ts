@@ -6,15 +6,14 @@ const UNIFORMS = [
   "metrics0",
   "metrics1",
   "metrics2",
-  "state",
-  "base",
-  "core",
+  "line",
+  "light",
   "plate",
   "rim",
   "shadow",
 ] as const;
 
-/** Draws Dot scope into a WebGL2 canvas sized in CSS points. */
+/** Draws the scope into a WebGL2 canvas sized in CSS points. */
 export function createHudRenderer(canvas: HTMLCanvasElement) {
   const gl = canvas.getContext("webgl2", {
     alpha: true,
@@ -55,8 +54,8 @@ export function createHudRenderer(canvas: HTMLCanvasElement) {
     gl.TEXTURE_2D,
     0,
     gl.RG32F,
-    TUNING.columns,
-    TUNING.rows,
+    TUNING.samples,
+    2,
     0,
     gl.RG,
     gl.FLOAT,
@@ -80,7 +79,7 @@ export function createHudRenderer(canvas: HTMLCanvasElement) {
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.useProgram(program);
       gl.bindVertexArray(vertices);
-      gl.uniform4f(location.metrics0, width, height, scale, TUNING.spacing);
+      gl.uniform4f(location.metrics0, width, height, scale, TUNING.span);
       gl.uniform4f(
         location.metrics1,
         pose.width,
@@ -91,13 +90,12 @@ export function createHudRenderer(canvas: HTMLCanvasElement) {
       gl.uniform4f(
         location.metrics2,
         pose.softness,
-        scope.columns,
-        scope.rows,
+        TUNING.samples,
+        TUNING.lineWidth,
         pose.height / 2,
       );
-      gl.uniform4f(location.state, pose.glow, pose.grid, pose.live, pose.cool);
-      gl.uniform4f(location.base, ...colors.base, dark ? 1 : 0);
-      gl.uniform4f(location.core, ...colors.core, 1);
+      gl.uniform4f(location.line, ...colors.line, 1);
+      gl.uniform4f(location.light, ...colors.light, 1);
       gl.uniform4fv(location.plate, colors.plate);
       gl.uniform4fv(location.rim, colors.rim);
       gl.uniform4fv(location.shadow, colors.shadow);
@@ -108,11 +106,11 @@ export function createHudRenderer(canvas: HTMLCanvasElement) {
         0,
         0,
         0,
-        scope.columns,
-        scope.rows,
+        TUNING.samples,
+        2,
         gl.RG,
         gl.FLOAT,
-        scope.dots,
+        scope.lines,
       );
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     },

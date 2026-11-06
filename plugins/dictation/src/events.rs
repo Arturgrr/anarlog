@@ -20,7 +20,7 @@ pub enum HudEvent {
     },
 }
 
-/// RMS of a buffer of samples, the level the HUD's Dot scope follows.
+/// RMS of a buffer of samples, the level the HUD's scope follows.
 pub(crate) fn rms(samples: &[f32]) -> f32 {
     if samples.is_empty() {
         return 0.0;

@@ -6,7 +6,7 @@ pub use self::macos::Handler;
 #[cfg(not(target_os = "macos"))]
 pub use self::webview::Handler;
 
-/// The HUD on macOS: a native panel drawing Dot scope with Metal
+/// The HUD on macOS: a native panel drawing the scope with Metal
 /// (`dictation-ui-macos`), prewarmed so the first press never waits on it.
 #[cfg(target_os = "macos")]
 mod macos {
@@ -38,7 +38,7 @@ mod macos {
 }
 
 /// The HUD on Windows and Linux: a transparent, click-through, never-focused
-/// webview at the top of the display under the pointer, drawing Dot scope
+/// webview at the top of the display under the pointer, drawing the scope
 /// with WebGL (`apps/desktop/src/dictation/hud`). The page keeps the HUD's
 /// clock and says when it has faded out, so the window hides. Type-checked
 /// in macOS tests too.

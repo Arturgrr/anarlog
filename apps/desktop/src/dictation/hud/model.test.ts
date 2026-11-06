@@ -22,7 +22,7 @@ describe("dictation HUD", () => {
     expect(recording.opacity).toBeGreaterThan(0.98);
     expect(recording.width).toBeCloseTo(112, 0);
     expect(
-      model.scope.dots.some((value, i) => i % 2 === 0 && value > 0.45),
+      model.scope.lines.some((value, i) => i % 2 === 1 && value > 0.45),
     ).toBe(true);
 
     model.handle({ type: "processing" }, 1, false);
@@ -37,7 +37,7 @@ describe("dictation HUD", () => {
     expect(model.active).toBe(false);
   });
 
-  it("turns coral on failure and only fades on cancel", () => {
+  it("turns red on failure and only fades on cancel", () => {
     const model = new HudModel();
     model.handle({ type: "started" }, 0, false);
     run(model, 0, 0.5);

@@ -2,7 +2,7 @@ import AppKit
 import Metal
 import QuartzCore
 
-/// Dot scope's Metal pipeline, its shader compiled from source at runtime.
+/// The scope's Metal pipeline, its shader compiled from source at runtime.
 final class HudRenderer {
   /// Built once, off the main thread when prewarmed.
   static let shared: HudRenderer? = HudRenderer()
@@ -18,20 +18,20 @@ final class HudRenderer {
     do {
       let library = try device.makeLibrary(source: hudShaderSource, options: nil)
       let descriptor = MTLRenderPipelineDescriptor()
-      descriptor.label = "Dot scope"
+      descriptor.label = "Dictation scope"
       descriptor.vertexFunction = library.makeFunction(name: "hud_vertex")
       descriptor.fragmentFunction = library.makeFunction(name: "hud_fragment")
       descriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
       pipeline = try device.makeRenderPipelineState(descriptor: descriptor)
     } catch {
-      NSLog("Dictation HUD: could not build the Dot scope shader: \(error)")
+      NSLog("Dictation HUD: could not build the scope shader: \(error)")
       return nil
     }
     self.device = device
     self.queue = queue
   }
 
-  func draw(into layer: CAMetalLayer, uniforms: HudUniforms, dots: [SIMD2<UInt16>]) {
+  func draw(into layer: CAMetalLayer, uniforms: HudUniforms, lines: [SIMD2<Float>]) {
     guard let drawable = layer.nextDrawable(), let commands = queue.makeCommandBuffer() else {
       return
     }
@@ -44,7 +44,7 @@ final class HudRenderer {
     encoder.setRenderPipelineState(pipeline)
     var uniforms = uniforms
     encoder.setFragmentBytes(&uniforms, length: MemoryLayout<HudUniforms>.stride, index: 0)
-    dots.withUnsafeBytes { bytes in
+    lines.withUnsafeBytes { bytes in
       if let base = bytes.baseAddress {
         encoder.setFragmentBytes(base, length: bytes.count, index: 1)
       }
@@ -56,7 +56,7 @@ final class HudRenderer {
   }
 }
 
-/// The dictation HUD on macOS: Hex's Dot scope in a click-through panel just
+/// The dictation HUD on macOS: the scope in a click-through panel just
 /// below the menu bar of the screen under the pointer, stepped on the
 /// display's refresh. Main thread only.
 final class DictationHud: NSObject {
@@ -182,17 +182,16 @@ final class DictationHud: NSObject {
     let size = scopeView.metalLayer.drawableSize
     let uniforms = HudUniforms(
       metrics0: [
-        Float(size.width), Float(size.height), Float(panel.backingScaleFactor), HudTuning.spacing,
+        Float(size.width), Float(size.height), Float(panel.backingScaleFactor), HudTuning.span,
       ],
       metrics1: [pose.width, pose.height, pose.opacity, pose.scale],
-      metrics2: [pose.softness, Float(scope.columns), Float(scope.rows), pose.height / 2],
-      state: [pose.glow, pose.grid, pose.live, pose.cool],
-      base: SIMD4(palette.base, dark ? 1 : 0),
-      core: SIMD4(palette.core, 1),
+      metrics2: [pose.softness, Float(HudTuning.samples), HudTuning.lineWidth, pose.height / 2],
+      line: SIMD4(palette.line, 1),
+      light: SIMD4(palette.light, 1),
       plate: palette.plate,
       rim: palette.rim,
       shadow: palette.shadow)
-    renderer.draw(into: scopeView.metalLayer, uniforms: uniforms, dots: scope.dots)
+    renderer.draw(into: scopeView.metalLayer, uniforms: uniforms, lines: scope.lines)
   }
 
   private func layoutLiveText() {

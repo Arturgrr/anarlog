@@ -36,7 +36,7 @@ enum HudEvent: Decodable, Equatable {
 
 /// The HUD's lifecycle, ported from Hex's `src/dictation/indicator.rs`
 /// (MIT, © 2026 Christopher Langton) for one dictation at a time: the phase
-/// bookkeeping and how long each look shows, driving Dot scope. Time is
+/// bookkeeping and how long each look shows, driving the scope. Time is
 /// passed in, never read.
 final class HudModel {
   private enum Phase {
@@ -51,7 +51,7 @@ final class HudModel {
   /// The loudness before any meter arrives, dBFS.
   private static let silent: Float = -120
   /// The shortest processing look: a fast transcription still shows the
-  /// field turning blue before done clears it.
+  /// light passing along the traces before done clears them.
   private static let processingMinimum: Double = 0.2
   /// How long done shows before the HUD collapses: a third into done's
   /// 0.3 s wipe, so the collapse and the wipe end together.
