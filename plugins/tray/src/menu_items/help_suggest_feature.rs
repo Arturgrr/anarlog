@@ -21,7 +21,7 @@ impl MenuItemHandler for HelpSuggestFeature {
         Ok(MenuItemKind::MenuItem(item))
     }
 
-    fn handle(_app: &AppHandle<tauri::Wry>) {
-        let _ = open::that("https://github.com/Arturgrr/librelog/issues");
+    fn handle(app: &AppHandle<tauri::Wry>) {
+        crate::feedback::open_issue_form(app, crate::feedback::FEEDBACK_TEMPLATE);
     }
 }
