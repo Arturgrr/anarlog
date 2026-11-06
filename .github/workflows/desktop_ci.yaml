@@ -127,7 +127,6 @@ jobs:
             --exclude tauri-plugin-analytics\
             --exclude tauri-plugin-audio-priority \
             --exclude tauri-plugin-auth \
-            --exclude tauri-plugin-bedrock \
             --exclude tauri-plugin-db2 \
             --exclude tauri-plugin-deeplink2 \
             --exclude tauri-plugin-detect \

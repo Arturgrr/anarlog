@@ -42,7 +42,6 @@
     "tracing:default",
     "anlg-tray:default",
     "agent:default",
-    "bedrock:default",
     "updater:default",
     "updater2:default",
     "deeplink2:default",

@@ -861,12 +861,6 @@ importers:
         specifier: ^2.10.1
         version: 2.10.1
 
-  plugins/bedrock:
-    dependencies:
-      '@tauri-apps/api':
-        specifier: ^2.10.1
-        version: 2.10.1
-
   plugins/contacts:
     dependencies:
       '@tauri-apps/api':
