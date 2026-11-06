@@ -42,7 +42,6 @@ tauri-plugin-fs2 = { workspace = true }
 tauri-plugin-hooks = { workspace = true }
 tauri-plugin-http = { workspace = true }
 tauri-plugin-icon = { workspace = true }
-tauri-plugin-js = { workspace = true }
 tauri-plugin-local-api = { workspace = true }
 tauri-plugin-local-auth = { workspace = true }
 tauri-plugin-local-stt = { workspace = true }

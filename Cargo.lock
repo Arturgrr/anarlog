@@ -2419,15 +2419,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "convert_case"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "633458d4ef8c78b72454de2d54fd6ab2e60f9e02be22f3c6104cdc8a4e0fceb9"
-dependencies = [
- "unicode-segmentation",
-]
-
-[[package]]
 name = "cookie"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3346,7 +3337,6 @@ dependencies = [
  "tauri-plugin-hooks",
  "tauri-plugin-http",
  "tauri-plugin-icon",
- "tauri-plugin-js",
  "tauri-plugin-local-api",
  "tauri-plugin-local-auth",
  "tauri-plugin-local-stt",
@@ -10734,19 +10724,7 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a135375fbac5ba723bb6a48f432a72f81539cedde422f0121a86c7c4e96d8e0d"
 dependencies = [
- "rquickjs-core 0.10.0",
-]
-
-[[package]]
-name = "rquickjs"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c50dc6d6c587c339edb4769cf705867497a2baf0eca8b4645fa6ecd22f02c77a"
-dependencies = [
- "either",
- "indexmap 2.14.0",
- "rquickjs-core 0.11.0",
- "rquickjs-macro",
+ "rquickjs-core",
 ]
 
 [[package]]
@@ -10757,43 +10735,7 @@ checksum = "bccb7121a123865c8ace4dea42e7ed84d78b90cbaf4ca32c59849d8d210c9672"
 dependencies = [
  "hashbrown 0.16.1",
  "relative-path",
- "rquickjs-sys 0.10.0",
-]
-
-[[package]]
-name = "rquickjs-core"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8bf7840285c321c3ab20e752a9afb95548c75cd7f4632a0627cea3507e310c1"
-dependencies = [
- "async-lock",
- "chrono",
- "dlopen2",
- "either",
- "hashbrown 0.16.1",
- "indexmap 2.14.0",
- "phf 0.13.1",
- "relative-path",
- "rquickjs-sys 0.11.0",
-]
-
-[[package]]
-name = "rquickjs-macro"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7106215ff41a5677b104906a13e1a440b880f4b6362b5dc4f3978c267fad2b80"
-dependencies = [
- "convert_case 0.10.0",
- "fnv",
- "ident_case",
- "indexmap 2.14.0",
- "phf_generator 0.13.1",
- "phf_shared 0.13.1",
- "proc-macro-crate 3.5.0",
- "proc-macro2",
- "quote",
- "rquickjs-core 0.11.0",
- "syn 2.0.117",
+ "rquickjs-sys",
 ]
 
 [[package]]
@@ -10801,15 +10743,6 @@ name = "rquickjs-sys"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57b1b6528590d4d65dc86b5159eae2d0219709546644c66408b2441696d1d725"
-dependencies = [
- "cc",
-]
-
-[[package]]
-name = "rquickjs-sys"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27344601ef27460e82d6a4e1ecb9e7e99f518122095f3c51296da8e9be2b9d83"
 dependencies = [
  "cc",
 ]
@@ -13573,21 +13506,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri-plugin-js"
-version = "0.1.0"
-dependencies = [
- "rquickjs 0.11.0",
- "serde",
- "specta",
- "specta-typescript",
- "tauri",
- "tauri-plugin",
- "tauri-specta",
- "thiserror 2.0.18",
- "tokio",
-]
-
-[[package]]
 name = "tauri-plugin-local-api"
 version = "0.1.0"
 dependencies = [
@@ -14103,7 +14021,7 @@ version = "0.1.0"
 dependencies = [
  "dirs 6.0.0",
  "regex",
- "rquickjs 0.10.0",
+ "rquickjs",
  "serde",
  "serde_json",
  "specta",
