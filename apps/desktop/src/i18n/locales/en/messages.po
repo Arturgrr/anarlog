@@ -13,9 +13,49 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: src/settings/ai/llm/configure.tsx
+msgid ""
+"- Ensure LM Studio server is **running.** (Default port is 1234)\n"
+"- Enable **CORS** in LM Studio config."
+msgstr ""
+"- Ensure LM Studio server is **running.** (Default port is 1234)\n"
+"- Enable **CORS** in LM Studio config."
+
+#: src/settings/ai/llm/configure.tsx
+msgid ""
+"- Ensure Ollama is **running** (`ollama serve`)\n"
+"- Pull a model first (`ollama pull llama3.2`)"
+msgstr ""
+"- Ensure Ollama is **running** (`ollama serve`)\n"
+"- Pull a model first (`ollama pull llama3.2`)"
+
+#: src/settings/ai/llm/configure.tsx
+msgid ""
+"- Ensure the Unsloth server is **running.** (Default port is 8888)\n"
+"- Paste the API key from Unsloth. It starts with `sk-unsloth-`.\n"
+"- Only models **loaded** in Unsloth show up in the list."
+msgstr ""
+"- Ensure the Unsloth server is **running.** (Default port is 8888)\n"
+"- Paste the API key from Unsloth. It starts with `sk-unsloth-`.\n"
+"- Only models **loaded** in Unsloth show up in the list."
+
+#: src/settings/ai/llm/configure.tsx
+msgid ""
+"- Uses Apple's on-device **System Language Model**.\n"
+"- Requires macOS 26 or later, a Mac that supports Apple Intelligence, and Apple Intelligence turned on.\n"
+"- This experiment is text-only and works best with shorter transcripts."
+msgstr ""
+"- Uses Apple's on-device **System Language Model**.\n"
+"- Requires macOS 26 or later, a Mac that supports Apple Intelligence, and Apple Intelligence turned on.\n"
+"- This experiment is text-only and works best with shorter transcripts."
+
 #: src/services/enhancer/summary-notification.ts
 msgid "\"{title}\" is ready to read."
 msgstr "\"{title}\" is ready to read."
+
+#: src/templates/queries.ts
+msgid "(Copy)"
+msgstr "(Copy)"
 
 #: src/settings/general/notification.tsx
 msgid "(default)"
@@ -25,15 +65,50 @@ msgstr "(default)"
 msgid "(Unavailable — using current default)"
 msgstr "(Unavailable — using current default)"
 
+#. placeholder {0}: ignoredOptions.length
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "{0, plural, one {# item ignored.} other {# items ignored.}}"
+msgstr "{0, plural, one {# item ignored.} other {# items ignored.}}"
+
 #. placeholder {0}: group.sessionIds.length
 #: src/sidebar/toast/undo-delete-toast.tsx
-msgid "{0} {noteLabel} deleted"
-msgstr "{0} {noteLabel} deleted"
+msgid "{0, plural, one {# note deleted} other {# notes deleted}}"
+msgstr "{0, plural, one {# note deleted} other {# notes deleted}}"
+
+#. placeholder {0}: failure.removedDraftCount ?? 0
+#: src/chat/components/input/hooks.ts
+msgid "{0, plural, one {An older unsent chat draft was removed to keep your current draft.} other {# older unsent chat drafts were removed to keep your current draft.}}"
+msgstr "{0, plural, one {An older unsent chat draft was removed to keep your current draft.} other {# older unsent chat drafts were removed to keep your current draft.}}"
+
+#. placeholder {0}: duplicatesWithData.length
+#: src/contacts/details.tsx
+msgid "{0, plural, one {Another contact with the same name or email exists. Merge to consolidate all related notes and information.} other {# contacts with the same name or email exist. Merge to consolidate all related notes and information.}}"
+msgstr "{0, plural, one {Another contact with the same name or email exists. Merge to consolidate all related notes and information.} other {# contacts with the same name or email exist. Merge to consolidate all related notes and information.}}"
+
+#. placeholder {0}: createdAt.recent_days ?? 0
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "{0, plural, one {Date: recent # day, including today} other {Date: recent # days, including today}}"
+msgstr "{0, plural, one {Date: recent # day, including today} other {Date: recent # days, including today}}"
+
+#. placeholder {0}: duplicatesWithData.length
+#: src/contacts/details.tsx
+msgid "{0, plural, one {Duplicate Contact Found} other {Duplicate Contacts Found}}"
+msgstr "{0, plural, one {Duplicate Contact Found} other {Duplicate Contacts Found}}"
+
+#. placeholder {0}: options.length
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "{0, plural, one {Showing total of # model.} other {Showing total of # models.}}"
+msgstr "{0, plural, one {Showing total of # model.} other {Showing total of # models.}}"
 
 #. placeholder {0}: status.commandName
 #: src/settings/developers/cli.tsx
 msgid "{0} could not be installed"
 msgstr "{0} could not be installed"
+
+#. placeholder {0}: formatToolName(toolName)
+#: src/chat/components/message/tool/generic.tsx
+msgid "{0} failed"
+msgstr "{0} failed"
 
 #. placeholder {0}: status.commandName
 #: src/settings/developers/cli.tsx
@@ -59,6 +134,10 @@ msgstr "{0}% complete"
 msgid "{absDays} days ago"
 msgstr "{absDays} days ago"
 
+#: src/i18n/native-labels.tsx
+msgid "{app} will stop running in the background."
+msgstr "{app} will stop running in the background."
+
 #: src/settings/stats/badge-collection.tsx
 msgid "{count} of {total} collected"
 msgstr "{count} of {total} collected"
@@ -71,7 +150,11 @@ msgstr "{date}. Conversations: {count}"
 msgid "{entryCount} selected"
 msgstr "{entryCount} selected"
 
-#. placeholder {0}: formatLanguageList(unsupportedLanguages)
+#: src/session/components/note-input/audio-drop-target.tsx
+msgid "{leadingLabels}, or {lastLabel}"
+msgstr "{leadingLabels}, or {lastLabel}"
+
+#. placeholder {0}: formatLanguageList(unsupportedLanguages, i18n)
 #: src/settings/ai/stt/select.tsx
 msgid "{model} can't transcribe {0}. Try another model or change your spoken languages."
 msgstr "{model} can't transcribe {0}. Try another model or change your spoken languages."
@@ -84,17 +167,63 @@ msgstr "{model} can't transcribe all selected languages together. Try another mo
 msgid "{months} months ago"
 msgstr "{months} months ago"
 
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
+msgid "{notice}; stop listening"
+msgstr "{notice}; stop listening"
+
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
+msgid "{notice}. Open Librelog to retry or change devices."
+msgstr "{notice}. Open Librelog to retry or change devices."
+
+#: src/stt/meeting-apps.ts
+msgid "{otherAppCount, plural, one {Ignore {firstName} and # other app?} other {Ignore {firstName} and # other apps?}}"
+msgstr "{otherAppCount, plural, one {Ignore {firstName} and # other app?} other {Ignore {firstName} and # other apps?}}"
+
 #: src/settings/stats/insights.tsx
 msgid "{peakCount} of {total} conversations ({share}) started on this weekday in the selected period."
 msgstr "{peakCount} of {total} conversations ({share}) started on this weekday in the selected period."
+
+#: src/stt/meeting-screen-records.ts
+msgid "{platformLabel} shared screen"
+msgstr "{platformLabel} shared screen"
 
 #: src/composer/index.tsx
 msgid "{primaryModifier} ↩ to send"
 msgstr "{primaryModifier} ↩ to send"
 
+#: src/stt/useRunBatch.ts
+msgid "{providerLabel} is not available for batch transcription on this platform. Configure a batch-capable speech-to-text provider."
+msgstr "{providerLabel} is not available for batch transcription on this platform. Configure a batch-capable speech-to-text provider."
+
+#: src/stt/useRunBatch.ts
+msgid "{providerLabel} is not available for batch transcription with the selected languages. Choose languages it supports, or configure another speech-to-text provider."
+msgstr "{providerLabel} is not available for batch transcription with the selected languages. Choose languages it supports, or configure another speech-to-text provider."
+
+#: src/settings/ai/stt/select.tsx
+msgid "{remainingCount} more"
+msgstr "{remainingCount} more"
+
+#: src/session/components/outer-header/metadata/index.tsx
+msgid "{startStr} to {endStr}"
+msgstr "{startStr} to {endStr}"
+
+#: src/session/components/note-input/audio-drop-target.tsx
+msgid "{supportedAudioFormats} audio"
+msgstr "{supportedAudioFormats} audio"
+
 #: src/sidebar/toast/undo-delete-toast.tsx
 msgid "{title} deleted"
 msgstr "{title} deleted"
+
+#: src/stt/useRunBatch.ts
+msgid "{unavailableLabel} is not available for batch transcription. Using {fallbackLabel} instead."
+msgstr "{unavailableLabel} is not available for batch transcription. Using {fallbackLabel} instead."
+
+#: src/templates/queries.ts
+msgid "{value} (Copy)"
+msgstr "{value} (Copy)"
 
 #: src/settings/stats/badge-collection.tsx
 msgid "{value} / {target} active weeks"
@@ -103,6 +232,10 @@ msgstr "{value} / {target} active weeks"
 #: src/settings/stats/badge-collection.tsx
 msgid "{value} / {target} conversations"
 msgstr "{value} / {target} conversations"
+
+#: src/session/components/note-input/header-enhanced.tsx
+msgid "{viewTitle} copied to clipboard"
+msgstr "{viewTitle} copied to clipboard"
 
 #: src/sidebar/timeline/utils/index.ts
 msgid "{weeks} weeks ago"
@@ -152,6 +285,14 @@ msgstr "A Markdown file with the note, summary, and transcript."
 msgid "a month ago"
 msgstr "a month ago"
 
+#: src/stt/useStartListening.ts
+msgid "A participant declined recording. Librelog stopped listening."
+msgstr "A participant declined recording. Librelog stopped listening."
+
+#: src/onboarding/welcome-note.ts
+msgid "A quick introduction to Librelog."
+msgstr "A quick introduction to Librelog."
+
 #: src/templates/template-sidebar.tsx
 msgid "A to Z"
 msgstr "A to Z"
@@ -160,6 +301,11 @@ msgstr "A to Z"
 msgid "a week ago"
 msgstr "a week ago"
 
+#: src/i18n/native-labels.tsx
+msgid "About {app}"
+msgstr "About {app}"
+
+#: src/i18n/external-messages.ts
 #: src/onboarding/permissions.tsx
 #: src/settings/general/permissions.tsx
 msgid "Accessibility"
@@ -194,7 +340,12 @@ msgstr "Add"
 msgid "Add \"{0}\""
 msgstr "Add \"{0}\""
 
-#. placeholder {0}: formatLanguageList(needsSystemSettings)
+#. placeholder {0}: option.name
+#: src/session/components/outer-header/metadata/participants/dropdown.tsx
+msgid "Add \"<0>{0}</0>\""
+msgstr "Add \"<0>{0}</0>\""
+
+#. placeholder {0}: formatLanguageList(needsSystemSettings, i18n)
 #: src/settings/ai/stt/select.tsx
 msgid "Add {0} in System Settings > General > Language & Region to transcribe with {model}, or choose another model."
 msgstr "Add {0} in System Settings > General > Language & Region to transcribe with {model}, or choose another model."
@@ -263,9 +414,17 @@ msgstr "Add notes about this contact..."
 msgid "Add organization"
 msgstr "Add organization"
 
+#: src/session/components/outer-header/metadata/participants/input.tsx
+msgid "Add participants"
+msgstr "Add participants"
+
 #: src/contacts/new-person-form.tsx
 msgid "Add person"
 msgstr "Add person"
+
+#: src/templates/sections-editor.tsx
+msgid "Add Section"
+msgstr "Add Section"
 
 #: src/settings/developers/skills.tsx
 msgid "Add skill to…"
@@ -278,6 +437,10 @@ msgstr "Add spoken language"
 #: src/settings/automations/workflow-builder.tsx
 msgid "Add step"
 msgstr "Add step"
+
+#: src/templates/template-form.tsx
+msgid "Add tag"
+msgstr "Add tag"
 
 #: src/calendar/components/event-chip.tsx
 msgid "Add to folder"
@@ -296,6 +459,7 @@ msgstr "Additional spoken languages"
 msgid "Advanced"
 msgstr "Advanced"
 
+#: src/settings/ai/shared/provider-labels.ts
 #: src/settings/ai/stt/local-file-model.tsx
 #: src/settings/ai/stt/select.tsx
 msgid "After recording"
@@ -313,6 +477,18 @@ msgstr "After the meeting summary is ready"
 msgid "Agent skills"
 msgstr "Agent skills"
 
+#: src/sidebar/settings-nav-groups.ts
+msgid "AI"
+msgstr "AI"
+
+#: src/store/zustand/ai-task/tasks.ts
+msgid "AI generation did not return any text."
+msgstr "AI generation did not return any text."
+
+#: src/store/zustand/ai-task/tasks.ts
+msgid "AI generation exceeded the safe output limit."
+msgstr "AI generation exceeded the safe output limit."
+
 #: src/settings/automations/index.tsx
 msgid "AI step"
 msgstr "AI step"
@@ -320,6 +496,10 @@ msgstr "AI step"
 #: src/contacts/details.tsx
 msgid "AI-generated summary of all interactions and notes with this contact will appear here. This will synthesize key discussion points, action items, and relationship context across all meetings and notes."
 msgstr "AI-generated summary of all interactions and notes with this contact will appear here. This will synthesize key discussion points, action items, and relationship context across all meetings and notes."
+
+#: src/settings/general/timezone.tsx
+msgid "Alaska"
+msgstr "Alaska"
 
 #: src/settings/developers/webhooks.tsx
 msgid "All events"
@@ -337,9 +517,21 @@ msgstr "All Set"
 msgid "All time"
 msgstr "All time"
 
+#: src/i18n/native-labels.tsx
+msgid "Allow Accessibility"
+msgstr "Allow Accessibility"
+
+#: src/stt/start-failure.ts
+msgid "Allow microphone access for Librelog, then try again."
+msgstr "Allow microphone access for Librelog, then try again."
+
 #: src/session/components/outer-header/overflow/always-on-top.tsx
 msgid "Always on Top"
 msgstr "Always on Top"
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Amazon Transcribe's native file API requires SigV4 plus an S3 object. Enter an OpenAI-compatible gateway URL that performs that AWS authentication and upload, then paste the gateway token as the API key."
+msgstr "Amazon Transcribe's native file API requires SigV4 plus an S3 object. Enter an OpenAI-compatible gateway URL that performs that AWS authentication and upload, then paste the gateway token as the API key."
 
 #: src/shared/control.tsx
 msgid "An unexpected error occurred."
@@ -353,6 +545,14 @@ msgstr "Analyzing structure..."
 msgid "Animals & Nature"
 msgstr "Animals & Nature"
 
+#: src/stt/start-failure.ts
+msgid "Another recording is still running"
+msgstr "Another recording is still running"
+
+#: src/settings/ai/stt/shared.tsx
+msgid "API documentation"
+msgstr "API documentation"
+
 #: src/settings/ai/shared/index.tsx
 msgid "API Key"
 msgstr "API Key"
@@ -360,6 +560,20 @@ msgstr "API Key"
 #: src/settings/ai/shared/provider-selection-prompt.ts
 msgid "API key saved"
 msgstr "API key saved"
+
+#. placeholder {0}: deepgramHealth.error.message
+#: src/settings/ai/stt/health.tsx
+msgid "API key verification failed: {0}"
+msgstr "API key verification failed: {0}"
+
+#: src/settings/ai/stt/shared.tsx
+msgid "API Keys"
+msgstr "API Keys"
+
+#: src/settings/ai/llm/shared.tsx
+#: src/settings/ai/stt/shared.tsx
+msgid "API setup"
+msgstr "API setup"
 
 #: src/sidebar/settings-nav-groups.ts
 msgid "App"
@@ -378,6 +592,18 @@ msgstr "Appearance"
 msgid "Apple Calendar access is off"
 msgstr "Apple Calendar access is off"
 
+#: src/settings/ai/shared/list-apple-foundation.ts
+msgid "Apple Foundation Models is not available."
+msgstr "Apple Foundation Models is not available."
+
+#: src/ai/apple-foundation-model.ts
+msgid "Apple Foundation Models requires a text prompt."
+msgstr "Apple Foundation Models requires a text prompt."
+
+#: src/settings/ai/shared/list-apple-foundation.ts
+msgid "Apple Foundation Models requires macOS 26 or later."
+msgstr "Apple Foundation Models requires macOS 26 or later."
+
 #: src/main/windows-title-bar.tsx
 msgid "Application menu"
 msgstr "Application menu"
@@ -386,13 +612,31 @@ msgstr "Application menu"
 msgid "Apply to all"
 msgstr "Apply to all"
 
+#: src/chat/components/message/tool/edit-summary.tsx
 #: src/edit/tab-content.tsx
 msgid "Apply to memo"
 msgstr "Apply to memo"
 
+#: src/chat/components/message/tool/edit-summary.tsx
 #: src/edit/tab-content.tsx
 msgid "Apply to summary"
 msgstr "Apply to summary"
+
+#: src/stt/detect-events.ts
+msgid "Are you in {title} right now?"
+msgstr "Are you in {title} right now?"
+
+#: src/stt/detect-events.ts
+msgid "Are you in a meeting?"
+msgstr "Are you in a meeting?"
+
+#: src/stt/detect-events.ts
+msgid "Are you talking to {firstName} and {secondName} right now?"
+msgstr "Are you talking to {firstName} and {secondName} right now?"
+
+#: src/stt/detect-events.ts
+msgid "Are you talking to {name} right now?"
+msgstr "Are you talking to {name} right now?"
 
 #: src/chat/components/input/index.tsx
 #: src/shared/chat-cta.tsx
@@ -419,8 +663,18 @@ msgstr "Attach Markdown or text"
 msgid "Attach up to three past summaries you like. Librelog will learn how you prefer meeting notes to be structured and written."
 msgstr "Attach up to three past summaries you like. Librelog will learn how you prefer meeting notes to be structured and written."
 
+#: src/shared/hooks/useFileUpload.ts
+msgid "Attachments must be smaller than 4 MB"
+msgstr "Attachments must be smaller than 4 MB"
+
+#: src/settings/general/timezone.tsx
+msgid "Auckland"
+msgstr "Auckland"
+
+#: src/meeting-float/route-state.ts
 #: src/settings/general/index.tsx
 #: src/settings/general/permissions.tsx
+#: src/stt/useUploadFile.ts
 msgid "Audio"
 msgstr "Audio"
 
@@ -428,9 +682,58 @@ msgstr "Audio"
 msgid "Audio available"
 msgstr "Audio available"
 
+#: src/store/zustand/listener/general-shared.ts
+msgid "Audio capture was interrupted"
+msgstr "Audio capture was interrupted"
+
+#: src/services/audio-cleanup.ts
+msgid "Audio cleanup could not finish"
+msgstr "Audio cleanup could not finish"
+
+#: src/services/audio-cleanup.ts
+#: src/stt/capture-lifecycle.ts
+msgid "Audio could not be deleted"
+msgstr "Audio could not be deleted"
+
+#: src/session/components/note-input/transcript/index.tsx
+msgid "Audio could not be deleted."
+msgstr "Audio could not be deleted."
+
+#: src/services/audio-cleanup.ts
+msgid "Audio could not be recovered"
+msgstr "Audio could not be recovered"
+
 #: src/settings/general/audio-settings.tsx
 msgid "Audio file retention"
 msgstr "Audio file retention"
+
+#: src/stt/useUploadFile.ts
+msgid "Audio files without a native path must be smaller than 4 MB"
+msgstr "Audio files without a native path must be smaller than 4 MB"
+
+#: src/stt/useStartListening.ts
+msgid "Audio is being saved. Choose a transcription provider to ensure this recording can be transcribed."
+msgstr "Audio is being saved. Choose a transcription provider to ensure this recording can be transcribed."
+
+#: src/stt/capture-lifecycle.ts
+msgid "Audio kept to finish your transcript"
+msgstr "Audio kept to finish your transcript"
+
+#: src/store/zustand/listener/general-live.ts
+msgid "Audio retry failed"
+msgstr "Audio retry failed"
+
+#: src/store/zustand/listener/general-live.ts
+msgid "Audio saving is delayed"
+msgstr "Audio saving is delayed"
+
+#: src/store/zustand/listener/general-live.ts
+msgid "Audio saving was interrupted"
+msgstr "Audio saving was interrupted"
+
+#: src/stt/start-failure.ts
+msgid "Audio settings"
+msgstr "Audio settings"
 
 #: src/lock/screen.tsx
 msgid "Authenticate to continue."
@@ -439,6 +742,16 @@ msgstr "Authenticate to continue."
 #: src/lock/screen.tsx
 msgid "Authenticating…"
 msgstr "Authenticating…"
+
+#: src/session/components/note-input/template-picker.tsx
+#: src/templates/auto-form.tsx
+#: src/templates/template-sidebar.tsx
+msgid "Auto"
+msgstr "Auto"
+
+#: src/templates/auto-form.tsx
+msgid "Auto format is unavailable."
+msgstr "Auto format is unavailable."
 
 #: src/templates/auto-form.tsx
 msgid "Auto summary format"
@@ -493,6 +806,11 @@ msgstr "Automation removed"
 msgid "Automations"
 msgstr "Automations"
 
+#: src/settings/ai/llm/shared.tsx
+#: src/settings/ai/stt/shared.tsx
+msgid "Available models"
+msgstr "Available models"
+
 #: src/settings/stats/insights.tsx
 msgid "Average across the capture days counted above."
 msgstr "Average across the capture days counted above."
@@ -502,6 +820,14 @@ msgstr "Average across the capture days counted above."
 #: src/sidebar/custom-sidebar-header.tsx
 msgid "Back"
 msgstr "Back"
+
+#: src/settings/general/timezone.tsx
+msgid "Bangkok"
+msgstr "Bangkok"
+
+#: src/meeting-float/labels.ts
+msgid "Bar opacity"
+msgstr "Bar opacity"
 
 #: src/settings/ai/shared/index.tsx
 msgid "Base URL"
@@ -514,6 +840,22 @@ msgstr "Based on captured conversations, including imported transcripts. Each co
 #: src/chat/components/body/empty.tsx
 msgid "Based on the conversation so far, suggest a few questions I could ask next."
 msgstr "Based on the conversation so far, suggest a few questions I could ask next."
+
+#: src/stt/batch-response-processing-error.ts
+msgid "Batch transcription completed, but Librelog could not process the response."
+msgstr "Batch transcription completed, but Librelog could not process the response."
+
+#: src/i18n/external-messages.ts
+msgid "Batch transcription did not include the current recording."
+msgstr "Batch transcription did not include the current recording."
+
+#: src/session/components/note-input/transcript/screens/batch.tsx
+msgid "Batch transcription mode"
+msgstr "Batch transcription mode"
+
+#: src/settings/general/timezone.tsx
+msgid "Berlin"
+msgstr "Berlin"
 
 #: src/settings/ai/stt/select.tsx
 msgid "Best for this Mac"
@@ -543,6 +885,10 @@ msgstr "Bring your meeting history"
 msgid "Build voiceprints from meeting audio so speakers you name in a transcript are recognized in later meetings. Voiceprints never leave this device, and unnamed ones are deleted after 45 days."
 msgstr "Build voiceprints from meeting audio so speakers you name in a transcript are recognized in later meetings. Voiceprints never leave this device, and unnamed ones are deleted after 45 days."
 
+#: src/i18n/component-labels.tsx
+msgid "Bullet List"
+msgstr "Bullet List"
+
 #: src/settings/stats/insights.tsx
 msgid "Busiest day"
 msgstr "Busiest day"
@@ -550,6 +896,14 @@ msgstr "Busiest day"
 #: src/calendar/components/event-chip.tsx
 msgid "Busy"
 msgstr "Busy"
+
+#: src/settings/ai/shared/provider-labels.ts
+msgid "BYO-model"
+msgstr "BYO-model"
+
+#: src/settings/general/timezone.tsx
+msgid "Cairo"
+msgstr "Cairo"
 
 #: src/settings/general/permissions.tsx
 #: src/sidebar/settings-nav-groups.ts
@@ -565,6 +919,7 @@ msgid "Can transcribe while the meeting is happening."
 msgstr "Can transcribe while the meeting is happening."
 
 #: src/calendar/components/apple/permission.tsx
+#: src/i18n/native-labels.tsx
 #: src/imports/screen.tsx
 #: src/settings/ai/llm/subscriptions/connect.tsx
 #: src/settings/dictionary/index.tsx
@@ -623,9 +978,21 @@ msgstr "Capture shared screens in Memos"
 msgid "Capture your first conversation. Every collection starts somewhere."
 msgstr "Capture your first conversation. Every collection starts somewhere."
 
+#: src/settings/general/timezone.tsx
+msgid "Central Time"
+msgstr "Central Time"
+
+#: src/stt/useStartListening.ts
+msgid "Change"
+msgstr "Change"
+
 #: src/calendar/components/event-chip.tsx
 msgid "Change auto-add folder"
 msgstr "Change auto-add folder"
+
+#: src/lock/auth.ts
+msgid "change lock settings"
+msgstr "change lock settings"
 
 #: src/contacts/details.tsx
 #: src/contacts/organization-details.tsx
@@ -645,9 +1012,25 @@ msgstr "Change speaker from here"
 msgid "Chat history"
 msgstr "Chat history"
 
+#: src/chat/components/session-provider.tsx
+msgid "Chat model is not ready"
+msgstr "Chat model is not ready"
+
+#: src/settings/ai/llm/shared.tsx
+msgid "ChatGPT plans"
+msgstr "ChatGPT plans"
+
+#: src/i18n/native-labels.tsx
+msgid "Check for Updates"
+msgstr "Check for Updates"
+
 #: src/chat/components/input/use-dictation.ts
 msgid "Check microphone permission and the selected input device, then try again."
 msgstr "Check microphone permission and the selected input device, then try again."
+
+#: src/stt/start-failure.ts
+msgid "Check that your vault folder is available and your disk has free space, then try again."
+msgstr "Check that your vault folder is available and your disk has free space, then try again."
 
 #: src/imports/screen.tsx
 msgid "Checking connection"
@@ -661,6 +1044,10 @@ msgstr "Checking installed meeting assistants…"
 msgid "Checking migration..."
 msgstr "Checking migration..."
 
+#: src/shared/long-load-gate.tsx
+msgid "Checking your local database. This is taking longer than expected."
+msgstr "Checking your local database. This is taking longer than expected."
+
 #: src/settings/developers/cli.tsx
 msgid "Checking…"
 msgstr "Checking…"
@@ -668,6 +1055,10 @@ msgstr "Checking…"
 #: src/settings/general/notification.tsx
 msgid "Chime"
 msgstr "Chime"
+
+#: src/settings/general/timezone.tsx
+msgid "China"
+msgstr "China"
 
 #. placeholder {0}: provider.name
 #: src/imports/screen.tsx
@@ -686,6 +1077,14 @@ msgstr "Choose a file format and what to include."
 msgid "Choose a language model for summaries and chat."
 msgstr "Choose a language model for summaries and chat."
 
+#: src/settings/ai/stt/health.tsx
+msgid "Choose a local transcription model file."
+msgstr "Choose a local transcription model file."
+
+#: src/i18n/external-messages.ts
+msgid "Choose a shortcut with Control, Alt, Shift, or Command."
+msgstr "Choose a shortcut with Control, Alt, Shift, or Command."
+
 #: src/settings/automations/index.tsx
 msgid "Choose a starter from the sidebar, or create a workflow and add steps like Zapier."
 msgstr "Choose a starter from the sidebar, or create a workflow and add steps like Zapier."
@@ -698,6 +1097,10 @@ msgstr "Choose a transcription model"
 msgid "Choose a transcription model to start listening."
 msgstr "Choose a transcription model to start listening."
 
+#: src/store/zustand/listener/general-live.ts
+msgid "Choose a working audio device and retry. Audio missing during this interruption cannot be recovered."
+msgstr "Choose a working audio device and retry. Audio missing during this interruption cannot be recovered."
+
 #: src/templates/auto-format-examples-dialog.tsx
 msgid "Choose an AI model before generating a format."
 msgstr "Choose an AI model before generating a format."
@@ -706,9 +1109,17 @@ msgstr "Choose an AI model before generating a format."
 msgid "Choose an AI provider to generate a summary from this transcript."
 msgstr "Choose an AI provider to generate a summary from this transcript."
 
+#: src/automations/engine.ts
+msgid "choose an export folder first"
+msgstr "choose an export folder first"
+
 #: src/settings/automations/index.tsx
 msgid "Choose an export folder first."
 msgstr "Choose an export folder first."
+
+#: src/automations/engine.ts
+msgid "choose at least one element to export"
+msgstr "choose at least one element to export"
 
 #: src/settings/automations/markdown-export-options.tsx
 msgid "Choose at least one section to export."
@@ -773,6 +1184,10 @@ msgstr "Choose the microphone that captures your voice."
 msgid "Choose which day begins your calendar week."
 msgstr "Choose which day begins your calendar week."
 
+#: src/settings/ai/llm/shared.tsx
+msgid "Claude Pro / Max"
+msgstr "Claude Pro / Max"
+
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "Clean Up"
 msgstr "Clean Up"
@@ -804,6 +1219,10 @@ msgstr "Clear selected model"
 msgid "Clear selection"
 msgstr "Clear selection"
 
+#: src/i18n/external-messages.ts
+msgid "Clear the text selection before dictating, or copy your last dictation to replace it."
+msgstr "Clear the text selection before dictating, or copy your last dictation to replace it."
+
 #: src/settings/developers/cli.tsx
 msgid "CLI & MCP"
 msgstr "CLI & MCP"
@@ -817,6 +1236,7 @@ msgid "Click the shortcut to record a new key combination. Press Escape to cance
 msgstr "Click the shortcut to record a new key combination. Press Escape to cancel."
 
 #: src/changelog/index.tsx
+#: src/i18n/component-labels.tsx
 #: src/main/windows-title-bar.tsx
 #: src/main/windows-window-controls.tsx
 #: src/session/components/note-input/search/bar.tsx
@@ -831,6 +1251,27 @@ msgstr "Close changelog"
 #: src/chat/components/toolbar-controls.tsx
 msgid "Close chat"
 msgstr "Close chat"
+
+#: src/meeting-float/labels.ts
+msgid "Close settings"
+msgstr "Close settings"
+
+#: src/i18n/native-labels.tsx
+msgid "Close Window"
+msgstr "Close Window"
+
+#: src/i18n/component-labels.tsx
+msgid "Closing in {count} {seconds, plural, one {second} other {seconds}}"
+msgstr "Closing in {count} {seconds, plural, one {second} other {seconds}}"
+
+#: src/i18n/component-labels.tsx
+msgid "Code Block"
+msgstr "Code Block"
+
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
+msgid "Collapse live transcript"
+msgstr "Collapse live transcript"
 
 #: src/settings/automations/markdown-export-options.tsx
 msgid "Collect action items"
@@ -857,6 +1298,14 @@ msgstr "Color theme"
 msgid "Combine metadata, summary, notes, and transcript."
 msgstr "Combine metadata, summary, notes, and transcript."
 
+#: src/i18n/component-labels.tsx
+msgid "Commands"
+msgstr "Commands"
+
+#: src/i18n/component-labels.tsx
+msgid "Comment"
+msgstr "Comment"
+
 #: src/contacts/details.tsx
 #: src/settings/general/account-profile.tsx
 msgid "Company"
@@ -877,6 +1326,10 @@ msgstr "Completion sound"
 #: src/composer/index.tsx
 msgid "Composer"
 msgstr "Composer"
+
+#: src/stt/useStartListening.ts
+msgid "Configure"
+msgstr "Configure"
 
 #: src/composer/index.tsx
 msgid "Configure a chat model in Settings"
@@ -900,7 +1353,6 @@ msgstr "Confirm"
 msgid "Connect"
 msgstr "Connect"
 
-#. placeholder {0}: config.displayName
 #. placeholder {0}: provider.displayName
 #. placeholder {0}: subscriptionProvider.displayName
 #: src/calendar/components/sidebar.tsx
@@ -909,10 +1361,18 @@ msgstr "Connect"
 msgid "Connect {0}"
 msgstr "Connect {0}"
 
+#: src/settings/ai/shared/index.tsx
+msgid "Connect {displayName}"
+msgstr "Connect {displayName}"
+
 #: src/onboarding/calendar.tsx
 #: src/onboarding/index.tsx
 msgid "Connect calendar"
 msgstr "Connect calendar"
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Connect to your [NVIDIA Speech NIM](https://docs.nvidia.com/nim/speech/latest/get-started/tutorials/asr.html) WebSocket server, for example `http://localhost:9000`. Choose the model served by your deployment. The API key is optional for servers without authentication. This requires a deployed NIM server; NVIDIA's hosted gRPC endpoint is not supported here."
+msgstr "Connect to your [NVIDIA Speech NIM](https://docs.nvidia.com/nim/speech/latest/get-started/tutorials/asr.html) WebSocket server, for example `http://localhost:9000`. Choose the model served by your deployment. The API key is optional for servers without authentication. This requires a deployed NIM server; NVIDIA's hosted gRPC endpoint is not supported here."
 
 #: src/imports/screen.tsx
 msgid "Connected"
@@ -927,6 +1387,23 @@ msgstr "Connected with your {0} subscription."
 msgid "Connected with your existing subscription."
 msgstr "Connected with your existing subscription."
 
+#. placeholder {0}: llmHealthErrorMessage(text.error)
+#: src/settings/ai/llm/health.tsx
+msgid "Connection failed: {0}"
+msgstr "Connection failed: {0}"
+
+#: src/session/components/outer-header/metadata/participants/input.tsx
+msgid "Contact already up to date"
+msgstr "Contact already up to date"
+
+#: src/session/components/outer-header/metadata/participants/input.tsx
+msgid "Contact created"
+msgstr "Contact created"
+
+#: src/session/components/outer-header/metadata/participants/input.tsx
+msgid "Contact enhanced"
+msgstr "Contact enhanced"
+
 #: src/contacts/contact-page-header.tsx
 msgid "Contact options"
 msgstr "Contact options"
@@ -935,9 +1412,17 @@ msgstr "Contact options"
 msgid "Contacts"
 msgstr "Contacts"
 
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Contains common ignore keyword"
+msgstr "Contains common ignore keyword"
+
 #: src/folders/folder-editor.tsx
 msgid "Context"
 msgstr "Context"
+
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Context length too small"
+msgstr "Context length too small"
 
 #: src/imports/screen.tsx
 #: src/onboarding/calendar.tsx
@@ -968,7 +1453,11 @@ msgstr "Conversations: {total}"
 msgid "Copied"
 msgstr "Copied"
 
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
+#: src/session/components/note-input/header-enhanced.tsx
+#: src/session/components/note-input/header-raw.tsx
+#: src/session/components/note-input/header-transcript.tsx
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
 #: src/settings/ai/llm/subscriptions/connect.tsx
 #: src/settings/developers/webhooks.tsx
@@ -991,6 +1480,10 @@ msgstr "Copy message"
 msgid "Copy this signing secret now — it is only shown once."
 msgstr "Copy this signing secret now — it is only shown once."
 
+#: src/session/components/note-input/file-handler.ts
+msgid "Could not add this attachment."
+msgstr "Could not add this attachment."
+
 #. placeholder {0}: error.message
 #: src/settings/developers/cli.tsx
 msgid "Could not check the CLI: {0}"
@@ -999,6 +1492,18 @@ msgstr "Could not check the CLI: {0}"
 #: src/settings/ai/stt/local-file-model.tsx
 msgid "Could not clear the selected model"
 msgstr "Could not clear the selected model"
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Could not connect ChatGPT subscription."
+msgstr "Could not connect ChatGPT subscription."
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Could not connect Claude subscription."
+msgstr "Could not connect Claude subscription."
+
+#: src/settings/ai/stt/health.tsx
+msgid "Could not connect to the local speech-to-text model."
+msgstr "Could not connect to the local speech-to-text model."
 
 #: src/settings/developers/cli.tsx
 msgid "Could not copy the MCP configuration"
@@ -1024,6 +1529,10 @@ msgstr "Could not delete the automation"
 msgid "Could not delete this note. Please try again."
 msgstr "Could not delete this note. Please try again."
 
+#: src/session/components/outer-header/metadata/participants/input.tsx
+msgid "Could not enhance contact"
+msgstr "Could not enhance contact"
+
 #: src/session/components/outer-header/overflow/export-modal.tsx
 msgid "Could not export. Check the export location in Settings and try again."
 msgstr "Could not export. Check the export location in Settings and try again."
@@ -1031,6 +1540,46 @@ msgstr "Could not export. Check the export location in Settings and try again."
 #: src/session/insights/past-notes.ts
 msgid "Could not generate meeting insights. Try again."
 msgstr "Could not generate meeting insights. Try again."
+
+#: src/services/enhancer/index.ts
+msgid "Could not generate the summary after repeated attempts."
+msgstr "Could not generate the summary after repeated attempts."
+
+#: src/i18n/external-messages.ts
+msgid "Could not insert text. Copy your last dictation from Settings > Dictation."
+msgstr "Could not insert text. Copy your last dictation from Settings > Dictation."
+
+#: src/settings/ai/stt/health.tsx
+msgid "Could not load the local speech-to-text model."
+msgstr "Could not load the local speech-to-text model."
+
+#: src/i18n/external-messages.ts
+msgid "Could not prepare dictation for insertion."
+msgstr "Could not prepare dictation for insertion."
+
+#: src/i18n/external-messages.ts
+msgid "Could not preserve the clipboard. Copy your last dictation from Settings > Dictation."
+msgstr "Could not preserve the clipboard. Copy your last dictation from Settings > Dictation."
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Could not refresh ChatGPT subscription."
+msgstr "Could not refresh ChatGPT subscription."
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Could not refresh Claude subscription."
+msgstr "Could not refresh Claude subscription."
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Could not refresh GitHub Copilot access."
+msgstr "Could not refresh GitHub Copilot access."
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Could not refresh Grok subscription."
+msgstr "Could not refresh Grok subscription."
+
+#: src/i18n/external-messages.ts
+msgid "Could not register dictation shortcut. It may be used by another app: {rest}"
+msgstr "Could not register dictation shortcut. It may be used by another app: {rest}"
 
 #: src/automations/actions.ts
 msgid "Could not remove the automation"
@@ -1047,6 +1596,23 @@ msgstr "Could not save the automation draft"
 #: src/sidebar/folder-name-dialog.tsx
 msgid "Could not save the folder."
 msgstr "Could not save the folder."
+
+#: src/chat/store/use-chat-actions.ts
+msgid "Could not save this chat message."
+msgstr "Could not save this chat message."
+
+#: src/dictation/lifecycle.tsx
+#: src/i18n/external-messages.ts
+msgid "Could not show the dictation indicator. Please try again."
+msgstr "Could not show the dictation indicator. Please try again."
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Could not start GitHub Copilot login."
+msgstr "Could not start GitHub Copilot login."
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Could not start Grok login."
+msgstr "Could not start Grok login."
 
 #: src/chat/components/input/use-dictation.ts
 msgid "Could not start voice input"
@@ -1074,6 +1640,10 @@ msgstr "Could not update the note date."
 msgid "Could not use the selected model"
 msgstr "Could not use the selected model"
 
+#: src/contexts/notifications.tsx
+msgid "Couldn’t download {modelName}"
+msgstr "Couldn’t download {modelName}"
+
 #: src/settings/stats/badge-collection.tsx
 msgid "Couldn't load your badges. Reopen this page to try again."
 msgstr "Couldn't load your badges. Reopen this page to try again."
@@ -1085,6 +1655,10 @@ msgstr "Couldn't load your insights. Reopen this page to try again."
 #: src/settings/general/account-profile.tsx
 msgid "Couldn't load your profile. Reopen this page to try again."
 msgstr "Couldn't load your profile. Reopen this page to try again."
+
+#: src/onboarding/final.tsx
+msgid "Couldn't open Librelog. Please try again."
+msgstr "Couldn't open Librelog. Please try again."
 
 #: src/settings/stats/badge-collection.tsx
 msgid "Couldn't save your new badges."
@@ -1107,13 +1681,30 @@ msgstr "Create \"{folderName}\""
 msgid "Create a brief to prepare this meeting"
 msgstr "Create a brief to prepare this meeting"
 
+#: src/stt/saved-capture-audio.tsx
+msgid "Create meeting note"
+msgstr "Create meeting note"
+
+#: src/templates/template-sidebar.tsx
+msgid "Create my first template"
+msgstr "Create my first template"
+
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
 msgid "Create new speaker"
 msgstr "Create new speaker"
 
+#: src/session/components/note-input/template-picker.tsx
+msgid "Create new template"
+msgstr "Create new template"
+
 #: src/templates/details.tsx
 msgid "Create template"
 msgstr "Create template"
+
+#. placeholder {0}: searchTerm.trim()
+#: src/contacts/details.tsx
+msgid "Create<0>\"{0}\"</0>"
+msgstr "Create<0>\"{0}\"</0>"
 
 #: src/session/components/outer-header/overflow/export-modal.tsx
 msgid "Created"
@@ -1127,15 +1718,25 @@ msgstr "Created {createdAt}"
 msgid "Creating brief..."
 msgstr "Creating brief..."
 
+#: src/settings/ai/stt/health.tsx
+msgid "Credentials will be checked when transcription starts."
+msgstr "Credentials will be checked when transcription starts."
+
 #: src/settings/general/audio-settings.tsx
 #: src/templates/auto-form.tsx
+#: src/templates/template-form.tsx
 msgid "Current default"
 msgstr "Current default"
+
+#: src/settings/ai/shared/provider-labels.ts
+msgid "Custom"
+msgstr "Custom"
 
 #: src/templates/template-sidebar.tsx
 msgid "Customized"
 msgstr "Customized"
 
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 msgid "Cut"
 msgstr "Cut"
@@ -1165,11 +1766,25 @@ msgstr "Date and time are required"
 msgid "Date range"
 msgstr "Date range"
 
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Date-specific snapshot"
+msgstr "Date-specific snapshot"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Date: {dateBounds}"
+msgstr "Date: {dateBounds}"
+
+#: src/chat/components/message/tool/edit-summary.tsx
 #: src/edit/tab-content.tsx
 msgid "Decline"
 msgstr "Decline"
 
+#: src/settings/ai/stt/shared.tsx
+msgid "Deepgram-compatible"
+msgstr "Deepgram-compatible"
+
 #: src/settings/ai/llm/select.tsx
+#: src/settings/general/notification.tsx
 msgid "Default"
 msgstr "Default"
 
@@ -1185,6 +1800,7 @@ msgstr "Default language for transcription and AI responses."
 #: src/sidebar/timeline/index.tsx
 #: src/templates/sections-editor.tsx
 #: src/templates/template-form.tsx
+#: src/templates/template-sidebar.tsx
 msgid "Delete"
 msgstr "Delete"
 
@@ -1204,6 +1820,10 @@ msgstr "Delete All Recurring Events"
 msgid "Delete automation"
 msgstr "Delete automation"
 
+#: src/contacts/person-item.tsx
+msgid "Delete Contact"
+msgstr "Delete Contact"
+
 #: src/sidebar/timeline/item.tsx
 msgid "Delete Event"
 msgstr "Delete Event"
@@ -1220,6 +1840,15 @@ msgstr "Delete model"
 #: src/sidebar/timeline/item.tsx
 msgid "Delete Note"
 msgstr "Delete Note"
+
+#: src/contacts/organization-item.tsx
+msgid "Delete Organization"
+msgstr "Delete Organization"
+
+#: src/audio-player/timeline.tsx
+#: src/session/components/note-input/header-transcript.tsx
+msgid "Delete recording"
+msgstr "Delete recording"
 
 #: src/sidebar/timeline/index.tsx
 msgid "Delete Selected ({sessionCount})"
@@ -1255,10 +1884,22 @@ msgstr "Developers"
 msgid "Device authentication is not available on this computer."
 msgstr "Device authentication is not available on this computer."
 
+#: src/store/zustand/listener/general-live.ts
+msgid "Device settings"
+msgstr "Device settings"
+
 #: src/settings/dictation.tsx
 #: src/sidebar/settings-nav-groups.ts
 msgid "Dictation"
 msgstr "Dictation"
+
+#: src/i18n/external-messages.ts
+msgid "Dictation is unavailable in password fields."
+msgstr "Dictation is unavailable in password fields."
+
+#: src/dictation/lifecycle.tsx
+msgid "Dictation is unavailable while Librelog is recording a meeting."
+msgstr "Dictation is unavailable while Librelog is recording a meeting."
 
 #: src/settings/dictation-shortcut.tsx
 msgid "Dictation shortcut"
@@ -1274,6 +1915,10 @@ msgstr "Dictation uses your microphone, transcription provider, languages, and d
 msgid "Dictionary"
 msgstr "Dictionary"
 
+#: src/stt/auto-stop.ts
+msgid "Did your meeting end?"
+msgstr "Did your meeting end?"
+
 #: src/settings/automations/index.tsx
 msgid "Disable"
 msgstr "Disable"
@@ -1287,6 +1932,19 @@ msgstr "Disable all notifications"
 msgid "Disconnect"
 msgstr "Disconnect"
 
+#: src/store/zustand/listener/general-live.ts
+msgid "Disk almost full"
+msgstr "Disk almost full"
+
+#: src/i18n/component-labels.tsx
+#: src/i18n/native-labels.tsx
+msgid "Dismiss"
+msgstr "Dismiss"
+
+#: src/i18n/component-labels.tsx
+msgid "Divider"
+msgstr "Divider"
+
 #: src/main/windows-title-bar.tsx
 #: src/settings/imports/index.tsx
 msgid "Documentation"
@@ -1296,10 +1954,23 @@ msgstr "Documentation"
 msgid "Don't save"
 msgstr "Don't save"
 
+#: src/i18n/native-labels.tsx
 #: src/settings/ai/stt/select.tsx
 #: src/sidebar/toast/registry.tsx
 msgid "Download"
 msgstr "Download"
+
+#: src/settings/ai/llm/shared.tsx
+msgid "Download LM Studio"
+msgstr "Download LM Studio"
+
+#: src/settings/ai/llm/shared.tsx
+msgid "Download Ollama"
+msgstr "Download Ollama"
+
+#: src/settings/ai/llm/shared.tsx
+msgid "Download Unsloth"
+msgstr "Download Unsloth"
 
 #. placeholder {0}: activeDownloads.length
 #: src/sidebar/toast/registry.tsx
@@ -1319,6 +1990,10 @@ msgstr "Downloading Librelog {0}{progress}"
 msgid "Downloading model"
 msgstr "Downloading model"
 
+#: src/i18n/native-labels.tsx
+msgid "Downloading..."
+msgstr "Downloading..."
+
 #: src/settings/automations/index.tsx
 #: src/settings/automations/workflow-builder.tsx
 #: src/sidebar/automations.tsx
@@ -1337,7 +2012,20 @@ msgstr "Draft a follow-up email to the participants"
 msgid "Draft follow-up email."
 msgstr "Draft follow-up email."
 
+#: src/i18n/native-labels.tsx
+msgid "Drag the app below into the list above."
+msgstr "Drag the app below into the list above."
+
+#: src/session/components/note-input/audio-drop-target.tsx
+msgid "Drop to upload and transcribe audio"
+msgstr "Drop to upload and transcribe audio"
+
+#: src/settings/general/timezone.tsx
+msgid "Dubai"
+msgstr "Dubai"
+
 #: src/templates/template-form.tsx
+#: src/templates/template-sidebar.tsx
 msgid "Duplicate"
 msgstr "Duplicate"
 
@@ -1353,9 +2041,13 @@ msgstr "Each example must be 12,000 characters or fewer."
 msgid "Earlier versions of this note, newest first."
 msgstr "Earlier versions of this note, newest first."
 
+#: src/settings/general/timezone.tsx
+msgid "Eastern Time"
+msgstr "Eastern Time"
+
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
-#: src/settings/dictionary/index.tsx
 #: src/sidebar/automations.tsx
 msgid "Edit"
 msgstr "Edit"
@@ -1363,6 +2055,26 @@ msgstr "Edit"
 #: src/session/components/outer-header/metadata/date.tsx
 msgid "Edit date"
 msgstr "Edit date"
+
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Edit memo"
+msgstr "Edit memo"
+
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Edit memo — review tab opened"
+msgstr "Edit memo — review tab opened"
+
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Edit summary"
+msgstr "Edit summary"
+
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Edit summary — review tab opened"
+msgstr "Edit summary — review tab opened"
+
+#: src/settings/dictionary/index.tsx
+msgid "Edit: {term}"
+msgstr "Edit: {term}"
 
 #: src/contacts/details.tsx
 #: src/settings/general/account-profile.tsx
@@ -1389,6 +2101,10 @@ msgstr "Enable {0}"
 #: src/settings/dictation.tsx
 msgid "Enable dictation"
 msgstr "Enable dictation"
+
+#: src/dictation/lifecycle.tsx
+msgid "Enable microphone permission in Settings > Permissions before dictating."
+msgstr "Enable microphone permission in Settings > Permissions before dictating."
 
 #: src/settings/automations/index.tsx
 #: src/settings/automations/workflow-builder.tsx
@@ -1417,9 +2133,29 @@ msgstr "Enter a valid date and time"
 msgid "Enter a valid folder name."
 msgstr "Enter a valid folder name."
 
+#: src/settings/ai/stt/configure.tsx
+msgid "Enter an OpenAI-compatible transcription gateway URL and its token. The gateway must expose `/audio/transcriptions` and translate file audio into Nova Sonic's AWS bidirectional stream. Native Bedrock endpoints and Bedrock API keys do not work here."
+msgstr "Enter an OpenAI-compatible transcription gateway URL and its token. The gateway must expose `/audio/transcriptions` and translate file audio into Nova Sonic's AWS bidirectional stream. Native Bedrock endpoints and Bedrock API keys do not work here."
+
 #: src/templates/template-form.tsx
 msgid "Enter template title"
 msgstr "Enter template title"
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Enter the regional **Bedrock Mantle OpenAI-compatible URL** (for example, `https://bedrock-mantle.us-east-1.api.aws/v1`) and a Bedrock long-term API key."
+msgstr "Enter the regional **Bedrock Mantle OpenAI-compatible URL** (for example, `https://bedrock-mantle.us-east-1.api.aws/v1`) and a Bedrock long-term API key."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Enter the Workers AI **OpenAI-compatible base URL** as {workersAiBaseUrl} and use a Cloudflare API token with Workers AI access."
+msgstr "Enter the Workers AI **OpenAI-compatible base URL** as {workersAiBaseUrl} and use a Cloudflare API token with Workers AI access."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Enter your **Azure AI Foundry endpoint** as the Base URL and your **API key**. Supports Claude and other models deployed via Azure AI Foundry. [Report issues]({ISSUES_URL})"
+msgstr "Enter your **Azure AI Foundry endpoint** as the Base URL and your **API key**. Supports Claude and other models deployed via Azure AI Foundry. [Report issues]({ISSUES_URL})"
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Enter your **Azure OpenAI endpoint** (e.g. `https://your-resource.openai.azure.com`) as the Base URL and your **API key**. [Report issues]({ISSUES_URL})"
+msgstr "Enter your **Azure OpenAI endpoint** (e.g. `https://your-resource.openai.azure.com`) as the Base URL and your **API key**. [Report issues]({ISSUES_URL})"
 
 #: src/settings/ai/shared/index.tsx
 msgid "Enter your API key"
@@ -1429,9 +2165,21 @@ msgstr "Enter your API key"
 msgid "Enter your API key (optional)"
 msgstr "Enter your API key (optional)"
 
+#: src/settings/ai/llm/configure.tsx
+msgid "Enter your project and location's **Vertex AI OpenAI-compatible endpoint** and a bearer access token. Vertex access tokens expire, so replace the saved token when Google Cloud refreshes it."
+msgstr "Enter your project and location's **Vertex AI OpenAI-compatible endpoint** and a bearer access token. Vertex access tokens expire, so replace the saved token when Google Cloud refreshes it."
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Error: {errorText}"
+msgstr "Error: {errorText}"
+
 #: src/composer/index.tsx
 msgid "Esc to dismiss"
 msgstr "Esc to dismiss"
+
+#: src/i18n/external-messages.ts
+msgid "Escape is reserved for cancelling dictation. Choose another key."
+msgstr "Escape is reserved for cancelling dictation. Choose another key."
 
 #: src/settings/general/notification.tsx
 msgid "Event notifications"
@@ -1440,6 +2188,10 @@ msgstr "Event notifications"
 #: src/settings/stats/index.tsx
 msgid "Every conversation adds to your story."
 msgstr "Every conversation adds to your story."
+
+#: src/templates/auto-format-inference.ts
+msgid "Example is too long"
+msgstr "Example is too long"
 
 #: src/templates/auto-format-examples-dialog.tsx
 msgid "Example summary"
@@ -1456,6 +2208,11 @@ msgstr "Examples must be Markdown or plain text files."
 #: src/settings/general/notification.tsx
 msgid "Exclude apps from detection"
 msgstr "Exclude apps from detection"
+
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
+msgid "Expand live transcript"
+msgstr "Expand live transcript"
 
 #: src/settings/automations/index.tsx
 msgid "Expected output"
@@ -1486,10 +2243,51 @@ msgstr "Export the meeting as Markdown"
 msgid "Exporting..."
 msgstr "Exporting..."
 
+#: src/i18n/native-labels.tsx
+msgid "Failed to check for updates: {error}"
+msgstr "Failed to check for updates: {error}"
+
+#: src/session/components/note-input/header-enhanced.tsx
+msgid "Failed to copy {viewTitle}"
+msgstr "Failed to copy {viewTitle}"
+
+#: src/session/components/note-input/header-raw.tsx
+msgid "Failed to copy memo"
+msgstr "Failed to copy memo"
+
+#: src/session/components/note-input/header-transcript.tsx
+msgid "Failed to copy transcript"
+msgstr "Failed to copy transcript"
+
+#: src/i18n/native-labels.tsx
+msgid "Failed to download update: {error}"
+msgstr "Failed to download update: {error}"
+
+#: src/main/update-banner.tsx
+msgid "Failed to download update."
+msgstr "Failed to download update."
+
+#: src/i18n/native-labels.tsx
+msgid "Failed to install update: {error}"
+msgstr "Failed to install update: {error}"
+
+#: src/edit/tab-content.tsx
+msgid "Failed to update this proposal."
+msgstr "Failed to update this proposal."
+
 #: src/settings/stats/badge-collection.tsx
 msgid "Familiar Face"
 msgstr "Familiar Face"
 
+#: src/templates/template-sidebar.tsx
+msgid "Favorite"
+msgstr "Favorite"
+
+#: src/templates/template-form.tsx
+msgid "Favorite template"
+msgstr "Favorite template"
+
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 msgid "File"
 msgstr "File"
@@ -1502,9 +2300,17 @@ msgstr "File format"
 msgid "Filename"
 msgstr "Filename"
 
+#: src/session/components/note-input/transcript/screens/listening.tsx
+msgid "Finalizing transcript..."
+msgstr "Finalizing transcript..."
+
 #: src/chat/components/body/empty.tsx
 msgid "Find key decisions."
 msgstr "Find key decisions."
+
+#: src/i18n/external-messages.ts
+msgid "Finding the focused field timed out. Enable accessibility in the target app."
+msgstr "Finding the focused field timed out. Enable accessibility in the target app."
 
 #: src/settings/stats/badge-collection.tsx
 msgid "Finding Your Rhythm"
@@ -1526,9 +2332,25 @@ msgstr "Flags"
 msgid "Float chat"
 msgstr "Float chat"
 
+#: src/meeting-float/labels.ts
+msgid "Floating bar"
+msgstr "Floating bar"
+
 #: src/settings/dictation-shortcut.tsx
 msgid "Fn / Globe"
 msgstr "Fn / Globe"
+
+#: src/i18n/external-messages.ts
+msgid "Focus an editable text field and enable Librelog in System Settings > Privacy & Security > Accessibility. Password fields are excluded."
+msgstr "Focus an editable text field and enable Librelog in System Settings > Privacy & Security > Accessibility. Password fields are excluded."
+
+#: src/i18n/external-messages.ts
+msgid "Focus an editable text field before dictating."
+msgstr "Focus an editable text field before dictating."
+
+#: src/i18n/external-messages.ts
+msgid "Focus an editable text field in an application with accessibility enabled. Password fields are excluded."
+msgstr "Focus an editable text field in an application with accessibility enabled. Password fields are excluded."
 
 #: src/settings/appearance/sidebar-item-fields.tsx
 #: src/sidebar/note-filter-menu.tsx
@@ -1568,6 +2390,22 @@ msgstr "For enabled notifications"
 msgid "Forever"
 msgstr "Forever"
 
+#: src/i18n/component-labels.tsx
+msgid "Format selection"
+msgstr "Format selection"
+
+#: src/store/zustand/listener/general-live.ts
+msgid "Free up disk space. Audio is kept in memory and saved once storage is available. Live transcription continues."
+msgstr "Free up disk space. Audio is kept in memory and saved once storage is available. Live transcription continues."
+
+#: src/store/zustand/listener/general-live.ts
+msgid "Free up disk space. Audio saving stops if the disk fills up. Live transcription continues."
+msgstr "Free up disk space. Audio saving stops if the disk fills up. Live transcription continues."
+
+#: src/stt/capture-lifecycle.ts
+msgid "Free up disk space. Librelog will try to recover the missing text while this meeting is still recording."
+msgstr "Free up disk space. Librelog will try to recover the missing text while this meeting is still recording."
+
 #: src/templates/template-icon-picker.tsx
 msgid "Frequently used"
 msgstr "Frequently used"
@@ -1579,6 +2417,10 @@ msgstr "Full Screen"
 #: src/calendar/components/event-chip.tsx
 msgid "Future meetings"
 msgstr "Future meetings"
+
+#: src/settings/ai/stt/shared.tsx
+msgid "Gateway"
+msgstr "Gateway"
 
 #: src/settings/general/index.tsx
 #: src/sidebar/settings-nav-groups.ts
@@ -1606,6 +2448,22 @@ msgstr "Get started"
 msgid "Get your attention when a summary is ready in the background."
 msgstr "Get your attention when a summary is ready in the background."
 
+#: src/settings/ai/stt/model-icon.tsx
+msgid "GGML runtime"
+msgstr "GGML runtime"
+
+#: src/settings/ai/llm/shared.tsx
+msgid "GitHub Copilot"
+msgstr "GitHub Copilot"
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "GitHub Copilot authorization failed."
+msgstr "GitHub Copilot authorization failed."
+
+#: src/i18n/external-messages.ts
+msgid "Global shortcuts are unavailable in this desktop session."
+msgstr "Global shortcuts are unavailable in this desktop session."
+
 #: src/sidebar/timeline/index.tsx
 msgid "Go back to now"
 msgstr "Go back to now"
@@ -1618,6 +2476,11 @@ msgstr "Go home"
 #: src/shared/open-note-dialog.tsx
 msgid "Go to"
 msgstr "Go to"
+
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
+msgid "Go to bottom"
+msgstr "Go to bottom"
 
 #: src/shared/control.tsx
 msgid "Go to Home"
@@ -1647,6 +2510,10 @@ msgstr "Got it"
 msgid "Graphite"
 msgstr "Graphite"
 
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Grok authorization failed."
+msgstr "Grok authorization failed."
+
 #: src/sidebar/note-filter-menu.tsx
 msgid "Grouping"
 msgstr "Grouping"
@@ -1675,6 +2542,23 @@ msgstr "Having trouble?"
 msgid "Having trouble? Paste the redirect URL"
 msgstr "Having trouble? Paste the redirect URL"
 
+#: src/settings/general/timezone.tsx
+msgid "Hawaii"
+msgstr "Hawaii"
+
+#: src/i18n/component-labels.tsx
+msgid "Heading 1"
+msgstr "Heading 1"
+
+#: src/i18n/component-labels.tsx
+msgid "Heading 2"
+msgstr "Heading 2"
+
+#: src/i18n/component-labels.tsx
+msgid "Heading 3"
+msgstr "Heading 3"
+
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 msgid "Help"
 msgstr "Help"
@@ -1695,6 +2579,15 @@ msgstr "Help Librelog read meeting activity"
 msgid "Hi, I'm Librelog AI. Set up a language model and I'll be ready to help."
 msgstr "Hi, I'm Librelog AI. Set up a language model and I'll be ready to help."
 
+#: src/i18n/native-labels.tsx
+#: src/meeting-float/overlay/live-caption.tsx
+msgid "Hide"
+msgstr "Hide"
+
+#: src/i18n/native-labels.tsx
+msgid "Hide {app}"
+msgstr "Hide {app}"
+
 #: src/settings/general/notification.tsx
 msgid "Hide all notification panels, Dock alerts, and completion sounds."
 msgstr "Hide all notification panels, Dock alerts, and completion sounds."
@@ -1703,10 +2596,19 @@ msgstr "Hide all notification panels, Dock alerts, and completion sounds."
 msgid "Hide Deleted Events"
 msgstr "Hide Deleted Events"
 
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Hide ignored models"
+msgstr "Hide ignored models"
+
+#: src/i18n/native-labels.tsx
+msgid "Hide Others"
+msgstr "Hide Others"
+
 #: src/settings/automations/index.tsx
 msgid "Hide preview"
 msgstr "Hide preview"
 
+#: src/main/sidebar-timeline-chrome.tsx
 #: src/main/windows-title-bar.tsx
 msgid "Hide sidebar"
 msgstr "Hide sidebar"
@@ -1714,6 +2616,11 @@ msgstr "Hide sidebar"
 #: src/main/windows-title-bar.tsx
 msgid "Hide Sidebar"
 msgstr "Hide Sidebar"
+
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/live-caption.tsx
+msgid "Hide transcript"
+msgstr "Hide transcript"
 
 #: src/settings/ai/llm/select.tsx
 msgid "High"
@@ -1753,6 +2660,34 @@ msgstr "Human"
 msgid "Icons"
 msgstr "Icons"
 
+#: src/stt/meeting-apps.ts
+msgid "Ignore {firstName} and {secondName}?"
+msgstr "Ignore {firstName} and {secondName}?"
+
+#: src/stt/meeting-apps.ts
+msgid "Ignore {firstName}?"
+msgstr "Ignore {firstName}?"
+
+#: src/stt/detect-events.ts
+msgid "Ignore it"
+msgstr "Ignore it"
+
+#: src/stt/detect-events.ts
+msgid "Ignore them"
+msgstr "Ignore them"
+
+#: src/stt/meeting-apps.ts
+msgid "Ignore these apps?"
+msgstr "Ignore these apps?"
+
+#: src/stt/meeting-apps.ts
+msgid "Ignore this app?"
+msgstr "Ignore this app?"
+
+#: src/i18n/external-messages.ts
+msgid "Images must be 8 MB or smaller."
+msgstr "Images must be 8 MB or smaller."
+
 #: src/onboarding/index.tsx
 msgid "Import notes and transcripts from the meeting apps you already use."
 msgstr "Import notes and transcripts from the meeting apps you already use."
@@ -1768,6 +2703,10 @@ msgstr "Imported: {0}. Unchanged: {1}. Needs review: {2}. Failed: {3}."
 #: src/session/components/note-input/transcript/screens/empty.tsx
 msgid "Importing audio..."
 msgstr "Importing audio..."
+
+#: src/shared/long-load-gate.tsx
+msgid "Importing your existing notes. This may take a few minutes."
+msgstr "Importing your existing notes. This may take a few minutes."
 
 #: src/settings/imports/index.tsx
 #: src/sidebar/settings-nav-groups.ts
@@ -1819,6 +2758,10 @@ msgstr "Include meeting ID"
 msgid "Includes imported transcripts. Deleted conversations are excluded."
 msgstr "Includes imported transcripts. Deleted conversations are excluded."
 
+#: src/settings/general/timezone.tsx
+msgid "India"
+msgstr "India"
+
 #: src/templates/sections-editor.tsx
 msgid "Insert above"
 msgstr "Insert above"
@@ -1848,10 +2791,18 @@ msgstr "Installed"
 msgid "Intelligence"
 msgstr "Intelligence"
 
+#: src/i18n/external-messages.ts
+msgid "Invalid dictation shortcut: {rest}"
+msgstr "Invalid dictation shortcut: {rest}"
+
 #: src/contacts/details.tsx
 #: src/settings/general/account-profile.tsx
 msgid "Job Title"
 msgstr "Job Title"
+
+#: src/session/components/outer-header/metadata/index.tsx
+msgid "Join"
+msgstr "Join"
 
 #: src/services/event-notification/index.ts
 #: src/session/components/outer-header/index.tsx
@@ -1882,6 +2833,14 @@ msgstr "Keep this version"
 msgid "Kimi Code API key"
 msgstr "Kimi Code API key"
 
+#: src/settings/ai/llm/shared.tsx
+msgid "Kimi Code membership"
+msgstr "Kimi Code membership"
+
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Kimi Code uses an API key, not OAuth."
+msgstr "Kimi Code uses an API key, not OAuth."
+
 #: src/settings/general/index.tsx
 msgid "Language & Region"
 msgstr "Language & Region"
@@ -1890,6 +2849,7 @@ msgstr "Language & Region"
 msgid "Language & transcription"
 msgstr "Language & transcription"
 
+#: src/session/components/outer-header/metadata/participants/input.tsx
 #: src/sidebar/toast/registry.tsx
 msgid "Language model needed"
 msgstr "Language model needed"
@@ -1920,6 +2880,10 @@ msgstr "Last run {relative}: {0}"
 #: src/settings/automations/starter-config.tsx
 msgid "Last run failed {relative}: {0}"
 msgstr "Last run failed {relative}: {0}"
+
+#: src/i18n/native-labels.tsx
+msgid "Later"
+msgstr "Later"
 
 #: src/chat/components/message/error.tsx
 msgid "Learn how to fix this"
@@ -1959,17 +2923,70 @@ msgstr "Librelog can read meeting details"
 msgid "Librelog CLI"
 msgstr "Librelog CLI"
 
+#: src/services/audio-cleanup.ts
+msgid "Librelog could not finish audio cleanup or recovery and will retry automatically."
+msgstr "Librelog could not finish audio cleanup or recovery and will retry automatically."
+
+#: src/stt/capture-lifecycle.ts
+msgid "Librelog could not finish saving the transcript. The recording was kept so you can try again."
+msgstr "Librelog could not finish saving the transcript. The recording was kept so you can try again."
+
+#: src/services/audio-cleanup.ts
+msgid "Librelog could not remove temporary audio and will retry cleanup automatically."
+msgstr "Librelog could not remove temporary audio and will retry cleanup automatically."
+
+#: src/session/components/note-input/transcript/index.tsx
+#: src/stt/capture-lifecycle.ts
+msgid "Librelog could not remove the temporary audio. Cleanup will be retried automatically."
+msgstr "Librelog could not remove the temporary audio. Cleanup will be retried automatically."
+
+#: src/services/audio-cleanup.ts
+msgid "Librelog could not restore interrupted audio and will retry recovery automatically."
+msgstr "Librelog could not restore interrupted audio and will retry recovery automatically."
+
+#: src/stt/capture-lifecycle.ts
+msgid "Librelog could not save part of the live transcript."
+msgstr "Librelog could not save part of the live transcript."
+
+#: src/shared/long-load-gate.tsx
+msgid "Librelog could not start"
+msgstr "Librelog could not start"
+
+#: src/stt/start-failure.ts
+msgid "Librelog couldn't open your audio input. Check your microphone selection, then try again."
+msgstr "Librelog couldn't open your audio input. Check your microphone selection, then try again."
+
+#: src/stt/start-failure.ts
+msgid "Librelog couldn't prepare storage for this recording"
+msgstr "Librelog couldn't prepare storage for this recording"
+
+#: src/stt/start-failure.ts
+msgid "Librelog doesn't have microphone access"
+msgstr "Librelog doesn't have microphone access"
+
 #: src/lock/gate.tsx
 msgid "Librelog is Locked"
 msgstr "Librelog is Locked"
+
+#: src/store/zustand/listener/general-live.ts
+msgid "Librelog keeps recording while live transcription reconnects. Missing text will be recovered from temporary audio while the meeting continues."
+msgstr "Librelog keeps recording while live transcription reconnects. Missing text will be recovered from temporary audio while the meeting continues."
 
 #: src/onboarding/index.tsx
 msgid "Librelog needs access to your microphone and system audio to record and transcribe your meetings"
 msgstr "Librelog needs access to your microphone and system audio to record and transcribe your meetings"
 
+#: src/shared/long-load-gate.tsx
+msgid "Librelog needs an update"
+msgstr "Librelog needs an update"
+
 #: src/onboarding/index.tsx
 msgid "Librelog needs microphone and system audio to transcribe your meetings, plus Accessibility to read meeting controls, visible chat."
 msgstr "Librelog needs microphone and system audio to transcribe your meetings, plus Accessibility to read meeting controls, visible chat."
+
+#: src/stt/saved-capture-audio.tsx
+msgid "Librelog saved this meeting's audio"
+msgstr "Librelog saved this meeting's audio"
 
 #. placeholder {0}: statuses[0].displayName
 #: src/settings/developers/skills.tsx
@@ -1985,6 +3002,10 @@ msgstr "Librelog skill added to {0} agents"
 msgid "Librelog will retry automatically. This does not affect your notes."
 msgstr "Librelog will retry automatically. This does not affect your notes."
 
+#: src/stt/auto-stop.ts
+msgid "Librelog will stop listening in {AUTO_STOP_CONFIRM_TIMEOUT_SECONDS} seconds."
+msgstr "Librelog will stop listening in {AUTO_STOP_CONFIRM_TIMEOUT_SECONDS} seconds."
+
 #: src/onboarding/index.tsx
 msgid "Librelog will sync your calendar to get meeting reminders"
 msgstr "Librelog will sync your calendar to get meeting reminders"
@@ -1993,6 +3014,10 @@ msgstr "Librelog will sync your calendar to get meeting reminders"
 #: src/settings/appearance/theme.tsx
 msgid "Light"
 msgstr "Light"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Limit: {limit}"
+msgstr "Limit: {limit}"
 
 #: src/contacts/details.tsx
 #: src/settings/general/account-profile.tsx
@@ -2007,6 +3032,10 @@ msgstr "List action items so far."
 msgid "List action items."
 msgstr "List action items."
 
+#: src/session/components/note-input/transcript/screens/listening.tsx
+msgid "Listening..."
+msgstr "Listening..."
+
 #: src/settings/dictation.tsx
 msgid "Listening…"
 msgstr "Listening…"
@@ -2019,13 +3048,69 @@ msgstr "Little steps worth keeping. Collect them at your own pace."
 msgid "Live"
 msgstr "Live"
 
+#: src/meeting-float/route-state.ts
+msgid "Live transcript"
+msgstr "Live transcript"
+
+#: src/stt/live-transcript-interrupted.ts
+msgid "Live transcript paused because {providerName} is having an outage."
+msgstr "Live transcript paused because {providerName} is having an outage."
+
+#: src/stt/live-transcript-interrupted.ts
+msgid "Live transcript paused because {providerName} rejected the transcription settings."
+msgstr "Live transcript paused because {providerName} rejected the transcription settings."
+
+#: src/stt/live-transcript-interrupted.ts
+msgid "Live transcript paused because {providerName} rejected your API key."
+msgstr "Live transcript paused because {providerName} rejected your API key."
+
+#: src/stt/live-transcript-interrupted.ts
+msgid "Live transcript paused because {providerName} stopped sending words."
+msgstr "Live transcript paused because {providerName} stopped sending words."
+
+#: src/stt/live-transcript-interrupted.ts
+msgid "Live transcript paused because Librelog can't reach {providerName}."
+msgstr "Live transcript paused because Librelog can't reach {providerName}."
+
+#: src/stt/live-transcript-interrupted.ts
+msgid "Live transcript paused because the local transcription model stopped responding."
+msgstr "Live transcript paused because the local transcription model stopped responding."
+
+#: src/stt/live-transcript-interrupted.ts
+msgid "Live transcript paused because you're offline."
+msgstr "Live transcript paused because you're offline."
+
 #: src/settings/dictation.tsx
 msgid "Live transcript preview"
 msgstr "Live transcript preview"
 
+#: src/store/zustand/listener/general-live.ts
+msgid "Live transcription continues. Free up disk space to resume audio saving. Audio missing during this interruption cannot be recovered."
+msgstr "Live transcription continues. Free up disk space to resume audio saving. Audio missing during this interruption cannot be recovered."
+
+#: src/stt/useStartListening.ts
+msgid "Live transcription is not configured"
+msgstr "Live transcription is not configured"
+
+#: src/stt/useStartListening.ts
+msgid "Live transcription is using {primaryLanguageName}"
+msgstr "Live transcription is using {primaryLanguageName}"
+
+#: src/store/zustand/listener/general-live.ts
+msgid "Live transcription stalled"
+msgstr "Live transcription stalled"
+
+#: src/stt/useStartListening.ts
+msgid "Live transcription won't include {omittedLanguageNames}. Audio is still being saved."
+msgstr "Live transcription won't include {omittedLanguageNames}. Audio is still being saved."
+
 #: src/settings/stats/badge-collection.tsx
 msgid "Living Library"
 msgstr "Living Library"
+
+#: src/shared/brand-loading-view.tsx
+msgid "Loading"
+msgstr "Loading"
 
 #: src/templates/auto-form.tsx
 msgid "Loading Auto format..."
@@ -2056,11 +3141,19 @@ msgstr "Loading your badges…"
 msgid "Loading your insights…"
 msgstr "Loading your insights…"
 
+#: src/routes/__root.tsx
+msgid "Loading your workspace. This should only take a moment."
+msgstr "Loading your workspace. This should only take a moment."
+
 #: src/changelog/index.tsx
 #: src/contacts/details.tsx
 #: src/settings/general/account-profile.tsx
 msgid "Loading..."
 msgstr "Loading..."
+
+#: src/settings/ai/stt/health.tsx
+msgid "Local STT server is starting up…"
+msgstr "Local STT server is starting up…"
 
 #: src/settings/privacy/index.tsx
 msgid "Lock app"
@@ -2071,9 +3164,17 @@ msgstr "Lock app"
 msgid "Lock Note"
 msgstr "Lock Note"
 
+#: src/lock/auth.ts
+msgid "lock this note"
+msgstr "lock this note"
+
 #: src/sidebar/timeline/item.tsx
 msgid "Locked note"
 msgstr "Locked note"
+
+#: src/settings/general/timezone.tsx
+msgid "London"
+msgstr "London"
 
 #: src/settings/ai/llm/select.tsx
 msgid "Low"
@@ -2149,9 +3250,21 @@ msgstr "Medium"
 msgid "Meeting"
 msgstr "Meeting"
 
+#: src/stt/meeting-chat-records.ts
+msgid "Meeting app"
+msgstr "Meeting app"
+
 #: src/session/components/note-input/meeting-chat-highlights.tsx
 msgid "Meeting chat"
 msgstr "Meeting chat"
+
+#: src/stt/meeting-chat-capture.ts
+msgid "Meeting chat capture needs Accessibility permission in Settings"
+msgstr "Meeting chat capture needs Accessibility permission in Settings"
+
+#: src/stt/meeting-chat-capture.ts
+msgid "Meeting chat capture needs the desktop accessibility bus"
+msgstr "Meeting chat capture needs the desktop accessibility bus"
 
 #: src/onboarding/permissions.tsx
 msgid "Meeting details access turned on"
@@ -2173,6 +3286,14 @@ msgstr "Meeting history imported"
 msgid "Meeting info"
 msgstr "Meeting info"
 
+#: src/session/components/outer-header/metadata/index.tsx
+msgid "Meeting link"
+msgstr "Meeting link"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "meetings"
+msgstr "meetings"
+
 #: src/settings/general/index.tsx
 #: src/sidebar/settings-nav-groups.ts
 msgid "Meetings"
@@ -2192,6 +3313,22 @@ msgstr "members"
 msgid "Memo"
 msgstr "Memo"
 
+#: src/session/components/note-input/header-raw.tsx
+msgid "Memo copied to clipboard"
+msgstr "Memo copied to clipboard"
+
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Memo edit declined"
+msgstr "Memo edit declined"
+
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Memo edit failed"
+msgstr "Memo edit failed"
+
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Memo updated"
+msgstr "Memo updated"
+
 #: src/settings/stats/badge-collection.tsx
 msgid "Memory Keeper"
 msgstr "Memory Keeper"
@@ -2200,6 +3337,7 @@ msgstr "Memory Keeper"
 msgid "Memos"
 msgstr "Memos"
 
+#: src/contacts/details.tsx
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
 msgid "Merge"
 msgstr "Merge"
@@ -2223,9 +3361,29 @@ msgstr "Microphone"
 msgid "Microphone access turned on"
 msgstr "Microphone access turned on"
 
+#: src/i18n/external-messages.ts
+msgid "Microphone capture failed: {rest}"
+msgstr "Microphone capture failed: {rest}"
+
 #: src/settings/general/notification.tsx
 msgid "Microphone detection"
 msgstr "Microphone detection"
+
+#: src/store/zustand/listener/general-shared.ts
+msgid "Microphone unavailable"
+msgstr "Microphone unavailable"
+
+#: src/store/zustand/listener/general-shared.ts
+msgid "Microphone unavailable. System audio continues"
+msgstr "Microphone unavailable. System audio continues"
+
+#: src/shared/long-load-gate.tsx
+msgid "Migrating your local database ({current} of {total}). This may take a few minutes."
+msgstr "Migrating your local database ({current} of {total}). This may take a few minutes."
+
+#: src/shared/long-load-gate.tsx
+msgid "Migrating your local database. This may take a few minutes."
+msgstr "Migrating your local database. This may take a few minutes."
 
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "Migration complete"
@@ -2239,6 +3397,7 @@ msgstr "Migration needs attention"
 msgid "Migration status unavailable"
 msgstr "Migration status unavailable"
 
+#: src/i18n/native-labels.tsx
 #: src/main/windows-window-controls.tsx
 msgid "Minimize"
 msgstr "Minimize"
@@ -2260,10 +3419,15 @@ msgstr "Model downloaded"
 msgid "Model is thinking..."
 msgstr "Model is thinking..."
 
+#: src/settings/ai/stt/shared.tsx
+msgid "Models & Pricing"
+msgstr "Models & Pricing"
+
 #: src/settings/general/week-start.tsx
 msgid "Monday"
 msgstr "Monday"
 
+#: src/session/components/outer-header/overflow/index.tsx
 #: src/settings/stats/index.tsx
 msgid "More"
 msgstr "More"
@@ -2272,9 +3436,17 @@ msgstr "More"
 msgid "More options"
 msgstr "More options"
 
+#: src/settings/general/timezone.tsx
+msgid "Moscow"
+msgstr "Moscow"
+
 #: src/settings/stats/insights.tsx
 msgid "Most conversations: {busiestDay}"
 msgstr "Most conversations: {busiestDay}"
+
+#: src/settings/general/timezone.tsx
+msgid "Mountain Time"
+msgstr "Mountain Time"
 
 #: src/templates/sections-editor.tsx
 msgid "Move down"
@@ -2287,6 +3459,10 @@ msgstr "Move this note"
 #: src/templates/sections-editor.tsx
 msgid "Move up"
 msgstr "Move up"
+
+#: src/onboarding/index.tsx
+msgid "Mute"
+msgstr "Mute"
 
 #: src/sidebar/automations.tsx
 msgid "My automations"
@@ -2307,6 +3483,7 @@ msgid "New automation"
 msgstr "New automation"
 
 #: src/chat/components/toolbar-controls.tsx
+#: src/chat/store/chat-title.ts
 msgid "New chat"
 msgstr "New chat"
 
@@ -2318,6 +3495,11 @@ msgstr "New folder"
 msgid "New meetings are imported automatically while Librelog is running."
 msgstr "New meetings are imported automatically while Librelog is running."
 
+#: src/main/sidebar-timeline-chrome.tsx
+msgid "New note"
+msgstr "New note"
+
+#: src/i18n/native-labels.tsx
 #: src/main/empty.tsx
 #: src/main/windows-title-bar.tsx
 msgid "New Note"
@@ -2326,6 +3508,12 @@ msgstr "New Note"
 #: src/session/components/note-input/raw.tsx
 msgid "New template"
 msgstr "New template"
+
+#: src/session/components/note-input/raw.tsx
+#: src/session/components/note-input/template-picker.tsx
+#: src/templates/utils.ts
+msgid "New Template"
+msgstr "New Template"
 
 #: src/contacts/related-notes.tsx
 #: src/contacts/shared.tsx
@@ -2341,6 +3529,10 @@ msgstr "Next match"
 msgid "next month"
 msgstr "next month"
 
+#: src/i18n/component-labels.tsx
+msgid "Next slide"
+msgstr "Next slide"
+
 #: src/sidebar/timeline/utils/index.ts
 msgid "next week"
 msgstr "next week"
@@ -2349,10 +3541,18 @@ msgstr "next week"
 msgid "No"
 msgstr "No"
 
+#: src/session/hooks/useAutoEnhance.ts
+msgid "No AI model configured"
+msgstr "No AI model configured"
+
 #: src/imports/screen.tsx
 #: src/settings/general/notification.tsx
 msgid "No apps found."
 msgstr "No apps found."
+
+#: src/store/zustand/listener/general-shared.ts
+msgid "No audio is being captured"
+msgstr "No audio is being captured"
 
 #: src/settings/automations/index.tsx
 msgid "No automation draft yet"
@@ -2374,6 +3574,14 @@ msgstr "No calendars found"
 msgid "No changelog available for this version."
 msgstr "No changelog available for this version."
 
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "No completion support"
+msgstr "No completion support"
+
+#: src/session/components/outer-header/metadata/participants/input.tsx
+msgid "No contact detail found"
+msgstr "No contact detail found"
+
 #: src/session/components/version-history-dialog.tsx
 msgid "No earlier versions yet."
 msgstr "No earlier versions yet."
@@ -2381,6 +3589,10 @@ msgstr "No earlier versions yet."
 #: src/templates/template-icon-picker.tsx
 msgid "No emoji found"
 msgstr "No emoji found"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "No excerpt available"
+msgstr "No excerpt available"
 
 #: src/sidebar/timeline/utils/index.ts
 msgid "No folder"
@@ -2409,6 +3621,10 @@ msgstr "No folders yet."
 #: src/folders/index.tsx
 msgid "No folders yet. Create one to group notes and materials."
 msgstr "No folders yet. Create one to group notes and materials."
+
+#: src/templates/auto-format-inference.ts
+msgid "No format requirements were generated"
+msgstr "No format requirements were generated"
 
 #: src/templates/template-icon-picker.tsx
 msgid "No icons found"
@@ -2451,6 +3667,10 @@ msgstr "No people"
 msgid "No people in this organization"
 msgstr "No people in this organization"
 
+#: src/settings/ai/llm/subscriptions/connect.tsx
+msgid "No provider selected."
+msgstr "No provider selected."
+
 #: src/settings/ai/llm/configure.tsx
 #: src/settings/ai/llm/select.tsx
 #: src/settings/ai/stt/configure.tsx
@@ -2465,6 +3685,10 @@ msgstr "No recent chats"
 #: src/contacts/related-notes.tsx
 msgid "No related notes found"
 msgstr "No related notes found"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "No results found"
+msgstr "No results found"
 
 #: src/contacts/related-notes.tsx
 #: src/settings/ai/shared/model-combobox.tsx
@@ -2482,13 +3706,47 @@ msgstr "No single busiest day"
 msgid "No speech detected"
 msgstr "No speech detected"
 
+#: src/dictation/controller.ts
+msgid "No speech detected. Please try again."
+msgstr "No speech detected. Please try again."
+
+#: src/i18n/external-messages.ts
+msgid "No speech was detected in the audio."
+msgstr "No speech was detected in the audio."
+
+#: src/templates/template-sidebar.tsx
+msgid "No templates found"
+msgstr "No templates found"
+
+#: src/session/components/note-input/template-picker.tsx
 #: src/templates/details.tsx
+#: src/templates/template-sidebar.tsx
 msgid "No templates yet"
 msgstr "No templates yet"
+
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "No text input support"
+msgstr "No text input support"
+
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "No tool support"
+msgstr "No tool support"
 
 #: src/session/components/note-input/transcript/screens/empty.tsx
 msgid "No transcript available"
 msgstr "No transcript available"
+
+#: src/services/enhancer/eligibility.ts
+msgid "No transcript recorded"
+msgstr "No transcript recorded"
+
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Not a chat model"
+msgstr "Not a chat model"
+
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Not an LLM type"
+msgstr "Not an LLM type"
 
 #: src/settings/stats/insights.tsx
 msgid "Not available"
@@ -2498,6 +3756,14 @@ msgstr "Not available"
 msgid "Not connected"
 msgstr "Not connected"
 
+#: src/session/components/note-input/enhanced/index.tsx
+msgid "Not enough transcript recorded to summarize."
+msgstr "Not enough transcript recorded to summarize."
+
+#: src/services/enhancer/eligibility.ts
+msgid "Not enough words recorded ({wordCount}/{minWords} minimum)"
+msgstr "Not enough words recorded ({wordCount}/{minWords} minimum)"
+
 #: src/settings/developers/cli.tsx
 msgid "Not installed"
 msgstr "Not installed"
@@ -2506,17 +3772,13 @@ msgstr "Not installed"
 msgid "not receiving events"
 msgstr "not receiving events"
 
-#: src/sidebar/toast/undo-delete-toast.tsx
-msgid "note"
-msgstr "note"
+#: src/i18n/external-messages.ts
+msgid "Not supported on this platform."
+msgstr "Not supported on this platform."
 
 #: src/lock/screen.tsx
 msgid "Note is Locked"
 msgstr "Note is Locked"
-
-#: src/sidebar/toast/undo-delete-toast.tsx
-msgid "notes"
-msgstr "notes"
 
 #: src/contacts/details.tsx
 #: src/settings/general/account-profile.tsx
@@ -2543,9 +3805,17 @@ msgstr "Notifications"
 msgid "Now"
 msgstr "Now"
 
+#: src/i18n/component-labels.tsx
+msgid "Numbered List"
+msgstr "Numbered List"
+
 #: src/templates/template-icon-picker.tsx
 msgid "Objects"
 msgstr "Objects"
+
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Old or deprecated model"
+msgstr "Old or deprecated model"
 
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "Older files that differ from your current data were kept as recovery copies. No action is required."
@@ -2557,6 +3827,10 @@ msgstr "Older files that differ from your current data were kept as recovery cop
 msgid "Oldest"
 msgstr "Oldest"
 
+#: src/settings/ai/stt/shared.tsx
+msgid "On device"
+msgstr "On device"
+
 #: src/settings/dictation.tsx
 msgid "On Wayland, approve the shortcuts in your desktop's prompt. Use Control + Alt + Escape to cancel. On X11, press Escape to cancel. The target app must expose an editable accessibility field."
 msgstr "On Wayland, approve the shortcuts in your desktop's prompt. Use Control + Alt + Escape to cancel. On X11, press Escape to cancel. The target app must expose an editable accessibility field."
@@ -2564,6 +3838,11 @@ msgstr "On Wayland, approve the shortcuts in your desktop's prompt. Use Control 
 #: src/session/components/note-input/enhanced/streaming.tsx
 msgid "On-device models can take a few minutes to warm up before text appears."
 msgstr "On-device models can take a few minutes to warm up before text appears."
+
+#: src/lock/auth.ts
+msgctxt "device authentication reason"
+msgid "open"
+msgstr "open"
 
 #: src/calendar/components/apple/permission.tsx
 msgid "Open"
@@ -2577,6 +3856,10 @@ msgstr "Open"
 msgid "Open {0} settings"
 msgstr "Open {0} settings"
 
+#: src/i18n/native-labels.tsx
+msgid "Open {app}"
+msgstr "Open {app}"
+
 #: src/chat/components/body/empty.tsx
 msgid "Open AI Settings"
 msgstr "Open AI Settings"
@@ -2589,6 +3872,10 @@ msgstr "Open calendar"
 #: src/calendar/components/sidebar.tsx
 msgid "Open calendar account actions"
 msgstr "Open calendar account actions"
+
+#: src/i18n/component-labels.tsx
+msgid "Open file"
+msgstr "Open file"
 
 #: src/session/components/outer-header/overflow/index.tsx
 msgid "Open floating panel"
@@ -2617,6 +3904,10 @@ msgstr "Open Librelog from the menu bar."
 msgid "Open meeting"
 msgstr "Open meeting"
 
+#: src/stt/start-failure.ts
+msgid "Open permissions"
+msgstr "Open permissions"
+
 #: src/calendar/components/apple/permission.tsx
 msgid "Open Settings"
 msgstr "Open Settings"
@@ -2629,12 +3920,12 @@ msgstr "Open the meeting link when a scheduled meeting begins."
 msgid "Opening sign-in…"
 msgstr "Opening sign-in…"
 
-#. placeholder {0}: accessibilityGuidance.paneTitle ?? "Privacy"
+#. placeholder {0}: localizeSettingsPane(accessibilityGuidance.paneTitle)
 #: src/onboarding/permissions.tsx
 msgid "Opens System Settings and guides you to add Librelog to the {0} list"
 msgstr "Opens System Settings and guides you to add Librelog to the {0} list"
 
-#. placeholder {0}: accessibilityGuidance.paneTitle ?? "Privacy"
+#. placeholder {0}: localizeSettingsPane(accessibilityGuidance.paneTitle)
 #: src/settings/general/permissions.tsx
 msgid "Opens System Settings and guides you to add Librelog to the {0} list."
 msgstr "Opens System Settings and guides you to add Librelog to the {0} list."
@@ -2668,26 +3959,59 @@ msgstr "Other device's version"
 msgid "Others"
 msgstr "Others"
 
+#: src/meeting-float/labels.ts
+msgid "Overlapping speech"
+msgstr "Overlapping speech"
+
 #: src/settings/stats/index.tsx
 msgid "Overview"
 msgstr "Overview"
 
+#: src/settings/general/timezone.tsx
+msgid "Pacific Time"
+msgstr "Pacific Time"
+
 #: src/shared/control.tsx
 msgid "Page not found"
 msgstr "Page not found"
+
+#: src/settings/general/timezone.tsx
+msgid "Paris"
+msgstr "Paris"
+
+#: src/stt/capture-lifecycle.ts
+msgid "Part of this meeting could not be transcribed yet, so Librelog kept its temporary audio on purpose. It will be deleted automatically once transcription succeeds."
+msgstr "Part of this meeting could not be transcribed yet, so Librelog kept its temporary audio on purpose. It will be deleted automatically once transcription succeeds."
 
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
 #: src/session/components/outer-header/overflow/export-modal.tsx
 msgid "Participants"
 msgstr "Participants"
 
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 msgid "Paste"
 msgstr "Paste"
 
+#: src/settings/ai/llm/configure.tsx
+msgid "Paste a Moonshot **API key**, or connect your **Kimi Code** membership. The default endpoint is the international service and can be changed under Advanced."
+msgstr "Paste a Moonshot **API key**, or connect your **Kimi Code** membership. The default endpoint is the international service and can be changed under Advanced."
+
 #: src/templates/auto-format-examples-dialog.tsx
 msgid "Paste a past summary you like..."
 msgstr "Paste a past summary you like..."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Paste an **API key**, or connect your **ChatGPT Plus or Pro** plan."
+msgstr "Paste an **API key**, or connect your **ChatGPT Plus or Pro** plan."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Paste an **API key**, or connect your **Claude Pro or Max** plan."
+msgstr "Paste an **API key**, or connect your **Claude Pro or Max** plan."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Paste an **API key**, or connect your **SuperGrok or X Premium+** plan."
+msgstr "Paste an **API key**, or connect your **SuperGrok or X Premium+** plan."
 
 #: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Paste an API key from your Kimi Code membership."
@@ -2697,10 +4021,20 @@ msgstr "Paste an API key from your Kimi Code membership."
 msgid "Paste the authorization code"
 msgstr "Paste the authorization code"
 
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "Paste the authorization code to continue."
+msgstr "Paste the authorization code to continue."
+
 #: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Paste the localhost redirect URL"
 msgstr "Paste the localhost redirect URL"
 
+#: src/settings/ai/llm/subscriptions/connect.tsx
+msgid "Paste your Kimi Code API key."
+msgstr "Paste your Kimi Code API key."
+
+#: src/audio-player/timeline.tsx
+#: src/i18n/component-labels.tsx
 #: src/settings/developers/webhooks.tsx
 msgid "Pause"
 msgstr "Pause"
@@ -2708,6 +4042,10 @@ msgstr "Pause"
 #: src/settings/general/notification.tsx
 msgid "Pause alerts while Do Not Disturb is on."
 msgstr "Pause alerts while Do Not Disturb is on."
+
+#: src/i18n/component-labels.tsx
+msgid "Pause auto-dismiss"
+msgstr "Pause auto-dismiss"
 
 #: src/settings/developers/webhooks.tsx
 msgid "Paused"
@@ -2741,6 +4079,34 @@ msgstr "Phone"
 msgid "Pin"
 msgstr "Pin"
 
+#: src/contacts/person-item.tsx
+msgid "Pin contact"
+msgstr "Pin contact"
+
+#: src/contacts/person-item.tsx
+msgid "Pin Contact"
+msgstr "Pin Contact"
+
+#: src/contacts/organization-item.tsx
+msgid "Pin organization"
+msgstr "Pin organization"
+
+#: src/contacts/organization-item.tsx
+msgid "Pin Organization"
+msgstr "Pin Organization"
+
+#: src/contacts/person-item.tsx
+msgid "Pinned contact"
+msgstr "Pinned contact"
+
+#: src/contacts/organization-item.tsx
+msgid "Pinned organization"
+msgstr "Pinned organization"
+
+#: src/audio-player/timeline.tsx
+msgid "Play"
+msgstr "Play"
+
 #: src/settings/general/notification.tsx
 msgid "Play a sound when transcription, summaries, or cloud sync finish."
 msgstr "Play a sound when transcription, summaries, or cloud sync finish."
@@ -2749,13 +4115,25 @@ msgstr "Play a sound when transcription, summaries, or cloud sync finish."
 msgid "Play from here"
 msgstr "Play from here"
 
+#: src/settings/ai/stt/configure.tsx
+msgid "Point this at any **Deepgram-compatible** endpoint, including a server on this computer or your local network."
+msgstr "Point this at any **Deepgram-compatible** endpoint, including a server on this computer or your local network."
+
 #: src/settings/general/meeting-settings.tsx
 msgid "Post recording disclosure in meeting chat"
 msgstr "Post recording disclosure in meeting chat"
 
+#: src/stt/capture-lifecycle.ts
+msgid "Post-meeting transcription failed. The recording was kept so you can try again."
+msgstr "Post-meeting transcription failed. The recording was kept so you can try again."
+
 #: src/settings/general/notification.tsx
 msgid "Prepare for events with a 5-minute reminder."
 msgstr "Prepare for events with a 5-minute reminder."
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Preparing search..."
+msgstr "Preparing search..."
 
 #: src/session/components/outer-header/overflow/export-modal.tsx
 msgid "Preparing transcript..."
@@ -2790,11 +4168,66 @@ msgstr "Preview"
 msgid "Previous match"
 msgstr "Previous match"
 
+#: src/i18n/component-labels.tsx
+msgid "Previous slide"
+msgstr "Previous slide"
+
+#: src/i18n/external-messages.ts
 #: src/settings/general/app-settings.tsx
 msgid "Privacy"
 msgstr "Privacy"
 
+#: src/chat/components/message/tool/update-prompt-template.tsx
+msgid "Prompt draft updated"
+msgstr "Prompt draft updated"
+
+#: src/chat/components/message/tool/update-prompt-template.tsx
+msgid "Prompt update failed"
+msgstr "Prompt update failed"
+
+#: src/session/queries/proposals.ts
+msgid "Proposal not found"
+msgstr "Proposal not found"
+
+#: src/templates/auto-format-inference.ts
+msgid "Provide between one and three examples"
+msgstr "Provide between one and three examples"
+
+#: src/settings/ai/stt/health.tsx
+msgid "Provider not configured."
+msgstr "Provider not configured."
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Query: {rawQuery}"
+msgstr "Query: {rawQuery}"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Query: none"
+msgstr "Query: none"
+
+#: src/i18n/native-labels.tsx
+msgid "Quit"
+msgstr "Quit"
+
+#: src/i18n/native-labels.tsx
+msgid "Quit {app} Completely?"
+msgstr "Quit {app} Completely?"
+
+#: src/i18n/native-labels.tsx
+msgid "Quit Completely"
+msgstr "Quit Completely"
+
+#: src/i18n/native-labels.tsx
+msgid "Quit Completely…"
+msgstr "Quit Completely…"
+
+#: src/i18n/component-labels.tsx
+msgid "Quote"
+msgstr "Quote"
+
+#: src/session/components/note-input/header-transcript.tsx
 #: src/session/components/note-input/transcript/screens/empty.tsx
+#: src/session/components/outer-header/overflow/index.tsx
 msgid "Re-transcribe"
 msgstr "Re-transcribe"
 
@@ -2850,9 +4283,17 @@ msgstr "received"
 msgid "Recent"
 msgstr "Recent"
 
+#: src/chat/components/toolbar-controls.tsx
+msgid "Recent Chats"
+msgstr "Recent Chats"
+
 #: src/calendar/components/sidebar.tsx
 msgid "Reconnect"
 msgstr "Reconnect"
+
+#: src/meeting-float/labels.ts
+msgid "Reconnecting live transcription; stop listening"
+msgstr "Reconnecting live transcription; stop listening"
 
 #: src/session/components/outer-header/index.tsx
 msgid "Record"
@@ -2866,15 +4307,45 @@ msgstr "Record other participants in meetings."
 msgid "Record your voice in meetings and calls."
 msgstr "Record your voice in meetings and calls."
 
+#: src/session/components/note-input/transcript/screens/batch.tsx
+msgid "Recording continues. Your transcript will be generated after you stop."
+msgstr "Recording continues. Your transcript will be generated after you stop."
+
+#: src/store/zustand/listener/general-live.ts
+msgid "Recording could not start. Check your audio permissions and devices."
+msgstr "Recording could not start. Check your audio permissions and devices."
+
+#: src/stt/start-failure.ts
+msgid "Recording couldn't start"
+msgstr "Recording couldn't start"
+
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
+msgid "Recording needs attention"
+msgstr "Recording needs attention"
+
 #: src/session/components/note-input/transcript/actions.ts
 #: src/session/components/outer-header/overflow/index.tsx
 msgid "Recording not found. It may have been deleted."
 msgstr "Recording not found. It may have been deleted."
 
+#: src/stt/meeting-disclosure.ts
+msgid "Recording started, but Librelog could not post the meeting chat disclosure."
+msgstr "Recording started, but Librelog could not post the meeting chat disclosure."
+
 #: src/settings/general/notification.tsx
 msgid "Recording status prompts"
 msgstr "Recording status prompts"
 
+#: src/stt/saved-capture-audio.tsx
+msgid "Recording stopped unexpectedly, so the audio was kept on purpose. Create the meeting note to transcribe and summarize it, or resume listening. The audio is deleted once it is transcribed."
+msgstr "Recording stopped unexpectedly, so the audio was kept on purpose. Create the meeting note to transcribe and summarize it, or resume listening. The audio is deleted once it is transcribed."
+
+#: src/session/components/note-input/transcript/index.tsx
+msgid "Recovery did not finish before the meeting ended. Audio was deleted according to your retention setting."
+msgstr "Recovery did not finish before the meeting ended. Audio was deleted according to your retention setting."
+
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 msgid "Redo"
 msgstr "Redo"
@@ -2883,6 +4354,11 @@ msgstr "Redo"
 msgid "Refresh calendars"
 msgstr "Refresh calendars"
 
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Refresh models"
+msgstr "Refresh models"
+
+#: src/session/components/note-input/header-enhanced.tsx
 #: src/session/components/note-input/template-picker.tsx
 msgid "Regenerate"
 msgstr "Regenerate"
@@ -2899,6 +4375,14 @@ msgstr "Reinstall"
 msgid "Related Notes"
 msgstr "Related Notes"
 
+#: src/i18n/external-messages.ts
+msgid "Release the shortcut keys before inserting text. Copy your last dictation from Settings > Dictation."
+msgstr "Release the shortcut keys before inserting text. Copy your last dictation from Settings > Dictation."
+
+#: src/i18n/component-labels.tsx
+msgid "Reload editor"
+msgstr "Reload editor"
+
 #: src/settings/general/audio-settings.tsx
 msgid "Remember speakers"
 msgstr "Remember speakers"
@@ -2907,6 +4391,7 @@ msgstr "Remember speakers"
 msgid "Reminders"
 msgstr "Reminders"
 
+#: src/session/components/note-input/header-enhanced.tsx
 #: src/sidebar/automations.tsx
 msgid "Remove"
 msgstr "Remove"
@@ -2920,6 +4405,14 @@ msgstr "Remove {0}"
 #: src/settings/dictionary/index.tsx
 msgid "Remove {term}"
 msgstr "Remove {term}"
+
+#: src/templates/template-form.tsx
+msgid "Remove as default"
+msgstr "Remove as default"
+
+#: src/i18n/component-labels.tsx
+msgid "Remove attachment"
+msgstr "Remove attachment"
 
 #: src/settings/automations/index.tsx
 msgid "Remove automation"
@@ -2938,6 +4431,15 @@ msgstr "Remove example {0}"
 #: src/contacts/profile-photo.tsx
 msgid "Remove photo"
 msgstr "Remove photo"
+
+#. placeholder {0}: message.content
+#: src/chat/components/content.tsx
+msgid "Remove queued message: {0}"
+msgstr "Remove queued message: {0}"
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "Remove step"
+msgstr "Remove step"
 
 #: src/sidebar/folder-materials.tsx
 msgid "Rename"
@@ -2970,6 +4472,10 @@ msgstr "Replace with..."
 #: src/main/windows-title-bar.tsx
 msgid "Report a Bug"
 msgstr "Report a Bug"
+
+#: src/i18n/native-labels.tsx
+msgid "Report Bug"
+msgstr "Report Bug"
 
 #: src/calendar/components/apple/permission.tsx
 msgid "Request"
@@ -3006,6 +4512,14 @@ msgstr "Reset to default format"
 msgid "Reset to Downloads"
 msgstr "Reset to Downloads"
 
+#: src/i18n/component-labels.tsx
+msgid "Resize image from left"
+msgstr "Resize image from left"
+
+#: src/i18n/component-labels.tsx
+msgid "Resize image from right"
+msgstr "Resize image from right"
+
 #: src/settings/general/notification.tsx
 msgid "Respect Do-Not-Disturb mode"
 msgstr "Respect Do-Not-Disturb mode"
@@ -3015,13 +4529,33 @@ msgid "Restart"
 msgstr "Restart"
 
 #: src/shared/control.tsx
+#: src/shared/long-load-gate.tsx
 msgid "Restart App"
 msgstr "Restart App"
+
+#: src/i18n/native-labels.tsx
+msgid "Restart to Apply Update"
+msgstr "Restart to Apply Update"
 
 #: src/main/windows-window-controls.tsx
 #: src/session/components/version-history-dialog.tsx
 msgid "Restore"
 msgstr "Restore"
+
+#: src/audio-player/timeline.tsx
+#: src/i18n/component-labels.tsx
+msgid "Resume"
+msgstr "Resume"
+
+#: src/i18n/component-labels.tsx
+msgid "Resume auto-dismiss"
+msgstr "Resume auto-dismiss"
+
+#: src/session/components/note-input/header-transcript.tsx
+#: src/session/components/outer-header/overflow/listening.tsx
+#: src/stt/saved-capture-audio.tsx
+msgid "Resume listening"
+msgstr "Resume listening"
 
 #: src/chat/components/message/error.tsx
 #: src/contacts/profile-photo.tsx
@@ -3029,6 +4563,7 @@ msgstr "Restore"
 #: src/settings/general/account-profile.tsx
 #: src/settings/general/storage/legacy-cleanup.tsx
 #: src/sidebar/toast/registry.tsx
+#: src/store/zustand/listener/general-live.ts
 msgid "Retry"
 msgstr "Retry"
 
@@ -3044,14 +4579,27 @@ msgstr "Review memo"
 msgid "Review summary"
 msgstr "Review summary"
 
+#: src/settings/general/timezone.tsx
+msgid "Reykjavik"
+msgstr "Reykjavik"
+
 #: src/settings/dictation-shortcut.tsx
 msgid "Right Command"
 msgstr "Right Command"
+
+#. placeholder {0}: formatToolName(toolName)
+#: src/chat/components/message/tool/generic.tsx
+msgid "Running {0}…"
+msgstr "Running {0}…"
 
 #: src/settings/ai/shared/index.tsx
 #: src/settings/ai/stt/select.tsx
 msgid "Runs after the recording finishes, not during the meeting."
 msgstr "Runs after the recording finishes, not during the meeting."
+
+#: src/settings/general/timezone.tsx
+msgid "Sao Paulo"
+msgstr "Sao Paulo"
 
 #: src/settings/dictionary/index.tsx
 #: src/templates/auto-form.tsx
@@ -3104,6 +4652,15 @@ msgstr "Scroll to bottom"
 msgid "Scroll to top"
 msgstr "Scroll to top"
 
+#: src/meeting-float/labels.ts
+msgid "Scroll transcript to bottom"
+msgstr "Scroll transcript to bottom"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+#: src/main/sidebar-timeline-chrome.tsx
+msgid "Search"
+msgstr "Search"
+
 #: src/sidebar/automations.tsx
 msgid "Search automations..."
 msgstr "Search automations..."
@@ -3115,6 +4672,14 @@ msgstr "Search contacts..."
 #: src/templates/template-icon-picker.tsx
 msgid "Search emoji..."
 msgstr "Search emoji..."
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Search failed"
+msgstr "Search failed"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Search failed: {titleQuery}"
+msgstr "Search failed: {titleQuery}"
 
 #: src/folders/sidebar.tsx
 msgid "Search folders..."
@@ -3175,6 +4740,14 @@ msgstr "Search timezone..."
 msgid "Search..."
 msgstr "Search..."
 
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Searched for: {titleQuery}"
+msgstr "Searched for: {titleQuery}"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+msgid "Searching for: {titleQuery}"
+msgstr "Searching for: {titleQuery}"
+
 #: src/templates/sections-editor.tsx
 msgid "Section actions"
 msgstr "Section actions"
@@ -3186,6 +4759,10 @@ msgstr "See all folders"
 #: src/session/components/note-input/template-picker.tsx
 msgid "See all templates"
 msgstr "See all templates"
+
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Select \"{trimmedQuery}\""
+msgstr "Select \"{trimmedQuery}\""
 
 #: src/settings/ai/shared/model-combobox.tsx
 #: src/settings/ai/stt/select.tsx
@@ -3201,6 +4778,7 @@ msgstr "Select a person to view details"
 msgid "Select a provider"
 msgstr "Select a provider"
 
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 msgid "Select All"
 msgstr "Select All"
@@ -3233,6 +4811,18 @@ msgstr "Select timezone"
 msgid "Select..."
 msgstr "Select..."
 
+#: src/settings/ai/stt/health.tsx
+msgid "Selected model is no longer available."
+msgstr "Selected model is no longer available."
+
+#: src/settings/ai/stt/health.tsx
+msgid "Selected model is not downloaded."
+msgstr "Selected model is not downloaded."
+
+#: src/settings/ai/stt/shared.tsx
+msgid "Self-hosted"
+msgstr "Self-hosted"
+
 #: src/contacts/organization-details.tsx
 msgid "Send email"
 msgstr "Send email"
@@ -3244,6 +4834,14 @@ msgstr "Send message"
 #: src/session/components/note-input/meeting-chat-highlights.tsx
 msgid "sent"
 msgstr "sent"
+
+#: src/settings/general/timezone.tsx
+msgid "Seoul"
+msgstr "Seoul"
+
+#: src/i18n/native-labels.tsx
+msgid "Services"
+msgstr "Services"
 
 #: src/session/components/note-input/header.tsx
 msgid "Session note views"
@@ -3263,6 +4861,7 @@ msgid "Set as current"
 msgstr "Set as current"
 
 #: src/templates/auto-form.tsx
+#: src/templates/template-form.tsx
 msgid "Set as default"
 msgstr "Set as default"
 
@@ -3274,10 +4873,19 @@ msgstr "Set up AI"
 msgid "Set up AI summaries"
 msgstr "Set up AI summaries"
 
+#: src/session/components/note-input/enhanced/index.tsx
+msgid "Set up AI summaries first."
+msgstr "Set up AI summaries first."
+
+#: src/session/components/note-input/enhanced-actions.ts
+msgid "Set up Intelligence in Settings before regenerating this summary."
+msgstr "Set up Intelligence in Settings before regenerating this summary."
+
 #: src/settings/dictation.tsx
 msgid "Setting up dictation…"
 msgstr "Setting up dictation…"
 
+#: src/i18n/native-labels.tsx
 #: src/main/empty.tsx
 #: src/main/windows-title-bar.tsx
 #: src/shared/open-note-dialog.tsx
@@ -3285,13 +4893,29 @@ msgstr "Setting up dictation…"
 msgid "Settings"
 msgstr "Settings"
 
+#: src/settings/ai/llm/shared.tsx
+msgid "Setup guide"
+msgstr "Setup guide"
+
+#: src/stt/meeting-screen-records.ts
+msgid "Shared screen"
+msgstr "Shared screen"
+
 #: src/session/components/note-input/meeting-screen-gallery.tsx
 msgid "Shared screen at {time}"
 msgstr "Shared screen at {time}"
 
+#: src/stt/meeting-screen-capture.ts
+msgid "Shared screen capture needs Screen Recording permission in Settings"
+msgstr "Shared screen capture needs Screen Recording permission in Settings"
+
 #: src/session/components/note-input/meeting-screen-gallery.tsx
 msgid "Shared screens"
 msgstr "Shared screens"
+
+#: src/i18n/native-labels.tsx
+msgid "Show All"
+msgstr "Show All"
 
 #: src/sidebar/timeline/item.tsx
 msgid "Show All Recurring Events"
@@ -3329,6 +4953,10 @@ msgstr "Show Event"
 msgid "Show floating bar"
 msgstr "Show floating bar"
 
+#: src/settings/ai/shared/model-combobox.tsx
+msgid "Show ignored models"
+msgstr "Show ignored models"
+
 #: src/calendar/components/session-chip.tsx
 #: src/settings/ai/stt/select.tsx
 #: src/sidebar/timeline/item.tsx
@@ -3352,6 +4980,7 @@ msgstr "Show meeting times as 14:00 instead of 2:00 PM."
 msgid "Show release notes"
 msgstr "Show release notes"
 
+#: src/main/sidebar-timeline-chrome.tsx
 #: src/main/windows-title-bar.tsx
 msgid "Show sidebar"
 msgstr "Show sidebar"
@@ -3375,6 +5004,10 @@ msgstr "Show the timeline in your preferred timezone."
 #: src/sidebar/timeline/item.tsx
 msgid "Show This Event"
 msgstr "Show This Event"
+
+#: src/meeting-float/labels.ts
+msgid "Show transcript"
+msgstr "Show transcript"
 
 #: src/settings/general/app-settings.tsx
 msgid "Show tray icon"
@@ -3408,9 +5041,17 @@ msgstr "Sign in with SuperGrok or X Premium+ and enter the code below."
 msgid "Sign in with your Claude account. After you authorize, copy the code and we'll finish connecting."
 msgstr "Sign in with your Claude account. After you authorize, copy the code and we'll finish connecting."
 
+#: src/settings/ai/llm/subscriptions/connect.tsx
+msgid "Sign-in is not ready yet."
+msgstr "Sign-in is not ready yet."
+
 #: src/settings/developers/webhooks.tsx
 msgid "Signing secret copied"
 msgstr "Signing secret copied"
+
+#: src/settings/general/timezone.tsx
+msgid "Singapore"
+msgstr "Singapore"
 
 #: src/settings/developers/skills.tsx
 msgid "Skill installed"
@@ -3431,6 +5072,14 @@ msgstr "Smileys & People"
 #: src/contacts/details.tsx
 msgid "Software Engineer"
 msgstr "Software Engineer"
+
+#: src/session/components/note-input/transcript/index.tsx
+msgid "Some audio could not be transcribed. Available recordings were kept according to your retention setting."
+msgstr "Some audio could not be transcribed. Available recordings were kept according to your retention setting."
+
+#: src/session/components/note-input/transcript/index.tsx
+msgid "Some audio has not been transcribed yet, so Librelog kept it temporarily. It will be deleted automatically once transcription succeeds."
+msgstr "Some audio has not been transcribed yet, so Librelog kept it temporarily. It will be deleted automatically once transcription succeeds."
 
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
 #: src/shared/control.tsx
@@ -3478,6 +5127,18 @@ msgstr "Sparkle"
 msgid "Speak into the focused text field in your apps. Your transcript appears when you finish."
 msgstr "Speak into the focused text field in your apps. Your transcript appears when you finish."
 
+#: src/meeting-float/route-state.ts
+#: src/session/components/note-input/transcript/export-data.ts
+msgid "Speaker"
+msgstr "Speaker"
+
+#: src/i18n/external-messages.ts
+#: src/meeting-float/route-state.ts
+#: src/meeting-float/speaker-labels.ts
+#: src/stt/live-segment.ts
+msgid "Speaker {speakerNumber}"
+msgstr "Speaker {speakerNumber}"
+
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "SQLite migration verification is incomplete"
 msgstr "SQLite migration verification is incomplete"
@@ -3486,9 +5147,17 @@ msgstr "SQLite migration verification is incomplete"
 msgid "Stack another destination. Steps run top to bottom."
 msgstr "Stack another destination. Steps run top to bottom."
 
+#: src/i18n/native-labels.tsx
+msgid "Start a new meeting"
+msgstr "Start a new meeting"
+
 #: src/settings/general/app-settings.tsx
 msgid "Start Librelog at login"
 msgstr "Start Librelog at login"
+
+#: src/session/components/outer-header/overflow/listening.tsx
+msgid "Start listening"
+msgstr "Start listening"
 
 #: src/settings/general/meeting-settings.tsx
 msgid "Start listening when a scheduled meeting begins."
@@ -3559,8 +5228,12 @@ msgstr "Stay current with updates installed the next time Librelog opens."
 msgid "Steps run from top to bottom."
 msgstr "Steps run from top to bottom."
 
+#: src/audio-player/timeline.tsx
 #: src/composer/index.tsx
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
 #: src/session/components/outer-header/index.tsx
+#: src/stt/auto-stop.ts
 msgid "Stop"
 msgstr "Stop"
 
@@ -3568,7 +5241,10 @@ msgstr "Stop"
 msgid "Stop auto-add"
 msgstr "Stop auto-add"
 
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
 #: src/session/components/outer-header/index.tsx
+#: src/session/components/outer-header/overflow/listening.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Stop listening"
 msgstr "Stop listening"
@@ -3580,6 +5256,10 @@ msgstr "Stop listening when your call ends."
 #: src/chat/components/input/index.tsx
 msgid "Stop response"
 msgstr "Stop response"
+
+#: src/stt/start-failure.ts
+msgid "Stop the current recording, or wait for it to finish saving, then try again."
+msgstr "Stop the current recording, or wait for it to finish saving, then try again."
 
 #: src/session/components/note-input/transcript/screens/empty.tsx
 msgid "Stop transcription"
@@ -3601,6 +5281,14 @@ msgstr "Storage"
 msgid "Story Collector"
 msgstr "Story Collector"
 
+#: src/stt/useRunBatch.ts
+msgid "STT connection is not available. Please configure your speech-to-text provider."
+msgstr "STT connection is not available. Please configure your speech-to-text provider."
+
+#: src/settings/ai/shared/provider-labels.ts
+msgid "Subscription"
+msgstr "Subscription"
+
 #: src/settings/general/notification.tsx
 msgid "Success"
 msgstr "Success"
@@ -3608,6 +5296,10 @@ msgstr "Success"
 #: src/main/windows-title-bar.tsx
 msgid "Suggest a Feature"
 msgstr "Suggest a Feature"
+
+#: src/i18n/native-labels.tsx
+msgid "Suggest Feature"
+msgstr "Suggest Feature"
 
 #: src/chat/components/body/empty.tsx
 msgid "Suggest what to ask next."
@@ -3619,6 +5311,7 @@ msgstr "Suggested templates"
 
 #: src/contacts/details.tsx
 #: src/edit/tab-content.tsx
+#: src/session/components/note-input/header-shared.tsx
 #: src/session/components/outer-header/overflow/export-modal.tsx
 #: src/settings/automations/markdown-export-options.tsx
 msgid "Summary"
@@ -3627,6 +5320,14 @@ msgstr "Summary"
 #: src/settings/general/notification.tsx
 msgid "Summary complete"
 msgstr "Summary complete"
+
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Summary edit declined"
+msgstr "Summary edit declined"
+
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Summary edit failed"
+msgstr "Summary edit failed"
 
 #: src/templates/auto-form.tsx
 msgid "Summary format"
@@ -3641,13 +5342,34 @@ msgstr "Summary format cannot be empty."
 msgid "Summary generation failed"
 msgstr "Summary generation failed"
 
+#: src/session/components/note-input/enhanced/index.tsx
+msgid "Summary generation is not ready yet."
+msgstr "Summary generation is not ready yet."
+
 #: src/services/enhancer/summary-notification.ts
 msgid "Summary ready"
 msgstr "Summary ready"
 
+#: src/chat/components/message/tool/edit-summary.tsx
+msgid "Summary updated"
+msgstr "Summary updated"
+
+#: src/session/components/note-input/enhanced-actions.ts
+#: src/session/hooks/useAutoEnhance.ts
+msgid "Summary wasn't generated"
+msgstr "Summary wasn't generated"
+
 #: src/settings/general/week-start.tsx
 msgid "Sunday"
 msgstr "Sunday"
+
+#: src/settings/ai/llm/shared.tsx
+msgid "SuperGrok"
+msgstr "SuperGrok"
+
+#: src/settings/general/timezone.tsx
+msgid "Sydney"
+msgstr "Sydney"
 
 #: src/templates/template-icon-picker.tsx
 msgid "Symbols"
@@ -3674,9 +5396,21 @@ msgstr "System audio"
 msgid "System audio enabled"
 msgstr "System audio enabled"
 
+#: src/store/zustand/listener/general-shared.ts
+msgid "System audio unavailable"
+msgstr "System audio unavailable"
+
+#: src/store/zustand/listener/general-shared.ts
+msgid "System audio unavailable. Microphone capture continues"
+msgstr "System audio unavailable. Microphone capture continues"
+
 #: src/settings/appearance/sidebar-item-fields.tsx
 msgid "Tags"
 msgstr "Tags"
+
+#: src/i18n/component-labels.tsx
+msgid "Task List"
+msgstr "Task List"
 
 #: src/settings/developers/skills.tsx
 msgid "Teach coding agents when and how to use the Librelog CLI and MCP"
@@ -3695,6 +5429,7 @@ msgstr "Template actions"
 msgid "Template content with Jinja2: {{ variable }}, {% if condition %}"
 msgstr "Template content with Jinja2: {{ variable }}, {% if condition %}"
 
+#: src/session/components/note-input/template-picker.tsx
 #: src/sidebar/settings-nav-groups.ts
 msgid "Templates"
 msgstr "Templates"
@@ -3718,9 +5453,61 @@ msgstr "Test failed ({0})"
 msgid "Test runs are not available yet."
 msgstr "Test runs are not available yet."
 
+#: src/i18n/component-labels.tsx
+msgid "Text"
+msgstr "Text"
+
+#: src/i18n/external-messages.ts
+msgid "The AI model is overloaded right now. Wait a moment, then retry."
+msgstr "The AI model is overloaded right now. Wait a moment, then retry."
+
+#: src/store/zustand/ai-task/tasks.ts
+msgid "The AI model stopped responding before it finished."
+msgstr "The AI model stopped responding before it finished."
+
+#: src/ai/apple-foundation-model.ts
+msgid "The Apple Foundation Models experiment currently supports text only."
+msgstr "The Apple Foundation Models experiment currently supports text only."
+
+#: src/settings/ai/shared/list-apple-foundation.ts
+msgid "The Apple Intelligence model is still downloading."
+msgstr "The Apple Intelligence model is still downloading."
+
+#: src/i18n/component-labels.tsx
+msgid "The editor failed to render. Your recording is still running."
+msgstr "The editor failed to render. Your recording is still running."
+
+#: src/i18n/external-messages.ts
+msgid "The focused text field changed. Copy your last dictation from Settings > Dictation."
+msgstr "The focused text field changed. Copy your last dictation from Settings > Dictation."
+
+#: src/i18n/external-messages.ts
+msgid "The new transcription returned much less text. Your saved transcript and recording were kept. Try transcribing again."
+msgstr "The new transcription returned much less text. Your saved transcript and recording were kept. Try transcribing again."
+
 #: src/shared/control.tsx
 msgid "The page you're looking for doesn't exist."
 msgstr "The page you're looking for doesn't exist."
+
+#: src/store/zustand/listener/general-live.ts
+msgid "The previous recording needs recovery"
+msgstr "The previous recording needs recovery"
+
+#: src/stt/useRunBatch.ts
+msgid "the selected speech-to-text provider"
+msgstr "the selected speech-to-text provider"
+
+#: src/stt/capture-lifecycle.ts
+msgid "The transcript was saved, but Librelog could not start the summary. Try generating it again."
+msgstr "The transcript was saved, but Librelog could not start the summary. Try generating it again."
+
+#: src/stt/live-transcript-interrupted.ts
+msgid "the transcription service"
+msgstr "the transcription service"
+
+#: src/store/zustand/listener/general-live.ts
+msgid "The unreadable audio was preserved in this note's folder as an audio.recovery-*.wav file. New audio will be recorded separately. Your transcript is unchanged."
+msgstr "The unreadable audio was preserved in this note's folder as an audio.recovery-*.wav file. New audio will be recorded separately. Your transcript is unchanged."
 
 #: src/sidebar/toast/registry.tsx
 msgid "The update download failed"
@@ -3730,9 +5517,14 @@ msgstr "The update download failed"
 msgid "Theme"
 msgstr "Theme"
 
+#. placeholder {0}: index + 1
 #: src/settings/automations/workflow-builder.tsx
-msgid "Then"
-msgstr "Then"
+msgid "Then {0}"
+msgstr "Then {0}"
+
+#: src/i18n/native-labels.tsx
+msgid "There are currently no updates available."
+msgstr "There are currently no updates available."
 
 #: src/chat/components/message/loading.tsx
 msgid "Thinking..."
@@ -3746,6 +5538,18 @@ msgstr "This device"
 msgid "This edit is no longer pending."
 msgstr "This edit is no longer pending."
 
+#: src/i18n/external-messages.ts
+msgid "This field does not expose whether it is editable. Copy your last dictation from Settings > Dictation."
+msgstr "This field does not expose whether it is editable. Copy your last dictation from Settings > Dictation."
+
+#: src/i18n/external-messages.ts
+msgid "This image would make the chat draft too large. Remove another image and try again."
+msgstr "This image would make the chat draft too large. Remove another image and try again."
+
+#: src/settings/ai/shared/list-apple-foundation.ts
+msgid "This Mac does not support Apple Intelligence."
+msgstr "This Mac does not support Apple Intelligence."
+
 #: src/calendar/components/event-chip.tsx
 msgid "This note"
 msgstr "This note"
@@ -3754,9 +5558,38 @@ msgstr "This note"
 msgid "This note was edited on another device at the same time. The later edit was kept."
 msgstr "This note was edited on another device at the same time. The later edit was kept."
 
+#: src/session/queries/proposals.ts
+msgid "This proposal is stale. The meeting changed after it was created."
+msgstr "This proposal is stale. The meeting changed after it was created."
+
+#: src/settings/ai/llm/subscriptions/connect.tsx
+msgid "This provider uses a different sign-in flow."
+msgstr "This provider uses a different sign-in flow."
+
 #: src/chat/components/session-provider.tsx
 msgid "This recording is using batch transcription, so the transcript isn't available to chat yet. Ask again after transcription finishes, or switch to a Pro model for live transcription."
 msgstr "This recording is using batch transcription, so the transcript isn't available to chat yet. Ask again after transcription finishes, or switch to a Pro model for live transcription."
+
+#: src/settings/ai/llm/subscriptions/connect.tsx
+#: src/settings/ai/llm/subscriptions/oauth.ts
+msgid "This sign-in expired. Try connecting again."
+msgstr "This sign-in expired. Try connecting again."
+
+#: src/i18n/external-messages.ts
+msgid "This text field does not expose an accessibility identity."
+msgstr "This text field does not expose an accessibility identity."
+
+#: src/session/components/note-input/transcript/index.tsx
+msgid "This transcript is incomplete."
+msgstr "This transcript is incomplete."
+
+#: src/chat/components/input/hooks.ts
+msgid "This unsent chat draft could not be kept because draft storage is full."
+msgstr "This unsent chat draft could not be kept because draft storage is full."
+
+#: src/chat/components/input/hooks.ts
+msgid "This unsent chat draft is too large to keep after closing the editor."
+msgstr "This unsent chat draft is too large to keep after closing the editor."
 
 #. placeholder {0}: status.fileCount
 #. placeholder {1}: formatBytes(status.totalBytes)
@@ -3767,6 +5600,10 @@ msgstr "This will remove {0} legacy files and free {1}. Your app data will not b
 #: src/settings/todo/index.tsx
 msgid "Ticket"
 msgstr "Ticket"
+
+#: src/i18n/component-labels.tsx
+msgid "Timer paused {count} {seconds, plural, one {second} other {seconds}}"
+msgstr "Timer paused {count} {seconds, plural, one {second} other {seconds}}"
 
 #: src/settings/general/timezone.tsx
 msgid "Timezone"
@@ -3784,6 +5621,14 @@ msgstr "Tip: The Librelog team loves our users!"
 msgid "Today"
 msgstr "Today"
 
+#: src/i18n/native-labels.tsx
+msgid "Toggle Full Screen"
+msgstr "Toggle Full Screen"
+
+#: src/settings/general/timezone.tsx
+msgid "Tokyo"
+msgstr "Tokyo"
+
 #: src/sidebar/timeline/utils/index.ts
 msgid "Tomorrow"
 msgstr "Tomorrow"
@@ -3800,8 +5645,29 @@ msgstr "Transcribing…"
 #: src/session/components/note-input/header-transcript.tsx
 #: src/session/components/outer-header/overflow/export-modal.tsx
 #: src/settings/automations/markdown-export-options.tsx
+#: src/stt/useUploadFile.ts
 msgid "Transcript"
 msgstr "Transcript"
+
+#: src/session/components/note-input/header-transcript.tsx
+msgid "Transcript copied to clipboard"
+msgstr "Transcript copied to clipboard"
+
+#: src/session/components/note-input/transcript/screens/listening.tsx
+msgid "Transcript is still being written."
+msgstr "Transcript is still being written."
+
+#: src/meeting-float/overlay/live-caption.tsx
+msgid "Transcript opacity"
+msgstr "Transcript opacity"
+
+#: src/services/enhancer/eligibility.ts
+msgid "Transcript too short to summarize ({characterCount}/{minCharacters} characters minimum)"
+msgstr "Transcript too short to summarize ({characterCount}/{minCharacters} characters minimum)"
+
+#: src/session/components/note-input/transcript/screens/listening.tsx
+msgid "Transcript will appear here when the first segment arrives."
+msgstr "Transcript will appear here when the first segment arrives."
 
 #: src/settings/ai/stt/index.tsx
 #: src/sidebar/settings-nav-groups.ts
@@ -3815,6 +5681,10 @@ msgstr "Transcription failed"
 #: src/sidebar/toast/registry.tsx
 msgid "Transcription provider needed"
 msgstr "Transcription provider needed"
+
+#: src/i18n/external-messages.ts
+msgid "Transcription stopped."
+msgstr "Transcription stopped."
 
 #: src/sidebar/toast/registry.tsx
 msgid "Transcription unavailable"
@@ -3831,10 +5701,13 @@ msgstr "Trigger"
 
 #: src/contacts/details.tsx
 #: src/onboarding/permissions.tsx
-#: src/settings/general/permissions.tsx
 #: src/settings/stats/badge-collection.tsx
 msgid "Try again"
 msgstr "Try again"
+
+#: src/settings/general/permissions.tsx
+msgid "Try again: {title}"
+msgstr "Try again: {title}"
 
 #: src/settings/dictation.tsx
 msgid "Try dictation"
@@ -3843,6 +5716,10 @@ msgstr "Try dictation"
 #: src/chat/components/input/use-dictation.ts
 msgid "Try speaking a little closer to the microphone."
 msgstr "Try speaking a little closer to the microphone."
+
+#: src/settings/ai/shared/list-apple-foundation.ts
+msgid "Turn on Apple Intelligence in System Settings."
+msgstr "Turn on Apple Intelligence in System Settings."
 
 #: src/calendar/components/apple/permission.tsx
 msgid "Turn on Librelog in System Settings → Privacy & Security → Calendars, then return here."
@@ -3856,10 +5733,19 @@ msgstr "Typical conversation length"
 msgid "Unavailable"
 msgstr "Unavailable"
 
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 #: src/sidebar/toast/undo-delete-toast.tsx
 msgid "Undo"
 msgstr "Undo"
+
+#: src/templates/template-sidebar.tsx
+msgid "Unfavorite"
+msgstr "Unfavorite"
+
+#: src/templates/template-form.tsx
+msgid "Unfavorite template"
+msgstr "Unfavorite template"
 
 #: src/calendar/components/event-chip.tsx
 msgid "Unfiled"
@@ -3873,6 +5759,18 @@ msgstr "Unknown"
 msgid "Unknown date"
 msgstr "Unknown date"
 
+#: src/chat/components/message/tool/edit-summary.tsx
+#: src/chat/components/message/tool/generic.tsx
+#: src/chat/components/message/tool/shared.tsx
+#: src/chat/components/message/tool/update-prompt-template.tsx
+#: src/settings/ai/llm/health.tsx
+msgid "Unknown error"
+msgstr "Unknown error"
+
+#: src/main/update-banner.tsx
+msgid "Unknown update error."
+msgstr "Unknown update error."
+
 #: src/lock/screen.tsx
 msgid "Unlock"
 msgstr "Unlock"
@@ -3882,33 +5780,78 @@ msgstr "Unlock"
 msgid "Unlock Note"
 msgstr "Unlock Note"
 
+#: src/lock/auth.ts
+msgid "unlock this note"
+msgstr "unlock this note"
+
 #: src/settings/ai/shared/index.tsx
 msgid "Unlock your login Keychain in the macOS prompt. Librelog will retry saving this API key automatically."
 msgstr "Unlock your login Keychain in the macOS prompt. Librelog will retry saving this API key automatically."
 
+#: src/onboarding/index.tsx
+msgid "Unmute"
+msgstr "Unmute"
+
 #: src/contacts/details.tsx
 #: src/contacts/organization-details.tsx
+#: src/contacts/person-item.tsx
 msgid "Unnamed"
 msgstr "Unnamed"
+
+#: src/contacts/details.tsx
+msgid "Unnamed Contact"
+msgstr "Unnamed Contact"
 
 #: src/contacts/contact-page-header.tsx
 msgid "Unpin"
 msgstr "Unpin"
 
+#: src/contacts/person-item.tsx
+msgid "Unpin contact"
+msgstr "Unpin contact"
+
+#: src/contacts/person-item.tsx
+msgid "Unpin Contact"
+msgstr "Unpin Contact"
+
+#: src/contacts/organization-item.tsx
+msgid "Unpin organization"
+msgstr "Unpin organization"
+
+#: src/contacts/organization-item.tsx
+msgid "Unpin Organization"
+msgstr "Unpin Organization"
+
+#: src/chat/components/message/tool/search-meetings.tsx
+#: src/chat/context/session-drag.ts
+#: src/services/tray-recording.tsx
 #: src/session/components/note-input/raw.tsx
+#: src/session/components/note-input/template-picker.tsx
 #: src/session/components/outer-header/overflow/export-modal.tsx
 #: src/session/components/title-input.tsx
+#: src/session/title-content.ts
 #: src/shared/open-note-dialog.tsx
 #: src/sidebar/timeline/item.tsx
 #: src/sidebar/toast/undo-delete-toast.tsx
+#: src/store/zustand/live-title.ts
 #: src/templates/sections-editor.tsx
+#: src/templates/template-sidebar.tsx
 msgid "Untitled"
 msgstr "Untitled"
 
+#: src/templates/queries.ts
+msgid "Untitled (Copy)"
+msgstr "Untitled (Copy)"
+
+#: src/automations/workflows.ts
 #: src/settings/automations/index.tsx
 #: src/sidebar/automations.tsx
 msgid "Untitled automation"
 msgstr "Untitled automation"
+
+#: src/session/components/outer-header/metadata/index.tsx
+msgid "Untitled Event"
+msgstr "Untitled Event"
 
 #: src/contacts/related-notes.tsx
 msgid "Untitled Note"
@@ -3922,14 +5865,42 @@ msgstr "Untitled session"
 msgid "Upcoming Event"
 msgstr "Upcoming Event"
 
+#: src/i18n/native-labels.tsx
+msgid "Update Available"
+msgstr "Update Available"
+
+#: src/i18n/native-labels.tsx
+msgid "Update Check Failed"
+msgstr "Update Check Failed"
+
+#: src/i18n/native-labels.tsx
+msgid "Update Failed"
+msgstr "Update Failed"
+
+#: src/chat/components/message/tool/update-prompt-template.tsx
+msgid "Update prompt draft"
+msgstr "Update prompt draft"
+
+#: src/i18n/native-labels.tsx
+msgid "Update v{version} is available!"
+msgstr "Update v{version} is available!"
+
 #: src/settings/general/account-profile.tsx
 msgid "Update your personal contact card."
 msgstr "Update your personal contact card."
+
+#: src/chat/components/message/tool/update-prompt-template.tsx
+msgid "Updating prompt draft"
+msgstr "Updating prompt draft"
 
 #: src/session/components/note-input/transcript/screens/empty.tsx
 #: src/session/components/outer-header/overflow/index.tsx
 msgid "Upload audio"
 msgstr "Upload audio"
+
+#: src/stt/useUploadFile.ts
+msgid "Upload Audio"
+msgstr "Upload Audio"
 
 #: src/session/components/note-input/transcript/screens/empty.tsx
 msgid "Upload audio or a transcript file to populate this note."
@@ -3940,13 +5911,105 @@ msgstr "Upload audio or a transcript file to populate this note."
 msgid "Upload transcript"
 msgstr "Upload transcript"
 
+#: src/stt/useUploadFile.ts
+msgid "Upload Transcript"
+msgstr "Upload Transcript"
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Alebex STT](https://www.alebex.ai/models-speech-to-text) with the speech-to-text token from your developer account."
+msgstr "Use [Alebex STT](https://www.alebex.ai/models-speech-to-text) with the speech-to-text token from your developer account."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [AssemblyAI](https://www.assemblyai.com) for transcriptions."
+msgstr "Use [AssemblyAI](https://www.assemblyai.com) for transcriptions."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Azure AI Speech](https://learn.microsoft.com/azure/ai-services/speech-service/rest-speech-to-text) fast transcription. Enter the regional Speech resource endpoint as the Base URL and its subscription key as the API key."
+msgstr "Use [Azure AI Speech](https://learn.microsoft.com/azure/ai-services/speech-service/rest-speech-to-text) fast transcription. Enter the regional Speech resource endpoint as the Base URL and its subscription key as the API key."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Cohere Transcribe](https://docs.cohere.com/docs/transcribe) for batch transcription. Files must be 25 MB or smaller and use one selected language. Cohere does not return timestamps or speaker labels, so Librelog estimates word timing."
+msgstr "Use [Cohere Transcribe](https://docs.cohere.com/docs/transcribe) for batch transcription. Files must be 25 MB or smaller and use one selected language. Cohere does not return timestamps or speaker labels, so Librelog estimates word timing."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Deepgram](https://deepgram.com) for transcriptions. If you want to use a [Dedicated](https://developers.deepgram.com/reference/custom-endpoints#deepgram-dedicated-endpoints) or [EU](https://developers.deepgram.com/reference/custom-endpoints#eu-endpoints) endpoint, or a Deepgram-compatible server on this computer or your local network, you can do that in the **advanced** section."
+msgstr "Use [Deepgram](https://deepgram.com) for transcriptions. If you want to use a [Dedicated](https://developers.deepgram.com/reference/custom-endpoints#deepgram-dedicated-endpoints) or [EU](https://developers.deepgram.com/reference/custom-endpoints#eu-endpoints) endpoint, or a Deepgram-compatible server on this computer or your local network, you can do that in the **advanced** section."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Gemini 3.5 Transcribe](https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-5-transcribe/) with a Google AI Studio API key. **3.5 Transcribe Live** captions during recording (preview sessions last up to 10 minutes). **3.5 Transcribe** runs after recording with speaker labels and word timestamps; Librelog splits files past 15 minutes."
+msgstr "Use [Gemini 3.5 Transcribe](https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-5-transcribe/) with a Google AI Studio API key. **3.5 Transcribe Live** captions during recording (preview sessions last up to 10 minutes). **3.5 Transcribe** runs after recording with speaker labels and word timestamps; Librelog splits files past 15 minutes."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Gladia](https://www.gladia.io) for transcriptions."
+msgstr "Use [Gladia](https://www.gladia.io) for transcriptions."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Google Cloud Speech-to-Text](https://cloud.google.com/speech-to-text) to transcribe after recording. Long recordings are split automatically and combined into one transcript. Paste an OAuth access token in the API key field; refresh it when it expires."
+msgstr "Use [Google Cloud Speech-to-Text](https://cloud.google.com/speech-to-text) to transcribe after recording. Long recordings are split automatically and combined into one transcript. Paste an OAuth access token in the API key field; refresh it when it expires."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Gradium STT](https://docs.gradium.ai/guides/speech-to-text) for live transcription in English, French, Spanish, Portuguese, or German."
+msgstr "Use [Gradium STT](https://docs.gradium.ai/guides/speech-to-text) for live transcription in English, French, Spanish, Portuguese, or German."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Inworld Realtime STT](https://docs.inworld.ai/stt/overview) for live transcription. Paste the Base64 API credentials from Inworld Portal as-is; do not encode them again."
+msgstr "Use [Inworld Realtime STT](https://docs.inworld.ai/stt/overview) for live transcription. Paste the Base64 API credentials from Inworld Portal as-is; do not encode them again."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Mistral](https://mistral.ai) for transcriptions. Keep the Base URL as `https://api.mistral.ai/v1` (Reset under Advanced if you pasted a transcriptions endpoint). **Voxtral Mini Transcribe 2** transcribes after recording; the realtime model is for live captions."
+msgstr "Use [Mistral](https://mistral.ai) for transcriptions. Keep the Base URL as `https://api.mistral.ai/v1` (Reset under Advanced if you pasted a transcriptions endpoint). **Voxtral Mini Transcribe 2** transcribes after recording; the realtime model is for live captions."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Modulate](https://docs.modulate.ai/get-started/stt) for live transcription. The multilingual model supports 25 European languages; the English model supports English only. Speaker labels identify up to four speakers with the multilingual model."
+msgstr "Use [Modulate](https://docs.modulate.ai/get-started/stt) for live transcription. The multilingual model supports 25 European languages; the English model supports English only. Speaker labels identify up to four speakers with the multilingual model."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [OpenAI](https://openai.com) for transcriptions."
+msgstr "Use [OpenAI](https://openai.com) for transcriptions."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [OpenRouter](https://openrouter.ai) to transcribe with supported speech-to-text models through one API key. OpenRouter transcription runs after recording."
+msgstr "Use [OpenRouter](https://openrouter.ai) to transcribe with supported speech-to-text models through one API key. OpenRouter transcription runs after recording."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Rev AI](https://docs.rev.ai/api/asynchronous/get-started) asynchronous transcription. Librelog uploads the recording, waits for the job, and retrieves word timestamps and speaker labels."
+msgstr "Use [Rev AI](https://docs.rev.ai/api/asynchronous/get-started) asynchronous transcription. Librelog uploads the recording, waits for the job, and retrieves word timestamps and speaker labels."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [SiliconFlow](https://docs.siliconflow.com/en/api-reference/audio/create-audio-transcriptions) for batch transcription. The default endpoint is the international service; use `https://api.siliconflow.cn/v1` under Advanced for a China-region API key."
+msgstr "Use [SiliconFlow](https://docs.siliconflow.com/en/api-reference/audio/create-audio-transcriptions) for batch transcription. The default endpoint is the international service; use `https://api.siliconflow.cn/v1` under Advanced for a China-region API key."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Soniox](https://soniox.com) for transcriptions."
+msgstr "Use [Soniox](https://soniox.com) for transcriptions."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Speechmatics](https://docs.speechmatics.com/speech-to-text/batch/quickstart) enhanced batch transcription. The default endpoint uses the EU region and can be changed under Advanced."
+msgstr "Use [Speechmatics](https://docs.speechmatics.com/speech-to-text/batch/quickstart) enhanced batch transcription. The default endpoint uses the EU region and can be changed under Advanced."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use [Z.AI GLM ASR](https://docs.z.ai/guides/audio/glm-asr-2512) for batch transcription. Librelog automatically splits recordings to fit Z.AI's 30-second upload limit."
+msgstr "Use [Z.AI GLM ASR](https://docs.z.ai/guides/audio/glm-asr-2512) for batch transcription. Librelog automatically splits recordings to fit Z.AI's 30-second upload limit."
+
+#: src/templates/template-icon-picker.tsx
+msgid "Use {color}"
+msgstr "Use {color}"
+
 #: src/settings/appearance/time-format.tsx
 msgid "Use 24-hour time"
 msgstr "Use 24-hour time"
 
+#: src/settings/ai/stt/configure.tsx
+msgid "Use a [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) endpoint that exposes Deepgram-compatible Nova-3 transcription."
+msgstr "Use a [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) endpoint that exposes Deepgram-compatible Nova-3 transcription."
+
 #: src/automations/starters.tsx
 msgid "Use a stable filename in the configured export directory."
 msgstr "Use a stable filename in the configured export directory."
+
+#: src/settings/ai/stt/configure.tsx
+msgid "Use Alibaba Cloud Model Studio's Qwen ASR for **live transcription**. The default endpoint is the Singapore region; change it under Advanced when your API key belongs to another region."
+msgstr "Use Alibaba Cloud Model Studio's Qwen ASR for **live transcription**. The default endpoint is the Singapore region; change it under Advanced when your API key belongs to another region."
 
 #: src/imports/screen.tsx
 msgid "Use files"
@@ -3980,6 +6043,46 @@ msgstr "Use your microphone to capture your voice"
 msgid "Used for transcription and automatic summary language detection."
 msgstr "Used for transcription and automatic summary language detection."
 
+#: src/settings/ai/llm/configure.tsx
+msgid "Uses Alibaba Cloud Model Studio's **OpenAI-compatible API**. The default endpoint is the Singapore region; change the Base URL under Advanced when your API key belongs to another region."
+msgstr "Uses Alibaba Cloud Model Studio's **OpenAI-compatible API**. The default endpoint is the Singapore region; change the Base URL under Advanced when your API key belongs to another region."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Uses SiliconFlow's **OpenAI-compatible API**. The default endpoint is the international service; use `https://api.siliconflow.cn/v1` under Advanced for a China-region API key."
+msgstr "Uses SiliconFlow's **OpenAI-compatible API**. The default endpoint is the international service; use `https://api.siliconflow.cn/v1` under Advanced for a China-region API key."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Uses your **ChatGPT Plus or Pro** plan. Sign in through Connect — we'll finish the handshake automatically."
+msgstr "Uses your **ChatGPT Plus or Pro** plan. Sign in through Connect — we'll finish the handshake automatically."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Uses your **Claude Pro or Max** plan. Sign in through Connect — no Anthropic API key needed."
+msgstr "Uses your **Claude Pro or Max** plan. Sign in through Connect — no Anthropic API key needed."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Uses your **GitHub Copilot** plan. Approve the device code in the browser to connect."
+msgstr "Uses your **GitHub Copilot** plan. Approve the device code in the browser to connect."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Uses your **Kimi Code** membership. Paste the coding API key from the Kimi Code console."
+msgstr "Uses your **Kimi Code** membership. Paste the coding API key from the Kimi Code console."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Uses your **SuperGrok or X Premium+** plan through xAI's subscription login."
+msgstr "Uses your **SuperGrok or X Premium+** plan through xAI's subscription login."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "Uses Z.AI's **OpenAI-compatible GLM API**. The default endpoint is the international service and can be changed under Advanced."
+msgstr "Uses Z.AI's **OpenAI-compatible GLM API**. The default endpoint is the international service and can be changed under Advanced."
+
+#: src/stt/useRunBatch.ts
+msgid "Using a batch transcription provider"
+msgstr "Using a batch transcription provider"
+
+#: src/settings/ai/stt/health.tsx
+msgid "Verifying API key..."
+msgstr "Verifying API key..."
+
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "Verifying the SQLite migration status"
 msgstr "Verifying the SQLite migration status"
@@ -3989,6 +6092,7 @@ msgstr "Verifying the SQLite migration status"
 msgid "Version history"
 msgstr "Version history"
 
+#: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 msgid "View"
 msgstr "View"
@@ -4005,9 +6109,25 @@ msgstr "View LinkedIn profile"
 msgid "View Note"
 msgstr "View Note"
 
+#: src/settings/ai/llm/configure.tsx
+msgid "Visit [AI Studio](https://aistudio.google.com/api-keys) to create an API key."
+msgstr "Visit [AI Studio](https://aistudio.google.com/api-keys) to create an API key."
+
 #: src/chat/components/input/use-dictation.ts
 msgid "Voice input is unavailable while Librelog is recording a meeting."
 msgstr "Voice input is unavailable while Librelog is recording a meeting."
+
+#: src/i18n/external-messages.ts
+msgid "Voice recording failed: {rest}"
+msgstr "Voice recording failed: {rest}"
+
+#: src/i18n/external-messages.ts
+msgid "Voice recording is already active."
+msgstr "Voice recording is already active."
+
+#: src/i18n/external-messages.ts
+msgid "Voice recording is not active."
+msgstr "Voice recording is not active."
 
 #: src/settings/general/notification.tsx
 msgid "Wait before treating microphone activity as a meeting."
@@ -4018,8 +6138,20 @@ msgid "Wait until the transcript and note are complete."
 msgstr "Wait until the transcript and note are complete."
 
 #: src/settings/ai/llm/subscriptions/connect.tsx
+msgid "Waiting for authorization in the browser."
+msgstr "Waiting for authorization in the browser."
+
+#: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Waiting for authorization in your browser…"
 msgstr "Waiting for authorization in your browser…"
+
+#: src/settings/ai/llm/configure.tsx
+msgid "We filter out models from the combobox based on heuristics like **input modalities** and **tool support**."
+msgstr "We filter out models from the combobox based on heuristics like **input modalities** and **tool support**."
+
+#: src/settings/ai/llm/configure.tsx
+msgid "We only support **OpenAI-compatible** endpoints for now."
+msgstr "We only support **OpenAI-compatible** endpoints for now."
 
 #: src/settings/developers/webhooks.tsx
 msgid "Webhooks"
@@ -4035,8 +6167,33 @@ msgid "Weekly streak: {0}"
 msgstr "Weekly streak: {0}"
 
 #: src/onboarding/index.tsx
+#: src/onboarding/welcome-note.ts
 msgid "Welcome to Librelog"
 msgstr "Welcome to Librelog"
+
+#: src/onboarding/welcome-note.ts
+msgid ""
+"Welcome to Librelog 👋\n"
+"\n"
+"\n"
+"This note is a quick way to see how Librelog works.\n"
+"\n"
+"\n"
+"Click **Record** in the top-right corner and talk for a minute, or play a video with someone speaking. Librelog saves the audio on your device. To create a transcript and notes, choose a provider in **Settings → Transcription**; if one is not ready, Librelog will show you a setup shortcut.\n"
+"\n"
+"\n"
+"When you stop recording, Librelog will create your summary automatically if transcription and intelligence are configured."
+msgstr ""
+"Welcome to Librelog 👋\n"
+"\n"
+"\n"
+"This note is a quick way to see how Librelog works.\n"
+"\n"
+"\n"
+"Click **Record** in the top-right corner and talk for a minute, or play a video with someone speaking. Librelog saves the audio on your device. To create a transcript and notes, choose a provider in **Settings → Transcription**; if one is not ready, Librelog will show you a setup shortcut.\n"
+"\n"
+"\n"
+"When you stop recording, Librelog will create your summary automatically if transcription and intelligence are configured."
 
 #: src/chat/components/body/empty.tsx
 msgid "What action items have come up so far in this meeting?"
@@ -4078,6 +6235,14 @@ msgstr "When this happens"
 msgid "whisper.cpp models"
 msgstr "whisper.cpp models"
 
+#: src/i18n/native-labels.tsx
+msgid "Window"
+msgstr "Window"
+
+#: src/i18n/external-messages.ts
+msgid "Windows could not insert the entire dictation. Check the field before copying your last dictation. Elevated apps may block text insertion."
+msgstr "Windows could not insert the entire dictation. Check the field before copying your last dictation. Elevated apps may block text insertion."
+
 #: src/settings/automations/workflow-builder.tsx
 msgid "Workflow"
 msgstr "Workflow"
@@ -4090,9 +6255,19 @@ msgstr "Workspace"
 msgid "Write to a folder"
 msgstr "Write to a folder"
 
+#: src/stt/detect-events.ts
+msgid "Yes"
+msgstr "Yes"
+
 #: src/sidebar/timeline/utils/index.ts
 msgid "Yesterday"
 msgstr "Yesterday"
+
+#: src/i18n/external-messages.ts
+#: src/meeting-float/route-state.ts
+#: src/stt/live-segment.ts
+msgid "You"
+msgstr "You"
 
 #: src/calendar/components/apple/permission.tsx
 msgid "You can"
@@ -4106,6 +6281,10 @@ msgstr "You can undo this action for a short time."
 msgid "You can use up to three example summaries."
 msgstr "You can use up to three example summaries."
 
+#: src/stt/live-transcript-interrupted.ts
+msgid "Your audio is still being saved, and the missing part will be filled in from the recording."
+msgstr "Your audio is still being saved, and the missing part will be filled in from the recording."
+
 #: src/settings/stats/badge-collection.tsx
 msgid "Your badges"
 msgstr "Your badges"
@@ -4118,9 +6297,17 @@ msgstr "Your busiest weekdays are tied at {peakCount} conversations each in the 
 msgid "Your conversation patterns"
 msgstr "Your conversation patterns"
 
+#: src/shared/long-load-gate.tsx
+msgid "Your data was updated by a newer version of Librelog, such as Librelog Nightly, and this version cannot open it yet. Your existing data was left unchanged. Install the latest version of Librelog, or keep using the newer app until this version catches up."
+msgstr "Your data was updated by a newer version of Librelog, such as Librelog Nightly, and this version cannot open it yet. Your existing data was left unchanged. Install the latest version of Librelog, or keep using the newer app until this version catches up."
+
 #: src/settings/dictionary/index.tsx
 msgid "Your dictionary is empty"
 msgstr "Your dictionary is empty"
+
+#: src/shared/long-load-gate.tsx
+msgid "Your existing data was left unchanged. Please restart the app. If the problem continues, contact support."
+msgstr "Your existing data was left unchanged. Please restart the app. If the problem continues, contact support."
 
 #: src/settings/general/account-profile.tsx
 msgid "Your info"
@@ -4134,6 +6321,10 @@ msgstr "Your insights"
 msgid "Your summary is ready."
 msgstr "Your summary is ready."
 
+#: src/stt/capture-lifecycle.ts
+msgid "Your transcript could not be saved"
+msgstr "Your transcript could not be saved"
+
 #: src/settings/stats/insights.tsx
 msgid "Your week at a glance"
 msgstr "Your week at a glance"
@@ -4141,3 +6332,7 @@ msgstr "Your week at a glance"
 #: src/templates/template-sidebar.tsx
 msgid "Z to A"
 msgstr "Z to A"
+
+#: src/i18n/native-labels.tsx
+msgid "Zoom"
+msgstr "Zoom"
