@@ -357,13 +357,6 @@ pub fn main() {
                 supervisor::monitor_supervisor(handle, ctx.is_exiting.clone(), app_handle.clone());
             }
 
-            {
-                use tauri_plugin_local_llm::LocalLlmPluginExt;
-                if false {
-                    app_handle.local_llm().start_server();
-                }
-            }
-
             search_index::spawn(app_handle.clone(), db.clone());
 
             #[cfg(not(feature = "app-store"))]

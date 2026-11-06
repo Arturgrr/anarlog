@@ -59,7 +59,6 @@ anlg-frontmatter = { path = "crates/frontmatter", package = "frontmatter" }
 anlg-fs-format = { path = "crates/fs-format", package = "fs-format" }
 anlg-fs-sync-core = { path = "crates/fs-sync-core", package = "fs-sync-core" }
 anlg-gbnf = { path = "crates/gbnf", package = "gbnf" }
-anlg-gguf = { path = "crates/gguf", package = "gguf" }
 anlg-hooks = { path = "crates/hooks", package = "hooks" }
 anlg-host = { path = "crates/host", package = "host" }
 anlg-intercept = { path = "crates/intercept", package = "intercept" }
@@ -67,7 +66,6 @@ anlg-language = { path = "crates/language", package = "language" }
 anlg-listener-core = { path = "crates/listener-core", package = "listener-core" }
 anlg-listener2-core = { path = "crates/listener2-core", package = "listener2-core" }
 anlg-lmstudio = { path = "crates/lmstudio", package = "lmstudio" }
-anlg-local-llm-core = { path = "crates/local-llm-core", package = "local-llm-core" }
 anlg-local-model = { path = "crates/local-model", package = "local-model" }
 anlg-local-stt-core = { path = "crates/local-stt-core", package = "local-stt-core" }
 anlg-model-downloader = { path = "crates/model-downloader", package = "model-downloader" }

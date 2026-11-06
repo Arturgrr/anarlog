@@ -4687,17 +4687,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gguf"
-version = "0.1.0"
-dependencies = [
- "byteorder",
- "dirs 6.0.0",
- "memmap2",
- "strum 0.28.0",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "gif"
 version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7528,28 +7517,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "local-llm-core"
-version = "0.1.0"
-dependencies = [
- "dirs 6.0.0",
- "file",
- "gguf",
- "lmstudio",
- "local-model",
- "serde",
- "specta",
- "thiserror 2.0.18",
- "tokio",
-]
-
-[[package]]
 name = "local-model"
 version = "0.1.0"
 dependencies = [
- "file",
  "model-downloader",
  "serde",
- "serde_json",
  "specta",
  "transcribe-soniqo",
  "transcribe-speechanalyzer",
@@ -13650,10 +13622,6 @@ dependencies = [
 name = "tauri-plugin-local-llm"
 version = "0.1.0"
 dependencies = [
- "dirs 6.0.0",
- "local-llm-core",
- "model-downloader",
- "reqwest 0.13.2",
  "serde",
  "serde_json",
  "specta",
@@ -13661,12 +13629,8 @@ dependencies = [
  "swift-rs 1.0.7 (git+https://github.com/Brendonovich/swift-rs?rev=41a1605)",
  "tauri",
  "tauri-plugin",
- "tauri-plugin-settings",
- "tauri-plugin-store",
  "tauri-specta",
- "thiserror 2.0.18",
  "tokio",
- "tracing",
 ]
 
 [[package]]

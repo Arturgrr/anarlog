@@ -6,86 +6,6 @@
 
 
 export const commands = {
-async modelsDir() : Promise<Result<string, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|models_dir") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async listSupportedModel() : Promise<Result<ModelInfo[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|list_supported_model") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async isModelDownloaded(model: GgufLlmModel) : Promise<Result<boolean, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|is_model_downloaded", { model }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async isModelDownloading(model: GgufLlmModel) : Promise<Result<boolean, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|is_model_downloading", { model }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async downloadModel(model: GgufLlmModel, channel: TAURI_CHANNEL<number>) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|download_model", { model, channel }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async cancelDownload(model: GgufLlmModel) : Promise<Result<boolean, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|cancel_download", { model }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async deleteModel(model: GgufLlmModel) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|delete_model", { model }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async listDownloadedModel() : Promise<Result<GgufLlmModel[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|list_downloaded_model") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async listCustomModels() : Promise<Result<CustomModelInfo[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|list_custom_models") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async serverUrl() : Promise<Result<string | null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|server_url") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async foundationModelAvailability() : Promise<Result<FoundationModelAvailability, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:local-llm|foundation_model_availability") };
@@ -130,13 +50,9 @@ async foundationModelGenerate(request: FoundationModelRequest) : Promise<Result<
 
 /** user-defined types **/
 
-export type CustomModelInfo = { path: string; name: string }
 export type FoundationModelAvailability = { status: string; reason: string | null }
 export type FoundationModelRequest = { requestId: string; instructions: string; prompt: string; maximumResponseTokens: number | null; temperature: number | null; useGreedySampling: boolean }
 export type FoundationModelResponse = { text: string }
-export type GgufLlmModel = "Llama3p2_3bQ4" | "Gemma3_4bQ4" | "AnarlogLLM"
-export type ModelInfo = { key: GgufLlmModel; name: string; description: string; size_bytes: number }
-export type TAURI_CHANNEL<TSend> = null
 
 /** tauri-specta globals **/
 

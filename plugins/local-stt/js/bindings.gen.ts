@@ -216,12 +216,7 @@ export type DownloadStatus =
   | { downloading: number }
   | "completed"
   | { failed: string };
-export type GgufLlmModel = "Llama3p2_3bQ4" | "Gemma3_4bQ4" | "AnarlogLLM";
-export type LocalModel =
-  | SoniqoModel
-  | AppleSpeechModel
-  | WhisperModel
-  | GgufLlmModel;
+export type LocalModel = SoniqoModel | AppleSpeechModel | WhisperModel;
 export type ServerInfo = {
   url: string | null;
   status: ServerStatus;

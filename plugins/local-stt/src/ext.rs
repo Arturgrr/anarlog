@@ -57,15 +57,10 @@ pub struct LocalStt<'a, R: Runtime, M: Manager<R>> {
 
 impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
     fn ensure_stt_model(model: &LocalModel) -> Result<(), crate::Error> {
-        match model {
-            LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) | LocalModel::Whisper(_) => {
-                if model.is_available_on_current_platform() {
-                    Ok(())
-                } else {
-                    Err(crate::Error::UnsupportedPlatform)
-                }
-            }
-            LocalModel::GgufLlm(_) => Err(crate::Error::UnsupportedModelType),
+        if model.is_available_on_current_platform() {
+            Ok(())
+        } else {
+            Err(crate::Error::UnsupportedPlatform)
         }
     }
 
