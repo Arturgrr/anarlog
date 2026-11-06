@@ -125,16 +125,16 @@ describe("SettingsNav", () => {
     );
   });
 
-  it.each([
-    ["Calendar", "calendar"],
-    ["Automations", "automations"],
-  ])("opens the %s workspace in a new tab", (label, type) => {
-    render(<SettingsNav />);
+  it.each([["Automations", "automations"]])(
+    "opens the %s workspace in a new tab",
+    (label, type) => {
+      render(<SettingsNav />);
 
-    fireEvent.click(screen.getByRole("button", { name: label }));
+      fireEvent.click(screen.getByRole("button", { name: label }));
 
-    expect(mocks.openNew).toHaveBeenCalledWith({ type });
-  });
+      expect(mocks.openNew).toHaveBeenCalledWith({ type });
+    },
+  );
 
   it("offers Insights instead of Stats, including via search", () => {
     render(<SettingsNav />);

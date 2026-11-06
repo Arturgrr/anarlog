@@ -1,7 +1,6 @@
 import { type UnlistenFn } from "@tauri-apps/api/event";
 
 import { events as notificationEvents } from "@anlg/plugin-notification";
-import { commands as openerCommands } from "@anlg/plugin-opener2";
 import type {
   CaptureConfigUpdate,
   IdentityAssignment,
@@ -13,12 +12,8 @@ import {
 import { getCurrentWebviewWindowLabel } from "@anlg/plugin-windows";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
-import {
-  getCalendarEventMeetingLink,
-  getCalendarEventStartedAt,
-} from "~/calendar/queries";
 import { liveQueryClient } from "~/db";
-import { createSession, getOrCreateSessionForEventId } from "~/session/queries";
+import { createSession } from "~/session/queries";
 import { setSettingValue } from "~/settings/queries";
 import { isAppStoreBuild } from "~/shared/app-store";
 import { useConfigValue, useConfigValues } from "~/shared/config";
@@ -138,53 +133,16 @@ const LIVE_TRANSCRIPT_IDENTITY_SQL = `
 
 const LIVE_CAPTURE_CONFIG_DEBOUNCE_MS = 750;
 
-async function shouldAutoStartNotificationSession(
-  eventId: string | null,
-  triggerAppIds: string[] | null,
-): Promise<boolean> {
-  if (triggerAppIds && triggerAppIds.length > 0) {
-    return true;
-  }
-
-  if (!eventId) {
-    return true;
-  }
-
-  const startedAt = await getCalendarEventStartedAt(eventId);
-  if (!startedAt) {
-    return false;
-  }
-
-  const startTime = new Date(String(startedAt)).getTime();
-  return !Number.isNaN(startTime) && startTime <= Date.now();
-}
-
 async function createNotificationSession(
-  eventId: string | null,
   triggerAppIds: string[] | null,
-): Promise<{ sessionId: string; autoStart: boolean }> {
-  const sessionId = eventId
-    ? await getOrCreateSessionForEventId(eventId)
-    : await createSession();
+): Promise<string> {
+  const sessionId = await createSession();
 
   if (triggerAppIds && triggerAppIds.length > 0) {
     listenerStore.getState().setTriggerAppIds(triggerAppIds);
   }
 
-  return {
-    sessionId,
-    autoStart: await shouldAutoStartNotificationSession(eventId, triggerAppIds),
-  };
-}
-
-async function openCalendarMeeting(eventId: string): Promise<void> {
-  const meetingLink = await getCalendarEventMeetingLink(eventId);
-  if (meetingLink) {
-    const result = await openerCommands.openUrl(meetingLink, null);
-    if (result.status === "error") {
-      throw new Error(result.error);
-    }
-  }
+  return sessionId;
 }
 
 function handleAutoStopEndedNotification(
@@ -651,12 +609,6 @@ function useNotificationEvents() {
             return;
           }
 
-          const eventId =
-            payload.source?.type === "calendar_event"
-              ? payload.source.event_id
-              : payload.source?.type === "mic_detected"
-                ? (payload.source.event_ids?.[0] ?? null)
-                : null;
           const sourceSessionId =
             payload.source?.type === "session"
               ? payload.source.session_id
@@ -672,28 +624,23 @@ function useNotificationEvents() {
               state: {
                 view: null,
                 autoStart: null,
-                scheduledAutoStart: null,
               },
             });
             return;
           }
 
-          if (
-            payload.source?.type !== "calendar_event" &&
-            payload.source?.type !== "mic_detected"
-          ) {
+          if (payload.source?.type !== "mic_detected") {
             return;
           }
 
-          void createNotificationSession(eventId, triggerAppIds)
-            .then(({ sessionId, autoStart }) => {
+          void createNotificationSession(triggerAppIds)
+            .then((sessionId) => {
               openNewRef.current({
                 type: "sessions",
                 id: sessionId,
                 state: {
                   view: null,
-                  autoStart: autoStart ? true : null,
-                  scheduledAutoStart: null,
+                  autoStart: true,
                 },
               });
             })
@@ -703,62 +650,8 @@ function useNotificationEvents() {
                 error,
               );
             });
-        } else if (payload.type === "notification_action") {
-          if (payload.source?.type !== "calendar_event") {
-            return;
-          }
-
-          const eventId = payload.source.event_id;
-          if (payload.action === "open_meeting") {
-            void openCalendarMeeting(eventId).catch((error) => {
-              console.error(
-                "[notification] failed to open calendar meeting",
-                error,
-              );
-            });
-            return;
-          }
-
-          void (async () => {
-            try {
-              const sessionId = await getOrCreateSessionForEventId(eventId);
-              openNewRef.current({
-                type: "sessions",
-                id: sessionId,
-                state: {
-                  view: null,
-                  autoStart: true,
-                },
-              });
-            } catch (error) {
-              console.error(
-                "[notification] failed to start calendar event recording",
-                error,
-              );
-            }
-
-            try {
-              // Opening the meeting last returns focus to the meeting client,
-              // while the session starts from the route's auto-start state.
-              await openCalendarMeeting(eventId);
-            } catch (error) {
-              console.error(
-                "[notification] failed to open calendar meeting",
-                error,
-              );
-            }
-          })();
         } else if (payload.type === "notification_option_selected") {
-          const selectedIndex = payload.selected_index;
-          const eventIds =
-            payload.source?.type === "mic_detected"
-              ? (payload.source.event_ids ?? [])
-              : [];
-
-          const sessionPromise =
-            selectedIndex < eventIds.length
-              ? getOrCreateSessionForEventId(eventIds[selectedIndex])
-              : createSession();
+          const sessionPromise = createSession();
 
           if (payload.source?.type === "mic_detected") {
             const triggerAppIds = payload.source.app_ids ?? [];
@@ -777,13 +670,12 @@ function useNotificationEvents() {
                 state: {
                   view: null,
                   autoStart: true,
-                  scheduledAutoStart: null,
                 },
               });
             })
             .catch((error) => {
               console.error(
-                "[notification] failed to open selected event",
+                "[notification] failed to open selected option",
                 error,
               );
             });

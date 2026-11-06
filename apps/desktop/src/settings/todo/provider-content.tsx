@@ -1,11 +1,8 @@
 import { useLingui } from "@lingui/react/macro";
 
+import { AccessPermissionRow, TroubleShootingLink } from "./permission";
 import type { TodoProvider } from "./shared";
 
-import {
-  AccessPermissionRow,
-  TroubleShootingLink,
-} from "~/calendar/components/apple/permission";
 import { usePermission } from "~/shared/hooks/usePermissions";
 
 export function TodoProviderContent({ config }: { config: TodoProvider }) {

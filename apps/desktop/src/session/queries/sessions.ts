@@ -1,7 +1,6 @@
 import { useCallback, useRef } from "react";
 
 import { md2json } from "@anlg/editor/markdown";
-import type { SessionEvent } from "@anlg/store";
 
 import { extractBodyHeadingsKey } from "../title-content";
 import type {
@@ -19,7 +18,6 @@ type SessionSqlRow = {
   owner_user_id: string;
   created_at: string;
   folder_path: string;
-  event_json: string;
   title: string;
   raw_body: string;
   raw_body_format: string;
@@ -36,8 +34,6 @@ type SessionSummarySqlRow = {
 type SessionTranscriptStateSqlRow = {
   has_transcript: boolean | number;
 };
-
-type SessionEventSqlRow = { event_json: string };
 
 const EMPTY_SESSION_SUMMARIES: SessionSummaryRecord[] = [];
 const SESSION_PREFETCH_TTL_MS = 5_000;
@@ -57,7 +53,6 @@ const SESSION_SELECT_SQL = `
     sessions.owner_user_id,
     sessions.created_at,
     sessions.folder_path,
-    sessions.event_json,
     sessions.title,
     sessions.locked,
     COALESCE(note.body, '') AS raw_body,
@@ -181,28 +176,6 @@ export function useSessionSummariesByIds(
   return useHeldLiveQueryRows(data, EMPTY_SESSION_SUMMARIES, enabled);
 }
 
-export async function loadSessionEvent(
-  sessionId: string,
-): Promise<SessionEvent | null> {
-  const rows = await liveQueryClient.execute<SessionEventSqlRow>(
-    `
-      SELECT event_json
-      FROM sessions
-      WHERE id = ? AND deleted_at IS NULL
-      LIMIT 1
-    `,
-    [sessionId],
-  );
-  const eventJson = rows[0]?.event_json;
-  if (!eventJson) return null;
-
-  try {
-    return JSON.parse(eventJson) as SessionEvent;
-  } catch {
-    return null;
-  }
-}
-
 export function useUpdateSession(sessionId: string) {
   return useCallback(
     (changes: SessionChanges) => updateSession(sessionId, changes),
@@ -288,7 +261,6 @@ export function updateSession(
       ["title", changes.title],
       ["created_at", changes.created_at],
       ["folder_path", changes.folder_id],
-      ["event_json", changes.event_json],
       [
         "locked",
         changes.locked === undefined ? undefined : Number(changes.locked),
@@ -439,7 +411,6 @@ function mapSessionRow(row: SessionSqlRow): SessionRecord {
     user_id: row.owner_user_id,
     created_at: row.created_at,
     folder_id: row.folder_path,
-    event_json: row.event_json,
     title: row.title,
     raw_md: rawMd,
     raw_template_id: row.raw_template_id,

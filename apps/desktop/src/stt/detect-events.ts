@@ -12,39 +12,30 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import {
   AUTO_STOP_ACCESSIBILITY_TIMEOUT_MS,
   AUTO_STOP_CONFIRM_DELAY_MS,
+  AUTO_STOP_NETWORK_HOLD_MS,
   getAutoStopActiveCheckAppIds,
   getAutoStopCandidateAppIds,
   getMeetingAppsStillOnCall,
-  getNetworkInterruptionDeadlineMs,
   isRecentNetworkDrop,
-  resolveNetworkHoldUntilMs,
   shouldPromptBeforeAutoStopping,
   showMeetingEndedPrompt,
 } from "./auto-stop";
 import { cancelAutoStopEndedNotification } from "./auto-stop-notification";
 import { inspectionsShowActiveMeetingForApps } from "./meeting-accessibility";
 import {
-  getBrowserMeetingPlatform,
   getIgnorableApps,
   getIgnoreAppsFooterText,
   getNotificationAppName,
-  getNotificationDisplayApp,
-  getNotificationDisplayApps,
+  getNotificationIconForApp,
   getNotificationIconForDetectedApps,
-  getNotificationIconForDisplayApp,
 } from "./meeting-apps";
 import { recordDetectedMeetingApps } from "./meeting-source-apps";
 
-import {
-  getNearbyCalendarEvents,
-  type NearbyCalendarEvent,
-} from "~/calendar/queries";
 import { useConfigValue } from "~/shared/config";
 import type { ListenerStore } from "~/store/zustand/listener";
 
 const MAX_TIMEOUT_DELAY_MS = 2_147_483_647;
 
-type NearbyEvent = NearbyCalendarEvent;
 type PendingAutoStop = {
   timeout?: ReturnType<typeof setTimeout>;
   requireMicSnapshot: boolean;
@@ -52,25 +43,6 @@ type PendingAutoStop = {
   networkInterrupted: boolean;
   networkHoldUntilMs?: number;
 };
-
-function getMicDetectedNotificationTitle(event: NearbyEvent | null): string {
-  if (!event) {
-    return t`Are you in a meeting?`;
-  }
-
-  if (event.participantNames.length === 1) {
-    const name = event.participantNames[0];
-    return t`Are you talking to ${name} right now?`;
-  }
-
-  if (event.participantNames.length === 2) {
-    const [firstName, secondName] = event.participantNames;
-    return t`Are you talking to ${firstName} and ${secondName} right now?`;
-  }
-
-  const title = event.title;
-  return t`Are you in ${title} right now?`;
-}
 
 export const useHandleDetectEvents = (store: ListenerStore) => {
   const stop = useStore(store, (state) => state.stop);
@@ -330,19 +302,8 @@ export const useHandleDetectEvents = (store: ListenerStore) => {
       }
 
       if (pending.networkInterrupted || !isOnlineRef.current) {
-        const nowMs = Date.now();
         const holdUntilMs =
-          pending.networkHoldUntilMs ??
-          resolveNetworkHoldUntilMs({
-            calendarDeadlineMs: await getNetworkInterruptionDeadlineMs({
-              sessionId: pending.sessionId,
-              nowMs,
-            }),
-            nowMs,
-          });
-        if (pendingAutoStopRef.current !== pending) {
-          return;
-        }
+          pending.networkHoldUntilMs ?? Date.now() + AUTO_STOP_NETWORK_HOLD_MS;
         if (holdUntilMs > Date.now()) {
           scheduleAutoStop(
             holdUntilMs - Date.now(),
@@ -435,40 +396,19 @@ export const useHandleDetectEvents = (store: ListenerStore) => {
 
           void (async () => {
             try {
-              const nearbyEvents = await getNearbyCalendarEvents(
-                Date.now(),
-                15 * 60 * 1000,
-              );
-              const nearbyEvent = nearbyEvents[0] ?? null;
-              const browserMeetingPlatform = getBrowserMeetingPlatform(
-                payload.apps,
-                nearbyEvent,
-              );
-              const displayApps = getNotificationDisplayApps(
-                payload.apps,
-                browserMeetingPlatform,
-              );
-              const displayIgnorableApps = ignorableApps.map((app) =>
-                getNotificationDisplayApp(app, browserMeetingPlatform),
-              );
-
               const footerIcon =
-                displayIgnorableApps.length > 0
-                  ? await getNotificationIconForDisplayApp(
-                      displayIgnorableApps[0]!,
-                      browserMeetingPlatform,
-                    )
+                ignorableApps.length > 0
+                  ? await getNotificationIconForApp(ignorableApps[0]!)
                   : null;
               const notificationIcon = await getNotificationIconForDetectedApps(
                 payload.apps,
-                browserMeetingPlatform,
               );
               const footer =
-                displayIgnorableApps.length > 0
+                ignorableApps.length > 0
                   ? {
-                      text: getIgnoreAppsFooterText(displayIgnorableApps),
+                      text: getIgnoreAppsFooterText(ignorableApps),
                       actionLabel:
-                        displayIgnorableApps.length === 1
+                        ignorableApps.length === 1
                           ? t`Ignore it`
                           : t`Ignore them`,
                       icon: footerIcon,
@@ -482,16 +422,15 @@ export const useHandleDetectEvents = (store: ListenerStore) => {
 
               await notificationCommands.showNotification({
                 key: payload.key,
-                title: getMicDetectedNotificationTitle(nearbyEvent),
+                title: t`Are you in a meeting?`,
                 message: "",
                 timeout: { secs: 15, nanos: 0 },
                 source: {
                   type: "mic_detected",
-                  app_names: displayApps.map((app) =>
+                  app_names: payload.apps.map((app) =>
                     getNotificationAppName(app),
                   ),
                   app_ids: appIds,
-                  event_ids: nearbyEvent ? [nearbyEvent.id] : [],
                 },
                 start_time: null,
                 participants: null,

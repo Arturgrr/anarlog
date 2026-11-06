@@ -5,8 +5,6 @@ use crate::models::PermissionStatus;
 #[cfg(target_os = "macos")]
 use objc2_av_foundation::{AVCaptureDevice, AVMediaTypeAudio};
 #[cfg(target_os = "macos")]
-use objc2_contacts::{CNContactStore, CNEntityType};
-#[cfg(target_os = "macos")]
 use objc2_event_kit::{EKEntityType, EKEventStore};
 
 #[allow(unused_macros)]
@@ -22,9 +20,7 @@ macro_rules! check {
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub enum Permission {
-    Calendar,
     Reminders,
-    Contacts,
     Microphone,
     SystemAudio,
     ScreenRecording,
@@ -100,9 +96,7 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
         }
 
         match permission {
-            Permission::Calendar => self.open_calendar().await,
             Permission::Reminders => self.open_reminders().await,
-            Permission::Contacts => self.open_contacts().await,
             Permission::Microphone => self.open_microphone().await,
             Permission::SystemAudio => self.open_system_audio().await,
             Permission::ScreenRecording => self.open_screen_recording().await,
@@ -127,9 +121,7 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
         }
 
         match permission {
-            Permission::Calendar => self.check_calendar().await,
             Permission::Reminders => self.check_reminders().await,
-            Permission::Contacts => self.check_contacts().await,
             Permission::Microphone => self.check_microphone().await,
             Permission::SystemAudio => self.check_system_audio().await,
             Permission::ScreenRecording => self.check_screen_recording().await,
@@ -143,9 +135,7 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
         use tauri_plugin_sidecar2::Sidecar2PluginExt;
 
         let arg = match permission {
-            Permission::Calendar => "calendar",
             Permission::Reminders => "reminders",
-            Permission::Contacts => "contacts",
             Permission::Microphone => "microphone",
             Permission::SystemAudio => "systemAudio",
             Permission::ScreenRecording => "screenRecording",
@@ -175,19 +165,9 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
         let value = value.trim();
 
         let status = match permission {
-            Permission::Calendar => match value {
-                "notDetermined" => PermissionStatus::NeverRequested,
-                "fullAccess" => PermissionStatus::Authorized,
-                _ => PermissionStatus::Denied,
-            },
             Permission::Reminders => match value {
                 "notDetermined" => PermissionStatus::NeverRequested,
                 "fullAccess" => PermissionStatus::Authorized,
-                _ => PermissionStatus::Denied,
-            },
-            Permission::Contacts => match value {
-                "notDetermined" => PermissionStatus::NeverRequested,
-                "authorized" => PermissionStatus::Authorized,
                 _ => PermissionStatus::Denied,
             },
             Permission::Microphone => match value {
@@ -222,9 +202,7 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
 
     pub async fn request(&self, permission: Permission) -> Result<(), crate::Error> {
         match permission {
-            Permission::Calendar => self.request_calendar().await,
             Permission::Reminders => self.request_reminders().await,
-            Permission::Contacts => self.request_contacts().await,
             Permission::Microphone => self.request_microphone().await,
             Permission::SystemAudio => self.request_system_audio().await,
             Permission::ScreenRecording => self.request_screen_recording().await,
@@ -235,9 +213,7 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
 
     pub async fn reset(&self, permission: Permission) -> Result<(), crate::Error> {
         match permission {
-            Permission::Calendar => self.reset_calendar().await,
             Permission::Reminders => self.reset_reminders().await,
-            Permission::Contacts => self.reset_contacts().await,
             Permission::Microphone => self.reset_microphone().await,
             Permission::SystemAudio => self.reset_system_audio().await,
             Permission::ScreenRecording => self.reset_screen_recording().await,
@@ -279,28 +255,10 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
             .unwrap_or_else(|| std::io::Error::other("failed to open System Settings").into()))
     }
 
-    async fn open_calendar(&self) -> Result<(), crate::Error> {
-        #[cfg(target_os = "macos")]
-        {
-            self.open_privacy_settings("Privacy_Calendars")?;
-        }
-
-        Ok(())
-    }
-
     async fn open_reminders(&self) -> Result<(), crate::Error> {
         #[cfg(target_os = "macos")]
         {
             self.open_privacy_settings("Privacy_Reminders")?;
-        }
-
-        Ok(())
-    }
-
-    async fn open_contacts(&self) -> Result<(), crate::Error> {
-        #[cfg(target_os = "macos")]
-        {
-            self.open_privacy_settings("Privacy_Contacts")?;
         }
 
         Ok(())
@@ -342,34 +300,10 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
         Ok(())
     }
 
-    async fn check_calendar(&self) -> Result<PermissionStatus, crate::Error> {
-        #[cfg(target_os = "macos")]
-        return check!("calendar", unsafe {
-            EKEventStore::authorizationStatusForEntityType(EKEntityType::Event)
-        });
-
-        #[cfg(not(target_os = "macos"))]
-        {
-            Ok(PermissionStatus::Denied)
-        }
-    }
-
     async fn check_reminders(&self) -> Result<PermissionStatus, crate::Error> {
         #[cfg(target_os = "macos")]
         return check!("reminders", unsafe {
             EKEventStore::authorizationStatusForEntityType(EKEntityType::Reminder)
-        });
-
-        #[cfg(not(target_os = "macos"))]
-        {
-            Ok(PermissionStatus::Denied)
-        }
-    }
-
-    async fn check_contacts(&self) -> Result<PermissionStatus, crate::Error> {
-        #[cfg(target_os = "macos")]
-        return check!("contacts", unsafe {
-            CNContactStore::authorizationStatusForEntityType(CNEntityType::Contacts)
         });
 
         #[cfg(not(target_os = "macos"))]
@@ -450,29 +384,6 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
         }
     }
 
-    async fn request_calendar(&self) -> Result<(), crate::Error> {
-        #[cfg(target_os = "macos")]
-        {
-            use objc2_foundation::NSError;
-
-            let event_store = unsafe { EKEventStore::new() };
-            let (tx, rx) = std::sync::mpsc::channel::<bool>();
-            let completion =
-                block2::RcBlock::new(move |granted: objc2::runtime::Bool, _error: *mut NSError| {
-                    let _ = tx.send(granted.as_bool());
-                });
-
-            unsafe {
-                event_store
-                    .requestFullAccessToEventsWithCompletion(&*completion as *const _ as *mut _)
-            };
-
-            let _ = rx.recv_timeout(std::time::Duration::from_secs(60));
-        }
-
-        Ok(())
-    }
-
     async fn request_reminders(&self) -> Result<(), crate::Error> {
         #[cfg(target_os = "macos")]
         {
@@ -488,31 +399,6 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
             unsafe {
                 event_store
                     .requestFullAccessToRemindersWithCompletion(&*completion as *const _ as *mut _)
-            };
-
-            let _ = rx.recv_timeout(std::time::Duration::from_secs(60));
-        }
-
-        Ok(())
-    }
-
-    async fn request_contacts(&self) -> Result<(), crate::Error> {
-        #[cfg(target_os = "macos")]
-        {
-            use objc2_foundation::NSError;
-
-            let contacts_store = unsafe { CNContactStore::new() };
-            let (tx, rx) = std::sync::mpsc::channel::<bool>();
-            let completion =
-                block2::RcBlock::new(move |granted: objc2::runtime::Bool, _error: *mut NSError| {
-                    let _ = tx.send(granted.as_bool());
-                });
-
-            unsafe {
-                contacts_store.requestAccessForEntityType_completionHandler(
-                    CNEntityType::Contacts,
-                    &completion,
-                );
             };
 
             let _ = rx.recv_timeout(std::time::Duration::from_secs(60));
@@ -580,23 +466,9 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Permissions<'a, R, M> {
         Ok(())
     }
 
-    async fn reset_calendar(&self) -> Result<(), crate::Error> {
-        #[cfg(target_os = "macos")]
-        self.reset_tcc("Calendar").await;
-
-        Ok(())
-    }
-
     async fn reset_reminders(&self) -> Result<(), crate::Error> {
         #[cfg(target_os = "macos")]
         self.reset_tcc("Reminders").await;
-
-        Ok(())
-    }
-
-    async fn reset_contacts(&self) -> Result<(), crate::Error> {
-        #[cfg(target_os = "macos")]
-        self.reset_tcc("AddressBook").await;
 
         Ok(())
     }
@@ -734,9 +606,7 @@ mod tests {
     #[test]
     fn other_permission_checks_keep_using_sidecar() {
         for permission in [
-            Permission::Calendar,
             Permission::Reminders,
-            Permission::Contacts,
             Permission::Microphone,
             Permission::SystemAudio,
             Permission::ScreenRecording,

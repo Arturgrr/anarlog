@@ -3,7 +3,6 @@ import { type ReactNode } from "react";
 import { cn } from "@anlg/utils";
 
 import { AutomationsNav } from "./automations";
-import { CalendarNav } from "./calendar";
 import { ContactsNav } from "./contacts";
 import { FolderMaterialsPanel } from "./folder-materials";
 import { FoldersNav } from "./folders";
@@ -18,25 +17,19 @@ import { useTabs } from "~/store/zustand/tabs";
 export function LeftSidebar({
   folderFilter = null,
   timelineHeader,
-  showIgnoredTimelineEvents,
-  onShowIgnoredTimelineEventsChange,
 }: {
   folderFilter?: string | null;
   timelineHeader?: ReactNode;
-  showIgnoredTimelineEvents?: boolean;
-  onShowIgnoredTimelineEventsChange?: (showIgnored: boolean) => void;
 } = {}) {
   const currentTab = useTabs((state) => state.currentTab);
 
   const isSettingsMode = currentTab?.type === "settings";
-  const isCalendarMode = currentTab?.type === "calendar";
   const isContactsMode = currentTab?.type === "contacts";
   const isTemplatesMode = currentTab?.type === "templates";
   const isAutomationsMode = currentTab?.type === "automations";
   const isFoldersMode = currentTab?.type === "folders";
   const isSpecialMode =
     isSettingsMode ||
-    isCalendarMode ||
     isContactsMode ||
     isTemplatesMode ||
     isAutomationsMode ||
@@ -60,8 +53,6 @@ export function LeftSidebar({
         <div className="relative min-h-0 flex-1 overflow-hidden">
           {isSettingsMode ? (
             <SettingsNav />
-          ) : isCalendarMode ? (
-            <CalendarNav />
           ) : isContactsMode ? (
             <ContactsNav />
           ) : isTemplatesMode ? (
@@ -78,8 +69,6 @@ export function LeftSidebar({
               <div className="relative min-h-0 flex-1">
                 <TimelineView
                   folderFilter={folderFilter}
-                  showIgnoredEvents={showIgnoredTimelineEvents}
-                  onShowIgnoredEventsChange={onShowIgnoredTimelineEventsChange}
                   topChromeInset={
                     isTimelineSidebarLayout &&
                     !timelineHeader &&

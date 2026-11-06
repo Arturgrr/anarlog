@@ -85,7 +85,6 @@ mod win {
     fn load_icon_asset(asset: &NotificationIconAsset) -> Option<HICON> {
         match asset {
             NotificationIconAsset::AppIcon => load_app_icon(),
-            NotificationIconAsset::Calendar => load_calendar_icon(),
             NotificationIconAsset::SystemSymbol { name } => load_system_symbol(name),
             NotificationIconAsset::BundleId { bundle_id } => load_icon_from_bundle_id(bundle_id),
             NotificationIconAsset::Path { path } => load_icon_from_path(path),

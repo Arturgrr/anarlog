@@ -51,7 +51,7 @@ it("can open a listening note without a listener provider", async () => {
     expect(useTabs.getState().currentTab).toMatchObject({
       type: "sessions",
       id: "new-session",
-      state: { autoStart: true, scheduledAutoStart: null },
+      state: { autoStart: true },
     });
   });
 });
@@ -107,11 +107,11 @@ it("opens the requested session without auto-start while another is live", () =>
     },
   }));
 
-  openSessionAndListen("calendar-session");
+  openSessionAndListen("other-session");
 
   expect(useTabs.getState().currentTab).toMatchObject({
     type: "sessions",
-    id: "calendar-session",
+    id: "other-session",
     state: { autoStart: null },
   });
 });

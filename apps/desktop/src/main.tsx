@@ -28,12 +28,7 @@ import { FloatingMeetingWindowHost } from "./meeting-float/host";
 import { routeTree } from "./routeTree.gen";
 import { EventListeners } from "./services/event-listeners";
 import { TaskManager } from "./services/task-manager";
-import {
-  createTaskScheduler,
-  TaskSchedulerProvider,
-} from "./services/task-scheduler";
 import { TrayRecordingSync } from "./services/tray-recording";
-import { TrayScheduleSync } from "./services/tray-schedule";
 import { UpdaterMeetingSync } from "./services/updater-meeting";
 import { useRemoteSessionDeletionUndoListener } from "./session/hooks/useDeleteSession";
 import { refreshLegacySettingsSnapshots } from "./settings/legacy-snapshots";
@@ -103,7 +98,6 @@ function AppRoot() {
 }
 
 function ReadyApp() {
-  const scheduler = useMemo(() => createTaskScheduler().start(), []);
   const theme = useConfigValue("theme") as ThemePreference;
   useRemoteSessionDeletionUndoListener(isMainWindow);
 
@@ -114,18 +108,15 @@ function ReadyApp() {
   return (
     <AppThemeProvider>
       <AppI18nProvider>
-        <TaskSchedulerProvider scheduler={scheduler}>
-          <AppLockGate>
-            <App />
-            {isMainWindow ? <TaskManager /> : null}
-            {isMainWindow ? <FloatingMeetingWindowHost /> : null}
-            {isMainWindow ? <EventListeners /> : null}
-            {isMainWindow ? <TrayScheduleSync /> : null}
-            {isMainWindow ? <TrayRecordingSync /> : null}
-            {isMainWindow && !isAppStoreBuild() ? <UpdaterMeetingSync /> : null}
-            <Toaster position="bottom-right" theme={theme} />
-          </AppLockGate>
-        </TaskSchedulerProvider>
+        <AppLockGate>
+          <App />
+          {isMainWindow ? <TaskManager /> : null}
+          {isMainWindow ? <FloatingMeetingWindowHost /> : null}
+          {isMainWindow ? <EventListeners /> : null}
+          {isMainWindow ? <TrayRecordingSync /> : null}
+          {isMainWindow && !isAppStoreBuild() ? <UpdaterMeetingSync /> : null}
+          <Toaster position="bottom-right" theme={theme} />
+        </AppLockGate>
       </AppI18nProvider>
     </AppThemeProvider>
   );

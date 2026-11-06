@@ -1,6 +1,5 @@
 const COMMANDS: &[&str] = &[
     "create_session",
-    "create_session_for_event",
     "soft_delete_session",
     "restore_deleted_session",
     "add_session_participant",

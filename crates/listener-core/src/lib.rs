@@ -34,7 +34,7 @@ pub enum TranscriptionMode {
     Batch,
 }
 
-/// Calendar attendance is not an upper bound on the voices in a recording.
+/// Participant lists are not an upper bound on the voices in a recording.
 pub(crate) fn expected_speakers_per_channel(
     _participant_human_ids: &[String],
     _self_human_id: Option<&str>,

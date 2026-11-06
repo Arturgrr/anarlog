@@ -471,7 +471,7 @@ pub async fn get_recurring_meeting_history(
 }
 
 /// Local-only capture metadata. Cloud/API/MCP meeting contracts do not expose
-/// filesystem paths or imported calendar bodies.
+/// filesystem paths or imported event bodies.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct LocalMeetingExport {
     #[serde(flatten)]

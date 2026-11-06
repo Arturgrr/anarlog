@@ -57,8 +57,8 @@ export async function discardEmptyAutomaticCapture({
       ) {
         return false;
       }
-      // Only remove this device's un-catalogued audio. The calendar note and
-      // anything another device has contributed stay in the shared database.
+      // Only remove this device's un-catalogued audio. The note and anything
+      // another device has contributed stay in the shared database.
       const result = await fsSyncCommands.audioDelete(sessionId);
       return result.status === "ok" && result.data;
     });

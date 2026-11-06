@@ -21,9 +21,6 @@ import {
 const captures = new Map<string, ReturnType<typeof createCapture>>();
 const POLL_MS = 5_000;
 const EVIDENCE_LEASE_MS = 10_000;
-// Apps a scheduled meeting link can be joined from; browsers cover Meet and web clients.
-const MEETING_CAPABLE_MIC_APP =
-  /zoom|teams|slack|webex|chrome|chromium|safari|thebrowser|aside|firefox|brave|edge|vivaldi|opera/i;
 
 export function startSpeakerContextCapture(sessionId: string) {
   if (getCurrentWebviewWindow().label !== "main") return;
@@ -93,8 +90,8 @@ function createCapture(sessionId: string) {
       await Promise.all([
         detectCommands.listMicUsingApplications().catch(() => null),
         detectCommands.inspectMeetingAccessibility().catch(() => null),
-        liveQueryClient.execute<{ title: string; event_json: string }>(
-          "SELECT title, event_json FROM sessions WHERE id = ? AND deleted_at IS NULL",
+        liveQueryClient.execute<{ title: string }>(
+          "SELECT title FROM sessions WHERE id = ? AND deleted_at IS NULL",
           [sessionId],
         ),
         getSessionParticipantHumanIds(sessionId),
@@ -113,12 +110,6 @@ function createCapture(sessionId: string) {
         inspectionShowsActiveMeeting(inspection) &&
         micApps.some((app) => app.id === inspection.app.id),
     );
-    let meetingLink = "";
-    try {
-      meetingLink = JSON.parse(row.event_json).meeting_link ?? "";
-    } catch {
-      /* No calendar context. */
-    }
     const participants = participantIds.length
       ? await liveQueryClient.execute<{ human_id: string; name: string }>(
           `SELECT id AS human_id, name FROM humans WHERE id IN (${participantIds.map(() => "?").join(",")}) AND deleted_at IS NULL ORDER BY id`,
@@ -139,12 +130,6 @@ function createCapture(sessionId: string) {
       );
       if (releasedMicrophone || leftCall) callAppId = null;
     }
-    // An observed pre-join/ended window overrides a scheduled link. A link alone is never attendance.
-    const calendarCall = Boolean(
-      meetingLink &&
-      micApps.some((app) => MEETING_CAPABLE_MIC_APP.test(app.id)) &&
-      inspections.length === 0,
-    );
     const inputDevice = available
       ? (device ?? (currentDevice?.status === "ok" ? currentDevice.data : null))
       : null;
@@ -153,7 +138,8 @@ function createCapture(sessionId: string) {
         start_ms: at,
         end_ms: at + EVIDENCE_LEASE_MS,
         active_call: callAppId !== null,
-        calendar_call: calendarCall,
+        // Persisted intervals keep this field so older builds can still parse them.
+        calendar_call: false,
         // A headset is isolated by construction; for anything else the runtime verdict
         // decides — headphones already keep speaker output out of the mic, and a
         // Bluetooth-swapped replacement is a room mic as far as we know.

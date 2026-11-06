@@ -862,7 +862,7 @@ mod tests {
         let update = test_update(vec![], vec!["self", "remote-a", "remote-b"], Some("self"));
         assert!(
             !update_requires_listener_refresh(&state.ctx.params, &update),
-            "calendar attendance"
+            "participant list"
         );
 
         let mut ctx = test_ctx();

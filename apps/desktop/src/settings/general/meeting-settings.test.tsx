@@ -19,7 +19,6 @@ function setting(value = true) {
 }
 
 function renderMeetingSettings({
-  autoStartScheduledMeetings = true,
   floatingBar = true,
   meetingDisclosureAutoPost = setting(),
   captureMeetingChat = setting(false),
@@ -28,8 +27,6 @@ function renderMeetingSettings({
   return {
     ...render(
       <MeetingSettingsView
-        autoJoinScheduledMeetings={setting()}
-        autoStartScheduledMeetings={setting(autoStartScheduledMeetings)}
         autoStopMeetings={setting()}
         floatingBar={setting(floatingBar)}
         meetingDisclosureAutoPost={meetingDisclosureAutoPost}
@@ -71,16 +68,6 @@ describe("MeetingSettingsView", () => {
       screen.getByText(/supported meetings using Accessibility/),
     ).toBeTruthy();
     expect(screen.getByText("Stop when meeting ends")).toBeTruthy();
-  });
-
-  it("only enables automatic joining when scheduled listening is enabled", () => {
-    renderMeetingSettings({ autoStartScheduledMeetings: false });
-
-    expect(
-      screen
-        .getByRole("switch", { name: "Join scheduled meetings" })
-        .hasAttribute("disabled"),
-    ).toBe(true);
   });
 
   it("updates the recording disclosure setting", () => {

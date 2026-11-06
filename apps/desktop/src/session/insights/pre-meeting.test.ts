@@ -9,7 +9,6 @@ import {
   getPreMeetingBriefFacts,
   mergeBriefMarkdown,
   selectBriefSourceNotes,
-  shouldShowPreMeetingBrief,
   streamPreMeetingBrief,
   trimPreMeetingBrief,
 } from "./pre-meeting";
@@ -41,7 +40,7 @@ function makeNote(
     dateLabel: "Aug 14, 2026",
     occurredAt: "2026-08-14T09:00:00.000Z",
     sourceSummary: "The source summary remains available.",
-    relationship: "same_series",
+    relationship: "matching_title",
     summary: "- Confirm launch timing.\n- Ada owns the prototype.",
     isGenerating: false,
     ...overrides,
@@ -75,115 +74,16 @@ describe("pre-meeting brief text", () => {
 });
 
 describe("pre-meeting brief visibility", () => {
-  const nowMs = Date.parse("2026-08-21T08:00:00.000Z");
-
-  it("stays hidden for past and all-day events", () => {
-    expect(
-      shouldShowPreMeetingBrief(
-        {
-          started_at: "2026-08-21T07:00:00.000Z",
-          ended_at: "2026-08-21T07:30:00.000Z",
-          is_all_day: false,
-        },
-        nowMs,
-      ),
-    ).toBe(false);
-    expect(
-      shouldShowPreMeetingBrief(
-        {
-          started_at: "2026-08-21T07:58:00.000Z",
-          ended_at: "",
-          is_all_day: false,
-        },
-        nowMs,
-      ),
-    ).toBe(true);
-    expect(
-      shouldShowPreMeetingBrief(
-        {
-          started_at: "2026-08-22T07:00:00.000Z",
-          ended_at: "2026-08-22T07:30:00.000Z",
-          is_all_day: true,
-        },
-        nowMs,
-      ),
-    ).toBe(false);
-    expect(
-      shouldShowPreMeetingBrief(
-        {
-          started_at: "2026-08-21T08:02:00.0000000",
-          ended_at: "2026-08-21T09:00:00.0000000",
-          is_all_day: false,
-        },
-        nowMs,
-      ),
-    ).toBe(true);
-  });
-
-  it.each(["2026-08-21T07:59:00.000Z", "2026-08-21T08:00:00.000Z"])(
-    "hides short meetings at or after their end time %s",
-    (ended_at) => {
-      expect(
-        shouldShowPreMeetingBrief(
-          {
-            started_at: "2026-08-21T07:58:00.000Z",
-            ended_at,
-            is_all_day: false,
-          },
-          nowMs,
-        ),
-      ).toBe(false);
-    },
-  );
-
-  it("does not let added participants make an ended meeting eligible", () => {
-    expect(
-      canCreatePreMeetingBrief({
-        event: {
-          started_at: "2026-08-21T07:00:00.000Z",
-          ended_at: "2026-08-21T07:30:00.000Z",
-          is_all_day: false,
-        },
-        nowMs,
-        notes: [makeNote({ sessionId: "previous" })],
-        hasParticipants: true,
-      }),
-    ).toBe(false);
-  });
-
-  it("requires an upcoming event or participants without an event, plus usable prior meetings", () => {
-    const event = {
-      started_at: "2026-08-21T09:00:00.000Z",
-      ended_at: "2026-08-21T10:00:00.000Z",
-      is_all_day: false,
-    };
+  it("requires session participants and usable prior meetings", () => {
     const notes = [makeNote({ sessionId: "previous" })];
 
-    expect(canCreatePreMeetingBrief({ event, nowMs, notes })).toBe(true);
-    expect(canCreatePreMeetingBrief({ event, nowMs, notes: [] })).toBe(false);
-    expect(
-      canCreatePreMeetingBrief({
-        event: null,
-        nowMs,
-        notes,
-      }),
-    ).toBe(false);
-    expect(
-      canCreatePreMeetingBrief({
-        event: null,
-        nowMs,
-        notes,
-        hasParticipants: true,
-      }),
-    ).toBe(true);
-    expect(
-      canCreatePreMeetingBrief({
-        event: null,
-        nowMs,
-        notes: [],
-        hasParticipants: true,
-      }),
-    ).toBe(false);
+    expect(canCreatePreMeetingBrief({ notes })).toBe(false);
+    expect(canCreatePreMeetingBrief({ notes, hasParticipants: true })).toBe(
+      true,
+    );
+    expect(canCreatePreMeetingBrief({ notes: [], hasParticipants: true })).toBe(
+      false,
+    );
   });
 });
 
@@ -367,9 +267,6 @@ describe("streamPreMeetingBrief", () => {
       language: "en",
       event: {
         title: "Weekly Product Sync",
-        started_at: "2026-08-21T09:00:00.000Z",
-        ended_at: "2026-08-21T10:00:00.000Z",
-        description: "Review the launch plan.",
         participants: [{ name: "Ada" }],
       },
       notes: [makeNote({ sessionId: "previous" })],

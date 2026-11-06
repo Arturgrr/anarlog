@@ -36,7 +36,7 @@ vi.mock("~/session/queries", () => ({
   }),
 }));
 
-vi.mock("~/calendar/hooks", () => ({
+vi.mock("~/shared/hooks/useNow", () => ({
   useTimezone: () => undefined,
   toTz: (date: Date) => date,
 }));
@@ -144,15 +144,15 @@ describe("SessionNodeView", () => {
   });
 
   it.each([false, true])(
-    "renders the event start time with 24-hour preference %s",
+    "renders the note time, not its legacy calendar event time, with 24-hour preference %s",
     (use24HourTime) => {
       hoisted.use24HourTime = use24HourTime;
-      const expectedEventTime = format(
-        new Date("2026-04-06T02:30:00.000Z"),
+      const expectedCreatedTime = format(
+        new Date("2026-04-06T00:00:00.000Z"),
         use24HourTime ? "HH:mm" : "h:mm a",
       );
-      const unexpectedCreatedTime = format(
-        new Date("2026-04-06T00:00:00.000Z"),
+      const unexpectedEventTime = format(
+        new Date("2026-04-06T02:30:00.000Z"),
         use24HourTime ? "HH:mm" : "h:mm a",
       );
 
@@ -175,10 +175,10 @@ describe("SessionNodeView", () => {
         </SessionNodeView>,
       );
 
-      expect(screen.queryAllByText(expectedEventTime).length).toBeGreaterThan(
+      expect(screen.queryAllByText(expectedCreatedTime).length).toBeGreaterThan(
         0,
       );
-      expect(screen.queryAllByText(unexpectedCreatedTime)).toHaveLength(0);
+      expect(screen.queryAllByText(unexpectedEventTime)).toHaveLength(0);
     },
   );
 });

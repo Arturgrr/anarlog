@@ -14,7 +14,6 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  buildEventSpeakerParticipantOptions,
   buildCreateSpeakerParticipantOption,
   buildSpeakerParticipantGroups,
   getAssignmentAnchorWordId,
@@ -117,10 +116,6 @@ vi.mock("@anlg/ui/components/ui/checkbox", () => ({
       checked,
       onChange: (event) => onCheckedChange(event.currentTarget.checked),
     }),
-}));
-
-vi.mock("~/calendar/queries", () => ({
-  useSessionEventParticipants: () => [],
 }));
 
 vi.mock("~/contacts/queries", () => ({
@@ -390,12 +385,8 @@ describe("buildSpeakerParticipantGroups", () => {
     const participant = option("human-1", "Alice", {
       isSessionParticipant: true,
     });
-    const eventParticipant = option("human-3", "Carol", {
-      isSessionParticipant: true,
-    });
     const groups = buildSpeakerParticipantGroups({
       sessionParticipants: [participant],
-      eventParticipants: [eventParticipant],
       contacts: [option("human-1", "Alice"), option("human-2", "Bob")],
       query: "",
     });
@@ -403,76 +394,12 @@ describe("buildSpeakerParticipantGroups", () => {
     expect(groups).toEqual([
       {
         title: "Participants",
-        options: [participant, eventParticipant],
+        options: [participant],
       },
       {
         title: "People",
         options: [option("human-2", "Bob")],
       },
-    ]);
-  });
-});
-
-describe("buildEventSpeakerParticipantOptions", () => {
-  it("matches event participants to existing people by email", () => {
-    expect(
-      buildEventSpeakerParticipantOptions({
-        eventParticipants: [{ name: "Alice A.", email: "alice@example.com" }],
-        contacts: [option("human-1", "Alice", { email: "alice@example.com" })],
-      }),
-    ).toEqual([
-      option("human-1", "Alice A.", {
-        email: "alice@example.com",
-        isSessionParticipant: true,
-      }),
-    ]);
-  });
-
-  it("creates pending participant options for event attendees without people", () => {
-    expect(
-      buildEventSpeakerParticipantOptions({
-        eventParticipants: [{ name: "Bob", email: "bob@example.com" }],
-        contacts: [],
-      }),
-    ).toEqual([
-      option("event:bob@example.com", "Bob", {
-        email: "bob@example.com",
-        isSessionParticipant: true,
-        isNew: true,
-      }),
-    ]);
-  });
-
-  it("does not match event attendees by name when their email differs", () => {
-    expect(
-      buildEventSpeakerParticipantOptions({
-        eventParticipants: [{ name: "Bob", email: "bob@example.com" }],
-        contacts: [option("human-1", "Bob", { email: "other@example.com" })],
-      }),
-    ).toEqual([
-      option("event:bob@example.com", "Bob", {
-        email: "bob@example.com",
-        isSessionParticipant: true,
-        isNew: true,
-      }),
-    ]);
-  });
-
-  it("keeps duplicate event attendees without emails selectable", () => {
-    expect(
-      buildEventSpeakerParticipantOptions({
-        eventParticipants: [{ name: "Bob" }, { name: "Bob" }],
-        contacts: [],
-      }),
-    ).toEqual([
-      option("event:Bob:0", "Bob", {
-        isSessionParticipant: true,
-        isNew: true,
-      }),
-      option("event:Bob:1", "Bob", {
-        isSessionParticipant: true,
-        isNew: true,
-      }),
     ]);
   });
 });

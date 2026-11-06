@@ -271,7 +271,6 @@ describe("ChatSession real SDK", () => {
     await waitFor(() => expect(harness.props.status).toBe("streaming"));
 
     for (const type of [
-      "calendar",
       "settings",
       "contacts",
       "humans",

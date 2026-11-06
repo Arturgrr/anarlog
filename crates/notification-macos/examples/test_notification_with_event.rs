@@ -60,9 +60,6 @@ fn main() {
             .key("event:apple-discovery-call")
             .title("Test Notification")
             .message("")
-            .source(NotificationSource::CalendarEvent {
-                event_id: "apple-discovery-call".to_string(),
-            })
             .participants(participants)
             .event_details(event_details)
             .action_label("Open Librelog")

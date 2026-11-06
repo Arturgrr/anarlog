@@ -10,7 +10,6 @@ export type WindowLabel =
   | "floating-bar"
   | "live-caption"
   | `note-${string}`
-  | "calendar"
   | "settings";
 
 export const getCurrentWebviewWindowLabel = () => {

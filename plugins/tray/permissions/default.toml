@@ -4,5 +4,4 @@ permissions = [
     "allow-set-tray-icon-visible",
     "allow-set-tray-labels",
     "allow-set-tray-recording-title",
-    "allow-set-tray-schedule",
 ]

@@ -10,8 +10,8 @@ import { ConversationPatterns } from "./insights";
 import { useActivity } from "./queries";
 import { Tracker } from "./tremor/tracker";
 
-import { useNow, useTimezone, useWeekStartsOn } from "~/calendar/hooks";
 import { SettingsPageTitle } from "~/settings/page-title";
+import { useNow, useTimezone, useWeekStartsOn } from "~/shared/hooks/useNow";
 
 const ACTIVITY_COLORS = [
   "bg-muted",

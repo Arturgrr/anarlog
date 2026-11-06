@@ -47,8 +47,6 @@ function createSnapshot(title = "") {
     ownerUserId: "user-1",
     title,
     createdAt: "2026-07-10T00:00:00.000Z",
-    event: null,
-    eventId: null,
     rawNoteId: "session-1",
     rawTemplateId: "",
     rawContent: "",

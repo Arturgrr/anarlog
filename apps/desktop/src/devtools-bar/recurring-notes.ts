@@ -1,5 +1,3 @@
-import type { SessionEvent } from "@anlg/store";
-
 import { executeTransaction, liveQueryClient } from "~/db";
 import { enqueueDatabaseWrite } from "~/db/write-queue";
 import {
@@ -18,8 +16,6 @@ type SeedParticipant = {
 };
 
 const CURRENT_SESSION_ID = "devtools-recurring-notes-current";
-const SERIES_ID = "devtools-recurring-product-sync";
-const CALENDAR_ID = "devtools-calendar";
 const MEETING_TITLE = "Devtools Weekly Product Sync";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -65,12 +61,12 @@ const PAST_NOTES = [
     daysAgo: 14,
     rawMd: [
       "# Product sync",
-      "- The team decided Insights should match by recurring calendar series before falling back to participants.",
+      "- The team decided Insights should match notes with the same title before falling back to participants.",
       "- Jordan called out that cached key facts should avoid requiring a model just to inspect the UI.",
       "- Follow-up: compare date labels against the meeting start time instead of the note creation time.",
     ].join("\n"),
     facts: [
-      "Insights should prefer recurring series matches before participant fallback.",
+      "Insights should prefer same-title matches before participant fallback.",
       "Cached key facts should make the UI inspectable without a model.",
       "Date labels should come from meeting start time.",
     ],
@@ -136,14 +132,11 @@ export async function populateRecurringMeetingNotes({
   ];
 
   for (const seed of seeds) {
-    const event = buildSessionEvent(seed.startedAt);
-    const eventJson = JSON.stringify(event);
     data.sessions[seed.sessionId] = {
       id: seed.sessionId,
       user_id: ownerUserId,
       title: MEETING_TITLE,
       created_at: seed.startedAt.toISOString(),
-      event_json: eventJson,
     };
     data.enhancedNotes.push({
       session_id: seed.sessionId,
@@ -166,8 +159,6 @@ export async function populateRecurringMeetingNotes({
         sessionId: seed.sessionId,
         startedAt: seed.startedAt,
         rawMd: seed.rawMd,
-        event,
-        eventJson,
         participants,
       }),
     );
@@ -216,8 +207,6 @@ function buildSessionStatements({
   sessionId,
   startedAt,
   rawMd,
-  event,
-  eventJson,
   participants,
 }: {
   ownerUserId: string;
@@ -225,20 +214,19 @@ function buildSessionStatements({
   sessionId: string;
   startedAt: Date;
   rawMd: string;
-  event: SessionEvent;
-  eventJson: string;
   participants: SeedParticipant[];
 }): SqlStatement[] {
   const createdAt = startedAt.toISOString();
+  const endedAt = new Date(startedAt.getTime() + 45 * 60 * 1000).toISOString();
   const statements: SqlStatement[] = [
     {
       sql: `
         INSERT INTO sessions (
           id, workspace_id, owner_user_id, title, created_at, updated_at,
-          started_at, ended_at, series_id, event_json, deleted_at
+          started_at, ended_at, deleted_at
         )
         VALUES (
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL
+          ?, ?, ?, ?, ?, ?, ?, ?, NULL
         )
         ON CONFLICT(id) DO UPDATE SET
           owner_user_id = excluded.owner_user_id,
@@ -247,8 +235,6 @@ function buildSessionStatements({
           updated_at = excluded.updated_at,
           started_at = excluded.started_at,
           ended_at = excluded.ended_at,
-          series_id = excluded.series_id,
-          event_json = excluded.event_json,
           deleted_at = NULL
       `,
       params: [
@@ -258,10 +244,8 @@ function buildSessionStatements({
         MEETING_TITLE,
         createdAt,
         createdAt,
-        event.started_at,
-        event.ended_at,
-        SERIES_ID,
-        eventJson,
+        createdAt,
+        endedAt,
       ],
     },
     buildDocumentStatement({
@@ -408,22 +392,6 @@ function buildDocumentStatement({
   };
 }
 
-function buildSessionEvent(startedAt: Date): SessionEvent {
-  const endedAt = new Date(startedAt.getTime() + 45 * 60 * 1000);
-  return {
-    tracking_id: `${SERIES_ID}:${toDateId(startedAt)}`,
-    calendar_id: CALENDAR_ID,
-    title: MEETING_TITLE,
-    started_at: startedAt.toISOString(),
-    ended_at: endedAt.toISOString(),
-    is_all_day: false,
-    has_recurrence_rules: true,
-    meeting_link: "https://zoom.us/j/1234567890",
-    description: "Seeded from devtools to exercise the Insights tab.",
-    recurrence_series_id: SERIES_ID,
-  };
-}
-
 async function loadLocalWorkspaceId(): Promise<string> {
   const [binding] = await liveQueryClient.execute<{
     workspace_id: string | null;
@@ -453,8 +421,4 @@ function normalizeUserId(
 
 function namespacedId(workspaceId: string, value: string): string {
   return `${workspaceId}:${value}`;
-}
-
-function toDateId(date: Date): string {
-  return date.toISOString().slice(0, 10);
 }

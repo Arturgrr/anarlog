@@ -78,7 +78,7 @@ describe("ParticipantChip", () => {
     expect(screen.getByText("lex@example.com")).toBeTruthy();
   });
 
-  it("shows the local user as You without contact actions", () => {
+  it("shows the local user as You", () => {
     mocks.participant = participant({
       humanId: "owner-1",
       name: "",
@@ -86,13 +86,8 @@ describe("ParticipantChip", () => {
       isSelf: true,
     });
 
-    render(
-      <ParticipantChip mappingId="mapping-1" onEnhanceContact={vi.fn()} />,
-    );
+    render(<ParticipantChip mappingId="mapping-1" />);
 
     expect(screen.getByText("You")).toBeTruthy();
-    expect(
-      screen.queryByRole("button", { name: /Enhance contact/ }),
-    ).toBeNull();
   });
 });

@@ -85,7 +85,6 @@ describe("search meetings chat tool", () => {
         id: "cs-101",
         title: "CS 101 lecture",
         created_at: "2026-08-01T00:00:00.000Z",
-        event_json: "",
       },
     ]);
     vi.mocked(searchMeetingContent).mockResolvedValue({
@@ -123,21 +122,24 @@ describe("search meetings chat tool", () => {
     ]);
   });
 
-  it("filters folder meetings by event started_at, not session created_at", async () => {
+  it("filters folder meetings by session created_at", async () => {
     const search = vi.fn();
     const meetingSearchTool = buildSearchMeetingsTool({
       search,
       getFolderFilter: () => "CS 101",
     } as any);
-    const startedAt = "2026-08-15T10:00:00.000Z";
-    const createdAt = "2025-01-01T00:00:00.000Z";
+    const createdAt = "2026-08-15T10:00:00.000Z";
 
     vi.mocked(loadSessionSummariesByFolder).mockResolvedValue([
       {
         id: "cs-101",
         title: "CS 101 lecture",
         created_at: createdAt,
-        event_json: JSON.stringify({ started_at: startedAt }),
+      },
+      {
+        id: "old",
+        title: "Old lecture",
+        created_at: "2025-01-01T00:00:00.000Z",
       },
     ]);
 
@@ -159,40 +161,9 @@ describe("search meetings chat tool", () => {
         title: "CS 101 lecture",
         excerpt: "",
         score: 0,
-        created_at: Date.parse(startedAt),
+        created_at: Date.parse(createdAt),
       },
     ]);
-  });
-
-  it("drops folder meetings whose event start is outside the date filter", async () => {
-    const meetingSearchTool = buildSearchMeetingsTool({
-      search: vi.fn(),
-      getFolderFilter: () => "CS 101",
-    } as any);
-
-    vi.mocked(loadSessionSummariesByFolder).mockResolvedValue([
-      {
-        id: "cs-101",
-        title: "Old lecture",
-        created_at: "2026-08-15T10:00:00.000Z",
-        event_json: JSON.stringify({
-          started_at: "2025-01-01T00:00:00.000Z",
-        }),
-      },
-    ]);
-
-    const result = await (meetingSearchTool as any).execute({
-      query: "",
-      filters: {
-        created_at: {
-          kind: "absolute",
-          gte: Date.parse("2026-08-14T00:00:00.000Z"),
-          lte: Date.parse("2026-08-16T00:00:00.000Z"),
-        },
-      },
-    });
-
-    expect(result).toEqual({ results: [] });
   });
 
   it("searches mentioned folders instead of the sidebar folder", async () => {
@@ -209,7 +180,6 @@ describe("search meetings chat tool", () => {
               {
                 id: "m1",
                 title: "Mentioned note",
-                event_json: null,
                 created_at: "2026-08-01T09:00:00.000Z",
               },
             ]
@@ -252,13 +222,11 @@ describe("search meetings chat tool", () => {
     const alpha = {
       id: "alpha",
       title: "Alpha note",
-      event_json: null,
       created_at: "2026-08-03T09:00:00.000Z",
     };
     const beta = {
       id: "beta",
       title: "Beta note",
-      event_json: null,
       created_at: "2026-08-02T09:00:00.000Z",
     };
     vi.mocked(loadSessionSummariesByFolder).mockImplementation(

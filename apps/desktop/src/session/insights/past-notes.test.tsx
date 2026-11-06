@@ -112,13 +112,11 @@ describe("insights regeneration", () => {
         current: {
           title: "Weekly Product Sync",
           created_at: "2026-06-03T10:00:00.000Z",
-          event_json: "",
           raw_md: "",
         },
         previous: {
           title: "Weekly Product Sync",
           created_at: "2026-05-28T10:00:00.000Z",
-          event_json: "",
           raw_md: "Raw note text should not feed insights.",
         },
       },
@@ -170,13 +168,11 @@ describe("insights regeneration", () => {
         current: {
           title: "Weekly Product Sync",
           created_at: "2026-06-03T10:00:00.000Z",
-          event_json: "",
           raw_md: "",
         },
         previous: {
           title: "Weekly Product Sync",
           created_at: "2026-05-28T10:00:00.000Z",
-          event_json: "",
           raw_md: "Raw note text should not feed insights.",
         },
       },
@@ -287,12 +283,10 @@ describe("insights regeneration", () => {
         current: {
           title: "Weekly Product Sync",
           created_at: "2026-06-03T10:00:00.000Z",
-          event_json: "",
         },
         previous: {
           title: "Weekly Product Sync",
           created_at: "2026-05-28T10:00:00.000Z",
-          event_json: "",
         },
       },
       mapping_session_participant: {
@@ -377,7 +371,6 @@ function makeData(
           user_id: String(row.user_id ?? "self"),
           title: String(row.title ?? ""),
           created_at: String(row.created_at ?? ""),
-          event_json: String(row.event_json ?? ""),
         },
       ]),
     ),

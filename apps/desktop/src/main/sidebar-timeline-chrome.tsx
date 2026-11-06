@@ -10,76 +10,27 @@ import {
 import { cn } from "@anlg/utils";
 
 import { SidebarNoteFilterMenu } from "~/sidebar/note-filter-menu";
-import { useSidebarUpcomingMeetingStatus } from "~/sidebar/timeline/upcoming-meeting";
 
-export const SidebarTimelineChromeWithUpcomingMeeting = memo(
-  function SidebarTimelineChromeWithUpcomingMeeting({
-    currentSessionId,
-    onNewNote,
-    onSearch,
-    onToggleSidebar,
-    sidebarExpanded,
-    showSidebarToggle = true,
-    showIgnoredTimelineEvents,
-  }: {
-    currentSessionId?: string;
-    onNewNote: () => void;
-    onSearch: () => void;
-    onToggleSidebar: () => void;
-    sidebarExpanded: boolean;
-    showSidebarToggle?: boolean;
-    showIgnoredTimelineEvents: boolean;
-  }) {
-    const upcomingMeetingStatus = useSidebarUpcomingMeetingStatus({
-      showIgnored: showIgnoredTimelineEvents,
-    });
-    const hasUpcomingMeeting = upcomingMeetingStatus
-      ? !currentSessionId ||
-        upcomingMeetingStatus.itemKey !== `session-${currentSessionId}`
-      : false;
-
-    return (
-      <SidebarTimelineChrome
-        hasUpcomingMeeting={hasUpcomingMeeting}
-        onNewNote={onNewNote}
-        onSearch={onSearch}
-        onToggleSidebar={onToggleSidebar}
-        sidebarExpanded={sidebarExpanded}
-        showSidebarToggle={showSidebarToggle}
-      />
-    );
-  },
-);
-
-function SidebarTimelineChrome({
-  hasUpcomingMeeting,
+export const SidebarTimelineChrome = memo(function SidebarTimelineChrome({
   onNewNote,
   onSearch,
   onToggleSidebar,
   sidebarExpanded,
-  showSidebarToggle,
+  showSidebarToggle = true,
 }: {
-  hasUpcomingMeeting: boolean;
   onNewNote: () => void;
   onSearch: () => void;
   onToggleSidebar: () => void;
   sidebarExpanded: boolean;
-  showSidebarToggle: boolean;
+  showSidebarToggle?: boolean;
 }) {
   const { t } = useLingui();
-  const collapsedBadge = !sidebarExpanded
-    ? hasUpcomingMeeting
-      ? "upcomingMeeting"
-      : null
-    : null;
-
   return (
     <div data-tauri-drag-region className="flex w-full items-center">
       <div data-tauri-drag-region className="flex items-center gap-0">
         {showSidebarToggle && (
           <LeftSurfaceChromeButton
             ariaLabel={sidebarExpanded ? t`Hide sidebar` : t`Show sidebar`}
-            badge={collapsedBadge}
             onClick={onToggleSidebar}
           >
             {sidebarExpanded ? (
@@ -95,7 +46,7 @@ function SidebarTimelineChrome({
       </div>
     </div>
   );
-}
+});
 
 export function SidebarNoteActions({
   onNewNote,
@@ -121,13 +72,11 @@ export function SidebarNoteActions({
 
 export function LeftSurfaceChromeButton({
   ariaLabel,
-  badge = null,
   children,
   disabled = false,
   onClick,
 }: {
   ariaLabel: string;
-  badge?: "upcomingMeeting" | null;
   children: ReactNode;
   disabled?: boolean;
   onClick: () => void;
@@ -147,13 +96,6 @@ export function LeftSurfaceChromeButton({
       onClick={onClick}
     >
       {children}
-      {badge ? (
-        <span
-          aria-hidden="true"
-          data-testid="collapsed-sidebar-upcoming-meeting-badge"
-          className="ring-background bg-foreground pointer-events-none absolute top-1 right-1 size-1.5 rounded-full ring-2"
-        />
-      ) : null}
     </button>
   );
 }

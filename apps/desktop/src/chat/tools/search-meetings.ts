@@ -132,7 +132,7 @@ async function searchFolderMeetings({
   const sessions = (await loadSessionSummariesByFolder(folderFilter))
     .map((session) => ({
       ...session,
-      searchAt: sessionSearchTimestamp(session.event_json, session.created_at),
+      searchAt: sessionSearchTimestamp(session.created_at),
     }))
     .filter((session) => sessionMatchesCreatedAt(session.searchAt, createdAt));
 

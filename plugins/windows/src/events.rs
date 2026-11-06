@@ -212,9 +212,9 @@ mod test {
     fn navigate_from_str() {
         let test_cases = vec![
             (
-                "librelog://example.com/app/new?calendarEventId=123&record=true",
+                "librelog://example.com/app/new?sessionId=123&record=true",
                 "/app/new",
-                Some(serde_json::json!({ "calendarEventId": "123", "record": "true" })),
+                Some(serde_json::json!({ "sessionId": "123", "record": "true" })),
             ),
             (
                 "librelog-dev://example.org/app/new?record=true",

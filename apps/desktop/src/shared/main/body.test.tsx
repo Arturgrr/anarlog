@@ -16,11 +16,6 @@ const mocks = vi.hoisted(() => ({
   platform: "macos" as "linux" | "macos" | "windows",
   startDragging: vi.fn().mockResolvedValue(undefined),
   toggleMaximize: vi.fn().mockResolvedValue(undefined),
-  upcomingMeetingStatus: null as null | {
-    itemKey: string;
-    label: string;
-    title: string;
-  },
   leftSidebarExpanded: true,
   currentTab: {
     active: true,
@@ -78,10 +73,6 @@ vi.mock("~/sidebar/note-filter-menu", () => ({
   SidebarNoteFilterMenu: () => <button type="button">Sort notes</button>,
 }));
 
-vi.mock("~/sidebar/timeline/upcoming-meeting", () => ({
-  useSidebarUpcomingMeetingStatus: () => mocks.upcomingMeetingStatus,
-}));
-
 vi.mock("~/main/shell-sidebar", () => ({
   ClassicMainSidebar: ({
     timelineHeader,
@@ -134,7 +125,6 @@ describe("ClassicMainBody", () => {
     mocks.platform = "macos";
     mocks.startDragging.mockClear();
     mocks.toggleMaximize.mockClear();
-    mocks.upcomingMeetingStatus = null;
     mocks.leftSidebarExpanded = true;
     mocks.currentTab = {
       active: true,
@@ -178,42 +168,6 @@ describe("ClassicMainBody", () => {
     expect(mocks.toggleLeftSidebar).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: "Sort notes" })).toBeNull();
   });
-
-  it.each([
-    ["shows", undefined, true],
-    ["hides when that note is already open", "upcoming", false],
-  ] as const)(
-    "%s the upcoming meeting badge on the collapsed sidebar toggle",
-    (_description, currentTabId, isBadgePresent) => {
-      mocks.leftSidebarExpanded = false;
-      mocks.upcomingMeetingStatus = {
-        itemKey: "session-upcoming",
-        label: "Starts in 3m",
-        title: "Devtool design sync",
-      };
-
-      if (currentTabId) {
-        mocks.currentTab = {
-          active: true,
-          id: currentTabId,
-          pinned: false,
-          slotId: "slot-1",
-          type: "sessions",
-        };
-      }
-
-      render(<ClassicMainBody />);
-
-      const sidebarToggle = screen.getByRole("button", {
-        name: "Show sidebar",
-      });
-      const badge = within(sidebarToggle).queryByTestId(
-        "collapsed-sidebar-upcoming-meeting-badge",
-      );
-
-      expect(Boolean(badge)).toBe(isBadgePresent);
-    },
-  );
 
   it.each([
     ["main-tab-content", 12, "empty", 1],

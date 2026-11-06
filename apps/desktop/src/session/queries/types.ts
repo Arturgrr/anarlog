@@ -3,7 +3,6 @@ export type SessionRecord = {
   user_id: string;
   created_at: string;
   folder_id: string;
-  event_json: string;
   title: string;
   raw_md: string;
   raw_template_id: string;
@@ -19,7 +18,6 @@ export type SessionChanges = Partial<
   Pick<
     SessionRecord,
     | "created_at"
-    | "event_json"
     | "folder_id"
     | "locked"
     | "raw_md"

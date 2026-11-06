@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { commands as calendarCommands } from "@anlg/plugin-calendar";
+import { commands as contactsCommands } from "@anlg/plugin-contacts";
 
 import { liveQueryClient, useLiveQuery } from "~/db";
 import { enqueueDatabaseWrite } from "~/db/write-queue";
@@ -453,7 +453,7 @@ export function createHuman({
   const humanId = id();
 
   return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    const result = await calendarCommands.createHuman({
+    const result = await contactsCommands.createHuman({
       id: humanId,
       owner_user_id: ownerUserId,
       name,
@@ -476,7 +476,7 @@ export function createOrganization({
   const organizationId = id();
 
   return enqueueDatabaseWrite(`organization:${organizationId}`, async () => {
-    const result = await calendarCommands.createOrganization({
+    const result = await contactsCommands.createOrganization({
       id: organizationId,
       owner_user_id: ownerUserId,
       name,
@@ -507,7 +507,7 @@ export function updateHuman(
   if (Object.keys(changes).length === 0) return Promise.resolve();
 
   return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    const result = await calendarCommands.updateHuman({
+    const result = await contactsCommands.updateHuman({
       human_id: humanId,
       name: changes.name ?? null,
       email: changes.email ?? null,
@@ -533,7 +533,7 @@ export function updateOrganization(
   }
 
   return enqueueDatabaseWrite(`organization:${organizationId}`, async () => {
-    const result = await calendarCommands.updateOrganization({
+    const result = await contactsCommands.updateOrganization({
       organization_id: organizationId,
       name: changes.name ?? null,
       memo: changes.memo ?? null,
@@ -559,7 +559,7 @@ export function updateContactAvatar(
 ): Promise<void> {
   const table = type === "human" ? "humans" : "organizations";
   return enqueueDatabaseWrite(`${table}:${contactId}`, async () => {
-    const result = await calendarCommands.updateContactAvatar({
+    const result = await contactsCommands.updateContactAvatar({
       kind: type,
       contact_id: contactId,
       avatar_data_url: avatarDataUrl,
@@ -575,7 +575,7 @@ export function updateHumanContactSummary(
   summary: ContactSummaryRecord,
 ): Promise<void> {
   return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    const result = await calendarCommands.updateHumanContactSummary({
+    const result = await contactsCommands.updateHumanContactSummary({
       human_id: humanId,
       summary_json: JSON.stringify(summary),
     });
@@ -590,7 +590,7 @@ export function toggleContactPin(
   contactId: string,
 ): Promise<void> {
   return enqueueDatabaseWrite("contacts:pin-order", async () => {
-    const result = await calendarCommands.toggleContactPin({
+    const result = await contactsCommands.toggleContactPin({
       kind: type,
       contact_id: contactId,
     });
@@ -604,7 +604,7 @@ export function reorderPinnedContacts(
   contacts: Array<{ type: "human" | "organization"; id: string }>,
 ): Promise<void> {
   return enqueueDatabaseWrite("contacts:pin-order", async () => {
-    const result = await calendarCommands.reorderPinnedContacts({
+    const result = await contactsCommands.reorderPinnedContacts({
       contacts: contacts.map(({ type, id }) => ({ kind: type, id })),
     });
     if (result.status === "error") {
@@ -618,45 +618,9 @@ export function mergeHumans(
   duplicateHumanId: string,
 ): Promise<void> {
   return enqueueDatabaseWrite("contacts:merge", async () => {
-    const result = await calendarCommands.mergeHumans({
+    const result = await contactsCommands.mergeHumans({
       selected_human_id: selectedHumanId,
       duplicate_human_id: duplicateHumanId,
-    });
-    if (result.status === "error") {
-      throw new Error(result.error);
-    }
-  });
-}
-
-export function applyContactEnhancement({
-  humanId,
-  ownerUserId,
-  changes,
-  createIfMissing = false,
-}: {
-  humanId: string;
-  ownerUserId: string;
-  changes: {
-    name?: string;
-    email?: string;
-    companyName?: string;
-    jobTitle?: string;
-    phone?: string;
-    linkedinUsername?: string;
-  };
-  createIfMissing?: boolean;
-}): Promise<void> {
-  return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    const result = await calendarCommands.applyContactEnhancement({
-      human_id: humanId,
-      owner_user_id: ownerUserId,
-      create_if_missing: createIfMissing,
-      name: changes.name ?? null,
-      email: changes.email ?? null,
-      company_name: changes.companyName ?? null,
-      job_title: changes.jobTitle ?? null,
-      phone: changes.phone ?? null,
-      linkedin_username: changes.linkedinUsername ?? null,
     });
     if (result.status === "error") {
       throw new Error(result.error);
@@ -772,7 +736,7 @@ function softDeleteContact(
 ): Promise<void> {
   const table = type === "human" ? "humans" : "organizations";
   return enqueueDatabaseWrite(`${table}:${contactId}`, async () => {
-    const result = await calendarCommands.softDeleteContact({
+    const result = await contactsCommands.softDeleteContact({
       kind: type,
       contact_id: contactId,
     });

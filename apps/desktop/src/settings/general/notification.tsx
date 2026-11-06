@@ -61,7 +61,6 @@ export function NotificationSettingsView() {
 
   const configs = useConfigValues([
     "notification_disabled",
-    "notification_event",
     "notification_detect",
     "notification_summary_complete",
     "notification_recording",
@@ -119,7 +118,6 @@ export function NotificationSettingsView() {
   const form = useForm({
     defaultValues: {
       notification_disabled: configs.notification_disabled,
-      notification_event: configs.notification_event,
       notification_detect: configs.notification_detect,
       notification_summary_complete: configs.notification_summary_complete,
       notification_recording: configs.notification_recording,
@@ -141,7 +139,6 @@ export function NotificationSettingsView() {
     onSubmit: async ({ value }) => {
       setSettingValues({
         notification_disabled: value.notification_disabled,
-        notification_event: value.notification_event,
         notification_detect: value.notification_detect,
         notification_summary_complete: value.notification_summary_complete,
         notification_recording: value.notification_recording,
@@ -214,20 +211,6 @@ export function NotificationSettingsView() {
                 <SettingSwitchRow
                   title={<Trans>Summary complete</Trans>}
                   description={<Trans>Show when a summary is ready.</Trans>}
-                  checked={field.state.value}
-                  onChange={field.handleChange}
-                  disabled={notificationsDisabled}
-                />
-              )}
-            </form.Field>
-
-            <form.Field name="notification_event">
-              {(field) => (
-                <SettingSwitchRow
-                  title={<Trans>Event notifications</Trans>}
-                  description={
-                    <Trans>Prepare for events with a 5-minute reminder.</Trans>
-                  }
                   checked={field.state.value}
                   onChange={field.handleChange}
                   disabled={notificationsDisabled}
@@ -593,8 +576,7 @@ export function NotificationSettingsView() {
                 <form.Subscribe
                   selector={(state) =>
                     !state.values.notification_disabled &&
-                    (state.values.notification_event ||
-                      state.values.notification_detect)
+                    state.values.notification_detect
                   }
                 >
                   {(anyNotificationEnabled) => (

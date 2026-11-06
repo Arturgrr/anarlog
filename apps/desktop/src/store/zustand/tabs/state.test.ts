@@ -30,7 +30,6 @@ describe("State Updater Actions", () => {
         state: {
           view: { type: "enhanced", id: "note-1" },
           autoStart: null,
-          scheduledAutoStart: null,
         },
       });
       expect(useTabs.getState()).toHaveCurrentTab({
@@ -38,14 +37,12 @@ describe("State Updater Actions", () => {
         state: {
           view: { type: "enhanced", id: "note-1" },
           autoStart: null,
-          scheduledAutoStart: null,
         },
       });
       expect(useTabs.getState()).toHaveLastHistoryEntry({
         state: {
           view: { type: "enhanced", id: "note-1" },
           autoStart: null,
-          scheduledAutoStart: null,
         },
       });
     });
@@ -68,11 +65,11 @@ describe("State Updater Actions", () => {
       });
       expect(state.tabs[1]).toMatchObject({
         id: active.id,
-        state: { view: null, autoStart: null, scheduledAutoStart: null },
+        state: { view: null, autoStart: null },
       });
       expect(useTabs.getState()).toHaveLastHistoryEntry({
         id: active.id,
-        state: { view: null, autoStart: null, scheduledAutoStart: null },
+        state: { view: null, autoStart: null },
       });
     });
 

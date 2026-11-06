@@ -160,9 +160,9 @@ importers:
       '@anlg/editor':
         specifier: workspace:^
         version: link:../../packages/editor
-      '@anlg/plugin-calendar':
+      '@anlg/plugin-contacts':
         specifier: workspace:*
-        version: link:../../plugins/calendar
+        version: link:../../plugins/contacts
       '@anlg/plugin-db':
         specifier: workspace:*
         version: link:../../plugins/db
@@ -861,7 +861,7 @@ importers:
         specifier: ^2.10.1
         version: 2.10.1
 
-  plugins/calendar:
+  plugins/contacts:
     dependencies:
       '@tauri-apps/api':
         specifier: ^2.10.1

@@ -44,7 +44,6 @@ const hoisted = vi.hoisted(() => ({
   liveDegraded: null as unknown,
   liveMuted: false,
   sessionMode: "inactive",
-  sessionEvent: null as { ended_at?: string } | null,
   transcriptMetadata: [] as Array<{
     id: string;
     sessionId: string;
@@ -152,7 +151,7 @@ vi.mock("~/audio-player", () => ({
   }),
 }));
 
-vi.mock("~/calendar/hooks", () => ({
+vi.mock("~/shared/hooks/useNow", () => ({
   useNow: () => new Date(hoisted.nowMs),
 }));
 
@@ -182,10 +181,6 @@ vi.mock("~/session/components/shared", () => ({
 vi.mock("~/stt/queries", async (importOriginal) => ({
   ...(await importOriginal()),
   useSessionTranscriptMetadata: () => hoisted.transcriptMetadata,
-}));
-
-vi.mock("~/session/hooks/useSessionEvent", () => ({
-  useSessionEvent: () => hoisted.sessionEvent,
 }));
 
 vi.mock("~/services/enhancer", () => ({
@@ -383,7 +378,6 @@ describe("SessionViewSwitcher", () => {
     hoisted.liveDegraded = null;
     hoisted.liveMuted = false;
     hoisted.sessionMode = "inactive";
-    hoisted.sessionEvent = null;
     hoisted.transcriptMetadata = [
       {
         id: "transcript-1",

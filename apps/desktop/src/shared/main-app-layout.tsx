@@ -4,13 +4,8 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { events as windowsEvents } from "@anlg/plugin-windows";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
-import {
-  openNewNoteAndListen,
-  openSessionAndListen,
-  useNewNote,
-} from "./useNewNote";
+import { openNewNoteAndListen, useNewNote } from "./useNewNote";
 
-import { getOrCreateSessionForEventId } from "~/session/queries";
 import { openFoldersFromNavigation } from "~/shared/folders-navigation";
 import { leaveAllOverlayTabs } from "~/shared/leave-overlay-tab";
 import { useZoomShortcuts } from "~/shared/zoom";
@@ -76,34 +71,7 @@ const useNavigationEvents = () => {
       .navigate(webview)
       .listen(({ payload }) => {
         if (payload.path === "/app/new") {
-          const calendarEventId = payload.search?.calendarEventId;
-          const shouldRecord = payload.search?.record === "true";
-
-          if (typeof calendarEventId === "string" && calendarEventId) {
-            void getOrCreateSessionForEventId(calendarEventId)
-              .then((sessionId) => {
-                if (shouldRecord) {
-                  openSessionAndListen(sessionId, { behavior: "new" });
-                  return;
-                }
-
-                openNew({
-                  type: "sessions",
-                  id: sessionId,
-                  state: {
-                    view: null,
-                    autoStart: null,
-                    scheduledAutoStart: null,
-                  },
-                });
-              })
-              .catch((error) => {
-                console.error(
-                  "[navigation] failed to open calendar event",
-                  error,
-                );
-              });
-          } else if (shouldRecord) {
+          if (payload.search?.record === "true") {
             openNewNoteAndListen({ behavior: "new" });
           } else {
             openNewNote();

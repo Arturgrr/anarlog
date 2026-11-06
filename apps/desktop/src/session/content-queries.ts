@@ -16,9 +16,7 @@ type SessionContentSqlRow = {
   owner_user_id: string;
   title: string;
   created_at: string;
-  event_json: string;
   source_apps_json: string;
-  event_id: string;
   raw_note_id: string;
   raw_template_id: string;
   raw_updated_at: string;
@@ -60,9 +58,7 @@ export type SessionContentSnapshot = {
   ownerUserId: string;
   title: string;
   createdAt: string;
-  event: unknown;
   sourceApps: SessionSourceApp[];
-  eventId: string | null;
   rawNoteId: string | null;
   rawTemplateId: string;
   rawUpdatedAt: string;
@@ -104,9 +100,7 @@ const SESSION_CONTENT_SQL = `
     session.owner_user_id,
     session.title,
     session.created_at,
-    session.event_json,
     session.source_apps_json,
-    COALESCE(NULLIF(session.event_id, ''), NULLIF(session.external_event_id, ''), '') AS event_id,
     COALESCE(note.id, '') AS raw_note_id,
     COALESCE(note.template_id, '') AS raw_template_id,
     COALESCE(note.updated_at, '') AS raw_updated_at,
@@ -297,9 +291,7 @@ function mapSessionContentRow(
     ownerUserId: row.owner_user_id,
     title: row.title,
     createdAt: row.created_at,
-    event: parseJson(row.event_json),
     sourceApps: parseSessionSourceApps(row.source_apps_json),
-    eventId: row.event_id || null,
     rawNoteId: row.raw_note_id || null,
     rawTemplateId: row.raw_template_id,
     rawUpdatedAt: row.raw_updated_at,

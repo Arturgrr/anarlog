@@ -3,8 +3,6 @@ import { resolveResource } from "@tauri-apps/api/path";
 
 import type { NotificationIcon } from "@anlg/plugin-notification";
 
-import type { NearbyCalendarEvent } from "~/calendar/queries";
-
 export const BROWSER_AUTO_STOP_APP_IDS = new Set([
   "at.studio.AsideBrowser",
   "app.zen-browser.zen",
@@ -60,7 +58,6 @@ export const BROWSER_AUTO_STOP_APP_IDS = new Set([
 ]);
 
 export type MicApp = { id: string; name: string };
-type NearbyEvent = NearbyCalendarEvent;
 export type MeetingPlatform = {
   displayName: string;
   iconResource: NotificationIconResource;
@@ -95,11 +92,6 @@ const notificationIconResourceCache = new Map<
   NotificationIconResource,
   Promise<NotificationIcon | null>
 >();
-
-const BROWSER_MEETING_ICON: NotificationIcon = {
-  type: "system_symbol",
-  name: "video.fill",
-};
 
 const MEETING_PLATFORMS = {
   zoom: {
@@ -342,15 +334,6 @@ function getNotificationResourceIcon(
   return promise;
 }
 
-async function getMeetingPlatformIcon(
-  platform: MeetingPlatform,
-): Promise<NotificationIcon> {
-  return (
-    (await getNotificationResourceIcon(platform.iconResource)) ??
-    BROWSER_MEETING_ICON
-  );
-}
-
 function getNotificationIconForAppId(appId: string): NotificationIcon | null {
   if (!appId || appId.startsWith("pid:")) {
     return null;
@@ -389,284 +372,11 @@ export function isMeetingCapableMicApp(app: MicApp) {
   return isBrowserApp(app) || getMicAppNotificationOverride(app) !== undefined;
 }
 
-function detectMeetingPlatformFromUrl(value: string): MeetingPlatform | null {
-  try {
-    const parsed = new URL(value);
-    const hostname = parsed.hostname.toLowerCase();
-    const pathname = parsed.pathname.toLowerCase();
-
-    if (hostname === "call.x.com") {
-      return MEETING_PLATFORMS.xCalls;
-    }
-
-    if (
-      (hostname === "x.com" || hostname === "www.x.com") &&
-      (pathname.startsWith("/i/call/") || pathname.startsWith("/call/"))
-    ) {
-      return MEETING_PLATFORMS.xCalls;
-    }
-
-    if (hostname === "zoom.us" || hostname.endsWith(".zoom.us")) {
-      return MEETING_PLATFORMS.zoom;
-    }
-
-    if (hostname === "meet.google.com") {
-      return MEETING_PLATFORMS.googleMeet;
-    }
-
-    if (hostname === "webex.com" || hostname.endsWith(".webex.com")) {
-      return MEETING_PLATFORMS.webex;
-    }
-
-    if (hostname === "teams.microsoft.com" || hostname === "teams.live.com") {
-      return MEETING_PLATFORMS.teams;
-    }
-
-    if (
-      hostname === "app.cal.video" ||
-      hostname === "cal.video" ||
-      hostname.endsWith(".cal.video") ||
-      ((hostname === "cal.com" || hostname === "app.cal.com") &&
-        pathname.startsWith("/video/"))
-    ) {
-      return MEETING_PLATFORMS.calVideo;
-    }
-
-    if (hostname === "cal.com" || hostname === "app.cal.com") {
-      return MEETING_PLATFORMS.calCom;
-    }
-
-    if (hostname === "daily.co" || hostname.endsWith(".daily.co")) {
-      return MEETING_PLATFORMS.daily;
-    }
-
-    if (
-      hostname === "whereby.com" ||
-      hostname.endsWith(".whereby.com") ||
-      hostname === "appear.in" ||
-      hostname.endsWith(".appear.in")
-    ) {
-      return MEETING_PLATFORMS.whereby;
-    }
-
-    if (hostname === "meet.jit.si" || hostname.endsWith(".jitsi.org")) {
-      return MEETING_PLATFORMS.jitsi;
-    }
-
-    if (
-      hostname === "gotomeeting.com" ||
-      hostname.endsWith(".gotomeeting.com") ||
-      hostname === "goto.com" ||
-      hostname.endsWith(".goto.com")
-    ) {
-      return MEETING_PLATFORMS.gotomeeting;
-    }
-
-    if (hostname === "slack.com" || hostname.endsWith(".slack.com")) {
-      return MEETING_PLATFORMS.slack;
-    }
-
-    if (
-      hostname === "discord.com" ||
-      hostname.endsWith(".discord.com") ||
-      hostname === "discord.gg"
-    ) {
-      return MEETING_PLATFORMS.discord;
-    }
-
-    if (hostname === "web.whatsapp.com" || hostname === "whatsapp.com") {
-      return MEETING_PLATFORMS.whatsapp;
-    }
-
-    if (hostname === "talk.kakao.com" || hostname.endsWith(".kakao.com")) {
-      return MEETING_PLATFORMS.kakaotalk;
-    }
-
-    if (
-      hostname === "web.telegram.org" ||
-      hostname === "t.me" ||
-      hostname === "telegram.me"
-    ) {
-      return MEETING_PLATFORMS.telegram;
-    }
-
-    if (hostname === "signal.me") {
-      return MEETING_PLATFORMS.signal;
-    }
-
-    if (hostname === "line.me" || hostname.endsWith(".line.me")) {
-      return MEETING_PLATFORMS.line;
-    }
-
-    if (hostname === "messenger.com" || hostname === "www.messenger.com") {
-      return MEETING_PLATFORMS.messenger;
-    }
-  } catch {}
-
-  return null;
-}
-
-function detectMeetingPlatformFromText(value: string): MeetingPlatform | null {
-  const urls = value.match(/https?:\/\/[^\s<>"')]+/g) ?? [];
-  for (const url of urls) {
-    const platform = detectMeetingPlatformFromUrl(url);
-    if (platform) {
-      return platform;
-    }
-  }
-
-  const normalized = value.toLowerCase();
-  if (/\bgoogle meet\b/.test(normalized)) {
-    return MEETING_PLATFORMS.googleMeet;
-  }
-  if (/\bmicrosoft teams\b/.test(normalized)) {
-    return MEETING_PLATFORMS.teams;
-  }
-  if (/\bzoom meeting\b/.test(normalized)) {
-    return MEETING_PLATFORMS.zoom;
-  }
-  if (/\bwebex\b/.test(normalized)) {
-    return MEETING_PLATFORMS.webex;
-  }
-  if (
-    /\bcal video\b|(^|[^a-z0-9])cal\.video([^a-z0-9]|$)|(^|[^a-z0-9])cal\.com\/video\//.test(
-      normalized,
-    )
-  ) {
-    return MEETING_PLATFORMS.calVideo;
-  }
-  if (/(^|[^a-z0-9])cal\.com([^a-z0-9]|$)/.test(normalized)) {
-    return MEETING_PLATFORMS.calCom;
-  }
-  if (
-    /(^|[^a-z0-9])daily\.co([^a-z0-9]|$)/.test(normalized) ||
-    /\bdaily prebuilt\b/.test(normalized)
-  ) {
-    return MEETING_PLATFORMS.daily;
-  }
-  if (/\bwhereby\b/.test(normalized)) {
-    return MEETING_PLATFORMS.whereby;
-  }
-  if (/\bjitsi\b/.test(normalized)) {
-    return MEETING_PLATFORMS.jitsi;
-  }
-  if (/\bgoto meeting\b|\bgotomeeting\b/.test(normalized)) {
-    return MEETING_PLATFORMS.gotomeeting;
-  }
-  if (/\bslack (huddle|call)\b/.test(normalized)) {
-    return MEETING_PLATFORMS.slack;
-  }
-  if (/\bdiscord (call|meeting|voice)\b/.test(normalized)) {
-    return MEETING_PLATFORMS.discord;
-  }
-  if (/\bwhatsapp (call|meeting)\b/.test(normalized)) {
-    return MEETING_PLATFORMS.whatsapp;
-  }
-  if (/\b(kakaotalk|kakao talk) (call|meeting)\b/.test(normalized)) {
-    return MEETING_PLATFORMS.kakaotalk;
-  }
-  if (/\btelegram (call|meeting)\b/.test(normalized)) {
-    return MEETING_PLATFORMS.telegram;
-  }
-  if (/\bsignal (call|meeting)\b/.test(normalized)) {
-    return MEETING_PLATFORMS.signal;
-  }
-  if (/\bline meeting\b/.test(normalized) || normalized === "line") {
-    return MEETING_PLATFORMS.line;
-  }
-  if (
-    /(^|[^a-z0-9])call\.x\.com\//.test(normalized) ||
-    /\bx calls\b/.test(normalized)
-  ) {
-    return MEETING_PLATFORMS.xCalls;
-  }
-  if (/\bmessenger (call|meeting|room)\b/.test(normalized)) {
-    return MEETING_PLATFORMS.messenger;
-  }
-
-  return null;
-}
-
-export function getBrowserMeetingPlatform(
-  apps: MicApp[],
-  event: NearbyEvent | null,
-): MeetingPlatform | null {
-  if (!apps.some(isBrowserApp) || !event) {
-    return null;
-  }
-
-  if (
-    apps.some(
-      (app) =>
-        !isBrowserApp(app) &&
-        getMicAppNotificationOverride(app)?.meetingPlatform,
-    )
-  ) {
-    return null;
-  }
-
-  for (const field of [
-    "meetingLink",
-    "location",
-    "description",
-    "title",
-  ] satisfies Array<keyof NearbyEvent>) {
-    const value = event[field];
-    if (!value) {
-      continue;
-    }
-
-    const platform = value.startsWith("http")
-      ? detectMeetingPlatformFromUrl(value)
-      : detectMeetingPlatformFromText(value);
-    if (platform) {
-      return platform;
-    }
-  }
-
-  return null;
-}
-
-export function getNotificationDisplayApp(
-  app: MicApp,
-  browserMeetingPlatform: MeetingPlatform | null,
-) {
-  if (browserMeetingPlatform && isBrowserApp(app)) {
-    return { ...app, name: browserMeetingPlatform.displayName };
-  }
-
-  return app;
-}
-
-export function getNotificationDisplayApps(
-  apps: MicApp[],
-  browserMeetingPlatform: MeetingPlatform | null,
-) {
-  return apps.map((app) =>
-    getNotificationDisplayApp(app, browserMeetingPlatform),
-  );
-}
-
-export async function getNotificationIconForDisplayApp(
-  app: MicApp,
-  browserMeetingPlatform: MeetingPlatform | null,
-): Promise<NotificationIcon | null> {
-  if (browserMeetingPlatform && isBrowserApp(app)) {
-    return getMeetingPlatformIcon(browserMeetingPlatform);
-  }
-
-  return getNotificationIconForApp(app);
-}
-
 export async function getNotificationIconForDetectedApps(
   apps: MicApp[],
-  browserMeetingPlatform: MeetingPlatform | null,
 ): Promise<NotificationIcon | null> {
   for (const app of apps) {
-    const icon = await getNotificationIconForDisplayApp(
-      app,
-      browserMeetingPlatform,
-    );
+    const icon = await getNotificationIconForApp(app);
     if (icon) {
       return icon;
     }

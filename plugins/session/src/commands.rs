@@ -30,13 +30,6 @@ session_write_command!(
     String
 );
 session_write_command!(
-    create_session_for_event,
-    creation,
-    create_session_for_event,
-    creation::CreateEventSessionRequest,
-    Option<creation::EventSessionResult>
-);
-session_write_command!(
     soft_delete_session,
     deletion,
     soft_delete_session,

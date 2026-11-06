@@ -34,8 +34,6 @@ import { resolveConfigValue, resolveConfigValues } from "~/shared/config";
 const SETTINGS_FORM_KEYS = [
   "autostart",
   "automatic_updates",
-  "auto_join_scheduled_meetings",
-  "auto_start_scheduled_meetings",
   "auto_stop_meetings",
   "floating_bar_enabled",
   "show_app_in_dock",
@@ -59,9 +57,6 @@ function useSettingsForm(storedSettings: StoredSettingValues) {
     defaultValues: {
       autostart: settingsValue.autostart,
       automatic_updates: settingsValue.automatic_updates,
-      auto_join_scheduled_meetings: settingsValue.auto_join_scheduled_meetings,
-      auto_start_scheduled_meetings:
-        settingsValue.auto_start_scheduled_meetings,
       auto_stop_meetings: settingsValue.auto_stop_meetings,
       floating_bar_enabled: settingsValue.floating_bar_enabled,
       show_app_in_dock: settingsValue.show_app_in_dock,
@@ -100,10 +95,6 @@ function useSettingsForm(storedSettings: StoredSettingValues) {
       setSettingValues({
         autostart: normalizedValue.autostart,
         automatic_updates: normalizedValue.automatic_updates,
-        auto_join_scheduled_meetings:
-          normalizedValue.auto_join_scheduled_meetings,
-        auto_start_scheduled_meetings:
-          normalizedValue.auto_start_scheduled_meetings,
         auto_stop_meetings: normalizedValue.auto_stop_meetings,
         floating_bar_enabled: normalizedValue.floating_bar_enabled,
         show_app_in_dock: normalizedValue.show_app_in_dock,
@@ -298,16 +289,6 @@ function SettingsSectionContent({
           <form.Subscribe selector={(state) => state.values}>
             {(values) => (
               <MeetingSettingsView
-                autoJoinScheduledMeetings={{
-                  value: values.auto_join_scheduled_meetings,
-                  onChange: (value) =>
-                    submitFieldValue("auto_join_scheduled_meetings", value),
-                }}
-                autoStartScheduledMeetings={{
-                  value: values.auto_start_scheduled_meetings,
-                  onChange: (value) =>
-                    submitFieldValue("auto_start_scheduled_meetings", value),
-                }}
                 autoStopMeetings={{
                   value: values.auto_stop_meetings,
                   onChange: (value) =>

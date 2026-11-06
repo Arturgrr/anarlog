@@ -205,10 +205,6 @@ msgstr "{providerLabel} is not available for batch transcription with the select
 msgid "{remainingCount} more"
 msgstr "{remainingCount} more"
 
-#: src/session/components/outer-header/metadata/index.tsx
-msgid "{startStr} to {endStr}"
-msgstr "{startStr} to {endStr}"
-
 #: src/session/components/note-input/audio-drop-target.tsx
 msgid "{supportedAudioFormats} audio"
 msgstr "{supportedAudioFormats} audio"
@@ -442,10 +438,6 @@ msgstr "Add step"
 msgid "Add tag"
 msgstr "Add tag"
 
-#: src/calendar/components/event-chip.tsx
-msgid "Add to folder"
-msgstr "Add to folder"
-
 #: src/settings/developers/webhooks.tsx
 msgid "Add webhook"
 msgstr "Add webhook"
@@ -588,10 +580,6 @@ msgstr "App icon"
 msgid "Appearance"
 msgstr "Appearance"
 
-#: src/calendar/components/apple/permission.tsx
-msgid "Apple Calendar access is off"
-msgstr "Apple Calendar access is off"
-
 #: src/settings/ai/shared/list-apple-foundation.ts
 msgid "Apple Foundation Models is not available."
 msgstr "Apple Foundation Models is not available."
@@ -623,20 +611,8 @@ msgid "Apply to summary"
 msgstr "Apply to summary"
 
 #: src/stt/detect-events.ts
-msgid "Are you in {title} right now?"
-msgstr "Are you in {title} right now?"
-
-#: src/stt/detect-events.ts
 msgid "Are you in a meeting?"
 msgstr "Are you in a meeting?"
-
-#: src/stt/detect-events.ts
-msgid "Are you talking to {firstName} and {secondName} right now?"
-msgstr "Are you talking to {firstName} and {secondName} right now?"
-
-#: src/stt/detect-events.ts
-msgid "Are you talking to {name} right now?"
-msgstr "Are you talking to {name} right now?"
 
 #: src/chat/components/input/index.tsx
 #: src/shared/chat-cta.tsx
@@ -757,14 +733,6 @@ msgstr "Auto format is unavailable."
 msgid "Auto summary format"
 msgstr "Auto summary format"
 
-#: src/calendar/components/event-chip.tsx
-msgid "Auto-add"
-msgstr "Auto-add"
-
-#: src/calendar/components/event-chip.tsx
-msgid "Auto-add future meetings?"
-msgstr "Auto-add future meetings?"
-
 #: src/settings/automations/index.tsx
 msgid "Automate what happens before, during, or after meetings based on the conditions you choose."
 msgstr "Automate what happens before, during, or after meetings based on the conditions you choose."
@@ -772,10 +740,6 @@ msgstr "Automate what happens before, during, or after meetings based on the con
 #: src/settings/general/app-settings.tsx
 msgid "Automatically install updates"
 msgstr "Automatically install updates"
-
-#: src/calendar/components/event-chip.tsx
-msgid "Automatically put all future instances of this recurring meeting into a folder."
-msgstr "Automatically put all future instances of this recurring meeting into a folder."
 
 #: src/settings/automations/index.tsx
 msgid "Automation actions"
@@ -815,8 +779,7 @@ msgstr "Available models"
 msgid "Average across the capture days counted above."
 msgstr "Average across the capture days counted above."
 
-#: src/calendar/components/apple/permission.tsx
-#: src/calendar/components/event-chip.tsx
+#: src/settings/todo/permission.tsx
 #: src/sidebar/custom-sidebar-header.tsx
 msgid "Back"
 msgstr "Back"
@@ -889,10 +852,6 @@ msgstr "Bullet List"
 msgid "Busiest day"
 msgstr "Busiest day"
 
-#: src/calendar/components/event-chip.tsx
-msgid "Busy"
-msgstr "Busy"
-
 #: src/settings/ai/shared/provider-labels.ts
 msgid "BYO-model"
 msgstr "BYO-model"
@@ -901,20 +860,10 @@ msgstr "BYO-model"
 msgid "Cairo"
 msgstr "Cairo"
 
-#: src/settings/general/permissions.tsx
-#: src/sidebar/settings-nav-groups.ts
-msgid "Calendar"
-msgstr "Calendar"
-
-#: src/onboarding/index.tsx
-msgid "Calendar connected"
-msgstr "Calendar connected"
-
 #: src/settings/ai/stt/select.tsx
 msgid "Can transcribe while the meeting is happening."
 msgstr "Can transcribe while the meeting is happening."
 
-#: src/calendar/components/apple/permission.tsx
 #: src/i18n/native-labels.tsx
 #: src/settings/ai/llm/subscriptions/connect.tsx
 #: src/settings/dictionary/index.tsx
@@ -980,10 +929,6 @@ msgstr "Central Time"
 #: src/stt/useStartListening.ts
 msgid "Change"
 msgstr "Change"
-
-#: src/calendar/components/event-chip.tsx
-msgid "Change auto-add folder"
-msgstr "Change auto-add folder"
 
 #: src/lock/auth.ts
 msgid "change lock settings"
@@ -1330,7 +1275,6 @@ msgstr "Connect"
 
 #. placeholder {0}: provider.displayName
 #. placeholder {0}: subscriptionProvider.displayName
-#: src/calendar/components/sidebar.tsx
 #: src/settings/ai/llm/subscriptions/connect.tsx
 #: src/settings/ai/shared/index.tsx
 msgid "Connect {0}"
@@ -1339,11 +1283,6 @@ msgstr "Connect {0}"
 #: src/settings/ai/shared/index.tsx
 msgid "Connect {displayName}"
 msgstr "Connect {displayName}"
-
-#: src/onboarding/calendar.tsx
-#: src/onboarding/index.tsx
-msgid "Connect calendar"
-msgstr "Connect calendar"
 
 #: src/settings/ai/stt/configure.tsx
 msgid "Connect to your [NVIDIA Speech NIM](https://docs.nvidia.com/nim/speech/latest/get-started/tutorials/asr.html) WebSocket server, for example `http://localhost:9000`. Choose the model served by your deployment. The API key is optional for servers without authentication. This requires a deployed NIM server; NVIDIA's hosted gRPC endpoint is not supported here."
@@ -1362,18 +1301,6 @@ msgstr "Connected with your existing subscription."
 #: src/settings/ai/llm/health.tsx
 msgid "Connection failed: {0}"
 msgstr "Connection failed: {0}"
-
-#: src/session/components/outer-header/metadata/participants/input.tsx
-msgid "Contact already up to date"
-msgstr "Contact already up to date"
-
-#: src/session/components/outer-header/metadata/participants/input.tsx
-msgid "Contact created"
-msgstr "Contact created"
-
-#: src/session/components/outer-header/metadata/participants/input.tsx
-msgid "Contact enhanced"
-msgstr "Contact enhanced"
 
 #: src/contacts/contact-page-header.tsx
 msgid "Contact options"
@@ -1394,10 +1321,6 @@ msgstr "Context"
 #: src/settings/ai/shared/model-combobox.tsx
 msgid "Context length too small"
 msgstr "Context length too small"
-
-#: src/onboarding/calendar.tsx
-msgid "Continue"
-msgstr "Continue"
 
 #: src/settings/general/meeting-settings.tsx
 msgid "Control listening without reopening Librelog."
@@ -1498,10 +1421,6 @@ msgstr "Could not delete the automation"
 #: src/session/hooks/useDeleteSession.ts
 msgid "Could not delete this note. Please try again."
 msgstr "Could not delete this note. Please try again."
-
-#: src/session/components/outer-header/metadata/participants/input.tsx
-msgid "Could not enhance contact"
-msgstr "Could not enhance contact"
 
 #: src/session/components/outer-header/overflow/export-modal.tsx
 msgid "Could not export. Check the export location in Settings and try again."
@@ -1769,10 +1688,6 @@ msgstr "Delete {pendingDeleteCount} selected notes?"
 msgid "Delete 1 selected note?"
 msgstr "Delete 1 selected note?"
 
-#: src/sidebar/timeline/item.tsx
-msgid "Delete All Recurring Events"
-msgstr "Delete All Recurring Events"
-
 #: src/settings/automations/index.tsx
 msgid "Delete automation"
 msgstr "Delete automation"
@@ -1780,10 +1695,6 @@ msgstr "Delete automation"
 #: src/contacts/person-item.tsx
 msgid "Delete Contact"
 msgstr "Delete Contact"
-
-#: src/sidebar/timeline/item.tsx
-msgid "Delete Event"
-msgstr "Delete Event"
 
 #: src/folders/folder-editor.tsx
 #: src/sidebar/folder-materials.tsx
@@ -1810,10 +1721,6 @@ msgstr "Delete recording"
 #: src/sidebar/timeline/index.tsx
 msgid "Delete Selected ({sessionCount})"
 msgstr "Delete Selected ({sessionCount})"
-
-#: src/sidebar/timeline/item.tsx
-msgid "Delete This Event"
-msgstr "Delete This Event"
 
 #: src/settings/ai/shared/model-combobox.tsx
 #: src/settings/ai/stt/select.tsx
@@ -1883,10 +1790,6 @@ msgstr "Disable"
 #: src/settings/general/notification.tsx
 msgid "Disable all notifications"
 msgstr "Disable all notifications"
-
-#: src/calendar/components/sidebar.tsx
-msgid "Disconnect"
-msgstr "Disconnect"
 
 #: src/store/zustand/listener/general-live.ts
 msgid "Disk almost full"
@@ -2066,14 +1969,6 @@ msgstr "Enable microphone permission in Settings > Permissions before dictating.
 msgid "Enabled"
 msgstr "Enabled"
 
-#: src/session/components/outer-header/metadata/participants/chip.tsx
-msgid "Enhance contact"
-msgstr "Enhance contact"
-
-#: src/session/components/outer-header/metadata/participants/chip.tsx
-msgid "Enhance contact {label}"
-msgstr "Enhance contact {label}"
-
 #: src/settings/ai/stt/select.tsx
 msgid "Enter a model identifier"
 msgstr "Enter a model identifier"
@@ -2134,10 +2029,6 @@ msgstr "Esc to dismiss"
 #: src/i18n/external-messages.ts
 msgid "Escape is reserved for cancelling dictation. Choose another key."
 msgstr "Escape is reserved for cancelling dictation. Choose another key."
-
-#: src/settings/general/notification.tsx
-msgid "Event notifications"
-msgstr "Event notifications"
 
 #: src/settings/stats/index.tsx
 msgid "Every conversation adds to your story."
@@ -2368,10 +2259,6 @@ msgstr "Frequently used"
 msgid "Full Screen"
 msgstr "Full Screen"
 
-#: src/calendar/components/event-chip.tsx
-msgid "Future meetings"
-msgstr "Future meetings"
-
 #: src/settings/ai/stt/shared.tsx
 msgid "Gateway"
 msgstr "Gateway"
@@ -2488,7 +2375,7 @@ msgstr "Hands-free dictation"
 msgid "Have Librelog ready when you sign in."
 msgstr "Have Librelog ready when you sign in."
 
-#: src/calendar/components/apple/permission.tsx
+#: src/settings/todo/permission.tsx
 msgid "Having trouble?"
 msgstr "Having trouble?"
 
@@ -2545,10 +2432,6 @@ msgstr "Hide {app}"
 #: src/settings/general/notification.tsx
 msgid "Hide all notification panels, Dock alerts, and completion sounds."
 msgstr "Hide all notification panels, Dock alerts, and completion sounds."
-
-#: src/sidebar/timeline/index.tsx
-msgid "Hide Deleted Events"
-msgstr "Hide Deleted Events"
 
 #: src/settings/ai/shared/model-combobox.tsx
 msgid "Hide ignored models"
@@ -2666,17 +2549,9 @@ msgstr "Improve with examples"
 msgid "in {absDays} days"
 msgstr "in {absDays} days"
 
-#: src/sidebar/timeline/upcoming-meeting.ts
-msgid "In {minutes}m {seconds}s"
-msgstr "In {minutes}m {seconds}s"
-
 #: src/sidebar/timeline/utils/index.ts
 msgid "in {months} months"
 msgstr "in {months} months"
-
-#: src/sidebar/timeline/upcoming-meeting.ts
-msgid "In {totalSeconds}s"
-msgstr "In {totalSeconds}s"
 
 #: src/sidebar/timeline/utils/index.ts
 msgid "in {weeks} weeks"
@@ -2736,26 +2611,9 @@ msgstr "Invalid dictation shortcut: {rest}"
 msgid "Job Title"
 msgstr "Job Title"
 
-#: src/session/components/outer-header/metadata/index.tsx
-msgid "Join"
-msgstr "Join"
-
-#: src/services/event-notification/index.ts
-#: src/session/components/outer-header/index.tsx
-msgid "Join & record"
-msgstr "Join & record"
-
-#: src/session/components/outer-header/index.tsx
-msgid "Join meeting and record"
-msgstr "Join meeting and record"
-
 #: src/onboarding/final.tsx
 msgid "Join our community and stay updated:"
 msgstr "Join our community and stay updated:"
-
-#: src/settings/general/meeting-settings.tsx
-msgid "Join scheduled meetings"
-msgstr "Join scheduled meetings"
 
 #: src/settings/dictation.tsx
 msgid "Keep Librelog running to use your shortcut in other apps."
@@ -2785,7 +2643,6 @@ msgstr "Language & Region"
 msgid "Language & transcription"
 msgstr "Language & transcription"
 
-#: src/session/components/outer-header/metadata/participants/input.tsx
 #: src/sidebar/toast/registry.tsx
 msgid "Language model needed"
 msgstr "Language model needed"
@@ -2938,10 +2795,6 @@ msgstr "Librelog will retry automatically. This does not affect your notes."
 msgid "Librelog will stop listening in {AUTO_STOP_CONFIRM_TIMEOUT_SECONDS} seconds."
 msgstr "Librelog will stop listening in {AUTO_STOP_CONFIRM_TIMEOUT_SECONDS} seconds."
 
-#: src/onboarding/index.tsx
-msgid "Librelog will sync your calendar to get meeting reminders"
-msgstr "Librelog will sync your calendar to get meeting reminders"
-
 #: src/settings/appearance/app-icon.tsx
 #: src/settings/appearance/theme.tsx
 msgid "Light"
@@ -3046,10 +2899,6 @@ msgstr "Loading"
 #: src/templates/auto-form.tsx
 msgid "Loading Auto format..."
 msgstr "Loading Auto format..."
-
-#: src/calendar/components/calendar-selection.tsx
-msgid "Loading calendars..."
-msgstr "Loading calendars..."
 
 #: src/edit/tab-content.tsx
 msgid "Loading edit…"
@@ -3176,10 +3025,6 @@ msgstr "Median transcribed time. Conversations with timing: {0}."
 msgid "Medium"
 msgstr "Medium"
 
-#: src/sidebar/timeline/index.tsx
-msgid "Meeting"
-msgstr "Meeting"
-
 #: src/stt/meeting-chat-records.ts
 msgid "Meeting app"
 msgstr "Meeting app"
@@ -3207,10 +3052,6 @@ msgstr "Meeting ends"
 #: src/session/components/outer-header/overflow/index.tsx
 msgid "Meeting info"
 msgstr "Meeting info"
-
-#: src/session/components/outer-header/metadata/index.tsx
-msgid "Meeting link"
-msgstr "Meeting link"
 
 #: src/chat/components/message/tool/search-meetings.tsx
 msgid "meetings"
@@ -3370,10 +3211,6 @@ msgstr "Mountain Time"
 msgid "Move down"
 msgstr "Move down"
 
-#: src/calendar/components/event-chip.tsx
-msgid "Move this note"
-msgstr "Move this note"
-
 #: src/templates/sections-editor.tsx
 msgid "Move up"
 msgstr "Move up"
@@ -3450,10 +3287,6 @@ msgstr "Next slide"
 msgid "next week"
 msgstr "next week"
 
-#: src/calendar/components/event-chip.tsx
-msgid "No"
-msgstr "No"
-
 #: src/session/hooks/useAutoEnhance.ts
 msgid "No AI model configured"
 msgstr "No AI model configured"
@@ -3478,10 +3311,6 @@ msgstr "No automations found"
 msgid "No automations yet"
 msgstr "No automations yet"
 
-#: src/calendar/components/calendar-selection.tsx
-msgid "No calendars found"
-msgstr "No calendars found"
-
 #: src/changelog/index.tsx
 msgid "No changelog available for this version."
 msgstr "No changelog available for this version."
@@ -3489,10 +3318,6 @@ msgstr "No changelog available for this version."
 #: src/settings/ai/shared/model-combobox.tsx
 msgid "No completion support"
 msgstr "No completion support"
-
-#: src/session/components/outer-header/metadata/participants/input.tsx
-msgid "No contact detail found"
-msgstr "No contact detail found"
 
 #: src/session/components/version-history-dialog.tsx
 msgid "No earlier versions yet."
@@ -3709,7 +3534,6 @@ msgid "Notifications"
 msgstr "Notifications"
 
 #: src/sidebar/timeline/index.tsx
-#: src/sidebar/timeline/upcoming-meeting.ts
 msgid "Now"
 msgstr "Now"
 
@@ -3752,15 +3576,15 @@ msgctxt "device authentication reason"
 msgid "open"
 msgstr "open"
 
-#: src/calendar/components/apple/permission.tsx
+#: src/settings/todo/permission.tsx
 msgid "Open"
 msgstr "Open"
 
 #. placeholder {0}: permissionName.toLowerCase()
 #. placeholder {0}: title.toLowerCase()
-#: src/calendar/components/apple/permission.tsx
 #: src/onboarding/permissions.tsx
 #: src/settings/general/permissions.tsx
+#: src/settings/todo/permission.tsx
 msgid "Open {0} settings"
 msgstr "Open {0} settings"
 
@@ -3771,15 +3595,6 @@ msgstr "Open {app}"
 #: src/chat/components/body/empty.tsx
 msgid "Open AI Settings"
 msgstr "Open AI Settings"
-
-#: src/sidebar/timeline/index.tsx
-msgid "Open calendar"
-msgstr "Open calendar"
-
-#: src/calendar/components/calendar-selection.tsx
-#: src/calendar/components/sidebar.tsx
-msgid "Open calendar account actions"
-msgstr "Open calendar account actions"
 
 #: src/i18n/component-labels.tsx
 msgid "Open file"
@@ -3808,21 +3623,9 @@ msgstr "Open Librelog"
 msgid "Open Librelog from the menu bar."
 msgstr "Open Librelog from the menu bar."
 
-#: src/services/event-notification/index.ts
-msgid "Open meeting"
-msgstr "Open meeting"
-
 #: src/stt/start-failure.ts
 msgid "Open permissions"
 msgstr "Open permissions"
-
-#: src/calendar/components/apple/permission.tsx
-msgid "Open Settings"
-msgstr "Open Settings"
-
-#: src/settings/general/meeting-settings.tsx
-msgid "Open the meeting link when a scheduled meeting begins."
-msgstr "Open the meeting link when a scheduled meeting begins."
 
 #: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Opening sign-in…"
@@ -3838,8 +3641,8 @@ msgstr "Opens System Settings and guides you to add Librelog to the {0} list"
 msgid "Opens System Settings and guides you to add Librelog to the {0} list."
 msgstr "Opens System Settings and guides you to add Librelog to the {0} list."
 
-#: src/calendar/components/apple/permission.tsx
 #: src/settings/ai/shared/index.tsx
+#: src/settings/todo/permission.tsx
 msgid "or"
 msgstr "or"
 
@@ -3862,10 +3665,6 @@ msgstr "Organization name"
 #: src/session/components/version-history-dialog.tsx
 msgid "Other device's version"
 msgstr "Other device's version"
-
-#: src/settings/general/permissions.tsx
-msgid "Others"
-msgstr "Others"
 
 #: src/meeting-float/labels.ts
 msgid "Overlapping speech"
@@ -3964,7 +3763,7 @@ msgstr "Paused"
 msgid "People"
 msgstr "People"
 
-#: src/calendar/components/apple/permission.tsx
+#: src/settings/todo/permission.tsx
 msgid "permission panel."
 msgstr "permission panel."
 
@@ -4029,10 +3828,6 @@ msgstr "Post recording disclosure in meeting chat"
 #: src/stt/capture-lifecycle.ts
 msgid "Post-meeting transcription failed. The recording was kept so you can try again."
 msgstr "Post-meeting transcription failed. The recording was kept so you can try again."
-
-#: src/settings/general/notification.tsx
-msgid "Prepare for events with a 5-minute reminder."
-msgstr "Prepare for events with a 5-minute reminder."
 
 #: src/chat/components/message/tool/search-meetings.tsx
 msgid "Preparing search..."
@@ -4190,10 +3985,6 @@ msgstr "Recent"
 msgid "Recent Chats"
 msgstr "Recent Chats"
 
-#: src/calendar/components/sidebar.tsx
-msgid "Reconnect"
-msgstr "Reconnect"
-
 #: src/meeting-float/labels.ts
 msgid "Reconnecting live transcription; stop listening"
 msgstr "Reconnecting live transcription; stop listening"
@@ -4252,10 +4043,6 @@ msgstr "Recovery did not finish before the meeting ended. Audio was deleted acco
 #: src/main/windows-title-bar.tsx
 msgid "Redo"
 msgstr "Redo"
-
-#: src/calendar/components/calendar-selection.tsx
-msgid "Refresh calendars"
-msgstr "Refresh calendars"
 
 #: src/settings/ai/shared/model-combobox.tsx
 msgid "Refresh models"
@@ -4379,12 +4166,12 @@ msgstr "Report a Bug"
 msgid "Report Bug"
 msgstr "Report Bug"
 
-#: src/calendar/components/apple/permission.tsx
+#: src/settings/todo/permission.tsx
 msgid "Request"
 msgstr "Request"
 
 #. placeholder {0}: title.toLowerCase()
-#: src/calendar/components/apple/permission.tsx
+#: src/settings/todo/permission.tsx
 msgid "Request {0}"
 msgstr "Request {0}"
 
@@ -4401,8 +4188,8 @@ msgstr "Require Touch ID or your password when opening Librelog."
 msgid "Require Windows Hello face, PIN, or password when opening Librelog."
 msgstr "Require Windows Hello face, PIN, or password when opening Librelog."
 
-#: src/calendar/components/apple/permission.tsx
 #: src/settings/ai/shared/index.tsx
+#: src/settings/todo/permission.tsx
 msgid "Reset"
 msgstr "Reset"
 
@@ -4812,17 +4599,9 @@ msgstr "Shared screens"
 msgid "Show All"
 msgstr "Show All"
 
-#: src/sidebar/timeline/item.tsx
-msgid "Show All Recurring Events"
-msgstr "Show All Recurring Events"
-
 #: src/settings/general/app-settings.tsx
 msgid "Show app in Dock"
 msgstr "Show app in Dock"
-
-#: src/settings/general/permissions.tsx
-msgid "Show Apple Calendar events in Librelog."
-msgstr "Show Apple Calendar events in Librelog."
 
 #: src/session/components/outer-header/overflow/index.tsx
 msgid "Show Audio in Explorer"
@@ -4836,14 +4615,6 @@ msgstr "Show Audio in Finder"
 msgid "Show Audio in Folder"
 msgstr "Show Audio in Folder"
 
-#: src/sidebar/timeline/index.tsx
-msgid "Show Deleted Events"
-msgstr "Show Deleted Events"
-
-#: src/sidebar/timeline/item.tsx
-msgid "Show Event"
-msgstr "Show Event"
-
 #: src/settings/general/meeting-settings.tsx
 msgid "Show floating bar"
 msgstr "Show floating bar"
@@ -4852,13 +4623,11 @@ msgstr "Show floating bar"
 msgid "Show ignored models"
 msgstr "Show ignored models"
 
-#: src/calendar/components/session-chip.tsx
 #: src/settings/ai/stt/select.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Show in Finder"
 msgstr "Show in Finder"
 
-#: src/calendar/components/session-chip.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Show in folder"
 msgstr "Show in folder"
@@ -4895,10 +4664,6 @@ msgstr "Show the folder above the title."
 #: src/settings/general/timezone.tsx
 msgid "Show the timeline in your preferred timezone."
 msgstr "Show the timeline in your preferred timezone."
-
-#: src/sidebar/timeline/item.tsx
-msgid "Show This Event"
-msgstr "Show This Event"
 
 #: src/meeting-float/labels.ts
 msgid "Show transcript"
@@ -5050,14 +4815,6 @@ msgstr "Start Librelog at login"
 msgid "Start listening"
 msgstr "Start listening"
 
-#: src/settings/general/meeting-settings.tsx
-msgid "Start listening when a scheduled meeting begins."
-msgstr "Start listening when a scheduled meeting begins."
-
-#: src/services/event-notification/index.ts
-msgid "Start recording"
-msgstr "Start recording"
-
 #: src/main/empty.tsx
 msgid "Start Recording"
 msgstr "Start Recording"
@@ -5065,10 +4822,6 @@ msgstr "Start Recording"
 #: src/chat/components/input/index.tsx
 msgid "Start voice input"
 msgstr "Start voice input"
-
-#: src/settings/general/meeting-settings.tsx
-msgid "Start when meeting begins"
-msgstr "Start when meeting begins"
 
 #: src/session/components/note-input/raw.tsx
 msgid "Start with a favorite template"
@@ -5086,14 +4839,6 @@ msgstr "Start writing..."
 #: src/sidebar/toast/registry.tsx
 msgid "Starting"
 msgstr "Starting"
-
-#: src/services/event-notification/index.ts
-msgid "Starting in {minutesUntil} minutes"
-msgstr "Starting in {minutesUntil} minutes"
-
-#: src/services/event-notification/index.ts
-msgid "Starting in 1 minute"
-msgstr "Starting in 1 minute"
 
 #: src/settings/dictation.tsx
 msgid "Starting microphone…"
@@ -5127,10 +4872,6 @@ msgstr "Steps run from top to bottom."
 #: src/stt/auto-stop.ts
 msgid "Stop"
 msgstr "Stop"
-
-#: src/calendar/components/event-chip.tsx
-msgid "Stop auto-add"
-msgstr "Stop auto-add"
 
 #: src/meeting-float/labels.ts
 #: src/meeting-float/overlay/bar.tsx
@@ -5437,10 +5178,6 @@ msgstr "This image would make the chat draft too large. Remove another image and
 msgid "This Mac does not support Apple Intelligence."
 msgstr "This Mac does not support Apple Intelligence."
 
-#: src/calendar/components/event-chip.tsx
-msgid "This note"
-msgstr "This note"
-
 #: src/session/components/note-conflict-banner.tsx
 msgid "This note was edited on another device at the same time. The later edit was kept."
 msgstr "This note was edited on another device at the same time. The later edit was kept."
@@ -5608,10 +5345,6 @@ msgstr "Try speaking a little closer to the microphone."
 msgid "Turn on Apple Intelligence in System Settings."
 msgstr "Turn on Apple Intelligence in System Settings."
 
-#: src/calendar/components/apple/permission.tsx
-msgid "Turn on Librelog in System Settings → Privacy & Security → Calendars, then return here."
-msgstr "Turn on Librelog in System Settings → Privacy & Security → Calendars, then return here."
-
 #: src/settings/stats/insights.tsx
 msgid "Typical conversation length"
 msgstr "Typical conversation length"
@@ -5633,10 +5366,6 @@ msgstr "Unfavorite"
 #: src/templates/template-form.tsx
 msgid "Unfavorite template"
 msgstr "Unfavorite template"
-
-#: src/calendar/components/event-chip.tsx
-msgid "Unfiled"
-msgstr "Unfiled"
 
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
 msgid "Unknown"
@@ -5736,10 +5465,6 @@ msgstr "Untitled (Copy)"
 msgid "Untitled automation"
 msgstr "Untitled automation"
 
-#: src/session/components/outer-header/metadata/index.tsx
-msgid "Untitled Event"
-msgstr "Untitled Event"
-
 #: src/contacts/related-notes.tsx
 msgid "Untitled Note"
 msgstr "Untitled Note"
@@ -5747,10 +5472,6 @@ msgstr "Untitled Note"
 #: src/edit/tab-content.tsx
 msgid "Untitled session"
 msgstr "Untitled session"
-
-#: src/services/event-notification/index.ts
-msgid "Upcoming Event"
-msgstr "Upcoming Event"
 
 #: src/i18n/native-labels.tsx
 msgid "Update Available"
@@ -6150,7 +5871,7 @@ msgstr "Yesterday"
 msgid "You"
 msgstr "You"
 
-#: src/calendar/components/apple/permission.tsx
+#: src/settings/todo/permission.tsx
 msgid "You can"
 msgstr "You can"
 

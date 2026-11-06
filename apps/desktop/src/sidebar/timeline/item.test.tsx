@@ -10,16 +10,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   addDeletion: vi.fn(),
-  ignoreEvent: vi.fn(),
   invalidateResource: vi.fn(),
-  isIgnored: vi.fn(() => false),
   openCurrent: vi.fn(),
   openNew: vi.fn(),
   platform: "macos",
   preloadSession: vi.fn(() => Promise.resolve(null)),
   sessionMode: "inactive",
   stop: vi.fn(),
-  getOrCreateSessionForEventId: vi.fn(() => Promise.resolve("session-event")),
   storeTitle: "Live Note",
   nativeContextMenus: [] as Array<
     Array<{
@@ -84,7 +81,6 @@ vi.mock("~/session/hooks/useEnhancedNotes", () => ({
 }));
 
 vi.mock("~/session/queries", () => ({
-  getOrCreateSessionForEventId: mocks.getOrCreateSessionForEventId,
   preloadSession: mocks.preloadSession,
 }));
 
@@ -118,16 +114,6 @@ vi.mock("~/shared/hooks/useNativeContextMenu", () => ({
     mocks.nativeContextMenus.push(menu);
     return vi.fn();
   },
-}));
-
-vi.mock("~/calendar/ignored-events", () => ({
-  useIgnoredEvents: () => ({
-    ignoreEvent: mocks.ignoreEvent,
-    ignoreSeries: vi.fn(),
-    isIgnored: mocks.isIgnored,
-    unignoreEvent: vi.fn(),
-    unignoreSeries: vi.fn(),
-  }),
 }));
 
 vi.mock("~/shared/config", () => ({
@@ -213,7 +199,7 @@ describe("TimelineItemComponent", () => {
 
   function renderSession(
     id: string,
-    data: { locked?: number; folder_id?: string; event_json?: string } = {},
+    data: { locked?: number; folder_id?: string } = {},
     props: { selected?: boolean } = {},
   ) {
     return render(
@@ -364,66 +350,9 @@ describe("TimelineItemComponent", () => {
     },
   );
 
-  it.each([true, false])(
-    "shows the folder tag on a filed event row when selected=%s",
-    (selected) => {
-      mocks.configValues = { sidebar_show_folder: true };
-      render(
-        <TimelineItemComponent
-          item={{
-            type: "event",
-            id: "event-1",
-            data: {
-              title: "Standup",
-              started_at: "2026-10-03T03:00:00.000Z",
-              has_recurrence_rules: false,
-              session_folder: "Work",
-            },
-          }}
-          precision="time"
-          selected={selected}
-          timezone="UTC"
-          multiSelected={false}
-          flatItemKeys={["event-event-1"]}
-        />,
-      );
-
-      expect(screen.getByText("Work")).toBeTruthy();
-    },
-  );
-
-  it("shows no folder tag on a sessionless recurring event row", () => {
+  it("shows no folder tag on an unfiled session row", () => {
     mocks.configValues = { sidebar_show_folder: true };
-    render(
-      <TimelineItemComponent
-        item={{
-          type: "event",
-          id: "event-1",
-          data: {
-            title: "Standup",
-            started_at: "2026-10-03T03:00:00.000Z",
-            has_recurrence_rules: true,
-            recurrence_series_id: "series-1",
-            session_folder: "",
-          },
-        }}
-        precision="time"
-        selected={false}
-        timezone="UTC"
-        multiSelected={false}
-        flatItemKeys={["event-event-1"]}
-      />,
-    );
-
-    expect(screen.queryByText("Work")).toBeNull();
-  });
-
-  it("shows no folder tag on an unfiled session row of a recurring series", () => {
-    mocks.configValues = { sidebar_show_folder: true };
-    renderSession("session-unfiled", {
-      folder_id: "",
-      event_json: JSON.stringify({ recurrence_series_id: "series-1" }),
-    });
+    renderSession("session-unfiled", { folder_id: "" });
 
     expect(screen.queryByText("Work")).toBeNull();
   });

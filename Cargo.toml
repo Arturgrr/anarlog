@@ -22,7 +22,6 @@ anlg-aec = { path = "crates/aec", package = "aec" }
 anlg-afconvert = { path = "crates/afconvert", package = "afconvert" }
 anlg-agent-access = { path = "crates/agent-access", package = "agent-access" }
 anlg-agent-core = { path = "crates/agent-core", package = "agent-core" }
-anlg-apple-calendar = { path = "crates/apple-calendar", package = "apple-calendar" }
 anlg-apple-todo = { path = "crates/apple-todo", package = "apple-todo" }
 anlg-askama-utils = { path = "crates/askama-utils", package = "askama-utils" }
 anlg-audacity = { path = "crates/audacity", package = "audacity" }
@@ -39,8 +38,6 @@ anlg-audio-sync = { path = "crates/audio-sync", package = "audio-sync" }
 anlg-audio-utils = { path = "crates/audio-utils", package = "audio-utils" }
 anlg-buffer = { path = "crates/buffer", package = "buffer" }
 anlg-bundle = { path = "crates/bundle", package = "bundle" }
-anlg-calendar = { path = "crates/calendar", package = "calendar" }
-anlg-calendar-interface = { path = "crates/calendar-interface", package = "calendar-interface" }
 anlg-claude = { path = "crates/claude", package = "claude" }
 anlg-cli-process = { path = "crates/cli-process", package = "cli-process" }
 anlg-codex = { path = "crates/codex", package = "codex" }
@@ -139,7 +136,7 @@ tauri-plugin-window-state = "2.4"
 tauri-plugin-agent = { path = "plugins/agent" }
 tauri-plugin-audio-priority = { path = "plugins/audio-priority" }
 tauri-plugin-bedrock = { path = "plugins/bedrock" }
-tauri-plugin-calendar = { path = "plugins/calendar" }
+tauri-plugin-contacts = { path = "plugins/contacts" }
 tauri-plugin-db = { path = "plugins/db" }
 tauri-plugin-deeplink2 = { path = "plugins/deeplink2" }
 tauri-plugin-detect = { path = "plugins/detect" }
@@ -288,7 +285,6 @@ objc2 = "0.6"
 objc2-app-kit = "0.3.2"
 objc2-application-services = "0.3.2"
 objc2-av-foundation = "0.3.2"
-objc2-contacts = "0.3.2"
 objc2-core-foundation = "0.3.2"
 objc2-core-graphics = "0.3.2"
 objc2-core-location = "0.3.2"

@@ -73,7 +73,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for checks and the development workflow.
 | ---------------- | ------------------------------------------------------------------- |
 | `apps/desktop`   | Tauri v2 desktop app: React and TypeScript UI, Rust backend         |
 | `apps/cli`       | Local CLI (`librelog`) and MCP server (`librelog mcp`)              |
-| `plugins/*`      | Tauri plugins such as local STT, database access, export, calendar  |
+| `plugins/*`      | Tauri plugins such as local STT, database access, and export        |
 | `crates/*`       | Rust libraries for audio capture, transcription, storage, and more  |
 | `packages/*`     | Shared TypeScript packages for the editor, database, UI, and SDK    |
 | `crates/db-app`  | SQLite schema and migrations                                        |

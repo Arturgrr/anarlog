@@ -105,18 +105,18 @@ describe("SettingsApp", () => {
     render(<SettingsMeetings />);
 
     const props = mocks.meetingSettingsProps.mock.lastCall?.[0] as {
-      autoStartScheduledMeetings: {
+      autoStopMeetings: {
         value: boolean;
         onChange: (value: boolean) => void;
       };
     };
-    expect(props.autoStartScheduledMeetings.value).toBe(true);
+    expect(props.autoStopMeetings.value).toBe(true);
 
-    act(() => props.autoStartScheduledMeetings.onChange(false));
+    act(() => props.autoStopMeetings.onChange(false));
 
     await waitFor(() => {
       expect(mocks.setSettingValues).toHaveBeenCalledWith(
-        expect.objectContaining({ auto_start_scheduled_meetings: false }),
+        expect.objectContaining({ auto_stop_meetings: false }),
       );
     });
   });

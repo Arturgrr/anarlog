@@ -30,9 +30,6 @@ pub(crate) fn pixbuf_for_icon(icon: Option<&NotificationIcon>) -> Option<Pixbuf>
 fn pixbuf_for_asset(asset: &NotificationIconAsset) -> Option<Pixbuf> {
     match asset {
         NotificationIconAsset::AppIcon => default_app_icon(),
-        NotificationIconAsset::Calendar => icon_theme_pixbuf("x-office-calendar")
-            .or_else(|| icon_theme_pixbuf("office-calendar"))
-            .or_else(|| icon_theme_pixbuf("calendar")),
         NotificationIconAsset::SystemSymbol { name } => {
             icon_theme_pixbuf(system_symbol_icon_name(name))
         }
