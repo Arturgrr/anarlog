@@ -27,7 +27,6 @@ Default permissions for the plugin
 - `allow-set-mic-muted`
 - `allow-get-capture-state`
 - `allow-get-capture-snapshot`
-- `allow-update-capture-credentials`
 - `allow-list-capture-audio-chunks`
 - `allow-get-capture-audio-cleanup-status`
 - `allow-acknowledge-capture-audio-cleanup-status`
@@ -1336,32 +1335,6 @@ Enables the suggest_providers_for_languages_live command without any pre-configu
 <td>
 
 Denies the suggest_providers_for_languages_live command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`transcription:allow-update-capture-credentials`
-
-</td>
-<td>
-
-Enables the update_capture_credentials command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`transcription:deny-update-capture-credentials`
-
-</td>
-<td>
-
-Denies the update_capture_credentials command without any pre-configured scope.
 
 </td>
 </tr>

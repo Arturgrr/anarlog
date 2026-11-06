@@ -477,19 +477,3 @@ pub async fn render_transcript_segments(
 ) -> Result<Vec<RenderedTranscriptSegment>, String> {
     Ok(anlg_transcript::render_transcript_segments(params))
 }
-
-#[tauri::command]
-#[specta::specta]
-pub async fn update_capture_credentials<R: tauri::Runtime>(
-    _app: tauri::AppHandle<R>,
-    session_id: String,
-    api_key: String,
-) -> Result<(), String> {
-    use anlg_transcription_core::listener::actors::{SessionMsg, session_supervisor_name};
-    let cell = ractor::registry::where_is(session_supervisor_name(&session_id))
-        .ok_or("Capture is not active")?;
-    let actor: ractor::ActorRef<SessionMsg> = cell.into();
-    actor
-        .cast(SessionMsg::UpdateCredentials(api_key))
-        .map_err(|_| "Capture credentials could not be updated".to_string())
-}

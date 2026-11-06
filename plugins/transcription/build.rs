@@ -22,7 +22,6 @@ const COMMANDS: &[&str] = &[
     "stop_capture_for_session",
     "get_capture_state",
     "get_capture_snapshot",
-    "update_capture_credentials",
     "list_capture_audio_chunks",
     "get_capture_audio_cleanup_status",
     "acknowledge_capture_audio_cleanup_status",
