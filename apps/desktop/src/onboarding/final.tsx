@@ -4,15 +4,19 @@ import { useRef, useState } from "react";
 import { commands as openerCommands } from "@anlg/plugin-opener2";
 import { commands as sfxCommands } from "@anlg/plugin-sfx";
 import { CircleNotch, GithubLogo } from "@anlg/ui/components/icons";
+import { cn } from "@anlg/utils";
 
 import { saveOnboardingStep } from "./config";
-import { OnboardingButton } from "./shared";
+import { ModelInstallList } from "./model-setup";
+import { useModelInstalls } from "./model-status";
+import { OnboardingButton, OnboardingSection } from "./shared";
 import {
   getOrCreateWelcomeSession,
   setPendingWelcomeSession,
 } from "./welcome-note";
 
 import { createSession } from "~/session/queries";
+import { SttSettingsProvider } from "~/settings/ai/stt/context";
 import { REPOSITORY_URL } from "~/shared/links";
 import { flushAutomaticRelaunch } from "~/shared/relaunch";
 import { commands } from "~/types/tauri.gen";
@@ -34,10 +38,65 @@ export function FinalDescription() {
   );
 }
 
+export function FinalStep({
+  onBack,
+  onChangeModel,
+  onFinish,
+}: {
+  onBack: () => void;
+  onChangeModel: () => void;
+  onFinish: (sessionId: string) => void;
+}) {
+  return (
+    <SttSettingsProvider selectOnDownload>
+      <FinalStepContent
+        onBack={onBack}
+        onChangeModel={onChangeModel}
+        onFinish={onFinish}
+      />
+    </SttSettingsProvider>
+  );
+}
+
+function FinalStepContent({
+  onBack,
+  onChangeModel,
+  onFinish,
+}: {
+  onBack: () => void;
+  onChangeModel: () => void;
+  onFinish: (sessionId: string) => void;
+}) {
+  const installs = useModelInstalls();
+  const installing = installs.length > 0;
+
+  return (
+    <OnboardingSection
+      title={
+        installing ? <Trans>Almost ready</Trans> : <Trans>Ready to go</Trans>
+      }
+      description={<FinalDescription />}
+      status="active"
+      skippable={false}
+      onBack={onBack}
+      onNext={installing ? undefined : () => void finishOnboarding(onFinish)}
+    >
+      <div className="flex flex-col items-start gap-5">
+        {installing ? (
+          <ModelInstallList installs={installs} onChangeModel={onChangeModel} />
+        ) : null}
+        <FinalSection onContinue={onFinish} waitingForInstall={installing} />
+      </div>
+    </OnboardingSection>
+  );
+}
+
 export function FinalSection({
   onContinue,
+  waitingForInstall = false,
 }: {
   onContinue: (sessionId: string) => void;
+  waitingForInstall?: boolean;
 }) {
   const { t } = useLingui();
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -63,8 +122,11 @@ export function FinalSection({
   return (
     <div className="flex flex-col items-start gap-2">
       <OnboardingButton
-        className="px-6 py-2 text-sm disabled:cursor-wait disabled:opacity-70"
-        disabled={status === "loading"}
+        className={cn([
+          "px-6 py-2 text-sm disabled:opacity-70",
+          status === "loading" && "disabled:cursor-wait",
+        ])}
+        disabled={status === "loading" || waitingForInstall}
         onClick={() => void handleContinue()}
       >
         {status === "loading" ? (
@@ -76,6 +138,11 @@ export function FinalSection({
           <Trans>Open Librelog</Trans>
         )}
       </OnboardingButton>
+      {waitingForInstall ? (
+        <p className="text-muted-foreground text-xs">
+          <Trans>Opens when the models finish installing</Trans>
+        </p>
+      ) : null}
       {status === "error" && (
         <p className="text-danger text-sm" role="alert">
           {t`Couldn't open Librelog. Please try again.`}

@@ -16,6 +16,7 @@ import {
   Warning,
 } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
+import { cn } from "@anlg/utils";
 
 import type { SttMode, SttModelEntry } from "./catalog";
 import { useSttSettings } from "./context";
@@ -241,19 +242,11 @@ function LocalModelActions({
             <Trans>Starting download…</Trans>
           )}
         </span>
-        <div
-          role="progressbar"
-          aria-label={t`Downloading ${label}`}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(progress)}
-          className="bg-layer-2 h-1 w-40 overflow-hidden rounded-full"
-        >
-          <div
-            className="bg-foreground h-full transition-[width] duration-300"
-            style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
-          />
-        </div>
+        <DownloadProgressBar
+          label={t`Downloading ${label}`}
+          progress={progress}
+          className="w-40"
+        />
         <Button
           type="button"
           variant="ghost"
@@ -340,6 +333,34 @@ function LocalModelActions({
         onConfirm={() => deleteModel.mutate()}
       />
     </>
+  );
+}
+
+export function DownloadProgressBar({
+  label,
+  progress,
+  className,
+}: {
+  label: string;
+  progress: number;
+  className?: string;
+}) {
+  const value = Math.max(0, Math.min(100, progress));
+
+  return (
+    <div
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(value)}
+      className={cn(["bg-layer-2 h-1 overflow-hidden rounded-full", className])}
+    >
+      <div
+        className="bg-foreground h-full transition-[width] duration-300"
+        style={{ width: `${value}%` }}
+      />
+    </div>
   );
 }
 

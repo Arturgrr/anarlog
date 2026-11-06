@@ -50,8 +50,10 @@ import {
 import { useConfigValue } from "~/shared/config";
 
 export function SttModelPicker({ variant }: { variant: ModelPickerVariant }) {
+  // Onboarding has no working model to keep while a download runs, and saving
+  // the choice right away lets it resume the download after a restart.
   return (
-    <SttSettingsProvider>
+    <SttSettingsProvider selectOnDownload={variant === "embedded"}>
       <SttPickerBody variant={variant} />
     </SttSettingsProvider>
   );

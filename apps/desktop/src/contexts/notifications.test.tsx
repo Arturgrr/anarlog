@@ -70,7 +70,11 @@ function DownloadStatus() {
 describe("NotificationProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    usePendingSttSelection.setState({ selection: null, queuedDownloads: [] });
+    usePendingSttSelection.setState({
+      selection: null,
+      queuedDownloads: [],
+      failedDownloads: {},
+    });
     mocks.setDownloadedSttSelection.mockResolvedValue(undefined);
     mocks.downloadHandler = null;
     mocks.listen.mockImplementation(async (handler) => {
@@ -113,6 +117,11 @@ describe("NotificationProvider", () => {
       { description: "download server rejected the model" },
     );
     expect(usePendingSttSelection.getState().selection).toBeNull();
+    expect(
+      usePendingSttSelection.getState().failedDownloads[
+        "soniqo-parakeet-batch"
+      ],
+    ).toBe("download server rejected the model");
   });
 
   it("selects the pending download only after completion and honors a newer choice", async () => {

@@ -14,10 +14,11 @@ import {
   getNextStep,
   getPrevStep,
   getStepStatus,
+  limitToMissingSelection,
   type OnboardingStep,
   saveOnboardingStep,
 } from "./config";
-import { FinalDescription, FinalSection, finishOnboarding } from "./final";
+import { FinalStep } from "./final";
 import { WelcomeLanguagePicker } from "./language-picker";
 import {
   IntelligenceStep,
@@ -29,8 +30,12 @@ import { PermissionsSection } from "./permissions";
 import { OnboardingSection } from "./shared";
 
 import { NotificationProvider } from "~/contexts/notifications";
+import { useSettingsReady } from "~/settings/queries";
+import { useConfigValues } from "~/shared/config";
 import { StandaloneWindowShell } from "~/shared/window-shell";
+import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
+import { isConfiguredSttModel } from "~/stt/capabilities";
 
 export function TabContentOnboarding({
   tab: _tab,
@@ -95,14 +100,16 @@ function OnboardingScreenContent({
   const queryClient = useQueryClient();
   const { t } = useLingui();
   const [isMuted, setIsMuted] = useState(false);
-  const [currentStep, setCurrentStep] = useState(getInitialStep);
+  const [savedStep, setSavedStep] = useState(getInitialStep);
+  const missingSelectionStep = useMissingSelectionStep();
+  const currentStep = limitToMissingSelection(savedStep, missingSelectionStep);
   const onboardingVideoRef = useRef<HTMLVideoElement>(null);
   const currentPlatform = platform();
 
   const goTo = useCallback((step: OnboardingStep | null) => {
     if (!step) return;
     saveOnboardingStep(step);
-    setCurrentStep(step);
+    setSavedStep(step);
   }, []);
 
   const goNext = useCallback(
@@ -272,18 +279,41 @@ function OnboardingScreenContent({
             <IntelligenceStep onBack={goBack} onContinue={goNext} />
           </OnboardingSection>
 
-          <OnboardingSection
-            title={<Trans>Ready to go</Trans>}
-            description={<FinalDescription />}
-            status={getStepStatus("final", currentStep)}
-            skippable={false}
-            onBack={goBack}
-            onNext={() => void finishOnboarding(handleFinish)}
-          >
-            <FinalSection onContinue={handleFinish} />
-          </OnboardingSection>
+          {currentStep === "final" ? (
+            <FinalStep
+              onBack={goBack}
+              onChangeModel={() => goTo("transcription")}
+              onFinish={handleFinish}
+            />
+          ) : null}
         </div>
       </div>
     </div>
   );
+}
+
+function useMissingSelectionStep(): OnboardingStep | null {
+  const settingsReady = useSettingsReady();
+  const pendingStt = usePendingSttSelection((state) => state.selection);
+  const {
+    current_stt_provider,
+    current_stt_model,
+    current_llm_provider,
+    current_llm_model,
+  } = useConfigValues([
+    "current_stt_provider",
+    "current_stt_model",
+    "current_llm_provider",
+    "current_llm_model",
+  ] as const);
+
+  if (!settingsReady) return null;
+  if (
+    !pendingStt &&
+    !isConfiguredSttModel(current_stt_provider, current_stt_model)
+  ) {
+    return "transcription";
+  }
+  if (!current_llm_provider || !current_llm_model) return "intelligence";
+  return null;
 }
