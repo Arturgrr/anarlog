@@ -39,12 +39,7 @@ The app only talks to the AI provider you select, Hugging Face when you download
 
 ## Install
 
-Librelog is in public beta. Builds are published for macOS 15 Sequoia or later on [GitHub Releases](https://github.com/Arturgrr/librelog/releases/latest):
-
-| Mac                         | Download                          |
-| --------------------------- | --------------------------------- |
-| Apple silicon (M1 or later) | `Librelog_<version>_aarch64.dmg` |
-| Intel                       | `Librelog_<version>_x64.dmg`     |
+Librelog is in public beta. Download `Librelog_<version>_aarch64.dmg` from [GitHub Releases](https://github.com/Arturgrr/librelog/releases/latest). It needs a Mac with Apple silicon (M1 or later) and macOS 15 Sequoia or later; Intel Macs are not supported.
 
 Linux and Windows builds are not published yet; build from source (below).
 
@@ -73,7 +68,7 @@ Librelog checks GitHub Releases for new versions. With **Settings → General �
 ### Known beta limitations
 
 - Builds are not notarized. After an update, macOS may ask again for microphone, screen and system audio recording, accessibility, or keychain access.
-- Soniqo, Apple Speech, and BYO-model on-device transcription need Apple silicon, and Apple Speech also needs macOS 26. On Intel Macs, use a provider with your own key or a local Deepgram-compatible server.
+- Apple Speech transcription needs macOS 26.
 - There is no crash reporting or telemetry, so problems only reach the maintainer if you report them: choose **Help → Report Bug** or **Settings → General → Report a problem**. The issue form opens with your app version, macOS version, and chip filled in; nothing is sent until you submit it.
 
 ### Where your data lives

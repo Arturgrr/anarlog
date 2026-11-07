@@ -80,7 +80,8 @@ test("release notes explain the macOS 15 first launch and include the changelog"
 
   assert.match(notes, /This is a beta/);
   assert.match(notes, /Librelog_0\.1\.0-beta\.1_aarch64\.dmg/);
-  assert.match(notes, /Librelog_0\.1\.0-beta\.1_x64\.dmg/);
+  assert.match(notes, /Apple silicon/);
+  assert.doesNotMatch(notes, /_x64\.dmg/);
   assert.match(notes, /Privacy & Security.*Open Anyway/);
   assert.doesNotMatch(notes, /right-click/i);
   assert.match(
@@ -94,7 +95,7 @@ test("release notes explain the macOS 15 first launch and include the changelog"
   );
 });
 
-test("the updater manifest covers both Mac architectures with public download URLs", () => {
+test("the updater manifest points Apple silicon Macs at the public download URL", () => {
   const manifest = updaterManifest({
     version: "0.1.0-beta.1",
     notes: "notes",
@@ -108,21 +109,12 @@ test("the updater manifest covers both Mac architectures with public download UR
         name: "Librelog_0.1.0-beta.1_aarch64.app.tar.gz.sig",
         content: "arm-signature\n",
       },
-      { name: "Librelog_0.1.0-beta.1_x64.app.tar.gz" },
-      {
-        name: "Librelog_0.1.0-beta.1_x64.app.tar.gz.sig",
-        content: "intel-signature",
-      },
     ],
   });
 
   const arm = {
     signature: "arm-signature",
     url: "https://github.com/Arturgrr/librelog/releases/download/desktop_v0.1.0-beta.1/Librelog_0.1.0-beta.1_aarch64.app.tar.gz",
-  };
-  const intel = {
-    signature: "intel-signature",
-    url: "https://github.com/Arturgrr/librelog/releases/download/desktop_v0.1.0-beta.1/Librelog_0.1.0-beta.1_x64.app.tar.gz",
   };
   assert.deepEqual(manifest, {
     version: "0.1.0-beta.1",
@@ -131,13 +123,11 @@ test("the updater manifest covers both Mac architectures with public download UR
     platforms: {
       "darwin-aarch64": arm,
       "darwin-aarch64-app": arm,
-      "darwin-x86_64": intel,
-      "darwin-x86_64-app": intel,
     },
   });
 });
 
-test("the updater manifest refuses to publish without every signed architecture", () => {
+test("the updater manifest refuses to publish without a signed archive", () => {
   const base = {
     version: "0.1.0-beta.1",
     notes: "",
@@ -149,22 +139,15 @@ test("the updater manifest refuses to publish without every signed architecture"
     () =>
       updaterManifest({
         ...base,
-        assets: [
-          { name: "L_aarch64.app.tar.gz" },
-          { name: "L_aarch64.app.tar.gz.sig", content: "s" },
-        ],
+        assets: [{ name: "L_aarch64.dmg" }],
       }),
-    /x64 updater archive/,
+    /aarch64 updater archive/,
   );
   assert.throws(
     () =>
       updaterManifest({
         ...base,
-        assets: [
-          { name: "L_aarch64.app.tar.gz" },
-          { name: "L_x64.app.tar.gz" },
-          { name: "L_x64.app.tar.gz.sig", content: "s" },
-        ],
+        assets: [{ name: "L_aarch64.app.tar.gz" }],
       }),
     /signature for L_aarch64/,
   );

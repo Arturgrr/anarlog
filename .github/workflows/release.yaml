@@ -96,12 +96,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Librelog ships for Apple silicon only: on-device transcription
+          # (MLX, Metal) needs it.
           - target: aarch64-apple-darwin
-            extra_config: ""
-          # MLX-based on-device transcription needs Apple silicon, so Intel
-          # builds ship without its Metal library.
-          - target: x86_64-apple-darwin
-            extra_config: "--config src-tauri/tauri.conf.macos-intel.json"
     defaults:
       run:
         shell: bash
@@ -151,7 +148,7 @@ jobs:
         with:
           projectPath: apps/desktop
           tauriScript: pnpm tauri
-          args: --target ${{ matrix.target }} --config src-tauri/tauri.conf.stable.json ${{ matrix.extra_config }}
+          args: --target ${{ matrix.target }} --config src-tauri/tauri.conf.stable.json
           releaseId: ${{ needs.draft.outputs.release_id }}
           # The publish job writes latest.json once both builds finish;
           # per-job writes race and can drop an architecture.
@@ -160,7 +157,8 @@ jobs:
       - env:
           TARGET: ${{ matrix.target }}
         run: |
-          app="target/$TARGET/release/bundle/macos/Librelog.app"
+          # apps/desktop/src-tauri/.cargo/config.toml puts the build there.
+          app="apps/desktop/src-tauri/target/$TARGET/release/bundle/macos/Librelog.app"
           codesign --verify --deep --strict --verbose=2 "$app"
           codesign --display --requirements - "$app"
 
