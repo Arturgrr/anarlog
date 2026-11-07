@@ -70,7 +70,10 @@ jobs:
               -f name="Librelog $VERSION" -F draft=true -F prerelease=false \
               -F "body=@$notes" --jq .id)"
           elif [[ "$draft" == "true" ]]; then
+            # Every update repeats the tag: GitHub replaces a draft's tag with
+            # untagged-* when an edit leaves it out.
             gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+              -f tag_name="$TAG" -f target_commitish="$GITHUB_SHA" \
               -F "body=@$notes" > /dev/null
           elif [[ "$EVENT_NAME" == "push" ]]; then
             # package.json changed without a version bump.
@@ -214,5 +217,6 @@ jobs:
 
           # Publishing makes latest.json reachable at releases/latest, which
           # is where installed apps look for updates.
-          gh api -X PATCH "$release" -F draft=false -F prerelease=false \
+          gh api -X PATCH "$release" -f tag_name="desktop_v$VERSION" \
+            -f target_commitish="$GITHUB_SHA" -F draft=false -F prerelease=false \
             -f make_latest=true > /dev/null
