@@ -80,12 +80,9 @@ export function releaseNotes({ version, repository, changelog }) {
     ...beta,
     "## Download",
     "",
-    "| Mac | File |",
-    "| --- | --- |",
-    `| Apple silicon (M1 or later) | \`${dmg("aarch64")}\` |`,
-    `| Intel | \`${dmg("x64")}\` |`,
+    `Download \`${dmg("aarch64")}\` below.`,
     "",
-    "Requires macOS 15 Sequoia or later. To check your chip, open the Apple menu and choose **About This Mac**.",
+    "Requires a Mac with Apple silicon (M1 or later) and macOS 15 Sequoia or later. Intel Macs are not supported.",
     "",
     "## First launch",
     "",
@@ -122,9 +119,9 @@ export function releaseNotes({ version, repository, changelog }) {
   ].join("\n");
 }
 
-const UPDATER_ARCHES = { aarch64: "aarch64", x64: "x86_64" };
+const UPDATER_ARCHES = { aarch64: "aarch64" };
 
-// Builds latest.json from the updater archives uploaded by every build job.
+// Builds latest.json from the updater archive uploaded by the build job.
 // URLs use the public download path so update checks do not count against the
 // unauthenticated REST API limit.
 export function updaterManifest({

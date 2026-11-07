@@ -1,9 +1,0 @@
-{
-  "bundle": {
-    "macOS": {
-      "files": {
-        "Resources/mlx-swift_Cmlx.bundle/default.metallib": null
-      }
-    }
-  }
-}
