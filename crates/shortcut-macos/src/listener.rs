@@ -1,9 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
+};
 
 use crate::{
-    hotkey::HotKey,
-    processor::{HotKeyProcessor, Options, Output},
-    tap::{EventTap, TapError, TapEvent},
+    processor::Output,
+    tap::{EventTap, TapError},
+    trigger::{Trigger, TriggerSet},
 };
 
 pub struct Listener {
@@ -11,30 +14,26 @@ pub struct Listener {
 }
 
 impl Listener {
-    pub fn start<F>(hotkey: HotKey, options: Options, callback: F) -> Result<Self, TapError>
+    /// Watches every trigger with one event tap and reports outputs by the
+    /// trigger's index. While `active` is set, one press of a double-tap key
+    /// is enough. Only modifier-only hotkeys that fire are kept from the
+    /// focused app.
+    pub fn start<F>(
+        triggers: &[Trigger],
+        active: Arc<AtomicBool>,
+        callback: F,
+    ) -> Result<Self, TapError>
     where
-        F: Fn(Output) + Send + Sync + 'static,
+        F: Fn(usize, Output) + Send + Sync + 'static,
     {
-        let processor = Arc::new(Mutex::new({
-            let mut p = HotKeyProcessor::new(hotkey);
-            p.set_options(options);
-            p
-        }));
-
+        let set = Mutex::new(TriggerSet::new(triggers));
         let tap = EventTap::start_filtered(move |event| {
-            let (out, consume) = {
-                let mut p = processor.lock().unwrap_or_else(|e| e.into_inner());
-                let out = match event {
-                    TapEvent::Key(k) => p.process_key(k),
-                    TapEvent::MouseClick => p.process_mouse_click(),
-                };
-                let consume = hotkey.is_modifier_only()
-                    && matches!(event, TapEvent::Key(k) if k.key.is_none())
-                    && out.is_some();
-                (out, consume)
-            };
-            if let Some(out) = out {
-                callback(out);
+            let (outputs, consume) = set
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .process(event, active.load(Ordering::SeqCst));
+            for (index, output) in outputs {
+                callback(index, output);
             }
             consume
         })?;

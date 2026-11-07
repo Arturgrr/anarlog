@@ -14,9 +14,7 @@ tauri-plugin = { workspace = true, features = ["build"] }
 specta-typescript = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 
-anlg-docs = { workspace = true }
 open = { workspace = true }
-serde_yaml = { workspace = true }
 
 [dependencies]
 tauri = { workspace = true, features = ["test"] }
@@ -34,4 +32,3 @@ specta = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true }
-uuid = { workspace = true, features = ["v4"] }

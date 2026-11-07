@@ -1,24 +1,14 @@
-import {
-  type NodeViewComponentProps,
-  useEditorEventCallback,
-} from "@handlewithcare/react-prosemirror";
+import { type NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
 import { Figma, Github, Google, Notion } from "@lobehub/icons";
-import { useQuery } from "@tanstack/react-query";
 import { forwardRef } from "react";
 
 import {
   getAppLinkDisplayParts,
   getAppLinkLabel,
-  type GitHubAttrs,
   type AppLinkAttrs,
 } from "@anlg/editor/app-link";
-import { getSafeNodePos } from "@anlg/editor/node-views";
 import { commands as openerCommands } from "@anlg/plugin-opener2";
-import { commands as todoCommands } from "@anlg/plugin-todo";
-import { Check } from "@anlg/ui/components/icons";
 import { cn } from "@anlg/utils";
-
-import { collectSiblingResources, openTaskTab } from "~/task/open-task-tab";
 
 function SlackIcon({ className }: { className?: string }) {
   return (
@@ -216,85 +206,14 @@ function BrandIcon({ attrs }: { attrs: AppLinkAttrs }) {
   }
 }
 
-function isGitHubCheckboxKind(attrs: AppLinkAttrs): attrs is GitHubAttrs {
-  return (
-    attrs.provider === "github" &&
-    (attrs.kind === "issue" || attrs.kind === "pull_request")
-  );
-}
-
-function useGitHubIssueState(attrs: AppLinkAttrs) {
-  const gh = isGitHubCheckboxKind(attrs) ? attrs : null;
-  const enabled = !!gh?.number;
-
-  const { data } = useQuery({
-    queryKey: ["github-issue-state", gh?.owner, gh?.repo, gh?.number],
-    queryFn: async () => {
-      const result = await todoCommands.githubIssueState(
-        gh!.owner,
-        gh!.repo,
-        gh!.number!,
-      );
-      if (result.status === "error") {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-    enabled,
-    staleTime: 60_000,
-  });
-
-  return data ?? null;
-}
-
-function Checkbox({ checked }: { checked: boolean }) {
-  return (
-    <span
-      className={cn([
-        "flex size-5 shrink-0 items-center justify-center rounded-md border-2",
-        checked
-          ? "border-muted-foreground bg-muted-foreground"
-          : "border-border bg-card",
-      ])}
-    >
-      {checked && (
-        <Check className="text-primary-foreground size-3.5" weight="bold" />
-      )}
-    </span>
-  );
-}
-
 export const AppLinkView = forwardRef<HTMLSpanElement, NodeViewComponentProps>(
   function AppLinkView({ nodeProps, ...htmlAttrs }, ref) {
     const attrs = nodeProps.node.attrs as AppLinkAttrs;
     const { header, subline } = getAppLinkDisplayParts(attrs);
     const href = attrs.url;
-    const ghState = useGitHubIssueState(attrs);
-    const showCheckbox = isGitHubCheckboxKind(attrs);
-    const checked = ghState === "Closed" || ghState === "Merged";
-
-    const handleClick = useEditorEventCallback(async (view) => {
-      if (!href) {
-        return;
-      }
-
-      if (
-        attrs.provider === "github" &&
-        (attrs.kind === "issue" || attrs.kind === "pull_request") &&
-        attrs.owner &&
-        attrs.repo &&
-        attrs.number
-      ) {
-        const pos = getSafeNodePos(nodeProps.getPos);
-        if (pos !== null) {
-          const resources = collectSiblingResources(view.state.doc, pos);
-          openTaskTab(resources);
-          return;
-        }
-      }
-
-      await openerCommands.openUrl(href, null);
-    });
+    const openLink = async () => {
+      if (href) await openerCommands.openUrl(href, null);
+    };
 
     return (
       <span ref={ref} {...htmlAttrs}>
@@ -311,18 +230,14 @@ export const AppLinkView = forwardRef<HTMLSpanElement, NodeViewComponentProps>(
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            void handleClick();
+            void openLink();
           }}
           className={cn([
             "border-border/60 bg-muted/35 inline-flex h-6 max-w-full items-center gap-1.5 rounded-md border px-1.5 text-left align-baseline",
             "hover:bg-accent transition-colors",
           ])}
         >
-          {showCheckbox ? (
-            <Checkbox checked={checked} />
-          ) : (
-            <BrandIcon attrs={attrs} />
-          )}
+          <BrandIcon attrs={attrs} />
           <span className="flex min-w-0 items-baseline gap-1.5">
             <span className="text-foreground truncate text-sm leading-none font-medium">
               {header}

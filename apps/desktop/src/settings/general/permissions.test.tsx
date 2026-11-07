@@ -55,7 +55,6 @@ function renderPermissions(accessibilityStatus: PermissionStatus) {
   mocks.permissions.set("microphone", permission("authorized"));
   mocks.permissions.set("systemAudio", permission("authorized"));
   mocks.permissions.set("accessibility", accessibility);
-  mocks.permissions.set("calendar", permission("authorized"));
 
   render(<Permissions />);
 
@@ -105,7 +104,7 @@ describe("Permissions", () => {
     const accessibility = renderPermissions("neverRequested");
 
     expect(
-      screen.getByText(/guides you to add Anarlog to the Accessibility list/),
+      screen.getByText(/guides you to add Librelog to the Accessibility list/),
     ).toBeTruthy();
 
     fireEvent.click(
@@ -139,11 +138,9 @@ describe("Permissions", () => {
     render(<Permissions />);
 
     expect(screen.queryByText("Accessibility")).toBeNull();
-    expect(screen.queryByText("Calendar")).toBeNull();
     expect(screen.getByText("microphone device unavailable")).toBeTruthy();
     expect(screen.getByText("PipeWire source unavailable")).toBeTruthy();
     expect(mocks.usePermission).not.toHaveBeenCalledWith("accessibility");
-    expect(mocks.usePermission).not.toHaveBeenCalledWith("calendar");
 
     fireEvent.click(
       screen.getByRole("button", { name: "Try again: Microphone" }),

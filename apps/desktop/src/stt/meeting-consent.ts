@@ -1,4 +1,4 @@
-export const MEETING_DISCLOSURE_MESSAGE_VERSION = "anarlog-disclosure-v1";
+export const MEETING_DISCLOSURE_MESSAGE_VERSION = "librelog-disclosure-v1";
 
 type DisclosureDelivery = "sent" | "not_sent" | "cancelled";
 

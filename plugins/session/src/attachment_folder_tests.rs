@@ -3,9 +3,8 @@ use sqlx::{Row, SqlitePool};
 
 use crate::attachments::{
     CatalogNoteAttachmentRequest, CatalogSessionAudioRequest, SessionAudioRequest,
-    SetAttachmentCloudSyncEnabledRequest, catalog_note_attachment, catalog_session_audio,
-    mark_session_audio_absent, mark_session_audio_transcription_complete,
-    set_attachment_cloud_sync_enabled, tombstone_session_audio,
+    catalog_note_attachment, catalog_session_audio, mark_session_audio_absent,
+    mark_session_audio_transcription_complete, tombstone_session_audio,
 };
 use crate::folder_catalog::{
     DeleteFolderCatalogRequest, EnsureFolderCatalogRequest, RenameFolderCatalogRequest,
@@ -19,6 +18,7 @@ use crate::folder_materials::{
 };
 
 const SHA_A: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
 const SHA_B: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
 async fn test_db() -> Db {
@@ -68,33 +68,6 @@ async fn insert_note_attachment_row(
     .bind(relative_path)
     .bind(sha256)
     .bind(cloud_object_key)
-    .execute(pool)
-    .await
-    .unwrap();
-}
-
-async fn insert_transfer_job(
-    pool: &SqlitePool,
-    id: &str,
-    attachment_id: &str,
-    direction: &str,
-    phase: &str,
-) {
-    sqlx::query(
-        "INSERT INTO attachment_transfer_jobs (
-          id, attachment_id, session_id, workspace_id, direction,
-          expected_sha256, expected_size_bytes, object_key, phase
-        ) VALUES (?, ?, 'session-1', 'workspace-1', ?, ?, 10, 'object-key-1', ?)",
-    )
-    .bind(id)
-    .bind(attachment_id)
-    .bind(direction)
-    .bind(if direction == "download" {
-        SHA_B
-    } else {
-        SHA_A
-    })
-    .bind(phase)
     .execute(pool)
     .await
     .unwrap();
@@ -337,159 +310,6 @@ async fn mark_session_audio_transcription_complete_sets_status() {
     .await
     .unwrap();
     assert_eq!(metadata, "{\"transcript_status\":\"complete\"}");
-}
-
-async fn seed_synced_attachment(pool: &SqlitePool) {
-    sqlx::query(
-        "INSERT INTO session_attachments (
-          id, workspace_id, session_id, filename, relative_path, sha256,
-          size_bytes, cloud_object_key
-        ) VALUES ('att-1', 'workspace-1', 'session-1', 'doc.pdf', 'attachments/att-1', ?, 10, 'object-key-1')",
-    )
-    .bind(SHA_A)
-    .execute(pool)
-    .await
-    .unwrap();
-}
-
-#[tokio::test]
-async fn set_attachment_cloud_sync_enabled_enqueues_download_and_completes_delete() {
-    let db = test_db().await;
-    insert_session(db.pool(), "session-1").await;
-    seed_synced_attachment(db.pool()).await;
-    insert_transfer_job(db.pool(), "job-del", "att-1", "delete", "queued").await;
-
-    set_attachment_cloud_sync_enabled(
-        db.pool(),
-        SetAttachmentCloudSyncEnabledRequest {
-            session_id: "session-1".to_string(),
-            attachment_id: "att-1".to_string(),
-            enabled: true,
-        },
-    )
-    .await
-    .unwrap();
-
-    let flag: i64 =
-        sqlx::query_scalar("SELECT cloud_sync_enabled FROM session_attachments WHERE id = 'att-1'")
-            .fetch_one(db.pool())
-            .await
-            .unwrap();
-    assert_eq!(flag, 1);
-
-    let jobs = job_rows(db.pool()).await;
-    let old = jobs
-        .iter()
-        .find(|row| row.get::<String, _>("id") == "job-del")
-        .unwrap();
-    assert_eq!(old.get::<String, _>("phase"), "completed");
-    let new_jobs: Vec<String> = jobs
-        .iter()
-        .filter(|row| row.get::<String, _>("id") != "job-del")
-        .map(|row| row.get::<String, _>("direction"))
-        .collect();
-    assert_eq!(new_jobs, vec!["download".to_string()]);
-}
-
-#[tokio::test]
-async fn set_attachment_cloud_sync_disabled_enqueues_download_delete_and_completes_jobs() {
-    let db = test_db().await;
-    insert_session(db.pool(), "session-1").await;
-    seed_synced_attachment(db.pool()).await;
-    sqlx::query("UPDATE session_attachments SET cloud_sync_enabled = 1 WHERE id = 'att-1'")
-        .execute(db.pool())
-        .await
-        .unwrap();
-    sqlx::query(
-        "INSERT INTO attachment_local_state (
-          attachment_id, session_id, relative_path, availability
-        ) VALUES ('att-1', 'session-1', 'attachments/att-1', 'present')",
-    )
-    .execute(db.pool())
-    .await
-    .unwrap();
-    insert_transfer_job(db.pool(), "job-up", "att-1", "upload", "queued").await;
-    insert_transfer_job(db.pool(), "job-down", "att-1", "download", "retry_wait").await;
-
-    set_attachment_cloud_sync_enabled(
-        db.pool(),
-        SetAttachmentCloudSyncEnabledRequest {
-            session_id: "session-1".to_string(),
-            attachment_id: "att-1".to_string(),
-            enabled: false,
-        },
-    )
-    .await
-    .unwrap();
-
-    let flag: i64 =
-        sqlx::query_scalar("SELECT cloud_sync_enabled FROM session_attachments WHERE id = 'att-1'")
-            .fetch_one(db.pool())
-            .await
-            .unwrap();
-    assert_eq!(flag, 0);
-
-    let jobs = job_rows(db.pool()).await;
-    let phases: Vec<(String, String, String)> = jobs
-        .iter()
-        .map(|row| {
-            (
-                row.get::<String, _>("id"),
-                row.get::<String, _>("direction"),
-                row.get::<String, _>("phase"),
-            )
-        })
-        .collect();
-    assert!(
-        phases
-            .iter()
-            .any(|(id, _, phase)| id == "job-up" && phase == "completed")
-    );
-    assert!(
-        phases
-            .iter()
-            .any(|(id, _, phase)| id == "job-down" && phase == "completed")
-    );
-    let fresh: Vec<String> = jobs
-        .iter()
-        .filter(|row| !["job-up", "job-down"].contains(&row.get::<String, _>("id").as_str()))
-        .map(|row| row.get::<String, _>("direction"))
-        .collect();
-    assert!(
-        fresh.contains(&"delete".to_string()),
-        "local present attachment enqueues delete job"
-    );
-}
-
-#[tokio::test]
-async fn set_attachment_cloud_sync_missing_attachment_commits_then_errors() {
-    let db = test_db().await;
-    insert_session(db.pool(), "session-1").await;
-    seed_synced_attachment(db.pool()).await;
-    sqlx::query("UPDATE session_attachments SET deleted_at = 'gone' WHERE id = 'att-1'")
-        .execute(db.pool())
-        .await
-        .unwrap();
-    insert_transfer_job(db.pool(), "job-del", "att-1", "delete", "queued").await;
-
-    let error = set_attachment_cloud_sync_enabled(
-        db.pool(),
-        SetAttachmentCloudSyncEnabledRequest {
-            session_id: "session-1".to_string(),
-            attachment_id: "att-1".to_string(),
-            enabled: true,
-        },
-    )
-    .await
-    .unwrap_err();
-    assert_eq!(error, "attachment is unavailable");
-
-    let phase: String =
-        sqlx::query_scalar("SELECT phase FROM attachment_transfer_jobs WHERE id = 'job-del'")
-            .fetch_one(db.pool())
-            .await
-            .unwrap();
-    assert_eq!(phase, "completed", "committed before the error is raised");
 }
 
 #[tokio::test]

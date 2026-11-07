@@ -167,15 +167,6 @@ export function useResumeListeningLifecycle(sessionId: string) {
           }
         }
 
-        try {
-          await state?.lifecycle.releaseCloudsyncLease();
-        } catch (error) {
-          console.error(
-            "[listener] failed to release exhausted capture recovery",
-            error,
-          );
-        }
-
         if (ownsRecoveryFinalizationRef.current) {
           finishCaptureRecoveryFinalization(sessionId);
           ownsRecoveryFinalizationRef.current = false;
@@ -187,7 +178,6 @@ export function useResumeListeningLifecycle(sessionId: string) {
       try {
         state = await lifecycleState;
         stoppedCapture = await readStoppedCapture();
-        await state.lifecycle.acquireCloudsyncLease();
       } catch (error) {
         console.error(
           "[listener] failed to prepare capture recovery state",
@@ -207,25 +197,15 @@ export function useResumeListeningLifecycle(sessionId: string) {
       try {
         result = await attachLiveSession(sessionId, {
           handlePersist: (delta) => {
-            void state.lifecycle
-              .acquireCloudsyncLease()
-              .then(() => state.lifecycle.handlePersist(delta))
-              .catch((error) => {
-                console.error(
-                  "[listener] failed to recover transcript persistence",
-                  error,
-                );
-              });
+            state.lifecycle.handlePersist(delta);
           },
           onStopped: (stoppedSessionId, details) => {
-            const processing = state.lifecycle
-              .acquireCloudsyncLease()
-              .then(() =>
-                state.lifecycle.onStopped(stoppedSessionId, {
-                  ...details,
-                  needsBatchRepair: true,
-                }),
-              );
+            const processing = Promise.resolve(
+              state.lifecycle.onStopped(stoppedSessionId, {
+                ...details,
+                needsBatchRepair: true,
+              }),
+            );
             stoppedProcessingRef.current = processing;
             return processing;
           },
@@ -302,7 +282,6 @@ export function useResumeListeningLifecycle(sessionId: string) {
           finishCaptureRecoveryFinalization(sessionId);
           ownsRecoveryFinalizationRef.current = false;
         }
-        await state.lifecycle.releaseCloudsyncLease();
         await acknowledgeStoppedOutcome();
         return "inactive" as const;
       }
@@ -313,11 +292,6 @@ export function useResumeListeningLifecycle(sessionId: string) {
         } catch (error) {
           console.error("[listener] failed to save capture audio state", error);
           return failRecovery({ clearMarker: false });
-        }
-        try {
-          await state.lifecycle.releaseCloudsyncLease();
-        } catch (error) {
-          console.error("[listener] failed to release capture recovery", error);
         }
         if (recoveryAttemptRef.current === attempt) {
           recoveryAttemptRef.current = null;

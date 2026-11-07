@@ -14,21 +14,14 @@ const mocks = vi.hoisted(() => ({
     type: "templates";
     state: {
       showHomepage: boolean;
-      isWebMode: boolean;
       selectedMineId: string | null;
-      selectedWebIndex: number | null;
     };
   }>,
   openNew: vi.fn(),
-  isPro: true,
-  isUpgradingToPro: false,
   select: vi.fn(),
   transitionChatMode: vi.fn(),
-  upgradeToPro: vi.fn(),
   updateSettingsTabState: vi.fn(),
   updateTemplatesTabState: vi.fn(),
-  workspaces: [] as Array<{ workspaceId: string }> | undefined,
-  workspacesLoading: false,
 }));
 
 const lingui = vi.hoisted(() => {
@@ -78,22 +71,6 @@ vi.mock("./custom-sidebar-header", () => ({
   CustomSidebarHeader: () => <div />,
 }));
 
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({
-    isPro: mocks.isPro,
-    isUpgradingToPro: mocks.isUpgradingToPro,
-    upgradeToPro: mocks.upgradeToPro,
-  }),
-}));
-
-vi.mock("~/settings/team/mirror", () => ({
-  useMyWorkspacesWithMirror: () => ({
-    data: mocks.workspaces,
-    isLoading: mocks.workspacesLoading,
-    isPending: mocks.workspacesLoading,
-  }),
-}));
-
 vi.mock("~/store/zustand/tabs", () => {
   const getState = () => ({
     currentTab: mocks.currentTab,
@@ -122,33 +99,21 @@ describe("SettingsNav", () => {
   beforeEach(() => {
     mocks.currentTab = { type: "settings", state: { tab: "app" } };
     mocks.tabs = [];
-    mocks.isPro = true;
-    mocks.isUpgradingToPro = false;
     mocks.openNew.mockClear();
     mocks.select.mockClear();
     mocks.transitionChatMode.mockClear();
-    mocks.upgradeToPro.mockClear();
     mocks.updateSettingsTabState.mockClear();
     mocks.updateTemplatesTabState.mockClear();
-    mocks.workspaces = [];
-    mocks.workspacesLoading = false;
   });
 
   const openedSettingsTab = () =>
     mocks.updateSettingsTabState.mock.lastCall?.[1] as
       | { tab: string }
       | undefined;
-  const hasProLock = (name: string | RegExp) =>
-    Boolean(
-      screen
-        .getByRole("button", { name })
-        .querySelector("[aria-label='Requires Anarlog Pro']"),
-    );
 
   it.each([
     ["Permissions", "permissions"],
-    ["Account", "account"],
-    ["Billing", "billing"],
+    ["Dictation", "dictation"],
   ])("opens %s inside settings", (label, tab) => {
     render(<SettingsNav />);
 
@@ -160,19 +125,18 @@ describe("SettingsNav", () => {
     );
   });
 
-  it.each([
-    ["Calendar", "calendar"],
-    ["Automations", "automations"],
-  ])("opens the %s workspace in a new tab", (label, type) => {
-    render(<SettingsNav />);
+  it.each([["Automations", "automations"]])(
+    "opens the %s workspace in a new tab",
+    (label, type) => {
+      render(<SettingsNav />);
 
-    fireEvent.click(screen.getByRole("button", { name: label }));
+      fireEvent.click(screen.getByRole("button", { name: label }));
 
-    expect(mocks.openNew).toHaveBeenCalledWith({ type });
-  });
+      expect(mocks.openNew).toHaveBeenCalledWith({ type });
+    },
+  );
 
-  it("offers Insights instead of Stats to free users, including via search", () => {
-    mocks.isPro = false;
+  it("offers Insights instead of Stats, including via search", () => {
     render(<SettingsNav />);
     expect(screen.queryByRole("button", { name: "Stats" })).toBeNull();
 
@@ -183,45 +147,6 @@ describe("SettingsNav", () => {
 
     expect(openedSettingsTab()).toEqual({ tab: "insights" });
     expect(screen.queryByRole("button", { name: "Stats" })).toBeNull();
-  });
-
-  it("keeps locked Pro features visible and navigable without forcing an upgrade", () => {
-    mocks.isPro = false;
-    render(<SettingsNav />);
-
-    expect(hasProLock(/Sync/)).toBe(true);
-
-    for (const [label, tab] of [
-      ["Sync", "sync"],
-      ["Dictionary", "dictionary"],
-      ["Teams", "team"],
-    ]) {
-      fireEvent.click(screen.getByRole("button", { name: new RegExp(label) }));
-      expect(openedSettingsTab()).toEqual({ tab });
-    }
-    fireEvent.click(screen.getByRole("button", { name: /Automations/ }));
-
-    expect(mocks.openNew).toHaveBeenCalledWith({ type: "automations" });
-    expect(mocks.upgradeToPro).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    ["without a workspace", [], false, true],
-    [
-      "for members of an existing workspace",
-      [{ workspaceId: "ws-1" }],
-      false,
-      false,
-    ],
-    ["while workspaces are loading", undefined, true, false],
-  ])("locks Teams for free users only %s", (_, workspaces, loading, locked) => {
-    mocks.isPro = false;
-    mocks.workspaces = workspaces;
-    mocks.workspacesLoading = loading;
-
-    render(<SettingsNav />);
-
-    expect(hasProLock(/Teams/)).toBe(locked);
   });
 
   it("filters nav items by item or group label", () => {

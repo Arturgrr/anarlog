@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn live_url_carries_model_channels_custom_query_and_proxy_provider() {
+    fn live_url_carries_model_channels_and_custom_query() {
         let adapter = DeepgramAdapter::default();
         let params = owhisper_interface::ListenParams {
             model: Some("nova-3".to_string()),
@@ -205,8 +205,5 @@ mod tests {
         };
         let url = adapter.build_ws_url(API_BASE, &params, 1);
         assert!(!url.as_str().contains("redemption_time_ms="));
-
-        let url = adapter.build_ws_url("https://api.anarlog.so/stt?provider=deepgram", &params, 1);
-        assert!(url.as_str().contains("provider=deepgram"));
     }
 }

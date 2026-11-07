@@ -118,7 +118,7 @@ describe("ChatContent", () => {
     const dataTransfer = new FakeDataTransfer();
 
     dataTransfer.setData(
-      "application/x-anarlog-session-context",
+      "application/x-librelog-session-context",
       JSON.stringify({ sessionId: "session-1" }),
     );
 

@@ -33,7 +33,7 @@ export function SettingsTodo() {
             value={provider.id}
             className="group/provider border-border border-b last:border-none"
           >
-            <div className="group hover:bg-accent grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 rounded-full">
+            <div className="group hover:bg-layer-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 rounded-md">
               <AccordionHeader className="min-w-0">
                 <AccordionTriggerPrimitive className="flex w-full min-w-0 items-center gap-2 py-3 text-left text-sm font-medium transition-all hover:no-underline">
                   {provider.icon}

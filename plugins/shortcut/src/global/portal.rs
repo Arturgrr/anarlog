@@ -2,11 +2,10 @@ use ashpd::desktop::global_shortcuts::{GlobalShortcuts, NewShortcut};
 use futures_util::StreamExt;
 use tauri::Manager;
 use tauri_plugin_global_shortcut::Shortcut;
-use tauri_specta::Event;
 
 use super::trigger::portal_trigger;
 
-use crate::ShortcutEvent;
+use crate::{ShortcutEvent, press};
 
 pub struct Registration {
     stop: tokio::sync::oneshot::Sender<()>,
@@ -20,7 +19,12 @@ impl Registration {
     }
 }
 
-pub async fn register(app: tauri::AppHandle, key: Shortcut) -> Result<Registration, String> {
+/// Binds every shortcut in one portal session; each is paired with its
+/// position in the configured list.
+pub async fn register(
+    app: tauri::AppHandle,
+    keys: Vec<(usize, Shortcut)>,
+) -> Result<Registration, String> {
     let portal = GlobalShortcuts::new().await.map_err(|e| {
         format!("This Wayland desktop does not provide the Global Shortcuts portal: {e}")
     })?;
@@ -37,19 +41,24 @@ pub async fn register(app: tauri::AppHandle, key: Shortcut) -> Result<Registrati
             .receive_deactivated()
             .await
             .map_err(|e| e.to_string())?;
-        let trigger = portal_trigger(key)?;
+        let mut shortcuts = Vec::new();
+        for (position, (source, key)) in keys.iter().enumerate() {
+            let description = if position == 0 {
+                "Dictate with Librelog".to_string()
+            } else {
+                format!("Dictate with Librelog ({})", position + 1)
+            };
+            shortcuts.push(
+                NewShortcut::new(format!("dictate-{source}"), description)
+                    .preferred_trigger(portal_trigger(*key)?.as_str()),
+            );
+        }
+        shortcuts.push(
+            NewShortcut::new("cancel-dictation", "Cancel Librelog dictation")
+                .preferred_trigger("CTRL+ALT+Escape"),
+        );
         portal
-            .bind_shortcuts(
-                &session,
-                &[
-                    NewShortcut::new("dictate", "Dictate with Anarlog")
-                        .preferred_trigger(trigger.as_str()),
-                    NewShortcut::new("cancel-dictation", "Cancel Anarlog dictation")
-                        .preferred_trigger("CTRL+ALT+Escape"),
-                ],
-                None,
-                Default::default(),
-            )
+            .bind_shortcuts(&session, &shortcuts, None, Default::default())
             .await
             .and_then(|request| request.response())
             .map_err(|e| e.to_string())?;
@@ -74,10 +83,10 @@ pub async fn register(app: tauri::AppHandle, key: Shortcut) -> Result<Registrati
     let task = tauri::async_runtime::spawn(async move {
         let Ok(mut closed) = session.receive_closed().await else {
             let _ = session.close().await;
-            let _ = ShortcutEvent::Cancelled.emit(&app);
+            press::cancel(&app);
             return;
         };
-        let mut down = false;
+        let source_of = |id: &str| id.strip_prefix("dictate-")?.parse::<usize>().ok();
         loop {
             tokio::select! {
                 _ = &mut stopped => break,
@@ -85,25 +94,25 @@ pub async fn register(app: tauri::AppHandle, key: Shortcut) -> Result<Registrati
                 event = pressed.next() => {
                     let Some(event) = event else { break };
                     if event.session_handle().as_str() != session_path { continue; }
-                    match event.shortcut_id() {
-                        "dictate" if !down => { down = true; let _ = ShortcutEvent::Pressed.emit(&app); }
-                        "cancel-dictation" if app.state::<super::GlobalState>().active.load(std::sync::atomic::Ordering::SeqCst) => {
-                            let _ = ShortcutEvent::Cancelled.emit(&app);
-                        }
-                        _ => {}
+                    if let Some(source) = source_of(event.shortcut_id()) {
+                        press::emit(&app, source, ShortcutEvent::Pressed);
+                    } else if event.shortcut_id() == "cancel-dictation"
+                        && app.state::<super::GlobalState>().active.load(std::sync::atomic::Ordering::SeqCst)
+                    {
+                        press::cancel(&app);
                     }
                 }
                 event = released.next() => {
                     let Some(event) = event else { break };
-                    if event.session_handle().as_str() == session_path && event.shortcut_id() == "dictate" {
-                        down = false;
-                        let _ = ShortcutEvent::Released.emit(&app);
+                    if event.session_handle().as_str() != session_path { continue; }
+                    if let Some(source) = source_of(event.shortcut_id()) {
+                        press::emit(&app, source, ShortcutEvent::Released);
                     }
                 }
             }
         }
         let _ = session.close().await;
-        let _ = ShortcutEvent::Cancelled.emit(&app);
+        press::cancel(&app);
     });
     Ok(Registration { stop, task })
 }

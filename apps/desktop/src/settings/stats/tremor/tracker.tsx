@@ -1,10 +1,9 @@
 // Tremor Tracker v1.0.0, Apache-2.0. See LICENSE.
 // Source: tremorlabs/tremor@ca4d588f47820ff3d514d37fa4ee08a4222dec11.
-// Adapted for calendar cells, Anarlog colors, and accessible data labels.
+// Adapted for calendar cells, Librelog colors, and accessible data labels.
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { type HTMLAttributes, useState } from "react";
 
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
 type TrackerBlockProps = {
@@ -31,7 +30,7 @@ function Block({ color, tooltip }: Omit<TrackerBlockProps, "key">) {
         >
           <div
             className={cn([
-              "size-full rounded-[3px] transition-opacity hover:opacity-60",
+              "size-full rounded-xs transition-opacity hover:opacity-60",
               color,
             ])}
           />
@@ -45,10 +44,8 @@ function Block({ color, tooltip }: Omit<TrackerBlockProps, "key">) {
 }
 
 function Tooltip({ children }: { children: string }) {
-  const ref = useSquircleRef<HTMLDivElement>();
   return (
     <HoverCard.Content
-      ref={ref}
       sideOffset={10}
       side="top"
       align="center"

@@ -1,21 +1,5 @@
 use super::*;
 
-#[test]
-fn shared_session_cache_is_plain_and_excluded_from_cloudsync() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260716173000_shared_session_cache")
-        .unwrap();
-
-    assert_eq!(migration.scope, anlg_db_migrate::MigrationScope::Plain);
-    assert!(
-        !cloudsync_table_registry()
-            .iter()
-            .any(|table| table.table_name == "shared_session_cache")
-    );
-    assert!(!cloudsync_alter_guard_required("shared_session_cache"));
-}
-
 #[tokio::test]
 async fn share_activation_backfills_only_previously_shared_manager_notes() {
     let db = Db::connect_memory_plain().await.unwrap();
@@ -23,7 +7,6 @@ async fn share_activation_backfills_only_previously_shared_manager_notes() {
         &db,
         anlg_db_migrate::DbSchema {
             steps: migration_steps_before("20261002090000_session_share_activation_sync"),
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await
@@ -355,23 +338,6 @@ async fn rejects_a_legacy_checksum_with_the_current_cache_schema() {
     ));
 }
 
-#[test]
-fn session_share_sync_state_is_plain_and_excluded_from_replication() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260717191000_session_share_sync_state")
-        .unwrap();
-
-    assert_eq!(migration.scope, anlg_db_migrate::MigrationScope::Plain);
-    assert!(
-        !cloudsync_table_registry()
-            .iter()
-            .any(|table| table.table_name == "session_share_sync_state")
-    );
-    assert!(!E2EE_DOMAIN_TABLES.contains(&"session_share_sync_state"));
-    assert!(!cloudsync_alter_guard_required("session_share_sync_state"));
-}
-
 #[tokio::test]
 async fn session_share_sync_state_enforces_local_reconciliation_contract() {
     let db = test_db().await;
@@ -447,12 +413,6 @@ async fn session_share_sync_state_enforces_local_reconciliation_contract() {
 
 #[tokio::test]
 async fn shared_session_cache_enforces_manager_web_edit_base() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260717190000_shared_session_cache_web_edits")
-        .unwrap();
-    assert_eq!(migration.scope, anlg_db_migrate::MigrationScope::Plain);
-
     let db = test_db().await;
     let insert = "INSERT INTO shared_session_cache (
             share_id,
@@ -517,12 +477,6 @@ async fn shared_session_cache_enforces_manager_web_edit_base() {
 
 #[tokio::test]
 async fn shared_session_cache_attachment_manifest_is_local_and_bounded() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260717172000_shared_session_cache_attachments")
-        .unwrap();
-    assert_eq!(migration.scope, anlg_db_migrate::MigrationScope::Plain);
-
     let db = test_db().await;
     sqlx::query(
         "INSERT INTO shared_session_cache (

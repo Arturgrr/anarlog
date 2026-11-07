@@ -63,7 +63,9 @@ const MEETING_FLOAT_SQL = `
     '' AS title,
     session.owner_user_id,
     participant.human_id,
-    COALESCE(NULLIF(human.name, ''), participant.display_name) AS human_name,
+    CASE WHEN participant.human_id = session.owner_user_id THEN ''
+      ELSE COALESCE(NULLIF(human.name, ''), participant.display_name)
+    END AS human_name,
     NULL AS speaker_context,
     NULL AS live_started_at_ms
   FROM session_participants AS participant
@@ -89,7 +91,9 @@ const MEETING_FLOAT_SQL = `
     NULL AS speaker_context,
     NULL AS live_started_at_ms
   FROM humans AS human
-  WHERE human.id <> '' AND human.deleted_at IS NULL
+  WHERE human.id <> ''
+    AND human.id <> human.owner_user_id
+    AND human.deleted_at IS NULL
 
   ORDER BY row_kind, session_id, human_id
 `;

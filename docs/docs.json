@@ -1,18 +1,13 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Anarlog",
+  "name": "Librelog",
   "colors": {
-    "primary": "#74540F",
-    "light": "#946F25",
-    "dark": "#5D430D"
+    "primary": "#242424",
+    "light": "#EDEDED",
+    "dark": "#3A3A3A"
   },
   "favicon": "/favicon.png",
-  "seo": {
-    "metatags": {
-      "canonical": "https://docs.anarlog.so"
-    }
-  },
   "navigation": {
     "pages": [
       {
@@ -20,22 +15,16 @@
         "pages": ["index", "desktop-installation", "quickstart"]
       },
       {
-        "group": "Using Anarlog",
+        "group": "Using Librelog",
         "pages": [
           "meetings",
           "dictation",
           "automatic-capture",
           "import-recordings",
-          "imports",
-          "zoom",
           "notes",
-          "sharing",
-          "teams",
           "chat",
           "customize-summaries",
-          "calendar",
           "contacts",
-          "sync",
           "automations",
           "languages"
         ]
@@ -69,7 +58,6 @@
         "pages": [
           "reference/cli",
           "reference/mcp",
-          "reference/api-cloud",
           "reference/webhooks",
           "reference/errors"
         ]
@@ -82,13 +70,8 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Anarlog",
-          "href": "https://anarlog.so/",
-          "icon": "house"
-        },
-        {
           "anchor": "GitHub",
-          "href": "https://github.com/fastrepl/anarlog",
+          "href": "https://github.com/Arturgrr/librelog",
           "icon": "github"
         }
       ]
@@ -102,13 +85,13 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:team@fastrepl.com"
+        "href": "https://github.com/Arturgrr/librelog/issues"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Download Anarlog",
-      "href": "https://anarlog.so/download/"
+      "label": "Download Librelog",
+      "href": "https://github.com/Arturgrr/librelog/releases"
     }
   },
   "contextual": {
@@ -123,15 +106,9 @@
       "vscode"
     ]
   },
-  "redirects": [
-    {
-      "source": "/reference/api",
-      "destination": "/reference/api-cloud"
-    }
-  ],
   "footer": {
     "socials": {
-      "github": "https://github.com/fastrepl/anarlog"
+      "github": "https://github.com/Arturgrr/librelog"
     }
   }
 }

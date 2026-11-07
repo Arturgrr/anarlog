@@ -24,9 +24,9 @@ private enum ParticipantStatusDisplay {
 
   var color: NSColor {
     switch self {
-    case .accepted: return NSColor.systemGreen
-    case .maybe: return NSColor.systemYellow
-    case .declined: return NSColor.systemRed
+    case .accepted: return NSColor.labelColor
+    case .maybe: return NSColor.secondaryLabelColor
+    case .declined: return NSColor.tertiaryLabelColor
     }
   }
 }
@@ -206,7 +206,7 @@ extension NotificationManager {
     actionButton.notification = notification
     actionButton.font = NSFont.systemFont(
       ofSize: Fonts.actionButtonSize, weight: Fonts.buttonWeight)
-    actionButton.layer?.cornerRadius = 10
+    actionButton.layer?.cornerRadius = Layout.buttonCornerRadius
     actionButton.translatesAutoresizingMaskIntoConstraints = false
     actionButton.heightAnchor.constraint(equalToConstant: 36).isActive = true
 

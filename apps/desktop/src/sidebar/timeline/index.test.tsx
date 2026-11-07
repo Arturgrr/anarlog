@@ -17,16 +17,12 @@ const mocks = vi.hoisted(() => ({
   currentTimeMs: undefined as number | undefined,
   isAnchorVisible: true,
   isScrolledPastAnchor: false,
-  isIgnored: vi.fn(() => false),
   liveSessionId: null as string | null,
   liveStatus: "inactive" as "inactive" | "active" | "finalizing",
   selectAll: vi.fn(),
-  smartCurrentTimeMs: undefined as number | undefined,
   timelineSelectionAnchorId: null as string | null,
   timelineSelectionSelectedIds: [] as string[],
-  timelineEventsTable: {} as Record<string, Record<string, unknown>>,
   timelineSessionsTable: {} as Record<string, Record<string, unknown>>,
-  activatedSessionIds: new Set<string>(),
 }));
 
 const lingui = vi.hoisted(() => {
@@ -105,19 +101,8 @@ vi.mock("~/shared/config", () => ({
   useConfigValue: () => mocks.configValue,
 }));
 
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: { user: { id: "owner-1" } } }),
-}));
-
-vi.mock("~/shared-notes/cache", () => ({
-  useActivatedSessionShareIds: () => mocks.activatedSessionIds,
-}));
-
-vi.mock("~/calendar/queries", () => ({
-  useTimelineTables: () => ({
-    timelineEventsTable: mocks.timelineEventsTable,
-    timelineSessionsTable: mocks.timelineSessionsTable,
-  }),
+vi.mock("./queries", () => ({
+  useTimelineSessionsTable: () => mocks.timelineSessionsTable,
 }));
 
 vi.mock("~/session/hooks/useDeleteSession", () => ({
@@ -126,12 +111,6 @@ vi.mock("~/session/hooks/useDeleteSession", () => ({
 
 vi.mock("~/shared/hooks/useNativeContextMenu", () => ({
   useNativeContextMenu: () => vi.fn(),
-}));
-
-vi.mock("~/calendar/ignored-events", () => ({
-  useIgnoredEvents: () => ({
-    isIgnored: mocks.isIgnored,
-  }),
 }));
 
 vi.mock("~/store/zustand/tabs", () => ({
@@ -187,29 +166,8 @@ vi.mock("./anchor", async () => {
 });
 
 vi.mock("./item", () => ({
-  ManagedSharedSessionIdsContext: {
-    Provider: ({ children }: { children: ReactNode }) => <>{children}</>,
-  },
-  TimelineItemComponent: ({
-    isUpcoming,
-    item,
-    itemNodeRef,
-    upcomingLabel,
-    upcomingProgress,
-  }: {
-    isUpcoming?: boolean;
-    item: { id: string };
-    itemNodeRef?: (node: HTMLDivElement | null) => void;
-    upcomingLabel?: string;
-    upcomingProgress?: number;
-  }) => (
-    <div
-      ref={itemNodeRef}
-      data-testid={`timeline-item-${item.id}`}
-      data-upcoming={isUpcoming ? "true" : undefined}
-      data-upcoming-label={upcomingLabel}
-      data-upcoming-progress={upcomingProgress}
-    />
+  TimelineItemComponent: ({ item }: { item: { id: string } }) => (
+    <div data-testid={`timeline-item-${item.id}`} />
   ),
 }));
 
@@ -223,7 +181,6 @@ vi.mock("./realtime", async () => {
       },
     ),
     useCurrentTimeMs: () => mocks.currentTimeMs ?? Date.now(),
-    useSmartCurrentTime: () => mocks.smartCurrentTimeMs ?? Date.now(),
   };
 });
 
@@ -242,21 +199,10 @@ const twoSelectableNotes = {
   },
 };
 
-const standupEvent = (startedAt: string) => ({
-  standup: {
-    title: "Team standup",
-    started_at: startedAt,
-    ended_at: "2024-01-15T12:30:00.000Z",
-    tracking_id_event: "event-standup",
-    has_recurrence_rules: false,
-  },
-});
-
 function freezeTime(iso: string) {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(iso));
   mocks.currentTimeMs = Date.now();
-  mocks.smartCurrentTimeMs = Date.now();
 }
 
 function mountEditor() {
@@ -267,26 +213,6 @@ function mountEditor() {
   document.body.appendChild(editor);
   editor.focus();
   return editor;
-}
-
-function rect(top: number, height: number): DOMRect {
-  return {
-    bottom: top + height,
-    height,
-    left: 0,
-    right: 240,
-    toJSON: () => ({}),
-    top,
-    width: 240,
-    x: 0,
-    y: top,
-  };
-}
-
-function queryMeetingChip(container: HTMLElement) {
-  return container.querySelector<HTMLElement>(
-    "[data-sidebar-upcoming-meeting-status]",
-  );
 }
 
 function isBefore(first: Element, second: Element) {
@@ -303,16 +229,12 @@ describe("TimelineView", () => {
     mocks.currentTimeMs = undefined;
     mocks.isAnchorVisible = true;
     mocks.isScrolledPastAnchor = false;
-    mocks.isIgnored.mockReturnValue(false);
     mocks.liveSessionId = null;
     mocks.liveStatus = "inactive";
     mocks.currentTab = { type: "empty" };
-    mocks.smartCurrentTimeMs = undefined;
     mocks.timelineSelectionAnchorId = null;
     mocks.timelineSelectionSelectedIds = [];
-    mocks.timelineEventsTable = {};
     mocks.timelineSessionsTable = {};
-    mocks.activatedSessionIds = new Set();
   });
 
   afterEach(() => {
@@ -321,34 +243,10 @@ describe("TimelineView", () => {
     vi.useRealTimers();
   });
 
-  it("opens the calendar from the timeline chip", () => {
-    freezeTime("2024-01-15T12:00:00.000Z");
-    mocks.timelineSessionsTable = {
-      later: {
-        title: "Quarterly planning",
-        created_at: "2024-01-17T12:00:00.000Z",
-      },
-    };
-
-    render(<TimelineView topChromeInset />);
-    fireEvent.click(screen.getByRole("button", { name: "Open calendar" }));
-
-    expect(mocks.openNew).toHaveBeenCalledWith({ type: "calendar" });
-  });
-
   it("selects all visible notes with Cmd+A after a sidebar note selection", () => {
     freezeTime("2024-01-15T09:00:00.000Z");
     mocks.currentTab = { type: "sessions", id: "selected-note" };
     mocks.timelineSelectionAnchorId = "session-selected-note";
-    mocks.timelineEventsTable = {
-      event: {
-        title: "Calendar hold",
-        started_at: "2024-01-15T13:00:00.000Z",
-        ended_at: "2024-01-15T13:30:00.000Z",
-        tracking_id_event: "event-hold",
-        has_recurrence_rules: false,
-      },
-    };
     mocks.timelineSessionsTable = twoSelectableNotes;
 
     render(<TimelineView />);
@@ -468,93 +366,6 @@ describe("TimelineView", () => {
     expect(mocks.clearSelection).toHaveBeenCalledOnce();
   });
 
-  it("shows an imminent meeting chip that scrolls to the meeting row", () => {
-    freezeTime("2024-01-15T12:00:00.000Z");
-    mocks.isAnchorVisible = false;
-    mocks.isScrolledPastAnchor = true;
-    mocks.timelineEventsTable = standupEvent("2024-01-15T12:00:51.000Z");
-
-    const { container } = render(<TimelineView topChromeInset />);
-    const scroller = container.querySelector("[data-sidebar-timeline-scroll]")!;
-    const row = screen.getByTestId("timeline-item-standup");
-    const chip = queryMeetingChip(container);
-
-    Object.defineProperty(scroller, "clientHeight", {
-      configurable: true,
-      value: 400,
-    });
-    scroller.scrollTop = 0;
-    scroller.scrollTo = vi.fn();
-    vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue(rect(0, 400));
-    vi.spyOn(row, "getBoundingClientRect").mockReturnValue(rect(800, 32));
-
-    expect(chip?.getAttribute("aria-label")).toBe("Team standup in 51s");
-    expect(row.dataset).toMatchObject({
-      upcoming: "true",
-      upcomingLabel: "In 51s",
-      upcomingProgress: "0.17",
-    });
-
-    fireEvent.click(chip!);
-
-    expect(scroller.scrollTo).toHaveBeenCalledWith({
-      top: 636,
-      behavior: "smooth",
-    });
-  });
-
-  it("hides the imminent meeting chip when the meeting row is visible", () => {
-    freezeTime("2024-01-15T12:00:00.000Z");
-    mocks.timelineEventsTable = standupEvent("2024-01-15T12:00:51.000Z");
-
-    const { container } = render(<TimelineView topChromeInset />);
-    const scroller = container.querySelector("[data-sidebar-timeline-scroll]")!;
-    vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue(rect(0, 400));
-    vi.spyOn(
-      screen.getByTestId("timeline-item-standup"),
-      "getBoundingClientRect",
-    ).mockReturnValue(rect(88, 32));
-
-    fireEvent.scroll(scroller);
-
-    expect(queryMeetingChip(container)).toBeNull();
-  });
-
-  it("keeps the meeting chip visible until the scheduled end time", () => {
-    freezeTime("2024-01-15T12:00:00.000Z");
-    mocks.timelineEventsTable = {
-      later: {
-        title: "Roadmap review",
-        started_at: "2024-01-15T12:06:00.000Z",
-        ended_at: "2024-01-15T12:30:00.000Z",
-        tracking_id_event: "event-later",
-        has_recurrence_rules: false,
-      },
-    };
-
-    const { container, rerender } = render(<TimelineView topChromeInset />);
-    const advanceTo = (iso: string, props: object) => {
-      vi.setSystemTime(new Date(iso));
-      mocks.currentTimeMs = Date.now();
-      fireEvent.focus(window);
-      rerender(<TimelineView topChromeInset {...props} />);
-    };
-
-    expect(queryMeetingChip(container)).toBeNull();
-
-    advanceTo("2024-01-15T12:01:00.000Z", { showOpenCalendarButton: true });
-    expect(queryMeetingChip(container)?.textContent).toBe("In 5m 0s");
-
-    advanceTo("2024-01-15T12:06:01.000Z", { showIgnoredEvents: false });
-    expect(queryMeetingChip(container)?.textContent).toBe("Localized now");
-
-    advanceTo("2024-01-15T12:30:01.000Z", {
-      showOpenCalendarButton: true,
-      showIgnoredEvents: false,
-    });
-    expect(queryMeetingChip(container)).toBeNull();
-  });
-
   it("places the fallback now indicator between future and past buckets", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2024-01-15T15:54:00.000Z"));
@@ -562,10 +373,7 @@ describe("TimelineView", () => {
     mocks.timelineSessionsTable = {
       tomorrow: {
         title: "Sprint retro & planning",
-        created_at: "2024-01-15T00:00:00.000Z",
-        event_json: JSON.stringify({
-          started_at: "2024-01-17T08:30:00.000Z",
-        }),
+        created_at: "2024-01-17T08:30:00.000Z",
       },
       yesterday: {
         title: "Design sync",
@@ -602,7 +410,7 @@ describe("TimelineView", () => {
     const { rerender } = render(<TimelineView />);
     vi.setSystemTime(new Date("2024-01-16T00:01:00.000Z"));
     mocks.currentTimeMs = Date.now();
-    rerender(<TimelineView showOpenCalendarButton />);
+    rerender(<TimelineView topChromeInset />);
 
     const staleTomorrowItem = screen.getByTestId("timeline-item-soon");
     const indicator = screen.getByTestId("current-time-indicator");
@@ -650,10 +458,6 @@ describe("TimelineView", () => {
         "session-live": {
           title: "kate <> john (char)",
           created_at: "2024-01-15T11:00:00.000Z",
-          event_json: JSON.stringify({
-            started_at: "2024-01-15T11:00:00.000Z",
-            ended_at: "2024-01-15T12:00:00.000Z",
-          }),
         },
       };
 
@@ -690,7 +494,6 @@ describe("TimelineView", () => {
     expect(screen.getByText("work")).toBeTruthy();
     expect(screen.getByText("No folder")).toBeTruthy();
     expect(screen.queryByText("Today")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Open calendar" })).toBeNull();
     expect(screen.queryByTestId("current-time-indicator")).toBeNull();
   });
 });

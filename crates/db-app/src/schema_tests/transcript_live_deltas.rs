@@ -1,18 +1,7 @@
 use super::*;
 
 #[tokio::test]
-async fn transcript_content_revision_is_cloudsync_safe() {
-    let migration = APP_MIGRATION_STEPS
-        .iter()
-        .find(|step| step.id == "20260815100000_transcript_content_revision")
-        .unwrap();
-    assert_eq!(
-        migration.scope,
-        anlg_db_migrate::MigrationScope::CloudsyncAlter {
-            table_name: "transcripts",
-        }
-    );
-
+async fn transcript_content_revision_defaults_to_zero() {
     let db = test_db().await;
     sqlx::query("INSERT INTO transcripts (id) VALUES ('transcript-1')")
         .execute(db.pool())

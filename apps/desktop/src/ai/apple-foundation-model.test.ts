@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const localLlmCommands = vi.hoisted(() => ({
+const foundationModelCommands = vi.hoisted(() => ({
   foundationModelBegin: vi.fn(),
   foundationModelCancel: vi.fn(),
   foundationModelGenerate: vi.fn(),
 }));
 
-vi.mock("@anlg/plugin-local-llm", () => ({ commands: localLlmCommands }));
+vi.mock("@anlg/plugin-apple-foundation", () => ({
+  commands: foundationModelCommands,
+}));
 
 import {
   createAppleFoundationModel,
@@ -23,14 +25,14 @@ const abortPrompt: CallOptions["prompt"] = [
 ];
 
 beforeEach(() => {
-  localLlmCommands.foundationModelBegin.mockReset();
-  localLlmCommands.foundationModelCancel.mockReset();
-  localLlmCommands.foundationModelGenerate.mockReset();
-  localLlmCommands.foundationModelBegin.mockResolvedValue({
+  foundationModelCommands.foundationModelBegin.mockReset();
+  foundationModelCommands.foundationModelCancel.mockReset();
+  foundationModelCommands.foundationModelGenerate.mockReset();
+  foundationModelCommands.foundationModelBegin.mockResolvedValue({
     status: "ok",
     data: null,
   });
-  localLlmCommands.foundationModelCancel.mockResolvedValue({
+  foundationModelCommands.foundationModelCancel.mockResolvedValue({
     status: "ok",
     data: null,
   });
@@ -130,7 +132,7 @@ describe("prepareFoundationModelRequest", () => {
     let finish:
       | ((value: { status: "error"; error: string }) => void)
       | undefined;
-    localLlmCommands.foundationModelGenerate.mockImplementationOnce(
+    foundationModelCommands.foundationModelGenerate.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           finish = resolve;
@@ -142,22 +144,25 @@ describe("prepareFoundationModelRequest", () => {
       abortSignal: controller.signal,
     } as CallOptions);
     await vi.waitFor(() =>
-      expect(localLlmCommands.foundationModelGenerate).toHaveBeenCalled(),
+      expect(
+        foundationModelCommands.foundationModelGenerate,
+      ).toHaveBeenCalled(),
     );
-    const requestId = localLlmCommands.foundationModelBegin.mock.calls[0]?.[0];
+    const requestId =
+      foundationModelCommands.foundationModelBegin.mock.calls[0]?.[0];
 
     controller.abort(reason);
     await vi.waitFor(() =>
-      expect(localLlmCommands.foundationModelCancel).toHaveBeenCalledWith(
-        requestId,
-      ),
+      expect(
+        foundationModelCommands.foundationModelCancel,
+      ).toHaveBeenCalledWith(requestId),
     );
     finish?.({ status: "error", error: "Generation was cancelled." });
 
     await expect(generation).rejects.toBe(reason);
-    expect(localLlmCommands.foundationModelGenerate).toHaveBeenCalledWith(
-      expect.objectContaining({ requestId }),
-    );
+    expect(
+      foundationModelCommands.foundationModelGenerate,
+    ).toHaveBeenCalledWith(expect.objectContaining({ requestId }));
   });
 
   it("cancels after registration when abort wins the begin race", async () => {
@@ -166,7 +171,7 @@ describe("prepareFoundationModelRequest", () => {
     let finishBegin:
       | ((value: { status: "ok"; data: null }) => void)
       | undefined;
-    localLlmCommands.foundationModelBegin.mockImplementationOnce(
+    foundationModelCommands.foundationModelBegin.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           finishBegin = resolve;
@@ -181,10 +186,13 @@ describe("prepareFoundationModelRequest", () => {
     finishBegin?.({ status: "ok", data: null });
 
     await expect(generation).rejects.toBe(reason);
-    const requestId = localLlmCommands.foundationModelBegin.mock.calls[0]?.[0];
-    expect(localLlmCommands.foundationModelCancel).toHaveBeenCalledWith(
+    const requestId =
+      foundationModelCommands.foundationModelBegin.mock.calls[0]?.[0];
+    expect(foundationModelCommands.foundationModelCancel).toHaveBeenCalledWith(
       requestId,
     );
-    expect(localLlmCommands.foundationModelGenerate).not.toHaveBeenCalled();
+    expect(
+      foundationModelCommands.foundationModelGenerate,
+    ).not.toHaveBeenCalled();
   });
 });

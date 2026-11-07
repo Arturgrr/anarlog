@@ -21,12 +21,11 @@ import { SearchBar } from "./search/bar";
 import { useSearch } from "./search/context";
 import { Transcript } from "./transcript";
 
+import { useCurrentNoteTab } from "~/session/components/shared";
 import {
   registerCanonicalSessionEditor,
   unregisterCanonicalSessionEditor,
-} from "~/session-sharing/editor-activity";
-import { useCurrentNoteTab } from "~/session/components/shared";
-import { SharedNoteSummary } from "~/shared-notes";
+} from "~/session/editor-activity";
 import { useScrollPreservation } from "~/shared/hooks/useScrollPreservation";
 import type { SessionMode } from "~/store/zustand/listener/general";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
@@ -48,8 +47,6 @@ type NoteInputProps = {
   tab: Extract<Tab, { type: "sessions" }>;
   rawMd: string;
   sessionTitle: string;
-  eventTitle?: string;
-  eventDescription?: string;
   onNavigateToTitle?: (pixelWidth?: number) => void;
   onScroll?: UIEventHandler<HTMLDivElement>;
   editorTabs?: TabEditorView[];
@@ -146,8 +143,6 @@ const NoteInputContent = forwardRef<
       tab,
       rawMd,
       sessionTitle,
-      eventTitle,
-      eventDescription,
       onNavigateToTitle,
       onScroll,
       editorTabs,
@@ -177,8 +172,7 @@ const NoteInputContent = forwardRef<
       shouldShowTranscriptTabSpinner(sessionMode);
 
     const { scrollRef, onBeforeTabChange } = useScrollPreservation(
-      renderedCurrentTab.type === "enhanced" ||
-        renderedCurrentTab.type === "shared"
+      renderedCurrentTab.type === "enhanced"
         ? `${renderedCurrentTab.type}-${renderedCurrentTab.id}`
         : renderedCurrentTab.type,
     );
@@ -392,15 +386,10 @@ const NoteInputContent = forwardRef<
                 sessionId={sessionId}
                 rawMd={rawMd}
                 sessionTitle={sessionTitle}
-                eventTitle={eventTitle}
-                eventDescription={eventDescription}
                 onNavigateToTitle={onNavigateToTitle}
                 onViewReady={handleSessionViewReady}
                 onViewDisposed={handleSessionViewDisposed}
               />
-            )}
-            {renderedCurrentTab.type === "shared" && (
-              <SharedNoteSummary shareId={renderedCurrentTab.id} />
             )}
             {renderedCurrentTab.type === "transcript" && (
               <Transcript
@@ -423,9 +412,6 @@ function isSameEditorView(left: TabEditorView, right: TabEditorView): boolean {
   }
 
   if (left.type === "enhanced" && right.type === "enhanced") {
-    return left.id === right.id;
-  }
-  if (left.type === "shared" && right.type === "shared") {
     return left.id === right.id;
   }
 

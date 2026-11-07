@@ -64,7 +64,7 @@ describe("LegacyMigrationCleanupRow", () => {
       alreadyCleaned: false,
       fileCount: 12,
       totalBytes: 2048,
-      sourceRoot: "/Users/test/Anarlog",
+      sourceRoot: "/Users/test/Librelog",
       blockingReason: null,
     });
     mocks.cleanupLegacyFiles.mockResolvedValue({
@@ -84,7 +84,7 @@ describe("LegacyMigrationCleanupRow", () => {
       latestRun: {
         id: "run-1",
         importerVersion: 1,
-        sourceRoot: "/Users/test/Anarlog",
+        sourceRoot: "/Users/test/Librelog",
         dryRun: false,
         status: "completed",
         discoveredCount: 12,
@@ -137,7 +137,7 @@ describe("LegacyMigrationCleanupRow", () => {
       alreadyCleaned: true,
       fileCount: 0,
       totalBytes: 0,
-      sourceRoot: "/Users/test/Anarlog",
+      sourceRoot: "/Users/test/Librelog",
       blockingReason: null,
     });
 
@@ -157,7 +157,7 @@ describe("LegacyMigrationCleanupRow", () => {
       alreadyCleaned: false,
       fileCount: 0,
       totalBytes: 0,
-      sourceRoot: "/Users/test/Anarlog",
+      sourceRoot: "/Users/test/Librelog",
       blockingReason: "SQLite migration verification is incomplete",
     });
 
@@ -181,7 +181,7 @@ describe("LegacyMigrationCleanupRow", () => {
       alreadyCleaned: false,
       fileCount: 0,
       totalBytes: 0,
-      sourceRoot: "/Users/test/Anarlog",
+      sourceRoot: "/Users/test/Librelog",
       blockingReason:
         "SQLite migration has not passed current parity verification",
     });
@@ -244,7 +244,7 @@ describe("LegacyMigrationCleanupRow", () => {
         alreadyCleaned: false,
         fileCount: 0,
         totalBytes: 0,
-        sourceRoot: "/Users/test/Anarlog",
+        sourceRoot: "/Users/test/Librelog",
         blockingReason: "SQLite migration verification is incomplete",
       })
       .mockResolvedValue({
@@ -254,7 +254,7 @@ describe("LegacyMigrationCleanupRow", () => {
         alreadyCleaned: false,
         fileCount: 12,
         totalBytes: 2048,
-        sourceRoot: "/Users/test/Anarlog",
+        sourceRoot: "/Users/test/Librelog",
         blockingReason: null,
       });
     mocks.getLegacyImportReport.mockResolvedValueOnce({
@@ -270,7 +270,7 @@ describe("LegacyMigrationCleanupRow", () => {
       latestRun: {
         id: "run-1",
         importerVersion: 1,
-        sourceRoot: "/Users/test/Anarlog",
+        sourceRoot: "/Users/test/Librelog",
         dryRun: false,
         status: "completed_with_issues",
         discoveredCount: 12,

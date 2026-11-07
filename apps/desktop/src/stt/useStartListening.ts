@@ -1,6 +1,6 @@
+import { t } from "@lingui/core/macro";
 import { useCallback } from "react";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { toast } from "@anlg/ui/components/ui/toast";
 
 import { useCaptureLifecycle } from "./capture-lifecycle";
@@ -17,7 +17,6 @@ import {
   startMeetingRecordingDisclosure,
 } from "./meeting-disclosure";
 import { startMeetingScreenCapture } from "./meeting-screen-capture";
-import { startPrimaryDeviceCoordination } from "./primary-device";
 import {
   classifyStartFailure,
   getMicrophonePermission,
@@ -25,10 +24,8 @@ import {
   type StartFailureStage,
 } from "./start-failure";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { useShell } from "~/contexts/shell";
 import { normalizeAudioRetention } from "~/services/audio-retention";
-import { getSessionEvent } from "~/session/utils";
 import { getBaseLanguageDisplayName } from "~/settings/general/language";
 import { useConfigValue } from "~/shared/config";
 import { useTabs } from "~/store/zustand/tabs";
@@ -43,7 +40,6 @@ import {
 } from "~/stt/queries";
 
 export {
-  CLOUDSYNC_CAPTURE_LEASE_ATTEMPTS,
   getPostCaptureAction,
   getPostCaptureRepairReasons,
 } from "./capture-lifecycle";
@@ -122,20 +118,6 @@ export function useStartListeningState(
       automatic,
       pendingMarker,
     );
-    // A fresh note or a just-focused window starts listening right as a sync
-    // round begins; waiting for that round to yield made the start feel slow
-    // and sometimes refused to record at all.
-    void lifecycle.deferCloudsync();
-    const releaseCloudsyncDeferral = async () => {
-      try {
-        await lifecycle.releaseCloudsyncLease();
-      } catch (error) {
-        console.error(
-          "[listener] failed to release capture CloudSync deferral",
-          error,
-        );
-      }
-    };
     const [keywords, liveTranscriptionConfig, remoteParticipantHumanIds] =
       await Promise.all([
         import("./useKeywords").then(({ getSessionKeywords }) =>
@@ -156,7 +138,6 @@ export function useStartListeningState(
         lifecycle.ready,
       ]);
     if (!canStartLiveSession(sessionId)) {
-      await releaseCloudsyncDeferral();
       return;
     }
 
@@ -169,9 +150,6 @@ export function useStartListeningState(
         "[listener] failed to prepare durable capture state",
         error,
       );
-      trackAnalyticsEvent("session_start_failed", {
-        failure_stage: "recovery_marker",
-      });
       try {
         await lifecycle.cleanupFailedStart();
       } catch (cleanupError) {
@@ -180,7 +158,6 @@ export function useStartListeningState(
           cleanupError,
         );
       }
-      await releaseCloudsyncDeferral();
       await reportStartFailure("recovery_marker", null);
       return;
     }
@@ -210,9 +187,6 @@ export function useStartListeningState(
       );
     } catch (error) {
       console.error("[listener] failed to start recording", error);
-      trackAnalyticsEvent("session_start_failed", {
-        failure_stage: "capture_start",
-      });
       try {
         await lifecycle.cleanupFailedStart();
       } catch (cleanupError) {
@@ -220,8 +194,6 @@ export function useStartListeningState(
           "[listener] failed to clean up capture state",
           cleanupError,
         );
-      } finally {
-        await releaseCloudsyncDeferral();
       }
       await reportStartFailure(
         "capture_start",
@@ -231,16 +203,11 @@ export function useStartListeningState(
     }
 
     if (!started) {
-      trackAnalyticsEvent("session_start_failed", {
-        failure_stage: "capture_rejected",
-      });
       await stopMeetingChatTasks();
       try {
         await lifecycle.cleanupFailedStart();
       } catch (error) {
         console.error("[listener] failed to clean up capture state", error);
-      } finally {
-        await releaseCloudsyncDeferral();
       }
       await reportStartFailure(
         "capture_rejected",
@@ -270,23 +237,22 @@ export function useStartListeningState(
         .map((language) => getBaseLanguageDisplayName(language))
         .join(", ");
 
-      toast.warning(`Live transcription is using ${primaryLanguageName}`, {
+      toast.warning(t`Live transcription is using ${primaryLanguageName}`, {
         id: "recording-with-limited-transcription-languages",
         duration: Infinity,
-        description: `Live transcription won't include ${omittedLanguageNames}. Audio is still being saved.`,
+        description: t`Live transcription won't include ${omittedLanguageNames}. Audio is still being saved.`,
         action: {
-          label: "Change",
+          label: t`Change`,
           onClick: openTranscriptionSettings,
         },
       });
     } else if (!conn) {
-      toast.warning("Live transcription is not configured", {
+      toast.warning(t`Live transcription is not configured`, {
         id: "recording-without-transcription",
         duration: Infinity,
-        description:
-          "Audio is being saved. Choose a transcription provider to ensure this recording can be transcribed.",
+        description: t`Audio is being saved. Choose a transcription provider to ensure this recording can be transcribed.`,
         action: {
-          label: "Configure",
+          label: t`Configure`,
           onClick: openTranscriptionSettings,
         },
       });
@@ -294,18 +260,12 @@ export function useStartListeningState(
 
     setLeftSidebarExpanded(false);
 
-    startPrimaryDeviceCoordination({
-      sessionId,
-      event: getSessionEvent({ event_json: session?.event_json }),
-      automatic,
-    });
-
     const stopChatCapture = startMeetingChatCapture({
       sessionId,
       excludedTexts: [MEETING_DISCLOSURE_MESSAGE],
       onParticipantDeclined: () => {
         toast.warning(
-          "A participant declined recording. Anarlog stopped listening.",
+          t`A participant declined recording. Librelog stopped listening.`,
           { id: "meeting-consent-declined", duration: Infinity },
         );
         stop();
@@ -322,19 +282,6 @@ export function useStartListeningState(
         () => getSessionMode(sessionId) === "active",
       );
     }
-
-    void analyticsCommands.event({
-      event: "session_started",
-      has_calendar_event: Boolean(
-        getSessionEvent({ event_json: session?.event_json }),
-      ),
-      ...(conn
-        ? {
-            stt_provider: conn.provider,
-            stt_model: conn.model,
-          }
-        : {}),
-    });
   }, [
     automatic,
     aiLanguage,

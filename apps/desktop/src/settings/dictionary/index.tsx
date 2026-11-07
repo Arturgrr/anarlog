@@ -19,10 +19,7 @@ import {
   InputGroupInput,
 } from "@anlg/ui/components/ui/input-group";
 
-import { trackAnalyticsEvent } from "~/analytics";
-import { useBillingAccess } from "~/auth/billing-context";
 import { SettingsPageTitle } from "~/settings/page-title";
-import { PlanGate } from "~/settings/plan-gate";
 import { useSetSettingValue } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
 import { normalizeKeywordList, parseDictionaryTermsText } from "~/stt/keywords";
@@ -30,14 +27,11 @@ import { normalizeKeywordList, parseDictionaryTermsText } from "~/stt/keywords";
 export function SettingsDictionary() {
   const terms = useConfigValue("personalization_dictionary_terms");
   const setTerms = useSetSettingValue("personalization_dictionary_terms");
-  const { isPro } = useBillingAccess();
 
   return (
     <div className="flex flex-col gap-8">
       <SettingsPageTitle title={<Trans>Dictionary</Trans>} />
-      <PlanGate plan="pro" allowed={isPro}>
-        <DictionarySettings terms={terms} onSave={setTerms} />
-      </PlanGate>
+      <DictionarySettings terms={terms} onSave={setTerms} />
     </div>
   );
 }
@@ -63,11 +57,6 @@ export function DictionarySettings({
       }
 
       onSave(JSON.stringify(nextTerms));
-      trackAnalyticsEvent("dictionary_updated", {
-        operation: "added",
-        term_count: nextTerms.length,
-        added_count: nextTerms.length - normalizedTerms.length,
-      });
       form.setFieldValue("term", "");
     },
   });
@@ -75,11 +64,6 @@ export function DictionarySettings({
   const removeTerm = (term: string) => {
     const nextTerms = normalizedTerms.filter((value) => value !== term);
     onSave(JSON.stringify(nextTerms));
-    trackAnalyticsEvent("dictionary_updated", {
-      operation: "removed",
-      term_count: nextTerms.length,
-      removed_count: normalizedTerms.length - nextTerms.length,
-    });
   };
 
   const editTerm = (term: string, nextTerm: string) => {
@@ -87,11 +71,6 @@ export function DictionarySettings({
       value === term ? nextTerm : value,
     );
     onSave(JSON.stringify(nextTerms));
-    trackAnalyticsEvent("dictionary_updated", {
-      operation: "edited",
-      term_count: nextTerms.length,
-      edited_count: 1,
-    });
   };
 
   return (
@@ -103,7 +82,7 @@ export function DictionarySettings({
         void form.handleSubmit();
       }}
     >
-      <InputGroup className="border-border bg-card has-[[data-slot=input-group-control]:focus-visible]:border-border rounded-full shadow-none has-[[data-slot=input-group-control]:focus-visible]:ring-0">
+      <InputGroup>
         <form.Field name="term">
           {(field) => (
             <InputGroupInput
@@ -127,7 +106,7 @@ export function DictionarySettings({
                   type="submit"
                   variant="ghost"
                   size="xs"
-                  className="rounded-full bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black dark:hover:bg-white/90 dark:hover:text-black"
+                  className="bg-primary text-primary-foreground shadow-button-contrast hover:bg-primary/90 hover:text-primary-foreground rounded-sm"
                   disabled={!canAdd}
                   aria-label={t`Add`}
                 >
@@ -150,7 +129,7 @@ export function DictionarySettings({
 
           if (normalizedTerms.length === 0) {
             return (
-              <div className="border-border bg-card flex min-h-40 flex-col items-center justify-center rounded-2xl border px-6 text-center">
+              <div className="bg-card shadow-raised flex min-h-40 flex-col items-center justify-center rounded-lg px-6 text-center">
                 <BookOpen className="text-muted-foreground mb-3 size-5" />
                 <p className="text-sm font-medium">
                   <Trans>Your dictionary is empty</Trans>
@@ -174,7 +153,7 @@ export function DictionarySettings({
           }
 
           return (
-            <div className="border-border bg-card divide-border divide-y overflow-hidden rounded-2xl border">
+            <div className="bg-card shadow-raised divide-border-muted divide-y overflow-hidden rounded-lg">
               {visibleTerms.map((term) => (
                 <DictionaryTermRow
                   key={term}
@@ -219,7 +198,7 @@ function DictionaryTermRow({
       <div className="flex min-h-12 items-center gap-2 py-2 pr-3 pl-4">
         <Input
           autoFocus
-          className="h-8 min-w-0 flex-1"
+          className="h-7 min-w-0 flex-1"
           value={editValue}
           onChange={(event) => setEditValue(event.target.value)}
           onKeyDown={(event) => {
@@ -233,7 +212,7 @@ function DictionaryTermRow({
               setEditValue(null);
             }
           }}
-          aria-label={`${t`Edit`}: ${term}`}
+          aria-label={t`Edit: ${term}`}
         />
         <Button
           type="button"
@@ -270,7 +249,7 @@ function DictionaryTermRow({
           size="icon"
           className="text-muted-foreground hover:text-foreground size-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           onClick={() => setEditValue(term)}
-          aria-label={`${t`Edit`}: ${term}`}
+          aria-label={t`Edit: ${term}`}
         >
           <PencilSimple className="size-4" />
         </Button>

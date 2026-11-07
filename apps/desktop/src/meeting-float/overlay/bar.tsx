@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useRef, useState } from "react";
 
 import type {
@@ -14,7 +15,6 @@ import {
 import { DancingSticks } from "@anlg/ui/components/ui/dancing-sticks";
 import { cn } from "@anlg/utils";
 
-import { DictationTranscript } from "./dictation";
 import {
   FLOATING_BAR_COMPACT_GAP,
   FLOATING_BAR_COMPACT_HEIGHT,
@@ -79,7 +79,7 @@ export function FloatingBarOverlay({
             : FLOATING_BAR_COMPACT_RADIUS,
           background:
             hovered && !isExpanded ? colors.envelopeSurface : colors.surface,
-          boxShadow: `inset 0 0 0 0.5px ${colors.outerStroke}`,
+          boxShadow: `inset 0 0 0 0.5px ${colors.rim}`,
         }}
       >
         {showsHoverHandle && <HoverHandle color={colors.handle} />}
@@ -100,10 +100,8 @@ export function FloatingBarOverlay({
               }}
             >
               <TranscriptList
-                key={state.dictation?.sessionId ?? "meeting"}
-                dictation={state.dictation}
                 bubbles={state.transcriptBubbles ?? []}
-                colorScheme={state.colorScheme}
+                colors={colors}
                 notice={state.transcriptNotice ?? null}
               />
             </div>
@@ -147,6 +145,8 @@ function FloatingControls({
   onStop: () => void;
   onToggleExpanded: (expanded: boolean) => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <div
       className="flex items-center"
@@ -158,7 +158,7 @@ function FloatingControls({
           type="button"
           data-tauri-drag-region="false"
           aria-label={
-            isExpanded ? "Collapse live transcript" : "Expand live transcript"
+            isExpanded ? t`Collapse live transcript` : t`Expand live transcript`
           }
           onClick={() => onToggleExpanded(!isExpanded)}
           className="flex items-center justify-center"
@@ -189,7 +189,9 @@ function StopControl({
   colors: BarColors;
   onStop: () => void;
 }) {
+  const { t } = useLingui();
   const [hovered, setHovered] = useState(false);
+  const notice = state.transcriptNotice ?? t`Recording needs attention`;
   const width = state.liveCaptionToggleVisible
     ? FLOATING_BAR_COMPACT_STOP_WIDTH
     : FLOATING_BAR_COMPACT_SOLO_STOP_WIDTH;
@@ -199,18 +201,15 @@ function StopControl({
       type="button"
       data-tauri-drag-region="false"
       aria-label={
-        state.dictation
-          ? "Finish dictation"
-          : state.status === "error"
-            ? `${state.transcriptNotice ?? "Recording needs attention"}; stop listening`
-            : "Stop listening"
+        state.status === "error"
+          ? t`${notice}; stop listening`
+          : t`Stop listening`
       }
       title={
         state.status === "error"
-          ? `${state.transcriptNotice ?? "Recording needs attention"}. Open Anarlog to retry or change devices.`
+          ? t`${notice}. Open Librelog to retry or change devices.`
           : undefined
       }
-      disabled={state.dictation?.phase === "transcribing"}
       onClick={onStop}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -219,24 +218,20 @@ function StopControl({
         width,
         height: FLOATING_BAR_COMPACT_ICON_SIZE,
         borderRadius: FLOATING_BAR_CONTROL_RADIUS,
-        background: hovered ? "rgba(255, 51, 77, 0.18)" : colors.controlFill,
-        color: colors.accent,
+        background: hovered ? colors.dangerFill : colors.controlFill,
+        color: colors.danger,
       }}
     >
-      {state.dictation?.phase === "transcribing" ? (
-        <span role="status" className="text-xs">
-          Finishing…
-        </span>
-      ) : hovered ? (
+      {hovered ? (
         <span className="flex items-center gap-1.5 text-xs font-semibold">
           <Square size={9} />
-          {state.dictation ? "Done" : "Stop"}
+          <Trans>Stop</Trans>
         </span>
       ) : state.status === "error" ? (
         <WarningCircle size={20} aria-hidden="true" />
       ) : (
         <DancingSticks
-          color={colors.accent}
+          color={colors.danger}
           amplitude={state.amplitude}
           width={26}
           height={20}
@@ -250,13 +245,11 @@ function StopControl({
 
 function TranscriptList({
   bubbles,
-  colorScheme,
-  dictation,
+  colors,
   notice,
 }: {
-  dictation: FloatingBarState["dictation"];
   bubbles: FloatingTranscriptBubble[];
-  colorScheme: FloatingBarState["colorScheme"];
+  colors: BarColors;
   notice: string | null;
 }) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -266,7 +259,7 @@ function TranscriptList({
     if (pinned) {
       bottomRef.current?.scrollIntoView?.({ block: "end" });
     }
-  }, [bubbles, pinned, notice, dictation?.text, dictation?.partial]);
+  }, [bubbles, pinned, notice]);
 
   return (
     <div className="relative h-full p-3">
@@ -279,41 +272,24 @@ function TranscriptList({
           setPinned(distance < 20);
         }}
       >
-        <div
-          className={cn([
-            "flex min-h-full flex-col gap-2",
-            dictation ? "justify-start" : "justify-end",
-          ])}
-        >
-          {dictation ? (
-            <DictationTranscript
-              dictation={dictation}
-              colorScheme={colorScheme}
+        <div className="flex min-h-full flex-col justify-end gap-2">
+          {bubbles.map((bubble, index) => (
+            <TranscriptBubble
+              key={bubble.id}
+              bubble={bubble}
+              colors={colors}
+              showsSpeakerLabel={
+                index === 0 ||
+                bubbles[index - 1]?.speakerLabel !== bubble.speakerLabel ||
+                bubbles[index - 1]?.isSelf !== bubble.isSelf
+              }
             />
-          ) : (
-            bubbles.map((bubble, index) => (
-              <TranscriptBubble
-                key={bubble.id}
-                bubble={bubble}
-                colorScheme={colorScheme}
-                showsSpeakerLabel={
-                  index === 0 ||
-                  bubbles[index - 1]?.speakerLabel !== bubble.speakerLabel ||
-                  bubbles[index - 1]?.isSelf !== bubble.isSelf
-                }
-              />
-            ))
-          )}
-          {!dictation && notice ? (
+          ))}
+          {notice ? (
             <p
               role="status"
               className="px-3 py-1.5 text-center text-[12px] leading-4"
-              style={{
-                color:
-                  colorScheme === "dark"
-                    ? "rgba(255, 255, 255, 0.5)"
-                    : "rgba(0, 0, 0, 0.45)",
-              }}
+              style={{ color: colors.muted }}
             >
               {notice}
             </p>
@@ -321,10 +297,7 @@ function TranscriptList({
           <div ref={bottomRef} />
         </div>
       </div>
-      {!pinned &&
-      (dictation
-        ? !!(dictation.text || dictation.partial)
-        : bubbles.length > 0) ? (
+      {!pinned && bubbles.length > 0 ? (
         <button
           type="button"
           data-tauri-drag-region="false"
@@ -337,13 +310,13 @@ function TranscriptList({
           }}
           className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[11px] font-medium"
           style={{
-            background:
-              colorScheme === "dark" ? "rgb(46, 46, 43)" : "rgb(242, 242, 237)",
-            color: colorScheme === "dark" ? "white" : "rgb(31, 28, 26)",
+            background: colors.chip,
+            boxShadow: `inset 0 0 0 0.5px ${colors.rim}`,
+            color: colors.content,
           }}
         >
           <CaretDown size={10} weight="bold" />
-          Go to bottom
+          <Trans>Go to bottom</Trans>
         </button>
       ) : null}
     </div>
@@ -353,11 +326,11 @@ function TranscriptList({
 function TranscriptBubble({
   bubble,
   showsSpeakerLabel,
-  colorScheme,
+  colors,
 }: {
   bubble: FloatingTranscriptBubble;
   showsSpeakerLabel: boolean;
-  colorScheme: FloatingBarState["colorScheme"];
+  colors: BarColors;
 }) {
   const overlapping = bubble.overlapsPrevious || bubble.overlapsNext;
 
@@ -367,20 +340,20 @@ function TranscriptBubble({
     >
       <div className="max-w-[calc(100%-40px)] text-left">
         {(showsSpeakerLabel || overlapping) && (
-          <p className="mb-1 text-[10px] font-semibold text-white">
+          <p
+            className="mb-1 text-[10px] font-semibold"
+            style={{ color: colors.content }}
+          >
             {showsSpeakerLabel ? bubble.speakerLabel : ""}
           </p>
         )}
         <p
-          className="rounded-[11px] px-2.5 py-2 text-[13px] leading-5 text-white"
+          className="rounded-[11px] px-2.5 py-2 text-[13px] leading-5"
           style={{
-            background: bubble.isSelf
-              ? `rgba(0, 0, 0, ${colorScheme === "dark" ? 0.34 : 0.24})`
-              : `rgba(0, 0, 0, ${colorScheme === "dark" ? 0.28 : 0.2})`,
+            color: colors.content,
+            background: bubble.isSelf ? colors.selfBubble : colors.bubble,
             boxShadow: overlapping
-              ? `inset 0 0 0 1px rgba(255, 255, 255, ${
-                  colorScheme === "dark" ? 0.26 : 0.34
-                })`
+              ? `inset 0 0 0 1px ${colors.overlap}`
               : undefined,
           }}
         >
@@ -416,29 +389,38 @@ function HoverHandle({ color }: { color: string }) {
   );
 }
 
-type BarColors = {
-  surface: string;
-  envelopeSurface: string;
-  content: string;
-  handle: string;
-  outerStroke: string;
-  controlFill: string;
-  accent: string;
-};
+type BarColors = ReturnType<typeof barColors>;
 
-function barColors(state: FloatingBarState): BarColors {
+/** The opacity setting's default, which draws Hex's HUD plate. */
+const DEFAULT_OPACITY = 0.78;
+
+/**
+ * Hex's HUD plate: graphite in the dark appearance, white in the light one,
+ * with its hairline rim. Red is the only hue, for recording and errors.
+ */
+function barColors(state: FloatingBarState) {
   const opacity = Math.min(Math.max(state.opacity, 0.35), 0.95);
   const dark = state.colorScheme === "dark";
-  const content = dark ? "rgb(255, 255, 255)" : "rgb(31, 28, 26)";
-  const surfaceRgb = dark ? "110, 112, 102" : "219, 217, 209";
+  const plate = dark ? "17, 17, 20" : "252, 251, 249";
+  const ink = dark ? "255, 255, 255" : "23, 23, 23";
+  const surface = Math.min(
+    (opacity / DEFAULT_OPACITY) * (dark ? 0.94 : 0.96),
+    0.98,
+  );
 
   return {
-    surface: `rgba(${surfaceRgb}, ${opacity * 0.82})`,
-    envelopeSurface: `rgba(${surfaceRgb}, ${Math.min(opacity * 1.08, 0.95)})`,
-    content,
-    handle: dark ? "rgba(255, 255, 255, 0.48)" : "rgba(31, 28, 26, 0.36)",
-    outerStroke: dark ? "rgba(255, 255, 255, 0.14)" : "rgba(31, 28, 26, 0.12)",
-    controlFill: dark ? "rgba(255, 255, 255, 0.08)" : "rgba(31, 28, 26, 0.07)",
-    accent: "rgb(255, 51, 77)",
+    surface: `rgba(${plate}, ${surface})`,
+    envelopeSurface: `rgba(${plate}, ${Math.min(surface + 0.04, 0.98)})`,
+    rim: dark ? "rgba(255, 255, 255, 0.11)" : "rgba(0, 0, 0, 0.09)",
+    content: `rgb(${ink})`,
+    muted: `rgba(${ink}, ${dark ? 0.5 : 0.45})`,
+    handle: `rgba(${ink}, ${dark ? 0.48 : 0.36})`,
+    controlFill: `rgba(${ink}, ${dark ? 0.08 : 0.07})`,
+    bubble: `rgba(${ink}, ${dark ? 0.07 : 0.045})`,
+    selfBubble: `rgba(${ink}, ${dark ? 0.12 : 0.08})`,
+    overlap: `rgba(${ink}, ${dark ? 0.26 : 0.2})`,
+    chip: dark ? "rgb(31, 31, 35)" : "rgb(242, 242, 242)",
+    danger: dark ? "#F17471" : "#B82D35",
+    dangerFill: dark ? "rgba(241, 116, 113, 0.18)" : "rgba(184, 45, 53, 0.14)",
   };
 }

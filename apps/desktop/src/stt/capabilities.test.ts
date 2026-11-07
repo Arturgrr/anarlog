@@ -158,7 +158,7 @@ describe("isSupportedLocalSttModel", () => {
   test.each([
     { model: "soniqo-parakeet-streaming", expected: true },
     { model: "apple-speech", expected: true },
-    { model: "am-parakeet-v3", expected: true },
+    { model: "am-parakeet-v3", expected: false },
     { model: "QuantizedSmallEn", expected: true },
     { model: "cloud", expected: false },
     { model: "Llama3p2_3bQ4", expected: false },
@@ -178,7 +178,7 @@ describe("isOnDeviceSttModel", () => {
       model: "soniqo-parakeet-batch",
       expected: false,
     },
-    { provider: "anarlog", model: "soniqo-parakeet-streaming", expected: true },
+    { provider: "anarlog", model: "am-parakeet-v3", expected: false },
   ])("$provider/$model -> $expected", ({ provider, model, expected }) => {
     expect(isOnDeviceSttModel(provider, model)).toBe(expected);
   });
@@ -207,9 +207,6 @@ describe("isRealtimeLocalModel", () => {
 
 describe("isConfiguredSttModel", () => {
   test.each([
-    { provider: "anarlog", model: "cloud", expected: true },
-    { provider: "anarlog", model: "soniqo-qwen3-small", expected: true },
-    { provider: "anarlog", model: "removed-local-model", expected: false },
     { provider: "soniqo", model: "soniqo-parakeet-batch", expected: true },
     { provider: "soniqo", model: "apple-speech", expected: false },
     { provider: "apple_speech", model: "apple-speech", expected: true },
@@ -234,30 +231,14 @@ describe("getUnsupportedDesktopLocalSttRepair", () => {
   });
 
   test.each(["windows", "linux"])(
-    "uses hosted transcription for entitled users on %s",
+    "requires a new provider selection on %s",
     (currentPlatform) => {
       expect(
         getUnsupportedDesktopLocalSttRepair(
           currentPlatform,
           "x86_64",
-          "anarlog",
+          "soniqo",
           "soniqo-parakeet-streaming",
-          true,
-        ),
-      ).toEqual({ provider: "anarlog", model: "cloud" });
-    },
-  );
-
-  test.each(["windows", "linux"])(
-    "requires a new provider selection for free users on %s",
-    (currentPlatform) => {
-      expect(
-        getUnsupportedDesktopLocalSttRepair(
-          currentPlatform,
-          "x86_64",
-          "anarlog",
-          "am-parakeet-v3",
-          false,
         ),
       ).toEqual({ provider: "", model: "" });
     },
@@ -268,9 +249,8 @@ describe("getUnsupportedDesktopLocalSttRepair", () => {
       getUnsupportedDesktopLocalSttRepair(
         "macos",
         "aarch64",
-        "anarlog",
+        "soniqo",
         "soniqo-parakeet-streaming",
-        false,
       ),
     ).toBeNull();
   });
@@ -282,46 +262,17 @@ describe("getUnsupportedDesktopLocalSttRepair", () => {
         "x86_64",
         "local_file",
         "local-file",
-        true,
       ),
-    ).toEqual({ provider: "anarlog", model: "cloud" });
+    ).toEqual({ provider: "", model: "" });
   });
 
-  test.each([
-    [true, { provider: "anarlog", model: "cloud" }],
-    [false, { provider: "", model: "" }],
-  ])(
-    "repairs unsupported Intel Mac local transcription when cloud access is %s",
-    (canUseCloud, expected) => {
-      expect(
-        getUnsupportedDesktopLocalSttRepair(
-          "macos",
-          "x86_64",
-          "anarlog",
-          "soniqo-parakeet-streaming",
-          canUseCloud,
-        ),
-      ).toEqual(expected);
-    },
-  );
-
-  test("does not rewrite cloud or BYOK selections", () => {
-    expect(
-      getUnsupportedDesktopLocalSttRepair(
-        "windows",
-        "x86_64",
-        "anarlog",
-        "cloud",
-        true,
-      ),
-    ).toBeNull();
+  test("does not rewrite BYOK selections", () => {
     expect(
       getUnsupportedDesktopLocalSttRepair(
         "linux",
         "x86_64",
         "deepgram",
         "nova-3-general",
-        false,
       ),
     ).toBeNull();
   });

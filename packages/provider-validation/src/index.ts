@@ -122,7 +122,7 @@ export async function verifyProviderCredentials(
     if (request.checkAuthentication) {
       const control = credentialRequest({
         ...credential,
-        apiKey: "anarlog-invalid-key-verification",
+        apiKey: "librelog-invalid-key-verification",
       });
       const rejected = await fetcher(control.url, {
         ...control.init,

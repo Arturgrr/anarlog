@@ -39,10 +39,10 @@ export function NoteConflictBanner({ sessionId }: { sessionId: string }) {
     <>
       {conflicts.length > 0 && (
         <div className="shrink-0 px-1 pt-1 pb-2">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-amber-500/35 bg-amber-500/10 px-3 py-2">
+          <div className="bg-layer-2 border-border flex flex-wrap items-center justify-between gap-3 rounded-lg border px-3 py-2">
             <div className="flex min-w-0 items-start gap-2.5">
               <Warning
-                className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400"
+                className="text-icon mt-0.5 size-4 shrink-0"
                 aria-hidden="true"
               />
               <p className="text-foreground text-[13px] leading-5 font-medium">

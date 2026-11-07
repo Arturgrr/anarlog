@@ -14,12 +14,9 @@ import type { SpeakerHintWithId, WordWithId } from "~/stt/types";
 type SessionContentSqlRow = {
   id: string;
   owner_user_id: string;
-  owner_email: string | null;
   title: string;
   created_at: string;
-  event_json: string;
   source_apps_json: string;
-  event_id: string;
   raw_note_id: string;
   raw_template_id: string;
   raw_updated_at: string;
@@ -59,12 +56,9 @@ type ParticipantJson = {
 export type SessionContentSnapshot = {
   sessionId: string;
   ownerUserId: string;
-  ownerEmail?: string | null;
   title: string;
   createdAt: string;
-  event: unknown;
   sourceApps: SessionSourceApp[];
-  eventId: string | null;
   rawNoteId: string | null;
   rawTemplateId: string;
   rawUpdatedAt: string;
@@ -104,17 +98,9 @@ const SESSION_CONTENT_SQL = `
   SELECT
     session.id,
     session.owner_user_id,
-    (
-      SELECT NULLIF(lower(self_human.email), '')
-      FROM humans AS self_human
-      WHERE self_human.id = session.owner_user_id
-        AND self_human.deleted_at IS NULL
-    ) AS owner_email,
     session.title,
     session.created_at,
-    session.event_json,
     session.source_apps_json,
-    COALESCE(NULLIF(session.event_id, ''), NULLIF(session.external_event_id, ''), '') AS event_id,
     COALESCE(note.id, '') AS raw_note_id,
     COALESCE(note.template_id, '') AS raw_template_id,
     COALESCE(note.updated_at, '') AS raw_updated_at,
@@ -151,9 +137,12 @@ const SESSION_CONTENT_SQL = `
     COALESCE((
       SELECT json_group_array(json_object(
         'human_id', participant.human_id,
-        'name', COALESCE(NULLIF(human.name, ''), participant.display_name),
-        'email', COALESCE(NULLIF(human.email, ''), participant.email),
-        'job_title', COALESCE(human.job_title, '')
+        'name', CASE WHEN participant.human_id = session.owner_user_id THEN ''
+          ELSE COALESCE(NULLIF(human.name, ''), participant.display_name) END,
+        'email', CASE WHEN participant.human_id = session.owner_user_id THEN ''
+          ELSE COALESCE(NULLIF(human.email, ''), participant.email) END,
+        'job_title', CASE WHEN participant.human_id = session.owner_user_id THEN ''
+          ELSE COALESCE(human.job_title, '') END
       ))
       FROM session_participants AS participant
       LEFT JOIN humans AS human
@@ -300,12 +289,9 @@ function mapSessionContentRow(
   return {
     sessionId: row.id,
     ownerUserId: row.owner_user_id,
-    ownerEmail: row.owner_email,
     title: row.title,
     createdAt: row.created_at,
-    event: parseJson(row.event_json),
     sourceApps: parseSessionSourceApps(row.source_apps_json),
-    eventId: row.event_id || null,
     rawNoteId: row.raw_note_id || null,
     rawTemplateId: row.raw_template_id,
     rawUpdatedAt: row.raw_updated_at,

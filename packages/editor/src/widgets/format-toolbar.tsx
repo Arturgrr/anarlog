@@ -31,6 +31,7 @@ import {
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
+import { useEditorLabels } from "../labels";
 import { schema } from "../note/schema";
 
 const OVERFLOW_CLIP = /(auto|scroll|overlay|hidden|clip)/;
@@ -116,6 +117,7 @@ export function FormatToolbar({
   onComment?: () => void;
   showFormatting?: boolean;
 }) {
+  const labels = useEditorLabels();
   const toolbarRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
 
@@ -222,10 +224,10 @@ export function FormatToolbar({
     <div
       ref={toolbarRef}
       role="toolbar"
-      aria-label="Format selection"
+      aria-label={labels.formatSelection}
       className={cn([
-        "bg-popover ring-border fixed z-50 flex items-center gap-0.5 rounded-xl p-1 ring-1",
-        "shadow-lg",
+        "bg-layer-1 fixed z-50 flex items-center gap-0.5 rounded-md p-0.5",
+        "shadow-floating",
       ])}
       style={{ top: 0, left: 0 }}
       onMouseDown={(e) => e.preventDefault()}
@@ -238,11 +240,11 @@ export function FormatToolbar({
               key={button.id}
               aria-pressed={active}
               className={cn([
-                "flex size-7 items-center justify-center rounded-md",
-                "cursor-pointer border-none transition-colors",
+                "flex size-7 items-center justify-center rounded-sm",
+                "cursor-pointer border-none",
                 active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground bg-transparent",
+                  ? "bg-pressed text-foreground"
+                  : "text-icon-muted hover:bg-hover hover:text-foreground bg-transparent",
               ])}
               onClick={() => toggle(button.markType)}
             >
@@ -256,10 +258,10 @@ export function FormatToolbar({
       {onComment && (
         <button
           type="button"
-          aria-label="Comment"
+          aria-label={labels.comment}
           className={cn([
-            "text-muted-foreground flex size-7 items-center justify-center rounded-md",
-            "hover:bg-accent hover:text-accent-foreground cursor-pointer border-none bg-transparent transition-colors",
+            "text-icon-muted flex size-7 items-center justify-center rounded-sm",
+            "hover:bg-hover hover:text-foreground cursor-pointer border-none bg-transparent",
           ])}
           onClick={onComment}
         >

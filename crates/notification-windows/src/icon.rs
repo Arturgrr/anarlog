@@ -85,7 +85,6 @@ mod win {
     fn load_icon_asset(asset: &NotificationIconAsset) -> Option<HICON> {
         match asset {
             NotificationIconAsset::AppIcon => load_app_icon(),
-            NotificationIconAsset::Calendar => load_calendar_icon(),
             NotificationIconAsset::SystemSymbol { name } => load_system_symbol(name),
             NotificationIconAsset::BundleId { bundle_id } => load_icon_from_bundle_id(bundle_id),
             NotificationIconAsset::Path { path } => load_icon_from_path(path),
@@ -449,12 +448,12 @@ mod tests {
         let previous_home = std::env::var("HOME").ok();
         let previous_profile = std::env::var("USERPROFILE").ok();
         unsafe {
-            std::env::set_var("HOME", "/home/anarlog");
+            std::env::set_var("HOME", "/home/librelog");
             std::env::remove_var("USERPROFILE");
         }
         assert_eq!(
             expand_home("~/icons/zoom.png"),
-            "/home/anarlog/icons/zoom.png"
+            "/home/librelog/icons/zoom.png"
         );
         assert_eq!(expand_home("/usr/share/zoom.png"), "/usr/share/zoom.png");
         match previous_home {

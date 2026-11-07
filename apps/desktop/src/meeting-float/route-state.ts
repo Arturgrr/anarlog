@@ -1,4 +1,4 @@
-import type { FloatingDictationState } from "@anlg/plugin-windows";
+import { t } from "@lingui/core/macro";
 
 import {
   DEFAULT_FLOATING_OVERLAY_SETTINGS,
@@ -7,6 +7,7 @@ import {
 } from "./settings";
 import type { FloatingSpeakerLabels } from "./speaker-labels";
 
+import { localizeSpeakerLabel } from "~/i18n/external-messages";
 import type { ListenerStore } from "~/store/zustand/listener";
 import {
   getCaptureWarning,
@@ -33,7 +34,6 @@ export type FloatingTranscriptBubble = {
 };
 
 export type FloatingRouteState = {
-  dictation?: FloatingDictationState | null;
   sessionId: string;
   title: string;
   amplitude: number;
@@ -123,7 +123,7 @@ export function getFloatingRouteState(
 
 function getFloatingTitle(title: string | null | undefined) {
   const normalized = title?.trim();
-  return normalized || "Live transcript";
+  return normalized || t`Live transcript`;
 }
 
 export function getFloatingTranscriptBubbles(
@@ -156,8 +156,8 @@ export function getFloatingTranscriptBubbles(
         id: segment.id,
         speakerLabel: resolved
           ? isSelf
-            ? "You"
-            : resolved.label
+            ? t`You`
+            : localizeSpeakerLabel(resolved.label)
           : getFloatingSpeakerLabel(segment.key, speakerLabelContext),
         text,
         isSelf,
@@ -191,7 +191,7 @@ function getFloatingSpeakerLabel(
   ctx?: RenderLabelContext,
 ) {
   if (isFloatingSelfSpeaker(key)) {
-    return "You";
+    return t`You`;
   }
 
   if (ctx) {
@@ -199,14 +199,15 @@ function getFloatingSpeakerLabel(
   }
 
   if (key.speaker_index != null) {
-    return `Speaker ${key.speaker_index + 1}`;
+    const speakerNumber = key.speaker_index + 1;
+    return t`Speaker ${speakerNumber}`;
   }
 
   if (key.channel === "RemoteParty") {
-    return "Speaker";
+    return t`Speaker`;
   }
 
-  return "Audio";
+  return t`Audio`;
 }
 
 function isFloatingSelfSpeaker(
@@ -346,14 +347,6 @@ export function isSameFloatingRouteState(
     left?.liveCaptionToggleVisible === right?.liveCaptionToggleVisible &&
     left?.title === right?.title &&
     (left?.transcriptNotice ?? null) === (right?.transcriptNotice ?? null) &&
-    left?.dictation?.sessionId === right?.dictation?.sessionId &&
-    left?.dictation?.phase === right?.dictation?.phase &&
-    left?.dictation?.microphone === right?.dictation?.microphone &&
-    left?.dictation?.text === right?.dictation?.text &&
-    left?.dictation?.partial === right?.dictation?.partial &&
-    left?.dictation?.previewEnabled === right?.dictation?.previewEnabled &&
-    left?.dictation?.previewUnavailable ===
-      right?.dictation?.previewUnavailable &&
     isSameFloatingTranscriptBubbles(
       left?.transcriptBubbles,
       right?.transcriptBubbles,

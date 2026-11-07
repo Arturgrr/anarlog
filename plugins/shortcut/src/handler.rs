@@ -11,11 +11,13 @@ pub use self::stub::Handler;
 
 #[cfg(target_os = "macos")]
 mod macos {
-    use std::{sync::Mutex, time::Duration};
+    use std::{
+        sync::{Arc, Mutex, atomic::AtomicBool},
+        time::Duration,
+    };
 
     use anlg_shortcut_macos as sm;
     use tauri::{AppHandle, Runtime};
-    use tauri_specta::Event;
 
     use super::{Error, HotKey, Options};
     use crate::events::Modifier;
@@ -38,22 +40,45 @@ mod macos {
             hotkey: HotKey,
             options: Options,
         ) -> Result<(), Error> {
-            let listener = sm::Listener::start(
-                convert_hotkey(&hotkey),
-                convert_options(options),
-                move |out| {
-                    let evt = match out {
+            self.register_triggers(
+                app,
+                vec![(
+                    0,
+                    sm::Trigger::HotKey {
+                        hotkey: convert_hotkey(&hotkey),
+                        options: convert_options(options),
+                    },
+                )],
+                Arc::new(AtomicBool::new(false)),
+            )
+        }
+
+        /// Replaces the native shortcuts with `triggers`, all watched by one
+        /// event tap. Each is paired with its position in the configured list.
+        pub fn register_triggers<R: Runtime>(
+            &self,
+            app: AppHandle<R>,
+            triggers: Vec<(usize, sm::Trigger)>,
+            active: Arc<AtomicBool>,
+        ) -> Result<(), Error> {
+            let mut listener = self.listener.lock().unwrap_or_else(|e| e.into_inner());
+            listener.take();
+            if triggers.is_empty() {
+                return Ok(());
+            }
+            let (sources, triggers): (Vec<_>, Vec<_>) = triggers.into_iter().unzip();
+            *listener = Some(
+                sm::Listener::start(&triggers, active, move |index, out| {
+                    let event = match out {
                         sm::Output::StartRecording => ShortcutEvent::Pressed,
                         sm::Output::StopRecording => ShortcutEvent::Released,
                         sm::Output::Cancel => ShortcutEvent::Cancelled,
                         sm::Output::Discard => ShortcutEvent::Discarded,
                     };
-                    let _ = evt.emit(&app);
-                },
-            )
-            .map_err(|e| Error::TapStart(e.to_string()))?;
-
-            *self.listener.lock().unwrap_or_else(|e| e.into_inner()) = Some(listener);
+                    crate::press::emit(&app, sources[index], event);
+                })
+                .map_err(|e| Error::TapStart(e.to_string()))?,
+            );
             Ok(())
         }
 

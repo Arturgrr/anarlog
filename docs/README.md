@@ -1,16 +1,6 @@
-# Anarlog documentation
+# Librelog documentation
 
-This Mintlify project is published at [docs.anarlog.so](https://docs.anarlog.so).
-
-## Deployment
-
-Configure the Mintlify project with `docs/` as its documentation directory and `docs.anarlog.so` as its custom domain. In Mintlify's domain setup:
-
-1. Add the verification records shown in the dashboard.
-2. Wait for both records and TLS provisioning to verify.
-3. Point the `docs` CNAME to the target shown by Mintlify.
-
-The website redirects the previous `anarlog.so/docs/*` routes to the matching path on the custom domain.
+This Mintlify project holds the Librelog user, CLI, and agent documentation. There is no hosted documentation site yet; read the pages in this directory or preview them locally.
 
 ## Local preview
 
@@ -22,9 +12,9 @@ cd docs
 mint dev
 ```
 
-Update `docs.json` whenever a page is added, moved, or removed. Keep CLI and MCP reference content aligned with `apps/cli/src/cli.rs` and `apps/cli/src/mcp.rs`. Mintlify publishes the custom agent skill from `skill.md`; keep it aligned with `../skills/anarlog/`.
+Update `docs.json` whenever a page is added, moved, or removed. Keep CLI and MCP reference content aligned with `apps/cli/src/cli.rs` and `apps/cli/src/mcp.rs`. `skill.md` is generated from `../skills/librelog/`; keep them aligned.
 
-Before deploying, run:
+Before submitting changes, run:
 
 ```bash
 mint validate

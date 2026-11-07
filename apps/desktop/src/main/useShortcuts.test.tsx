@@ -44,10 +44,6 @@ vi.mock("react-hotkeys-hook", () => ({
   },
 }));
 
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ isPro: true }),
-}));
-
 vi.mock("~/contexts/shell", () => ({
   useShell: () => ({
     chat: {
@@ -100,7 +96,6 @@ vi.mock("~/store/zustand/tabs", () => {
         case "sessions":
         case "humans":
         case "organizations":
-        case "task":
         case "daily_summary":
           return `${tab.type}-${tab.id}`;
         case "edit":

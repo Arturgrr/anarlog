@@ -10,8 +10,6 @@ const mocks = vi.hoisted(() => ({
   transaction: vi.fn(),
   transcribe: vi.fn(),
   summarize: vi.fn(),
-  billingReady: true,
-  authSession: {} as object | null,
 }));
 vi.mock("@anlg/plugin-db", () => ({
   cleanupRecordingImports: async () => {},
@@ -23,12 +21,6 @@ vi.mock("~/settings/queries", () => ({ useSettingsReady: () => true }));
 vi.mock("~/settings/providers", () => ({
   useAiProvidersState: () => ({ isReady: true }),
 }));
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ isReady: mocks.billingReady }),
-}));
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: mocks.authSession }),
-}));
 vi.mock("~/db", () => ({
   liveQueryClient: { execute: mocks.execute },
   executeTransaction: mocks.transaction,
@@ -38,10 +30,6 @@ vi.mock("@anlg/plugin-fs-sync", () => ({
 }));
 vi.mock("@anlg/plugin-fs2", () => ({
   commands: { remove: async () => ({ status: "ok" }) },
-}));
-vi.mock("~/db/cloudsync-activity", () => ({
-  withCloudsyncActivity: (_kind: string, _id: string, run: () => unknown) =>
-    run(),
 }));
 vi.mock("~/session/attachments", () => ({
   catalogLocalSessionAudio: async () => {},
@@ -120,8 +108,6 @@ it.each([false, true])(
   "survives StrictMode and waits for the summary outcome (failure: %s)",
   async (fails) => {
     vi.useFakeTimers();
-    mocks.billingReady = true;
-    mocks.authSession = {};
     const job = setupJob(fails);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(100);
@@ -142,10 +128,8 @@ it.each([false, true])(
   },
 );
 
-it("runs signed-out imports and finishes them after the worker unmounts", async () => {
+it("finishes imports after the worker unmounts", async () => {
   vi.useFakeTimers();
-  mocks.billingReady = false;
-  mocks.authSession = null;
   const job = setupJob(false);
   await act(async () => {
     await vi.advanceTimersByTimeAsync(100);

@@ -17,21 +17,8 @@ export function subscriptionTwinId(
   }
 }
 
-export function isFoldedSubscriptionProvider(providerId: string): boolean {
-  return (Object.values(API_SUBSCRIPTION_TWINS) as string[]).includes(
-    providerId,
-  );
-}
-
-export function shouldShowInProviderList(
-  providerId: string,
-  search: string,
-): boolean {
-  if (providerId === "anarlog") {
-    return false;
-  }
-  if (isFoldedSubscriptionProvider(providerId) && !search.trim()) {
-    return false;
-  }
-  return true;
+export function apiTwinId(providerId: string): string | undefined {
+  return Object.entries(API_SUBSCRIPTION_TWINS).find(
+    ([, subscriptionId]) => subscriptionId === providerId,
+  )?.[0];
 }

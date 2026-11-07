@@ -1,0 +1,29 @@
+[package]
+name = "tauri-plugin-apple-foundation"
+version = "0.1.0"
+authors = ["You"]
+edition = "2024"
+exclude = ["/js", "/node_modules"]
+links = "tauri-plugin-apple-foundation"
+description = ""
+
+[build-dependencies]
+tauri-plugin = { workspace = true, features = ["build"] }
+
+[target.'cfg(target_os = "macos")'.build-dependencies]
+swift-rs = { workspace = true, features = ["build"] }
+
+[dev-dependencies]
+specta-typescript = { workspace = true }
+
+[dependencies]
+tauri = { workspace = true, features = ["test"] }
+tauri-specta = { workspace = true, features = ["derive", "typescript"] }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+specta = { workspace = true }
+tokio = { workspace = true, features = ["rt"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+swift-rs = { workspace = true }

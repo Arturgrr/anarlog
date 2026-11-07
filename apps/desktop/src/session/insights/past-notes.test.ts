@@ -7,43 +7,32 @@ import {
 } from "./past-notes";
 
 describe("buildPastSessionNotes", () => {
-  it("builds descending past notes from recurring and same-title sessions", () => {
+  it("builds descending past notes from same-title sessions", () => {
     const data = makeData({
       sessions: {
         current: {
           title: "Weekly Product Sync",
           created_at: "2026-06-03T10:00:00.000Z",
-          event_json: JSON.stringify({
-            started_at: "2026-06-03T10:00:00.000Z",
-            recurrence_series_id: "series-1",
-          }),
           raw_md: "",
         },
         previous: {
           title: "Weekly Product Sync",
           created_at: "2026-05-28T10:00:00.000Z",
-          event_json: JSON.stringify({
-            started_at: "2026-05-28T10:00:00.000Z",
-            recurrence_series_id: "series-1",
-          }),
           raw_md: "",
         },
         same_title: {
           title: "Weekly Product Sync",
           created_at: "2026-05-27T10:00:00.000Z",
-          event_json: "",
           raw_md: "Raw note text should not feed insights.",
         },
         older: {
           title: "Older Product Sync",
           created_at: "2026-05-21T10:00:00.000Z",
-          event_json: "",
           raw_md: "Reviewed onboarding follow-ups and assigned owners.",
         },
         future: {
           title: "Future Product Sync",
           created_at: "2026-06-10T10:00:00.000Z",
-          event_json: "",
           raw_md: "Should not show up.",
         },
       },
@@ -141,7 +130,7 @@ describe("buildPastSessionNotes", () => {
         participantNames: ["alex", "jamie"],
         sourceSummary:
           "Aligned on transcript panel behavior. Past notes should stay short and scannable.",
-        relationship: "same_series",
+        relationship: "matching_title",
         summary: null,
         isGenerating: false,
       },
@@ -167,86 +156,22 @@ describe("buildPastSessionNotes", () => {
     ]);
   });
 
-  it("prioritizes recurring-series history over newer title matches", () => {
-    const participant = {
-      human_id: "alex",
-      user_id: "self",
-      source: "auto",
-    };
-    const data = makeData({
-      sessions: {
-        current: {
-          title: "Weekly Product Sync",
-          created_at: "2026-06-03T10:00:00.000Z",
-          event_json: JSON.stringify({
-            started_at: "2026-06-03T10:00:00.000Z",
-            recurrence_series_id: "series-1",
-          }),
-        },
-        recurring: {
-          title: "Weekly Product Sync",
-          created_at: "2026-05-20T10:00:00.000Z",
-          event_json: JSON.stringify({
-            started_at: "2026-05-20T10:00:00.000Z",
-            recurrence_series_id: "series-1",
-          }),
-        },
-        title_match: {
-          title: "Weekly Product Sync",
-          created_at: "2026-05-30T10:00:00.000Z",
-          event_json: "",
-        },
-      },
-      mapping_session_participant: {
-        current_alex: { ...participant, session_id: "current" },
-        recurring_alex: { ...participant, session_id: "recurring" },
-        title_match_alex: { ...participant, session_id: "title_match" },
-      },
-      enhanced_notes: {
-        recurring_summary: {
-          session_id: "recurring",
-          content: "Recurring context.",
-          position: 0,
-        },
-        title_summary: {
-          session_id: "title_match",
-          content: "Title-match context.",
-          position: 0,
-        },
-      },
-    });
-
-    const result = buildPastSessionNotes(data, "current", "self");
-
-    expect(
-      result.notes.map((note) => [note.sessionId, note.relationship]),
-    ).toEqual([
-      ["recurring", "same_series"],
-      ["title_match", "matching_title"],
-    ]);
-  });
-
-  it("uses shared participants when the meeting is not recurring or same-title", () => {
+  it("uses shared participants when the meeting is not same-title", () => {
     const data = makeData({
       sessions: {
         current: {
           title: "Untitled",
           created_at: "2026-06-03T10:00:00.000Z",
-          event_json: JSON.stringify({
-            started_at: "2026-06-03T20:00:00.000Z",
-          }),
           raw_md: "",
         },
         coffee_chat: {
           title: "Coffee with Yujong",
           created_at: "2026-05-20T10:00:00.000Z",
-          event_json: "",
           raw_md: "",
         },
         other_person: {
           title: "Hiring loop",
           created_at: "2026-05-22T10:00:00.000Z",
-          event_json: "",
           raw_md: "",
         },
       },
@@ -255,21 +180,21 @@ describe("buildPastSessionNotes", () => {
           session_id: "current",
           human_id: "yujong",
           user_id: "self",
-          source: "calendar",
+          source: "auto",
           name: "Yujong Lee",
         },
         coffee_yujong: {
           session_id: "coffee_chat",
           human_id: "yujong",
           user_id: "self",
-          source: "calendar",
+          source: "auto",
           name: "Yujong Lee",
         },
         other_sam: {
           session_id: "other_person",
           human_id: "sam",
           user_id: "self",
-          source: "calendar",
+          source: "auto",
           name: "Sam",
         },
       },
@@ -295,7 +220,7 @@ describe("buildPastSessionNotes", () => {
     expect(result.notes[0]?.participantNames).toEqual(["Yujong Lee"]);
   });
 
-  it("ranks series and title matches ahead of other meetings with the same people", () => {
+  it("ranks title matches ahead of other meetings with the same people", () => {
     const participant = {
       human_id: "yujong",
       user_id: "self",
@@ -307,42 +232,22 @@ describe("buildPastSessionNotes", () => {
         current: {
           title: "Founders sync",
           created_at: "2026-06-03T10:00:00.000Z",
-          event_json: JSON.stringify({
-            started_at: "2026-06-03T10:00:00.000Z",
-            recurrence_series_id: "series-1",
-          }),
-        },
-        series: {
-          title: "Founders sync",
-          created_at: "2026-05-20T10:00:00.000Z",
-          event_json: JSON.stringify({
-            started_at: "2026-05-20T10:00:00.000Z",
-            recurrence_series_id: "series-1",
-          }),
         },
         titled: {
           title: "Founders sync",
           created_at: "2026-05-27T10:00:00.000Z",
-          event_json: "",
         },
         other_meeting: {
           title: "Coffee chat",
           created_at: "2026-05-30T10:00:00.000Z",
-          event_json: "",
         },
       },
       mapping_session_participant: {
         current_yujong: { ...participant, session_id: "current" },
-        series_yujong: { ...participant, session_id: "series" },
         titled_yujong: { ...participant, session_id: "titled" },
         other_yujong: { ...participant, session_id: "other_meeting" },
       },
       enhanced_notes: {
-        series_summary: {
-          session_id: "series",
-          content: "Series context.",
-          position: 0,
-        },
         titled_summary: {
           session_id: "titled",
           content: "Title context.",
@@ -361,7 +266,6 @@ describe("buildPastSessionNotes", () => {
     expect(
       result.notes.map((note) => [note.sessionId, note.relationship]),
     ).toEqual([
-      ["series", "same_series"],
       ["titled", "matching_title"],
       ["other_meeting", "shared_participants"],
     ]);
@@ -373,7 +277,6 @@ describe("past note relationship indexing", () => {
     return {
       title: "Weekly Product Sync",
       created_at: createdAt,
-      event_json: "",
       raw_md: "",
     };
   }
@@ -587,7 +490,6 @@ function makeData(
           user_id: String(row.user_id ?? "self"),
           title: String(row.title ?? ""),
           created_at: String(row.created_at ?? ""),
-          event_json: String(row.event_json ?? ""),
         },
       ]),
     ),

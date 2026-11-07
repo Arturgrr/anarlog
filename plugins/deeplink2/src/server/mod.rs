@@ -108,7 +108,7 @@ pub(crate) fn subscription_auth_deeplink(
     search: &AuthCallbackSearch,
 ) -> Option<String> {
     let code = search.code.as_deref()?.trim();
-    if code.is_empty() || !search.access_token.is_empty() || !search.refresh_token.is_empty() {
+    if code.is_empty() {
         return None;
     }
 
@@ -142,46 +142,15 @@ fn ui_content(deep_link: &DeepLink) -> (bool, &'static str, &'static str) {
             if search
                 .code
                 .as_deref()
-                .is_some_and(|code| !code.trim().is_empty())
-                && search.access_token.is_empty()
-                && search.refresh_token.is_empty() =>
+                .is_some_and(|code| !code.trim().is_empty()) =>
         {
             (
                 true,
                 "Connected successfully",
-                "Returning to Anarlog to finish connecting.",
+                "Returning to Librelog to finish connecting.",
             )
         }
-        DeepLink::AuthCallback(_) => (
-            true,
-            "Signed in successfully",
-            "Click the button below to return to the app.",
-        ),
-        DeepLink::BillingRefresh(_) => (
-            true,
-            "Subscription updated",
-            "Click the button below to return to the app.",
-        ),
-        DeepLink::IntegrationCallback(s) if s.status == "success" => (
-            true,
-            "Connected successfully",
-            "Click the button below to return to the app.",
-        ),
-        DeepLink::IntegrationCallback(s) if s.status == "upgrade_required" => (
-            false,
-            "Upgrade required",
-            "You can close this window and upgrade your plan to connect this integration.",
-        ),
-        DeepLink::IntegrationCallback(_) => (
-            false,
-            "Connection failed",
-            "Something went wrong. Please close this window and try again.",
-        ),
-        DeepLink::OnboardingDemoComplete(_) => (
-            true,
-            "Demo complete",
-            "Anarlog is finishing your transcript and creating your summary.",
-        ),
+        DeepLink::AuthCallback(_) => default_ui_content(),
     }
 }
 
@@ -221,8 +190,7 @@ async fn handle_request<R: tauri::Runtime>(
     shutdown.notify_one();
 
     // Subscription codes bounce through `{scheme}://auth/callback?code=…` so
-    // the OS opens the app. Token logins stay focus-only to avoid a second
-    // auth callback with the same secrets.
+    // the OS opens the app.
     Html(html)
 }
 
@@ -341,36 +309,20 @@ mod tests {
         AuthCallbackSearch {
             code: Some("ac_nf5hq".to_string()),
             state: Some("state-1".to_string()),
-            ..AuthCallbackSearch::default()
         }
     }
 
     #[test]
     fn subscription_code_bounces_through_custom_scheme_deeplink() {
         assert_eq!(
-            subscription_auth_deeplink("anarlog", &subscription_search()).as_deref(),
-            Some("anarlog://auth/callback?code=ac_nf5hq&state=state-1")
+            subscription_auth_deeplink("librelog", &subscription_search()).as_deref(),
+            Some("librelog://auth/callback?code=ac_nf5hq&state=state-1")
         );
-        let html = render_html(&DeepLink::AuthCallback(subscription_search()), "anarlog");
-        assert!(html.contains("anarlog://auth/callback?code=ac_nf5hq"));
+        let html = render_html(&DeepLink::AuthCallback(subscription_search()), "librelog");
+        assert!(html.contains("librelog://auth/callback?code=ac_nf5hq"));
         assert!(html.contains("state=state-1"));
         assert!(html.contains(r#"document.getElementById("open-app")?.click()"#));
-        assert!(!html.contains("anarlog://focus"));
-    }
-
-    #[test]
-    fn token_login_stays_focus_only() {
-        let html = render_html(
-            &DeepLink::AuthCallback(AuthCallbackSearch {
-                access_token: "access".to_string(),
-                refresh_token: "refresh".to_string(),
-                code: Some("should-ignore".to_string()),
-                ..AuthCallbackSearch::default()
-            }),
-            "anarlog-dev",
-        );
-        assert!(html.contains("anarlog-dev://focus"));
-        assert!(!html.contains("code=should-ignore"));
+        assert!(!html.contains("librelog://focus"));
     }
 
     #[test]
@@ -378,9 +330,9 @@ mod tests {
         let html = render_html_from_callback(
             "/auth/callback",
             "code=codex-code&state=s1&scope=openid",
-            "anarlog",
+            "librelog",
         );
-        assert!(html.contains("anarlog://auth/callback?code=codex-code"));
+        assert!(html.contains("librelog://auth/callback?code=codex-code"));
         assert!(html.contains("state=s1"));
     }
 }

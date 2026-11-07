@@ -25,22 +25,16 @@ import { getCanShowTranscript, useHasTranscript } from "./components/shared";
 import { useAutoEnhance } from "./hooks/useAutoEnhance";
 import { useEnhancedNotes } from "./hooks/useEnhancedNotes";
 import { shouldShowSessionTopAudioPlayer } from "./top-audio-player";
-import { getSessionEvent } from "./utils";
 
 import * as AudioPlayer from "~/audio-player";
 import { isLockedFlag } from "~/lock/flag";
 import { revealLockedNote } from "~/lock/notes";
 import { NoteLockScreen } from "~/lock/screen";
 import { useAppLock } from "~/lock/store";
-import {
-  isCanonicalSessionImportLocked,
-  subscribeCanonicalSessionImportLocks,
-} from "~/session-sharing/editor-activity";
 import { useSession } from "~/session/queries";
-import { useSessionSharedNoteIds } from "~/shared-notes/event-keys";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
 import { useListener } from "~/stt/contexts";
-import { ScheduledSessionAutoStart } from "~/stt/scheduled-session-auto-start";
+import { SessionAutoStart } from "~/stt/session-auto-start";
 
 export function TabContentNote({
   standaloneWindow = false,
@@ -49,14 +43,6 @@ export function TabContentNote({
   standaloneWindow?: boolean;
   tab: Extract<Tab, { type: "sessions" }>;
 }) {
-  const importLocked = React.useSyncExternalStore(
-    subscribeCanonicalSessionImportLocks,
-    () => isCanonicalSessionImportLocked(tab.id),
-    () => isCanonicalSessionImportLocked(tab.id),
-  );
-
-  if (importLocked) return <SessionContentLoading />;
-
   return <LockedNoteGate tab={tab} standaloneWindow={standaloneWindow} />;
 }
 
@@ -122,11 +108,8 @@ function UnlockedTabContentNote({
     <>
       {tab.state.autoStart && !standaloneWindow ? (
         // Stay mounted under the lock overlay so a locked session can clear
-        // autoStart instead of blocking later scheduled meetings.
-        <ScheduledSessionAutoStart
-          sessionId={tab.id}
-          requiresCalendarEligibility={Boolean(tab.state.scheduledAutoStart)}
-        />
+        // autoStart instead of leaving it armed.
+        <SessionAutoStart sessionId={tab.id} />
       ) : null}
       <SearchProvider>
         <AudioPlayer.Provider sessionId={tab.id} url={audioUrl ?? ""}>
@@ -182,21 +165,18 @@ function TabContentNoteInner({
     hasTranscript && sessionMode === "inactive",
   );
   const session = useSession(sessionId);
-  const sessionEvent = session ? getSessionEvent(session) : null;
   const updateSessionTabState = useTabs((state) => state.updateSessionTabState);
 
   const { skipReason } = useAutoEnhance(tab);
   const isTranscribing = shouldShowTranscriptTabSpinner(sessionMode);
   const isLiveSessionActive = sessionMode === "active";
-  const sharedNoteIds = useSessionSharedNoteIds(sessionId);
   const editorTabs = React.useMemo(
     () =>
       createEditorTabs({
         enhancedNoteIds,
         canShowTranscript,
-        sharedNoteIds,
       }),
-    [enhancedNoteIds, canShowTranscript, sharedNoteIds],
+    [enhancedNoteIds, canShowTranscript],
   );
   const currentView = React.useMemo(() => {
     return computeCurrentNoteTab(
@@ -204,15 +184,8 @@ function TabContentNoteInner({
       isLiveSessionActive,
       enhancedNoteIds,
       canShowTranscript,
-      sharedNoteIds,
     );
-  }, [
-    tab.state.view,
-    isLiveSessionActive,
-    enhancedNoteIds,
-    canShowTranscript,
-    sharedNoteIds,
-  ]);
+  }, [tab.state.view, isLiveSessionActive, enhancedNoteIds, canShowTranscript]);
   useAutoFocusEditor({
     sessionId,
     noteInputRef,
@@ -313,7 +286,7 @@ function TabContentNoteInner({
               data-session-top-audio-player
               className="shrink-0 px-1 pt-1 pb-2"
             >
-              <div className="border-border/70 bg-card/80 overflow-hidden rounded-[22px] border">
+              <div className="bg-card shadow-raised overflow-hidden rounded-lg">
                 <AudioPlayer.Timeline contentClassName="py-1.5 pr-3 pl-1" />
               </div>
             </div>
@@ -325,8 +298,6 @@ function TabContentNoteInner({
                 tab={tab}
                 rawMd={session.raw_md}
                 sessionTitle={session.title}
-                eventTitle={sessionEvent?.title}
-                eventDescription={sessionEvent?.description}
                 editorTabs={editorTabs}
                 currentTab={currentView}
                 handleTabChange={handleTabChange}

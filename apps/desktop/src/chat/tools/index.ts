@@ -29,17 +29,10 @@ import {
   buildFindRelatedMeetingsTool,
   buildSearchMeetingContentTool,
 } from "./note-files";
-import { buildSearchCalendarEventsTool } from "./search-calendar-events";
 import { buildSearchContactsTool } from "./search-contacts";
 import { buildSearchMeetingsTool } from "./search-meetings";
 import { buildApplySessionCorrectionTool } from "./session-correction";
-import type {
-  CalendarEventSearchResult,
-  ContactSearchResult,
-  WebSearchResponse,
-  ToolDependencies,
-} from "./types";
-import { buildWebSearchTool } from "./web-search";
+import type { ContactSearchResult, ToolDependencies } from "./types";
 
 import type { SearchFilters } from "~/search/contexts/engine/types";
 
@@ -113,11 +106,6 @@ export const buildChatTools = (deps: ToolDependencies) => ({
     "search_contacts",
     buildSearchContactsTool(deps),
   ),
-  search_calendar_events: withToolLogging(
-    "search_calendar_events",
-    buildSearchCalendarEventsTool(deps),
-  ),
-  web_search: withToolLogging("web_search", buildWebSearchTool(deps)),
   edit_memo: withToolLogging("edit_memo", buildEditMemoTool(deps)),
   edit_summary: withToolLogging("edit_summary", buildEditSummaryTool(deps)),
   apply_session_correction: withToolLogging(
@@ -236,22 +224,6 @@ type LocalTools = {
       query: string;
       results: ContactSearchResult[];
     };
-  };
-  search_calendar_events: {
-    input: { query: string; limit?: number };
-    output: {
-      query: string;
-      results: CalendarEventSearchResult[];
-    };
-  };
-  web_search: {
-    input: {
-      query: string;
-      includeDomains?: string[];
-      excludeDomains?: string[];
-      limit?: number;
-    };
-    output: WebSearchResponse;
   };
   edit_memo: {
     input: { sessionId?: string; content: string };

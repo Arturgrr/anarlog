@@ -1,19 +1,15 @@
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { renderHook } from "@testing-library/react";
 import { generateText, streamText } from "ai";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 
-import { normalizeLLMProviderId, useLanguageModel } from "./useLLMConnection";
+import { useLanguageModel } from "./useLLMConnection";
 
 const mocks = vi.hoisted(() => ({ provider: "custom" as string }));
 const managed = vi.hoisted(() => ({ ready: true, disabled: false }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
 vi.mock("~/settings/queries", () => ({
   useSettingsReady: () => managed.ready,
-}));
-vi.mock("~/auth", () => ({ useAuth: () => ({ session: null }) }));
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ isPaid: false }),
 }));
 vi.mock("~/settings/providers", () => ({
   useAiProvider: () => ({
@@ -100,8 +96,10 @@ it("sends OpenRouter app-attribution headers for the BYOK openrouter provider", 
     const headers = new Headers(
       init?.headers ?? (input instanceof Request ? input.headers : undefined),
     );
-    expect(headers.get("HTTP-Referer")).toBe("https://anarlog.so");
-    expect(headers.get("X-OpenRouter-Title")).toBe("Anarlog");
+    expect(headers.get("HTTP-Referer")).toBe(
+      "https://github.com/Arturgrr/librelog",
+    );
+    expect(headers.get("X-OpenRouter-Title")).toBe("Librelog");
     expect(headers.get("X-OpenRouter-Categories")).toBe(
       "writing-assistant,personal-agent",
     );
@@ -128,13 +126,6 @@ it("sends OpenRouter app-attribution headers for the BYOK openrouter provider", 
   });
   expect(await completion.text).toBe("Hello from OpenRouter");
   unmount();
-});
-
-describe("normalizeLLMProviderId", () => {
-  it("maps the legacy hosted provider id and preserves current ids", () => {
-    expect(normalizeLLMProviderId("hyprnote")).toBe("anarlog");
-    expect(normalizeLLMProviderId("openai")).toBe("openai");
-  });
 });
 
 it.each([

@@ -123,7 +123,7 @@ export function NormalMessage({
             <>
               <button
                 onClick={handleCopy}
-                className={`p-1 transition-colors ${copied ? "text-green-500" : "text-muted-foreground hover:text-foreground"}`}
+                className={`p-1 transition-colors ${copied ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 aria-label={t`Copy message`}
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useQuery } from "@tanstack/react-query";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { useEffect, useState, type ReactNode } from "react";
@@ -13,8 +14,6 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
 import { BrandLoadingView } from "./brand-loading-view";
-
-import { captureOperationalError } from "~/error-reporting";
 
 export const LONG_LOAD_SPLASH_DELAY_MS = 400;
 const STARTUP_STATUS_REFETCH_INTERVAL_MS = 250;
@@ -85,18 +84,16 @@ export function LongLoadGate({ children }: { children: ReactNode }) {
 function getStartupDetail(status: StartupStatus | undefined) {
   switch (status?.phase) {
     case "preparing_database":
-      return "Checking your local database. This is taking longer than expected.";
+      return t`Checking your local database. This is taking longer than expected.`;
     case "migrating_database": {
-      const progress =
-        status.migrationCurrent && status.migrationTotal
-          ? ` (${status.migrationCurrent} of ${status.migrationTotal})`
-          : "";
-      return `Migrating your local database${progress}. This may take a few minutes.`;
+      const current = status.migrationCurrent;
+      const total = status.migrationTotal;
+      return current && total
+        ? t`Migrating your local database (${current} of ${total}). This may take a few minutes.`
+        : t`Migrating your local database. This may take a few minutes.`;
     }
     case "importing_legacy_data":
-      return "Importing your existing notes. This may take a few minutes.";
-    case "configuring_cloudsync":
-      return "Preparing sync. This should only take a moment.";
+      return t`Importing your existing notes. This may take a few minutes.`;
     case "ready":
     case "failed":
     case undefined:
@@ -106,16 +103,14 @@ function getStartupDetail(status: StartupStatus | undefined) {
 
 function StartupErrorView({ error }: { error: Error }) {
   const needsUpdate = error.message.includes(
-    "created by a newer version of Anarlog",
+    "created by a newer version of Librelog",
   );
 
   const handleRestart = async () => {
     try {
       await relaunch();
     } catch (cause) {
-      captureOperationalError(cause, {
-        operation: "app_restart",
-      });
+      console.error("[app] relaunch failed", cause);
     }
   };
 
@@ -128,17 +123,19 @@ function StartupErrorView({ error }: { error: Error }) {
     >
       <div className="flex max-w-sm flex-col items-center gap-4 text-center">
         <h1 className="text-foreground text-base font-semibold">
-          {needsUpdate ? "Anarlog needs an update" : "Anarlog could not start"}
+          {needsUpdate
+            ? t`Librelog needs an update`
+            : t`Librelog could not start`}
         </h1>
         <p className="text-muted-foreground text-sm leading-relaxed">
           {needsUpdate
-            ? "Your data was updated by a newer version of Anarlog, such as Anarlog Nightly, and this version cannot open it yet. Your existing data was left unchanged. Install the latest version of Anarlog, or keep using the newer app until this version catches up."
-            : "Your existing data was left unchanged. Please restart the app. If the problem continues, contact support."}
+            ? t`Your data was updated by a newer version of Librelog, such as Librelog Nightly, and this version cannot open it yet. Your existing data was left unchanged. Install the latest version of Librelog, or keep using the newer app until this version catches up.`
+            : t`Your existing data was left unchanged. Please restart the app. If the problem continues, contact support.`}
         </p>
         {needsUpdate ? null : (
           <Button size="sm" onClick={() => void handleRestart()}>
             <ArrowClockwise className="mr-1.5 h-3.5 w-3.5" />
-            Restart App
+            {t`Restart App`}
           </Button>
         )}
       </div>

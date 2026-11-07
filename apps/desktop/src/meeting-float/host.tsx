@@ -40,8 +40,6 @@ import {
   showFloatingMeetingWindow,
 } from "./window-panel";
 
-import { getDictationPanelState } from "~/dictation/panel";
-import { useDictationStatus } from "~/dictation/state";
 import {
   getStoredSettingValues,
   setSettingValue,
@@ -191,13 +189,7 @@ function FloatingMeetingWindowSync({
     let routeState: FloatingRouteState | null = null;
     let hasRouteState = false;
     let cancelled = false;
-    const windowSynchronizer = createFloatingMeetingWindowSynchronizer(
-      (state) => {
-        useDictationStatus.setState({
-          presentedOwner: state?.dictation?.sessionId ?? null,
-        });
-      },
-    );
+    const windowSynchronizer = createFloatingMeetingWindowSynchronizer();
     let unsubscribeMeetingData: (() => Promise<void>) | null = null;
     const unlisteners: Array<() => void> = [];
     const speakerLabeler = createFloatingSpeakerLabeler(() => {
@@ -224,20 +216,18 @@ function FloatingMeetingWindowSync({
           ? routeState.transcriptBubbles
           : undefined;
       updateRouteState(
-        state.live.status === "inactive" && !state.live.loading
-          ? getDictationPanelState()
-          : enabledRef.current
-            ? getCurrentFloatingRouteState(
-                state,
-                undefined,
-                settingsRef.current,
-                getFloatingLiveCaptionToggleVisible(state),
-                meetingData,
-                transcriptBubbles,
-                speakerLabeler.labels,
-                sttProviderRef.current,
-              )
-            : null,
+        enabledRef.current
+          ? getCurrentFloatingRouteState(
+              state,
+              undefined,
+              settingsRef.current,
+              getFloatingLiveCaptionToggleVisible(state),
+              meetingData,
+              transcriptBubbles,
+              speakerLabeler.labels,
+              sttProviderRef.current,
+            )
+          : null,
       );
     };
     const resolveSpeakerLabels = () => {
@@ -260,7 +250,6 @@ function FloatingMeetingWindowSync({
       .listen(() => {
         if (
           !enabledRef.current ||
-          routeState?.dictation ||
           listenerStore.getState().live.status !== "active"
         )
           return;
@@ -289,24 +278,8 @@ function FloatingMeetingWindowSync({
         unlisteners.push(unlisten);
       });
 
-    windowsEvents.floatingBarDictationAction
-      .listen(({ payload }) => {
-        if (cancelled) return;
-        const state = useDictationStatus.getState();
-        if (state.phase === "idle" || state.owner !== payload.sessionId) return;
-        if (payload.action === "cancel") state.cancel?.();
-        else if (payload.action === "finish") state.finish?.();
-        else useDictationStatus.setState({ expanded: !state.expanded });
-      })
-      .then((unlisten) => {
-        if (cancelled) unlisten();
-        else unlisteners.push(unlisten);
-      });
     resolveSpeakerLabels();
     refreshCurrentRouteState();
-    const unsubscribeDictation = useDictationStatus.subscribe(() =>
-      refreshCurrentRouteState(),
-    );
 
     const unsubscribe = listenerStore.subscribe((state, previousState) => {
       if (!haveFloatingRouteInputsChanged(state, previousState)) {
@@ -355,7 +328,6 @@ function FloatingMeetingWindowSync({
       refreshSettingsRef.current = () => {};
       speakerLabeler.dispose();
       unsubscribe();
-      unsubscribeDictation();
       unsubscribeAppliedTheme();
       window.removeEventListener("online", handleConnectivityChange);
       window.removeEventListener("offline", handleConnectivityChange);

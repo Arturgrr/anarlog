@@ -6,7 +6,7 @@ use crate::{
 
 const MAX_ID_BYTES: usize = 255;
 const MAX_TIMESTAMP_BYTES: usize = 64;
-const RESERVED_METADATA_KEY: &str = "anarlog_capture_ingest";
+const RESERVED_METADATA_KEY: &str = "librelog_capture_ingest";
 
 pub(crate) fn validate(
     expected_workspace_id: &str,

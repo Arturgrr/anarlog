@@ -1,19 +1,19 @@
 ---
 name: testing
-description: "Use when adding, changing, deleting, or reviewing tests in Anarlog (TypeScript, Rust, or node --test scripts), deciding whether a change needs a test, fixing a failing test, or pruning test suites. Covers what is worth testing, what to leave untested, test budgets, and the test-weight report."
+description: "Use when adding, changing, deleting, or reviewing tests in Librelog (TypeScript, Rust, or node --test scripts), deciding whether a change needs a test, fixing a failing test, or pruning test suites. Covers what is worth testing, what to leave untested, test budgets, and the test-weight report."
 ---
 
 # Testing
 
-Use this skill when adding, changing, deleting, or reviewing tests in Anarlog, deciding whether a change needs a test, or pruning a test suite. Tests are code we pay for on every CI run and every refactor; keep the ones that catch real regressions and nothing else.
+Use this skill when adding, changing, deleting, or reviewing tests in Librelog, deciding whether a change needs a test, or pruning a test suite. Tests are code we pay for on every CI run and every refactor; keep the ones that catch real regressions and nothing else.
 
 ## Write a test when
 
 - A bug was fixed: add one regression test that fails without the fix. One, not a matrix of neighbours.
-- The behavior is observable by a user or another component: public APIs, tauri-specta bindings, OpenAPI contracts, MCP and CLI output, serializers and parsers, TipTap/ProseMirror JSON conversion.
-- Losing it loses data or trust: SQLite migrations and desktop/mobile schema parity, CloudSync and E2EE, auth, billing and Stripe webhooks, permissions and RLS, recording and STT lifecycles.
+- The behavior is observable by a user or another component: public APIs, tauri-specta bindings, MCP and CLI output, serializers and parsers, TipTap/ProseMirror JSON conversion.
+- Losing it loses data or trust: SQLite migrations and schema compatibility, auth, permissions, recording and STT lifecycles.
 - It is a real concurrency or recovery invariant: capture start/stop races, crash recovery, retry, cancellation, ordering between actors or tasks.
-- It encodes release or store policy that a workflow edit could silently break (for example `scripts/desktop-release-provenance.test.mjs`).
+- It encodes release or store policy that a workflow edit could silently break.
 
 ## Do not write a test for
 

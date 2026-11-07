@@ -2,29 +2,23 @@ import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  isCloudModel: false,
-  getSessionForRequest: vi.fn(),
   connection: null as {
     provider: string;
     model: string;
     apiKey: string;
     baseUrl: string;
   } | null,
-  session: { user: { id: "user-1" } } as { user: { id: string } } | null,
-  billing: { isPro: true, isReady: true },
   platform: "macos",
   settings: {
     dictation_enabled: true,
-    dictation_shortcut: "Control+Alt+Space",
+    dictation_shortcuts: ["Control+Alt+Space"],
     dictation_hands_free: false,
     microphone_device: "",
   } as Record<string, unknown>,
   meeting: { status: "inactive", loading: false },
   configure: vi.fn(),
   setActive: vi.fn(),
-  show: vi.fn(),
-  hide: vi.fn(),
-  setPhase: vi.fn(),
+  hud: vi.fn(),
   captureTarget: vi.fn(),
   startSystemRecording: vi.fn(),
   stopRecording: vi.fn(),
@@ -38,7 +32,6 @@ const mocks = vi.hoisted(() => ({
   unlisten: vi.fn(),
   listener: null as ((event: { payload: { type: string } }) => void) | null,
 }));
-vi.mock("./panel", () => ({ waitForDictationPanel: vi.fn(async () => {}) }));
 vi.mock("@tauri-apps/api/core", () => ({
   Channel: class {
     constructor(public onmessage: (event: unknown) => void) {}
@@ -47,19 +40,9 @@ vi.mock("@tauri-apps/api/core", () => ({
 vi.mock("~/stt/useSTTConnection", () => ({
   useSTTConnection: () => ({
     conn: mocks.connection,
-    isCloudModel: mocks.isCloudModel,
-  }),
-}));
-vi.mock("~/auth", () => ({
-  useAuth: () => ({
-    session: mocks.session,
-    getSessionForRequest: mocks.getSessionForRequest,
   }),
 }));
 vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => mocks.platform }));
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => mocks.billing,
-}));
 vi.mock("~/settings/queries", () => ({ useSettingsReady: () => true }));
 vi.mock("~/shared/config", () => ({
   useConfigValue: (key: string) => mocks.settings[key],
@@ -82,9 +65,7 @@ vi.mock("@anlg/plugin-shortcut", () => ({
 }));
 vi.mock("@anlg/plugin-dictation", () => ({
   commands: {
-    show: mocks.show,
-    hide: mocks.hide,
-    setPhase: mocks.setPhase,
+    hud: mocks.hud,
     captureTarget: mocks.captureTarget,
     startSystemRecording: mocks.startSystemRecording,
     stopRecording: mocks.stopRecording,
@@ -118,10 +99,13 @@ describe("dictation access and lifecycle", () => {
     const { rerender } = render(<DictationLifecycle />);
     await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
     useDictationStatus.setState({ lastTranscript: "Recover this text" });
-    mocks.settings.dictation_shortcut = "Control+Alt+D";
+    mocks.settings.dictation_shortcuts = ["Control+Alt+Space", "Fn"];
     rerender(<DictationLifecycle />);
     await waitFor(() =>
-      expect(mocks.configure).toHaveBeenLastCalledWith("Control+Alt+D"),
+      expect(mocks.configure).toHaveBeenLastCalledWith([
+        "Control+Alt+Space",
+        "Fn",
+      ]),
     );
     expect(useDictationStatus.getState().lastTranscript).toBe(
       "Recover this text",
@@ -135,11 +119,11 @@ describe("dictation access and lifecycle", () => {
     render(<DictationLifecycle />);
     await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
     act(() => useDictationStatus.setState({ capturingShortcut: true }));
-    await waitFor(() => expect(mocks.configure).toHaveBeenLastCalledWith(null));
+    await waitFor(() => expect(mocks.configure).toHaveBeenLastCalledWith([]));
     expect(useDictationStatus.getState().ready).toBe(false);
     act(() => useDictationStatus.setState({ capturingShortcut: false }));
     await waitFor(() =>
-      expect(mocks.configure).toHaveBeenLastCalledWith("Control+Alt+Space"),
+      expect(mocks.configure).toHaveBeenLastCalledWith(["Control+Alt+Space"]),
     );
     expect(mocks.startSystemRecording).not.toHaveBeenCalled();
   });
@@ -147,26 +131,18 @@ describe("dictation access and lifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useDictationStatus.setState({ capturingShortcut: false });
-    mocks.session = { user: { id: "user-1" } };
-    mocks.billing = { isPro: true, isReady: true };
     mocks.platform = "macos";
     mocks.connection = null;
-    mocks.isCloudModel = false;
-    mocks.getSessionForRequest.mockResolvedValue({
-      access_token: "refreshed-token",
-    });
     mocks.settings.dictation_live_preview = false;
     mocks.settings.dictation_enabled = true;
-    mocks.settings.dictation_shortcut = "Control+Alt+Space";
+    mocks.settings.dictation_shortcuts = ["Control+Alt+Space"];
     mocks.settings.microphone_device = "";
     mocks.meeting = { status: "inactive", loading: false };
     mocks.listener = null;
     for (const fn of [
       mocks.configure,
       mocks.setActive,
-      mocks.show,
-      mocks.hide,
-      mocks.setPhase,
+      mocks.hud,
       mocks.startSystemRecording,
       mocks.cancelRecording,
       mocks.discardRecording,
@@ -200,12 +176,9 @@ describe("dictation access and lifecycle", () => {
     });
   });
 
-  it.each(["free", "loading", "signed-out", "disabled", "meeting"])(
+  it.each(["disabled", "meeting"])(
     "does not register shortcuts when %s",
     async (condition) => {
-      if (condition === "free") mocks.billing.isPro = false;
-      if (condition === "loading") mocks.billing.isReady = false;
-      if (condition === "signed-out") mocks.session = null;
       if (condition === "disabled") mocks.settings.dictation_enabled = false;
       if (condition === "meeting") mocks.meeting.status = "active";
       render(<DictationLifecycle />);
@@ -215,10 +188,10 @@ describe("dictation access and lifecycle", () => {
     },
   );
 
-  it("registers for Pro access and inserts into the captured field", async () => {
+  it("registers without an account or plan and inserts into the captured field", async () => {
     render(<DictationLifecycle />);
     await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
-    expect(mocks.configure).toHaveBeenCalledWith("Control+Alt+Space");
+    expect(mocks.configure).toHaveBeenCalledWith(["Control+Alt+Space"]);
     await act(async () => {
       mocks.listener?.({ payload: { type: "pressed" } });
     });
@@ -235,6 +208,61 @@ describe("dictation access and lifecycle", () => {
       expect.anything(),
     );
     expect(mocks.discardRecording).toHaveBeenCalledWith("/tmp/dictation.wav");
+  });
+
+  it("shows the HUD before the microphone opens and tells it how the dictation ends", async () => {
+    render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "pressed" } });
+    });
+    expect(mocks.hud.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.startSystemRecording.mock.invocationCallOrder[0]!,
+    );
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "released" } });
+    });
+    await waitFor(() =>
+      expect(mocks.hud.mock.calls.map(([event]) => event.type)).toEqual([
+        "started",
+        "processing",
+        "completed",
+      ]),
+    );
+
+    mocks.hud.mockClear();
+    mocks.runBatch.mockImplementation(async () => {});
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "pressed" } });
+    });
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "released" } });
+    });
+    await waitFor(() =>
+      expect(mocks.hud).toHaveBeenLastCalledWith({ type: "failed" }),
+    );
+
+    mocks.hud.mockClear();
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "pressed" } });
+    });
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "cancelled" } });
+    });
+    await waitFor(() =>
+      expect(mocks.hud).toHaveBeenLastCalledWith({ type: "cancelled" }),
+    );
+  });
+
+  it("does not record when the HUD cannot show", async () => {
+    mocks.hud.mockResolvedValue({ status: "error", error: "no panel" });
+    render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "pressed" } });
+    });
+    expect(mocks.startSystemRecording).not.toHaveBeenCalled();
+    expect(useDictationStatus.getState().error).toMatch(/indicator/u);
   });
 
   it("reuses the finalized live transcript even when preview display is disabled", async () => {
@@ -265,14 +293,10 @@ describe("dictation access and lifecycle", () => {
         partial: "words",
       });
       channel.onmessage({ type: "previewUnavailable" });
-      channel.onmessage({ type: "amplitude", amplitude: 0.5 });
     });
-    expect(useDictationStatus.getState()).toMatchObject({
-      text: "",
-      partial: "",
-      previewUnavailable: false,
-      amplitude: 0.5,
-    });
+    expect(mocks.hud).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "preview" }),
+    );
     await act(async () => {
       mocks.listener?.({ payload: { type: "released" } });
     });
@@ -286,7 +310,7 @@ describe("dictation access and lifecycle", () => {
     expect(mocks.discardRecording).toHaveBeenCalledWith("/tmp/dictation.wav");
   });
 
-  it("aborts and removes shortcuts when paid access is lost during recording", async () => {
+  it("aborts and removes shortcuts when dictation is disabled during recording", async () => {
     const view = render(<DictationLifecycle />);
     await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
     await act(async () => {
@@ -295,9 +319,9 @@ describe("dictation access and lifecycle", () => {
     await waitFor(() =>
       expect(useDictationStatus.getState().phase).toBe("recording"),
     );
-    mocks.billing.isPro = false;
+    mocks.settings.dictation_enabled = false;
     view.rerender(<DictationLifecycle />);
-    await waitFor(() => expect(mocks.configure).toHaveBeenLastCalledWith(null));
+    await waitFor(() => expect(mocks.configure).toHaveBeenLastCalledWith([]));
     expect(mocks.cancelRecording).toHaveBeenCalledWith(
       expect.stringMatching(/^system-dictation-/u),
     );
@@ -312,7 +336,7 @@ describe("dictation access and lifecycle", () => {
     await act(async () => {
       mocks.listener?.({ payload: { type: "pressed" } });
     });
-    expect(useDictationStatus.getState().owner).toBeNull();
+    expect(mocks.hud).not.toHaveBeenCalled();
     expect(mocks.captureTarget).not.toHaveBeenCalled();
     expect(mocks.startSystemRecording).not.toHaveBeenCalled();
     expect(useDictationStatus.getState().error).toMatch(
@@ -366,14 +390,14 @@ describe("dictation access and lifecycle", () => {
         partial: "there",
       });
     });
-    expect(useDictationStatus.getState()).toMatchObject({
-      text: "Hello",
-      partial: "there",
-      expanded: true,
+    expect(mocks.hud).toHaveBeenLastCalledWith({
+      type: "preview",
+      stable: "Hello",
+      tentative: " there",
     });
     expect(mocks.insertText).not.toHaveBeenCalled();
     await act(async () => {
-      useDictationStatus.getState().finish?.();
+      mocks.listener?.({ payload: { type: "released" } });
     });
     await waitFor(() =>
       expect(mocks.insertText).toHaveBeenCalledWith("focused-field", "Hello"),
@@ -381,14 +405,12 @@ describe("dictation access and lifecycle", () => {
     await act(async () => {
       channel.onmessage({ type: "transcript", text: "Stale", partial: "" });
     });
-    expect(useDictationStatus.getState()).toMatchObject({
-      owner: null,
-      text: "",
-      lastTranscript: "Hello",
-    });
+    expect(mocks.hud).toHaveBeenLastCalledWith({ type: "completed" });
+    expect(useDictationStatus.getState().lastTranscript).toBe("Hello");
   });
 
   it("drops preview updates after cancellation and does not transcribe or insert", async () => {
+    mocks.settings.dictation_live_preview = true;
     render(<DictationLifecycle />);
     await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
     await act(async () => {
@@ -408,14 +430,14 @@ describe("dictation access and lifecycle", () => {
         partial: "",
       });
     });
-    expect(useDictationStatus.getState().text).toBe("");
+    expect(mocks.hud).toHaveBeenLastCalledWith({ type: "cancelled" });
     expect(mocks.runBatch).not.toHaveBeenCalled();
     expect(mocks.insertText).not.toHaveBeenCalled();
   });
-  it("keeps local preview local without requesting a cloud token", async () => {
+  it("streams the live preview to the selected local server", async () => {
     mocks.settings.dictation_live_preview = true;
     mocks.connection = {
-      provider: "anarlog",
+      provider: "soniqo",
       model: "soniqo-parakeet-streaming",
       apiKey: "",
       baseUrl: "http://127.0.0.1:1234",
@@ -425,74 +447,8 @@ describe("dictation access and lifecycle", () => {
     await act(async () => {
       mocks.listener?.({ payload: { type: "pressed" } });
     });
-    expect(mocks.getSessionForRequest).not.toHaveBeenCalled();
     expect(mocks.startSystemRecording.mock.calls[0]![2]).toEqual(
       expect.objectContaining({ baseUrl: "http://127.0.0.1:1234", apiKey: "" }),
     );
-  });
-
-  it("captures the destination before waiting for a preview token", async () => {
-    mocks.settings.dictation_live_preview = true;
-    mocks.isCloudModel = true;
-    mocks.connection = {
-      provider: "anarlog",
-      model: "cloud",
-      apiKey: "stale",
-      baseUrl: "https://api.anarlog.so/stt",
-    };
-    let finishAuth!: (session: { access_token: string }) => void;
-    mocks.getSessionForRequest.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          finishAuth = resolve;
-        }),
-    );
-    render(<DictationLifecycle />);
-    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
-    await act(async () => {
-      mocks.listener?.({ payload: { type: "pressed" } });
-    });
-    expect(mocks.getSessionForRequest).toHaveBeenCalledOnce();
-    expect(mocks.captureTarget).toHaveBeenCalledOnce();
-    expect(mocks.captureTarget.mock.invocationCallOrder[0]).toBeLessThan(
-      mocks.getSessionForRequest.mock.invocationCallOrder[0],
-    );
-    mocks.captureTarget.mockResolvedValue({
-      status: "ok",
-      data: "different-field",
-    });
-    await act(async () => {
-      finishAuth({ access_token: "fresh" });
-    });
-    expect(mocks.captureTarget).toHaveBeenCalledOnce();
-    expect(mocks.startSystemRecording).toHaveBeenCalledOnce();
-    await act(async () => {
-      mocks.listener?.({ payload: { type: "released" } });
-    });
-    await waitFor(() =>
-      expect(mocks.insertText).toHaveBeenCalledWith("focused-field", "Hello"),
-    );
-  });
-
-  it("keeps recording available when a cloud preview session cannot be refreshed", async () => {
-    mocks.settings.dictation_live_preview = true;
-    mocks.isCloudModel = true;
-    mocks.connection = {
-      provider: "anarlog",
-      model: "cloud",
-      apiKey: "stale-token",
-      baseUrl: "https://api.anarlog.so/stt",
-    };
-    mocks.getSessionForRequest.mockRejectedValue(new Error("offline"));
-    render(<DictationLifecycle />);
-    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
-    await act(async () => {
-      mocks.listener?.({ payload: { type: "pressed" } });
-    });
-    expect(mocks.startSystemRecording.mock.calls[0]![2]).toBeNull();
-    expect(useDictationStatus.getState()).toMatchObject({
-      phase: "recording",
-      previewUnavailable: true,
-    });
   });
 });

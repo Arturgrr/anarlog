@@ -18,7 +18,7 @@ pub enum SkipReason {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AppCategory {
-    Anarlog,
+    Librelog,
     Dictation,
     IDE,
     ScreenRecording,
@@ -29,11 +29,11 @@ pub enum AppCategory {
 impl AppCategory {
     pub fn bundle_ids(&self) -> &'static [&'static str] {
         match self {
-            Self::Anarlog => &[
-                "com.hyprnote.dev",
-                "com.hyprnote.stable",
-                "com.hyprnote.nightly",
-                "com.hyprnote.staging",
+            Self::Librelog => &[
+                "com.arturgrr.librelog.dev",
+                "com.arturgrr.librelog",
+                "com.arturgrr.librelog.nightly",
+                "com.arturgrr.librelog.staging",
             ],
             Self::Dictation => &[
                 "com.electron.wispr-flow",
@@ -84,7 +84,7 @@ impl AppCategory {
 
     pub fn all() -> &'static [AppCategory] {
         &[
-            Self::Anarlog,
+            Self::Librelog,
             Self::Dictation,
             Self::IDE,
             Self::ScreenRecording,
@@ -252,7 +252,7 @@ mod tests {
                 HashSet::new(),
                 HashSet::new(),
                 &[
-                    "com.hyprnote.dev",
+                    "com.arturgrr.librelog.dev",
                     "com.electron.aqua-voice",
                     "com.microsoft.VSCode",
                 ],
@@ -322,7 +322,10 @@ mod tests {
     fn test_evaluate_rejects_when_no_trackable_apps_remain() {
         let policy = MicNotificationPolicy::default();
         for apps in [
-            vec![app("com.hyprnote.dev"), app("com.electron.aqua-voice")],
+            vec![
+                app("com.arturgrr.librelog.dev"),
+                app("com.electron.aqua-voice"),
+            ],
             Vec::new(),
         ] {
             let ctx = PolicyContext {
@@ -445,7 +448,7 @@ mod tests {
     fn test_ignored_categories_control_category_filtering() {
         let apps = vec![
             app("com.electron.aqua-voice"),
-            app("com.hyprnote.dev"),
+            app("com.arturgrr.librelog.dev"),
             app("us.zoom.xos"),
         ];
 
@@ -466,6 +469,6 @@ mod tests {
         };
         let result = policy.evaluate(&ctx).unwrap();
         let ids: Vec<_> = result.filtered_apps.iter().map(|a| a.id.as_str()).collect();
-        assert_eq!(ids, vec!["com.hyprnote.dev", "us.zoom.xos"]);
+        assert_eq!(ids, vec!["com.arturgrr.librelog.dev", "us.zoom.xos"]);
     }
 }

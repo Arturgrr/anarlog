@@ -31,7 +31,6 @@ pub enum NotificationEvent {
 pub enum NotificationKey {
     MicStarted { apps: BTreeSet<String> },
     MicStopped { apps: BTreeSet<String> },
-    CalendarEvent { event_id: String },
     Custom(String),
 }
 
@@ -48,12 +47,6 @@ impl NotificationKey {
         }
     }
 
-    pub fn calendar_event(event_id: impl Into<String>) -> Self {
-        Self::CalendarEvent {
-            event_id: event_id.into(),
-        }
-    }
-
     pub fn to_dedup_key(&self) -> String {
         match self {
             Self::MicStarted { apps } => {
@@ -63,9 +56,6 @@ impl NotificationKey {
             Self::MicStopped { apps } => {
                 let sorted: Vec<_> = apps.iter().cloned().collect();
                 format!("mic-stopped:{}", sorted.join(","))
-            }
-            Self::CalendarEvent { event_id } => {
-                format!("event:{event_id}")
             }
             Self::Custom(s) => s.clone(),
         }
@@ -119,8 +109,6 @@ pub struct NotificationFooter {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 #[serde(tag = "type")]
 pub enum NotificationSource {
-    #[serde(rename = "calendar_event")]
-    CalendarEvent { event_id: String },
     #[serde(rename = "session")]
     Session { session_id: String },
     #[serde(rename = "mic_detected")]
@@ -128,8 +116,6 @@ pub enum NotificationSource {
         app_names: Vec<String>,
         #[serde(default)]
         app_ids: Vec<String>,
-        #[serde(default)]
-        event_ids: Vec<String>,
     },
 }
 
@@ -138,8 +124,6 @@ pub enum NotificationSource {
 pub enum NotificationIconAsset {
     #[serde(rename = "app_icon")]
     AppIcon,
-    #[serde(rename = "calendar")]
-    Calendar,
     #[serde(rename = "system_symbol")]
     SystemSymbol { name: String },
     #[serde(rename = "bundle_id")]
@@ -180,8 +164,8 @@ pub enum NotificationActionVariant {
     Destructive,
 }
 
-/// An explicit calendar reminder action. These are intentionally semantic so the
-/// app can decide whether foregrounding its window is appropriate.
+/// An explicit meeting action. These are intentionally semantic so the app can
+/// decide whether foregrounding its window is appropriate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, specta::Type)]
 #[serde(rename_all = "snake_case")]
 pub enum NotificationAction {
@@ -301,10 +285,9 @@ impl Notification {
         )
     }
 
+    // The label is translated, so the destructive variant marks the stop prompt.
     pub fn shows_stop_countdown(&self) -> bool {
-        self.is_destructive_action()
-            && self.action_label.as_deref() == Some("Stop")
-            && self.timeout.is_some_and(|timeout| !timeout.is_zero())
+        self.is_destructive_action() && self.timeout.is_some_and(|timeout| !timeout.is_zero())
     }
 
     pub fn has_options(&self) -> bool {
@@ -318,10 +301,6 @@ impl Notification {
     }
 
     pub fn has_expandable_content(&self) -> bool {
-        if matches!(self.source, Some(NotificationSource::CalendarEvent { .. })) {
-            return false;
-        }
-
         self.participants
             .as_ref()
             .is_some_and(|participants| !participants.is_empty())
@@ -329,7 +308,7 @@ impl Notification {
     }
 
     pub fn default_action_label(&self) -> &str {
-        self.action_label.as_deref().unwrap_or("Open Anarlog")
+        self.action_label.as_deref().unwrap_or("Open Librelog")
     }
 
     pub fn expanded_action_label(&self) -> &str {
@@ -378,7 +357,11 @@ impl Notification {
         }
 
         if self.shows_stop_countdown() {
-            return stop_countdown_text(remaining.unwrap_or(Duration::ZERO));
+            return stop_countdown_text(
+                &self.message,
+                self.timeout,
+                remaining.unwrap_or(Duration::ZERO),
+            );
         }
 
         self.message.clone()
@@ -403,18 +386,25 @@ pub fn expanded_schedule_text(remaining: Duration) -> String {
     format!("Begins in {}:{:02}", total_seconds / 60, total_seconds % 60)
 }
 
-pub fn stop_countdown_text(remaining: Duration) -> String {
+// The frontend sends the message in the app language with the full timeout
+// in it; counting that number down keeps the text translated.
+pub fn stop_countdown_text(
+    message: &str,
+    timeout: Option<Duration>,
+    remaining: Duration,
+) -> String {
     let seconds = remaining.as_secs_f64().ceil() as u64;
-    format!("Anarlog will stop listening in {seconds} seconds.")
+    if let Some(total) = timeout.map(|timeout| timeout.as_secs().to_string())
+        && message.contains(&total)
+    {
+        return message.replacen(&total, &seconds.to_string(), 1);
+    }
+    format!("Librelog will stop listening in {seconds} seconds.")
 }
 
 impl NotificationSource {
     pub fn default_icon(&self) -> Option<NotificationIcon> {
         match self {
-            Self::CalendarEvent { .. } => Some(NotificationIcon::Overlay {
-                base: NotificationIconAsset::AppIcon,
-                badge: NotificationIconAsset::Calendar,
-            }),
             Self::Session { .. } => None,
             Self::MicDetected { app_ids, .. } => app_ids
                 .iter()
@@ -590,26 +580,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn calendar_notifications_default_to_app_plus_calendar_overlay() {
-        let source = NotificationSource::CalendarEvent {
-            event_id: "evt-1".to_string(),
-        };
-
-        assert_eq!(
-            source.default_icon(),
-            Some(NotificationIcon::Overlay {
-                base: NotificationIconAsset::AppIcon,
-                badge: NotificationIconAsset::Calendar,
-            })
-        );
-    }
-
-    #[test]
     fn mic_notifications_default_to_first_resolvable_app_icon() {
         let source = NotificationSource::MicDetected {
             app_names: vec!["Zoom".to_string()],
             app_ids: vec!["pid:42".to_string(), "us.zoom.xos".to_string()],
-            event_ids: vec![],
         };
 
         assert_eq!(
@@ -662,7 +636,6 @@ mod tests {
             .source(NotificationSource::MicDetected {
                 app_names: vec!["Zoom".to_string()],
                 app_ids: vec!["/Applications/Zoom.app".to_string()],
-                event_ids: vec![],
             })
             .build();
 
@@ -676,8 +649,8 @@ mod tests {
         let explicit_icon_notification = Notification::builder()
             .title("Title")
             .message("Message")
-            .source(NotificationSource::CalendarEvent {
-                event_id: "evt-1".to_string(),
+            .source(NotificationSource::Session {
+                session_id: "sess-1".to_string(),
             })
             .icon(NotificationIcon::Hidden)
             .build();
@@ -689,27 +662,7 @@ mod tests {
     }
 
     #[test]
-    fn only_session_notifications_with_event_details_expand() {
-        let calendar_notification = Notification::builder()
-            .title("Standup")
-            .message("Starting soon")
-            .source(NotificationSource::CalendarEvent {
-                event_id: "evt-1".to_string(),
-            })
-            .participants(vec![Participant {
-                name: Some("Ada".to_string()),
-                email: "ada@example.com".to_string(),
-                status: ParticipantStatus::Accepted,
-            }])
-            .event_details(EventDetails {
-                what: "Standup".to_string(),
-                timezone: None,
-                location: None,
-            })
-            .build();
-
-        assert!(!calendar_notification.has_expandable_content());
-
+    fn notifications_with_event_details_expand() {
         let session_notification = Notification::builder()
             .title("Design sync")
             .message("")
@@ -766,7 +719,7 @@ mod tests {
     fn stop_countdown_copy_matches_macos() {
         let notification = Notification::builder()
             .title("Did your meeting end?")
-            .message("Anarlog will stop listening soon.")
+            .message("Librelog will stop listening soon.")
             .action_label("Stop")
             .action_variant(NotificationActionVariant::Destructive)
             .timeout(Duration::from_secs(30))
@@ -775,7 +728,21 @@ mod tests {
         assert!(notification.shows_stop_countdown());
         assert_eq!(
             notification.compact_message(Some(Duration::from_secs_f64(4.2))),
-            "Anarlog will stop listening in 5 seconds."
+            "Librelog will stop listening in 5 seconds."
+        );
+
+        let translated = Notification::builder()
+            .title("A reunião terminou?")
+            .message("O Librelog vai parar de ouvir em 30 segundos.")
+            .action_label("Parar")
+            .action_variant(NotificationActionVariant::Destructive)
+            .timeout(Duration::from_secs(30))
+            .build();
+
+        assert!(translated.shows_stop_countdown());
+        assert_eq!(
+            translated.compact_message(Some(Duration::from_secs_f64(4.2))),
+            "O Librelog vai parar de ouvir em 5 segundos."
         );
         assert_eq!(
             compact_schedule_text(Duration::from_secs(90)),
@@ -818,9 +785,6 @@ mod tests {
         let notification = Notification::builder()
             .title("Standup")
             .message("Starting soon")
-            .source(NotificationSource::CalendarEvent {
-                event_id: "evt-1".to_string(),
-            })
             .start_time(start_time)
             .build();
 

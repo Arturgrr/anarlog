@@ -11,8 +11,9 @@ enum Layout {
   static let topMargin: CGFloat = 15
   static let slideInOffset: CGFloat = 10
   static let buttonOverhang: CGFloat = 8
-  static let cornerRadius: CGFloat = 14
-  static let liquidGlassCornerRadius: CGFloat = 22
+  static let cornerRadius: CGFloat = 8
+  static let liquidGlassCornerRadius: CGFloat = 10
+  static let buttonCornerRadius: CGFloat = 6
   static let contentPaddingHorizontal: CGFloat = 12
   static let contentPaddingVertical: CGFloat = 9
   static let expandedPaddingHorizontal: CGFloat = 16
@@ -45,25 +46,34 @@ enum Fonts {
 }
 
 enum Colors {
-  static let buttonNormalBg = NSColor(calibratedWhite: 1.0, alpha: 0.42).cgColor
-  static let buttonPressedBg = NSColor(calibratedWhite: 1.0, alpha: 0.62).cgColor
-  static let notificationBg = NSColor(calibratedWhite: 0.92, alpha: 0.85).cgColor
-  static let actionButtonBg = NSColor(calibratedWhite: 0.35, alpha: 0.95).cgColor
-  static let actionButtonPressedBg = NSColor(calibratedWhite: 0.25, alpha: 0.95).cgColor
+  static let buttonNormalBg = NSColor(calibratedWhite: 1.0, alpha: 1.0).cgColor
+  static let buttonPressedBg = NSColor(calibratedWhite: 0.92, alpha: 1.0).cgColor
+  static let buttonBorder = NSColor(calibratedWhite: 0.0, alpha: 0.14).cgColor
+  static let buttonText = NSColor(calibratedWhite: 0.086, alpha: 1.0)
+  static let notificationBg = NSColor(calibratedWhite: 0.98, alpha: 0.85).cgColor
+  static let notificationOpaqueBg = NSColor(calibratedWhite: 0.98, alpha: 1.0).cgColor
+  static let notificationHairline = NSColor(calibratedWhite: 0.859, alpha: 1.0).cgColor
+  static let actionButtonBg = NSColor(calibratedWhite: 0.141, alpha: 1.0).cgColor
+  static let actionButtonPressedBg = NSColor(calibratedWhite: 0.345, alpha: 1.0).cgColor
   static let actionButtonDestructiveBg = NSColor(
-    calibratedRed: 0.78, green: 0.16, blue: 0.14, alpha: 0.95
+    calibratedRed: 0.988, green: 0.922, blue: 0.922, alpha: 1.0
   ).cgColor
   static let actionButtonDestructivePressedBg = NSColor(
-    calibratedRed: 0.64, green: 0.10, blue: 0.09, alpha: 0.95
+    calibratedRed: 0.949, green: 0.733, blue: 0.718, alpha: 1.0
   ).cgColor
-  static let compactActionButtonElapsedBg = NSColor(calibratedWhite: 0.92, alpha: 0.98).cgColor
-  static let compactActionButtonRemainingBg = NSColor(calibratedWhite: 0.78, alpha: 0.98)
+  static let actionButtonDestructiveText = NSColor(
+    calibratedRed: 0.722, green: 0.176, blue: 0.208, alpha: 1.0
+  )
+  static let compactActionButtonElapsedBg = NSColor(calibratedWhite: 0.949, alpha: 1.0).cgColor
+  static let compactActionButtonRemainingBg = NSColor(calibratedWhite: 0.859, alpha: 1.0)
     .cgColor
+  static let divider = NSColor(calibratedWhite: 0.0, alpha: 0.10).cgColor
+  static let pressedOverlay = NSColor(calibratedWhite: 0.0, alpha: 0.08).cgColor
   static let closeButtonNormalBg = NSColor(calibratedWhite: 1.0, alpha: 0.24).cgColor
   static let closeButtonHoverBg = NSColor(calibratedWhite: 1.0, alpha: 0.38).cgColor
   static let closeButtonPressedBg = NSColor(calibratedWhite: 1.0, alpha: 0.5).cgColor
   static let closeButtonBorder = NSColor.white.withAlphaComponent(0.62).cgColor
-  static let progressBarBg = NSColor(calibratedRed: 0.4, green: 0.6, blue: 0.9, alpha: 0.7).cgColor
+  static let progressBarBg = NSColor(calibratedWhite: 0.36, alpha: 0.7).cgColor
 }
 
 enum CloseButtonConfig {

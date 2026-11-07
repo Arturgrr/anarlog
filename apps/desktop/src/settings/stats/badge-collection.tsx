@@ -22,8 +22,7 @@ import {
 import type { ActivityRecord } from "./queries";
 import { ProgressBar } from "./tremor/progress-bar";
 
-import { useAuth } from "~/auth";
-import { DEFAULT_USER_ID } from "~/shared/utils";
+import { useLocalUserId } from "~/shared/owner-user";
 import { commands } from "~/types/tauri.gen";
 
 export function BadgeCollection(props: {
@@ -32,22 +31,14 @@ export function BadgeCollection(props: {
   timezone?: string;
   weekStartsOn: 0 | 1;
 }) {
-  const auth = useAuth();
-  if (auth.session === undefined)
+  const ownerId = useLocalUserId();
+  if (ownerId === null)
     return (
       <p role="status">
         <Trans>Loading your badges…</Trans>
       </p>
     );
-  const ownerId = auth.session?.user.id ?? DEFAULT_USER_ID;
-  return (
-    <PersonalBadges
-      key={ownerId}
-      {...props}
-      ownerId={ownerId}
-      signedUp={!!auth.session && !auth.session.user.is_anonymous}
-    />
-  );
+  return <PersonalBadges key={ownerId} {...props} ownerId={ownerId} />;
 }
 
 function PersonalBadges({
@@ -56,7 +47,6 @@ function PersonalBadges({
 }: {
   ownerId: string;
   records: ActivityRecord[];
-  signedUp: boolean;
   now: Date;
   timezone?: string;
   weekStartsOn: 0 | 1;
@@ -143,10 +133,6 @@ export function BadgeGallery({
   const { t, i18n } = useLingui();
   const [selectedId, setSelectedId] = useState<BadgeId | null>(null);
   const details = {
-    hello: {
-      name: t`Hello, Anarlog`,
-      description: t`Create your Anarlog account. A place for your conversations to call home.`,
-    },
     "all-set": {
       name: t`All Set`,
       description: t`Complete onboarding. You're ready for your next conversation.`,
@@ -195,9 +181,7 @@ export function BadgeGallery({
           ? t`${value} / ${target} conversations`
           : badge.metric === "weeks"
             ? t`${value} / ${target} active weeks`
-            : badge.metric === "signup"
-              ? t`Create your account`
-              : t`Complete onboarding`,
+            : t`Complete onboarding`,
     };
   });
   const selected = badges.find((badge) => badge.id === selectedId);
@@ -228,7 +212,7 @@ export function BadgeGallery({
               type="button"
               onClick={() => setSelectedId(badge.id)}
               aria-label={badge.name}
-              className="bg-background border-border hover:bg-muted focus-visible:outline-ring isolate flex h-full w-full cursor-pointer flex-col items-center gap-3 rounded-2xl border px-3 py-5 text-center focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="bg-card shadow-raised hover:bg-layer-2 focus-visible:outline-ring isolate flex h-full w-full cursor-pointer flex-col items-center gap-3 rounded-lg px-3 py-5 text-center focus-visible:outline-2 focus-visible:outline-offset-[2.5px]"
             >
               <BadgeEmblem id={badge.id} collected={!!badge.collectedAt} />
               <span className="flex flex-col gap-1">
@@ -259,7 +243,7 @@ export function BadgeGallery({
         }}
       >
         {selected && (
-          <DialogContent className="isolate max-w-sm rounded-2xl">
+          <DialogContent className="isolate max-w-sm">
             <div className="flex justify-center py-2">
               <BadgeEmblem
                 id={selected.id}
@@ -328,7 +312,7 @@ function BadgeEmblem({
         ])}
       />
       {collected && (
-        <span className="bg-background border-border rounded-pill absolute right-0 bottom-0 flex size-5 items-center justify-center border">
+        <span className="bg-card border-border absolute right-0 bottom-0 flex size-5 items-center justify-center rounded-full border">
           <Check className="size-3" />
         </span>
       )}

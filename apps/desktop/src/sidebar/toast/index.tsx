@@ -14,21 +14,16 @@ import {
 import type { ToastType } from "./types";
 import { useDismissedToasts } from "./useDismissedToasts";
 
-import { useAuth } from "~/auth";
 import { useNotifications } from "~/contexts/notifications";
 import { useDesktopUpdateControl } from "~/main/update-banner";
 import { useConfigValues } from "~/shared/config";
 import { useLatestRef } from "~/shared/hooks/useLatestRef";
 import { useDevtoolsToastPreview } from "~/store/zustand/devtools-toast-preview";
 import { useTabs } from "~/store/zustand/tabs";
-import {
-  isConfiguredSttModel,
-  isAnarlogCloudSttModel,
-} from "~/stt/capabilities";
+import { isConfiguredSttModel } from "~/stt/capabilities";
 import { useListener } from "~/stt/contexts";
 
 export function ToastNotifications() {
-  const auth = useAuth();
   const { dismissToast, isDismissed } = useDismissedToasts();
   const [sessionDismissedToastIds, setSessionDismissedToastIds] = useState(
     () => new Set<string>(),
@@ -72,8 +67,6 @@ export function ToastNotifications() {
     }
   }
 
-  const isAuthenticated = !!auth?.session;
-  const isAuthLoading = auth.session === undefined;
   const {
     current_llm_provider,
     current_llm_model,
@@ -90,11 +83,6 @@ export function ToastNotifications() {
     current_stt_provider,
     current_stt_model,
   );
-  const hasProSttConfigured = isAnarlogCloudSttModel(
-    current_stt_provider,
-    current_stt_model,
-  );
-  const hasProLlmConfigured = current_llm_provider === "anarlog";
 
   const currentTab = useTabs((state) => state.currentTab);
   const devtoolsPreview = useDevtoolsToastPreview((state) => state.preview);
@@ -128,10 +116,6 @@ export function ToastNotifications() {
     (state) => state.updateSettingsTabState,
   );
 
-  const handleSignIn = useCallback(async () => {
-    await auth?.signIn();
-  }, [auth]);
-
   const openAiTab = useCallback(
     (tab: "intelligence" | "transcription") => {
       if (currentTab?.type === "settings") {
@@ -154,12 +138,8 @@ export function ToastNotifications() {
   const registry = useMemo(
     () =>
       createToastRegistry({
-        isAuthenticated,
-        isAuthLoading,
         hasLLMConfigured,
         hasSttConfigured,
-        hasProSttConfigured,
-        hasProLlmConfigured,
         isAiTranscriptionTabActive,
         isAiIntelligenceTabActive,
         isBatchTranscribingInActiveTranscriptTab,
@@ -170,17 +150,12 @@ export function ToastNotifications() {
         localSttStatus,
         isLocalSttModel,
         update,
-        onSignIn: handleSignIn,
         onOpenLLMSettings: handleOpenLLMSettings,
         onOpenSTTSettings: handleOpenSTTSettings,
       }),
     [
-      isAuthenticated,
-      isAuthLoading,
       hasLLMConfigured,
       hasSttConfigured,
-      hasProSttConfigured,
-      hasProLlmConfigured,
       isAiTranscriptionTabActive,
       isAiIntelligenceTabActive,
       isBatchTranscribingInActiveTranscriptTab,
@@ -191,7 +166,6 @@ export function ToastNotifications() {
       localSttStatus,
       isLocalSttModel,
       update,
-      handleSignIn,
       handleOpenLLMSettings,
       handleOpenSTTSettings,
     ],
@@ -227,17 +201,11 @@ export function ToastNotifications() {
       devtoolsPreview
         ? createDevtoolsToastPreview({
             preview: devtoolsPreview.type,
-            onSignIn: handleSignIn,
             onOpenLLMSettings: handleOpenLLMSettings,
             onOpenSTTSettings: handleOpenSTTSettings,
           })
         : null,
-    [
-      devtoolsPreview,
-      handleSignIn,
-      handleOpenLLMSettings,
-      handleOpenSTTSettings,
-    ],
+    [devtoolsPreview, handleOpenLLMSettings, handleOpenSTTSettings],
   );
 
   const registryPriorityToast =
@@ -380,7 +348,7 @@ function NotificationToast({
 }
 
 const DAY_TOAST_SNOOZE_MS = 24 * 60 * 60 * 1_000;
-const DAY_TOAST_SNOOZE_KEY_PREFIX = "anarlog:toast:snoozed-until:";
+const DAY_TOAST_SNOOZE_KEY_PREFIX = "librelog:toast:snoozed-until:";
 
 function hasActiveDayToastSnooze(id: string): boolean {
   try {

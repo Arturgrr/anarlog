@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { generateText, type LanguageModel } from "ai";
 
 const FALLBACK_CHAT_TITLE_MAX_LENGTH = 50;
@@ -8,7 +9,7 @@ export function createFallbackChatTitle(initialRequest: string): string {
   const title = normalizeTitleText(initialRequest);
 
   if (!title) {
-    return "New chat";
+    return t`New chat`;
   }
 
   return truncateTitle(title, FALLBACK_CHAT_TITLE_MAX_LENGTH);

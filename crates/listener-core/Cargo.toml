@@ -13,7 +13,6 @@ anlg-audio = { workspace = true }
 anlg-audio-device = { workspace = true }
 anlg-audio-utils = { workspace = true }
 anlg-device-monitor = { workspace = true }
-anlg-host = { workspace = true }
 anlg-language = { workspace = true }
 anlg-storage = { workspace = true }
 anlg-supervisor = { workspace = true }
@@ -42,8 +41,6 @@ tokio-stream = { workspace = true }
 tokio-util = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
-
-sentry = { workspace = true }
 
 [dev-dependencies]
 anlg-data = { workspace = true }

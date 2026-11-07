@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useState } from "react";
 
 import { toast } from "@anlg/ui/components/ui/toast";
@@ -17,7 +18,7 @@ export function useAutoEnhance(tab: Extract<Tab, { type: "sessions" }>) {
       if (event.type === "auto-enhance-skipped") {
         setSkipReason(event.reason);
         if (event.reasonCode === "transcript_too_short") {
-          toast.warning("Summary wasn't generated", {
+          toast.warning(t`Summary wasn't generated`, {
             id: `auto-summary-too-short-${sessionId}`,
             description: event.reason,
           });
@@ -26,8 +27,8 @@ export function useAutoEnhance(tab: Extract<Tab, { type: "sessions" }>) {
       if (event.type === "auto-enhance-started") {
         const tabsState = useTabs.getState();
         const sessionTab = tabsState.tabs.find(
-          (t): t is Extract<Tab, { type: "sessions" }> =>
-            t.type === "sessions" && t.id === sessionId,
+          (candidate): candidate is Extract<Tab, { type: "sessions" }> =>
+            candidate.type === "sessions" && candidate.id === sessionId,
         );
         if (sessionTab && sessionTab.state.view?.type !== "transcript") {
           tabsState.updateSessionTabState(sessionTab, {
@@ -37,7 +38,7 @@ export function useAutoEnhance(tab: Extract<Tab, { type: "sessions" }>) {
         }
       }
       if (event.type === "auto-enhance-no-model") {
-        setSkipReason("No AI model configured");
+        setSkipReason(t`No AI model configured`);
       }
     });
   }, [sessionId]);

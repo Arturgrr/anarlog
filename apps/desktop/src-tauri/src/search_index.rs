@@ -10,7 +10,7 @@ use tauri_plugin_tantivy::{
 };
 
 // Increment when the SQLite-to-Tantivy document shape changes so existing indexes are rebuilt.
-const PROJECTION_VERSION: i64 = 4;
+const PROJECTION_VERSION: i64 = 5;
 const BATCH_SIZE: i64 = 64;
 const DIRTY_DEBOUNCE: Duration = Duration::from_millis(250);
 const RETRY_INTERVAL: Duration = Duration::from_secs(5);
@@ -209,7 +209,7 @@ async fn enqueue_all_entities(pool: &SqlitePool) -> Result<(), sqlx::Error> {
         "INSERT INTO search_index_dirty (entity_type, entity_id)
          SELECT 'human', id
          FROM humans
-         WHERE deleted_at IS NULL
+         WHERE deleted_at IS NULL AND id <> owner_user_id
          ON CONFLICT(entity_type, entity_id) DO UPDATE SET
            generation = search_index_dirty.generation + 1,
            queued_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
@@ -455,10 +455,12 @@ async fn build_human_document(
     connection: &mut sqlx::SqliteConnection,
     id: &str,
 ) -> WorkerResult<IndexAction> {
+    // The local user's row (id = owner_user_id) is not a contact, so its
+    // profile columns are never indexed.
     let Some(human) = sqlx::query(
         "SELECT name, email, job_title, linkedin_username, created_at, memo
          FROM humans
-         WHERE id = ? AND deleted_at IS NULL",
+         WHERE id = ? AND deleted_at IS NULL AND id <> owner_user_id",
     )
     .bind(id)
     .fetch_optional(&mut *connection)
@@ -524,7 +526,7 @@ async fn projection_consistency_snapshot(pool: &SqlitePool) -> Result<(i64, i64)
     let active_count = sqlx::query_scalar(
         "SELECT
            (SELECT COUNT(*) FROM sessions WHERE deleted_at IS NULL) +
-           (SELECT COUNT(*) FROM humans WHERE deleted_at IS NULL) +
+           (SELECT COUNT(*) FROM humans WHERE deleted_at IS NULL AND id <> owner_user_id) +
            (SELECT COUNT(*) FROM organizations WHERE deleted_at IS NULL)",
     )
     .fetch_one(&mut *tx)
@@ -942,6 +944,33 @@ mod tests {
             ),
             "hello world again nested array"
         );
+    }
+
+    #[tokio::test]
+    async fn human_projection_never_indexes_the_local_user() {
+        let db = anlg_db_core::Db::connect_memory_plain().await.unwrap();
+        anlg_db_app::prepare_schema(&db).await.unwrap();
+        sqlx::query(
+            "INSERT INTO humans (id, owner_user_id, name, job_title)
+             VALUES ('owner-1', 'owner-1', 'Ada Owner', 'CEO'),
+                    ('human-1', 'owner-1', 'Alice', 'Engineer')",
+        )
+        .execute(db.pool())
+        .await
+        .unwrap();
+
+        let mut connection = db.pool().acquire().await.unwrap();
+        assert!(matches!(
+            build_human_document(&mut connection, "owner-1").await.unwrap(),
+            IndexAction::Remove(id) if id == "owner-1"
+        ));
+        assert!(matches!(
+            build_human_document(&mut connection, "human-1").await.unwrap(),
+            IndexAction::Upsert(document) if document.title == "Alice"
+        ));
+        drop(connection);
+        let (database_count, _) = projection_consistency_snapshot(db.pool()).await.unwrap();
+        assert_eq!(database_count, 1);
     }
 
     #[test]

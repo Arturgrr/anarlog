@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { MeetingCapturedChatMessage } from "@anlg/plugin-detect";
 
 import { executeTransaction, liveQueryClient, useLiveQuery } from "~/db";
@@ -300,7 +302,9 @@ function isMeetingChatDirection(
 export function formatMeetingPlatform(
   platform: MeetingCapturedChatMessage["platform"],
 ) {
-  return MEETING_PLATFORM_LABELS[platform];
+  return platform === "unknown"
+    ? t`Meeting app`
+    : MEETING_PLATFORM_LABELS[platform];
 }
 
 export function formatMeetingChatRecordsAsMarkdown(

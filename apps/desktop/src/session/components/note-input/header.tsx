@@ -7,7 +7,6 @@ export { createEditorTabs } from "@anlg/utils/session";
 
 import { HeaderViewEnhanced } from "./header-enhanced";
 import { HeaderViewRaw } from "./header-raw";
-import { HeaderViewShared } from "./header-shared-note";
 import { HeaderViewTranscript } from "./header-transcript";
 
 import { FolderPicker } from "~/session/components/folder-picker";
@@ -17,7 +16,6 @@ import {
 } from "~/session/components/shared";
 import { useEnhancedNotes } from "~/session/hooks/useEnhancedNotes";
 import { deleteEnhancedNote } from "~/session/queries";
-import { useSessionSharedNoteIds } from "~/shared-notes/event-keys";
 import { type EditorView } from "~/store/zustand/tabs/schema";
 import { useListener } from "~/stt/contexts";
 
@@ -60,7 +58,7 @@ export function SessionViewSwitcher({
       data-tauri-drag-region="false"
       className={cn([
         "pointer-events-auto relative z-10 w-fit max-w-full shrink-0 overflow-visible",
-        "bg-foreground/10 dark:bg-accent/55 rounded-pill flex h-7 items-center gap-[2px] p-[2px] [corner-shape:round]",
+        "bg-layer-1 ring-border flex h-7 items-center gap-[2px] rounded-md p-0.5 ring-[0.5px]",
       ])}
     >
       {editorTabs.map((view, index) => {
@@ -129,18 +127,6 @@ export function SessionViewSwitcher({
           );
         }
 
-        if (view.type === "shared") {
-          return (
-            <HeaderViewShared
-              key={`shared-${view.id}`}
-              isActive={
-                currentTab.type === "shared" && currentTab.id === view.id
-              }
-              onClick={() => handleTabChange(view)}
-            />
-          );
-        }
-
         return null;
       })}
     </div>
@@ -162,11 +148,8 @@ export function useEditorTabs({
     hasTranscript && sessionMode === "inactive",
   );
 
-  const sharedNoteIds = useSessionSharedNoteIds(sessionId);
-
   return createEditorTabs({
     enhancedNoteIds,
     canShowTranscript,
-    sharedNoteIds,
   });
 }

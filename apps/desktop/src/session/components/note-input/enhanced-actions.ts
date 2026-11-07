@@ -1,6 +1,6 @@
+import { t } from "@lingui/core/macro";
 import { useCallback } from "react";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { toast } from "@anlg/ui/components/ui/toast";
 
 import { useAITaskTask } from "~/ai/hooks";
@@ -23,7 +23,7 @@ export function useEnhancedNoteActions({
   enhancedNoteId: string | null;
   sessionId: string;
 }) {
-  const model = useLanguageModel("enhance");
+  const model = useLanguageModel();
   const taskId = enhancedNoteId
     ? createTaskId(enhancedNoteId, "enhance")
     : null;
@@ -41,7 +41,7 @@ export function useEnhancedNoteActions({
 
       if (!model) {
         toast.error(
-          "Set up Intelligence in Settings before regenerating this summary.",
+          t`Set up Intelligence in Settings before regenerating this summary.`,
         );
         return;
       }
@@ -53,7 +53,7 @@ export function useEnhancedNoteActions({
           !eligibility.eligible &&
           eligibility.code === "transcript_too_short"
         ) {
-          toast.warning("Summary wasn't generated", {
+          toast.warning(t`Summary wasn't generated`, {
             id: `auto-summary-too-short-${sessionId}`,
             description: eligibility.reason,
           });
@@ -68,11 +68,6 @@ export function useEnhancedNoteActions({
         });
         return;
       }
-
-      void analyticsCommands.event({
-        event: "note_enhanced",
-        is_auto: false,
-      });
 
       if (!note) {
         await getEnhancerService()?.enhance(sessionId, {

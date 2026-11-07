@@ -1,15 +1,10 @@
 import { useLingui } from "@lingui/react/macro";
 
 import {
-  ArrowsClockwise,
   Bell,
   BookOpen,
-  Buildings,
-  CalendarDots,
   ChartLineUp,
   Code,
-  CreditCard,
-  DownloadSimple,
   FileText,
   FolderSimple,
   Gear,
@@ -20,15 +15,12 @@ import {
   ShieldCheck,
   Sparkle,
   Sun,
-  User,
   Users,
-  UsersThree,
   VideoCamera,
   Waveform,
 } from "@anlg/ui/components/icons";
 
 import { privacyMessages } from "~/settings/general/app-settings";
-import { useMyWorkspacesWithMirror } from "~/settings/team/mirror";
 import { type SettingsTab, type TabInput } from "~/store/zustand/tabs";
 
 type SettingsNavItem =
@@ -36,65 +28,36 @@ type SettingsNavItem =
       id: SettingsTab;
       label: string;
       icon: Icon;
-      requiresPro?: boolean;
     }
   | {
-      id: "automations" | "calendar" | "contacts" | "folders" | "templates";
+      id: "automations" | "contacts" | "folders" | "templates";
       label: string;
       icon: Icon;
       destination: TabInput;
-      requiresPro?: boolean;
     };
 
 export type SettingsNavGroup = { label: string; items: SettingsNavItem[] };
 
 export function useSettingsNavGroups(): SettingsNavGroup[] {
   const { i18n, t } = useLingui();
-  const workspaces = useMyWorkspacesWithMirror();
-  const hasExistingWorkspace = (workspaces.data?.length ?? 0) > 0;
 
   return [
     {
       label: t`App`,
       items: [
         { id: "app", label: t`General`, icon: Gear },
-        { id: "account", label: t`Account`, icon: User },
-        { id: "billing", label: t`Billing`, icon: CreditCard },
-        { id: "referrals", label: t`Invite friends`, icon: Users },
         { id: "insights", label: t`Insights`, icon: ChartLineUp },
-        {
-          id: "team",
-          label: t`Teams`,
-          icon: UsersThree,
-          requiresPro: !workspaces.isLoading && !hasExistingWorkspace,
-        },
-        {
-          id: "sync",
-          label: t`Sync`,
-          icon: ArrowsClockwise,
-          requiresPro: true,
-        },
         { id: "appearance", label: t`Appearance`, icon: Sun },
         { id: "notifications", label: t`Notifications`, icon: Bell },
       ],
     },
     {
-      label: "AI",
+      label: t`AI`,
       items: [
         { id: "transcription", label: t`Transcription`, icon: Waveform },
-        {
-          id: "dictation",
-          label: t`Dictation`,
-          icon: Microphone,
-          requiresPro: true,
-        },
+        { id: "dictation", label: t`Dictation`, icon: Microphone },
         { id: "intelligence", label: t`Intelligence`, icon: Sparkle },
-        {
-          id: "dictionary",
-          label: t`Dictionary`,
-          icon: BookOpen,
-          requiresPro: true,
-        },
+        { id: "dictionary", label: t`Dictionary`, icon: BookOpen },
       ],
     },
     {
@@ -106,12 +69,6 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
           label: t`Folders`,
           icon: FolderSimple,
           destination: { type: "folders" },
-        },
-        {
-          id: "calendar",
-          label: t`Calendar`,
-          icon: CalendarDots,
-          destination: { type: "calendar" },
         },
         {
           id: "contacts",
@@ -130,15 +87,7 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
           label: t`Automations`,
           icon: Lightning,
           destination: { type: "automations" },
-          requiresPro: true,
         },
-      ],
-    },
-    {
-      label: t`Data`,
-      items: [
-        { id: "imports", label: t`Imports`, icon: DownloadSimple },
-        { id: "crm", label: t`CRM`, icon: Buildings },
       ],
     },
     {

@@ -5,7 +5,6 @@ use crate::{
     dispatch,
 };
 
-const MAX_CLOUD_SNAPSHOT_BYTES: usize = 2 * 1024 * 1024;
 static MARKDOWN_EXPORT_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 fn pool<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<sqlx::SqlitePool, String> {
@@ -427,7 +426,7 @@ pub(crate) fn persist_markdown_export(
 }
 
 fn legacy_export_prefix(meeting_id: &str) -> String {
-    format!("<!-- anarlog:legacy-markdown-export {meeting_id:?} -->\n\n")
+    format!("<!-- librelog:legacy-markdown-export {meeting_id:?} -->\n\n")
 }
 
 // Only remove files explicitly owned by the legacy exporter. Unmarked files
@@ -455,151 +454,4 @@ fn remove_stale_exports(directory: &std::path::Path, meeting_id: &str, keep_file
             let _ = std::fs::remove_file(entry.path());
         }
     }
-}
-
-#[tauri::command]
-#[specta::specta]
-pub async fn get_cloud_snapshot<R: tauri::Runtime>(
-    app: tauri::AppHandle<R>,
-    meeting_id: String,
-) -> Result<serde_json::Value, String> {
-    let pool = pool(&app)?;
-    let export = anlg_agent_access::get_meeting_export(&pool, meeting_id)
-        .await
-        .map_err(|error| error.to_string())?;
-    prepare_cloud_snapshot(export)
-}
-
-pub(crate) fn prepare_cloud_snapshot(
-    mut export: anlg_agent_access::MeetingExport,
-) -> Result<serde_json::Value, String> {
-    let snapshot = serde_json::to_value(&export).map_err(|error| error.to_string())?;
-    if cloud_snapshot_jsonb_len(&snapshot)? <= MAX_CLOUD_SNAPSHOT_BYTES {
-        return Ok(snapshot);
-    }
-    drop(snapshot);
-    for transcript in &mut export.transcripts {
-        transcript.words.clear();
-        transcript.speaker_hints.clear();
-    }
-    let snapshot = serde_json::to_value(export).map_err(|error| error.to_string())?;
-    if cloud_snapshot_jsonb_len(&snapshot)? > MAX_CLOUD_SNAPSHOT_BYTES {
-        return Err(format!(
-            "meeting snapshot exceeds the {MAX_CLOUD_SNAPSHOT_BYTES}-byte limit"
-        ));
-    }
-    Ok(snapshot)
-}
-
-// The hosted constraint measures jsonb::text, which includes separator spaces
-// and expands exponent notation, rather than the compact JSON sent over HTTP.
-pub(crate) fn cloud_snapshot_jsonb_len(value: &serde_json::Value) -> Result<usize, String> {
-    match value {
-        serde_json::Value::Array(values) => values
-            .iter()
-            .try_fold(2 + values.len().saturating_sub(1) * 2, |len, value| {
-                Ok(len + cloud_snapshot_jsonb_len(value)?)
-            }),
-        serde_json::Value::Object(values) => values.iter().try_fold(
-            2 + values.len().saturating_sub(1) * 2,
-            |len, (key, value)| {
-                let key_len = serde_json::to_vec(key)
-                    .map_err(|error| error.to_string())?
-                    .len();
-                Ok(len + key_len + 2 + cloud_snapshot_jsonb_len(value)?)
-            },
-        ),
-        serde_json::Value::Number(value) => {
-            let number = value.to_string();
-            let Some((mantissa, exponent)) = number.split_once('e') else {
-                return Ok(number.len());
-            };
-            let exponent = exponent.parse::<i32>().map_err(|error| error.to_string())?;
-            let sign = usize::from(mantissa.starts_with('-'));
-            let mantissa = mantissa.trim_start_matches('-');
-            let digits = mantissa.bytes().filter(u8::is_ascii_digit).count();
-            let decimal = mantissa.find('.').unwrap_or(mantissa.len()) as i32 + exponent;
-            Ok(sign
-                + if decimal <= 0 {
-                    2 + (-decimal) as usize + digits
-                } else if decimal as usize >= digits {
-                    decimal as usize
-                } else {
-                    digits + 1
-                })
-        }
-        _ => serde_json::to_vec(value)
-            .map(|serialized| serialized.len())
-            .map_err(|error| error.to_string()),
-    }
-}
-
-#[tauri::command]
-#[specta::specta]
-pub async fn list_cloud_snapshot_ids<R: tauri::Runtime>(
-    app: tauri::AppHandle<R>,
-) -> Result<Vec<String>, String> {
-    let pool = pool(&app)?;
-    let mut offset = 0;
-    let mut ids = Vec::new();
-    loop {
-        let page = anlg_agent_access::list_meetings(
-            &pool,
-            anlg_agent_access::ListMeetingsInput {
-                query: None,
-                series_id: None,
-                folder_path: None,
-                limit: Some(anlg_agent_access::MAX_LIST_LIMIT),
-                offset: Some(offset),
-            },
-        )
-        .await
-        .map_err(|error| error.to_string())?;
-        ids.extend(page.meetings.into_iter().map(|meeting| meeting.id));
-        let Some(next_offset) = page.pagination.next_offset else {
-            break;
-        };
-        offset = next_offset;
-    }
-    Ok(ids)
-}
-
-#[tauri::command]
-#[specta::specta]
-pub async fn prepare_drive_markdown<R: tauri::Runtime>(
-    app: tauri::AppHandle<R>,
-    meeting_id: String,
-) -> Result<crate::types::DriveMarkdownExport, String> {
-    let export = anlg_agent_access::get_meeting_export(&pool(&app)?, meeting_id)
-        .await
-        .map_err(|error| error.to_string())?;
-    drive_markdown(export)
-}
-
-pub(crate) fn drive_markdown(
-    mut export: anlg_agent_access::MeetingExport,
-) -> Result<crate::types::DriveMarkdownExport, String> {
-    if !export
-        .meeting
-        .summaries
-        .iter()
-        .any(|summary| !summary.markdown.trim().is_empty())
-    {
-        return Err("No meeting summary is available yet".to_string());
-    }
-    export.meeting.note = None;
-    export.meeting.action_items.clear();
-    let filename = configured_markdown_filename(
-        &export.meeting,
-        &MarkdownExportOptions {
-            include_id_suffix: false,
-            ..Default::default()
-        },
-    );
-    let mut markdown = export.to_markdown();
-    if markdown == export.meeting.to_markdown() {
-        markdown.push_str("\n\n## Transcript\n\nNo transcript is available for this note.");
-    }
-    markdown.push('\n');
-    Ok(crate::types::DriveMarkdownExport { filename, markdown })
 }

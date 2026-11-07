@@ -1,9 +1,11 @@
+import { t } from "@lingui/core/macro";
 import { Channel } from "@tauri-apps/api/core";
 import { platform } from "@tauri-apps/plugin-os";
 import { useRef } from "react";
 
 import {
   commands as dictation,
+  type HudEvent,
   type RecordingUpdate,
 } from "@anlg/plugin-dictation";
 import { commands as permissions } from "@anlg/plugin-permissions";
@@ -13,11 +15,9 @@ import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { DictationController } from "./controller";
-import { waitForDictationPanel } from "./panel";
 import { useDictationStatus } from "./state";
 
-import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
+import { localizeExternalMessage } from "~/i18n/external-messages";
 import { useSettingsReady } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
 import { useListener } from "~/stt/contexts";
@@ -32,11 +32,9 @@ export function waitForDictationCleanup() {
 }
 
 export function DictationLifecycle() {
-  const { session } = useAuth();
-  const { isPro, isReady } = useBillingAccess();
   const settingsReady = useSettingsReady();
   const enabled = useConfigValue("dictation_enabled");
-  const shortcut = useConfigValue("dictation_shortcut");
+  const shortcuts = useConfigValue("dictation_shortcuts");
   const handsFree = useConfigValue("dictation_hands_free");
   const capturingShortcut = useDictationStatus(
     (state) => state.capturingShortcut,
@@ -46,13 +44,13 @@ export function DictationLifecycle() {
     (state) => state.live.status !== "inactive" || state.live.loading,
   );
 
-  if (!session || !isReady || !isPro || !settingsReady || !enabled) return null;
+  if (!settingsReady || !enabled) return null;
   return (
-    <TranscriptRetention key={session.user.id}>
+    <TranscriptRetention>
       {!meetingActive && !capturingShortcut && (
         <ActiveDictation
-          key={`${shortcut}:${handsFree}:${retry}`}
-          shortcut={shortcut}
+          key={`${JSON.stringify(shortcuts)}:${handsFree}:${retry}`}
+          shortcuts={shortcuts}
           handsFree={handsFree}
         />
       )}
@@ -75,10 +73,10 @@ function unwrap<T>(
 }
 
 function ActiveDictation({
-  shortcut,
+  shortcuts: configured,
   handsFree,
 }: {
-  shortcut: string;
+  shortcuts: string[];
   handsFree: boolean;
 }) {
   const id = useRef(`system-dictation-${crypto.randomUUID()}`).current;
@@ -88,8 +86,7 @@ function ActiveDictation({
   const livePreview = useConfigValue("dictation_live_preview");
   const dictionary = useConfigValue("personalization_dictionary_terms");
   const languages = useConfigValue("spoken_languages");
-  const { conn, isCloudModel } = useSTTConnection();
-  const auth = useAuth();
+  const { conn } = useSTTConnection();
   const current = useRef({
     runBatch,
     microphone,
@@ -97,8 +94,6 @@ function ActiveDictation({
     languages,
     dictionary,
     conn,
-    isCloudModel,
-    auth,
   });
   current.current = {
     runBatch,
@@ -107,8 +102,6 @@ function ActiveDictation({
     languages,
     dictionary,
     conn,
-    isCloudModel,
-    auth,
   };
 
   useMountEffect(() => {
@@ -119,9 +112,23 @@ function ActiveDictation({
     let unlisten: (() => void) | undefined;
     let abort = new AbortController();
     let presentation: Promise<void> = Promise.resolve();
+    // Whether this dictation's HUD is up, and how it ended; anything that
+    // ends without completing or cancelling failed.
+    let hudShown = false;
+    let outcome: "completed" | "cancelled" | null = null;
+    // One at a time, so the HUD sees events in the order they happened.
+    let hudEvents: Promise<unknown> = Promise.resolve();
+    const hud = (event: HudEvent) => {
+      if (!hudShown) return;
+      hudEvents = hudEvents.then(async () => {
+        await dictation.hud(event);
+      });
+    };
     const onError = (error: unknown) => {
       if (disposed) return;
-      const message = error instanceof Error ? error.message : String(error);
+      const message = localizeExternalMessage(
+        error instanceof Error ? error.message : String(error),
+      );
       useDictationStatus.setState({ error: message });
       toast.error(message);
     };
@@ -130,74 +137,53 @@ function ActiveDictation({
       start: async () => {
         abort = new AbortController();
         finalTranscript = null;
+        outcome = null;
         const recordingAbort = abort;
-        const owner = `${id}:${crypto.randomUUID()}`;
-        const {
-          microphone,
-          livePreview,
-          conn,
-          isCloudModel,
-          languages,
-          dictionary,
-          auth,
-        } = current.current;
-        useDictationStatus.setState({
-          owner,
-          error: null,
-          text: "",
-          partial: "",
-          amplitude: 0,
-          microphone: microphone || "Default microphone",
-          previewEnabled: livePreview,
-          previewUnavailable: livePreview && !conn,
-          expanded: livePreview,
-        });
+        const { microphone, livePreview, conn, languages, dictionary } =
+          current.current;
+        useDictationStatus.setState({ error: null });
         if (platform() === "macos") {
           const permission = unwrap(
             await permissions.checkPermission("microphone"),
           );
           if (permission !== "authorized")
             throw new Error(
-              "Enable microphone permission in Settings > Permissions before dictating.",
+              t`Enable microphone permission in Settings > Permissions before dictating.`,
             );
         }
         const capture = unwrap(await transcription.getCaptureState());
         if (capture !== "inactive")
           throw new Error(
-            "Dictation is unavailable while Anarlog is recording a meeting.",
+            t`Dictation is unavailable while Librelog is recording a meeting.`,
           );
         abort.signal.throwIfAborted();
         target = unwrap(await dictation.captureTarget());
-        const previewSession = isCloudModel
-          ? await auth.getSessionForRequest().catch(() => null)
+        const preview = conn
+          ? {
+              provider: conn.provider,
+              baseUrl: conn.baseUrl,
+              apiKey: conn.apiKey,
+              params: {
+                model: conn.model,
+                channels: 1,
+                sample_rate: 16000,
+                languages: languages || [],
+                keywords: dictionary || [],
+                num_speakers: 1,
+                min_speakers: null,
+                max_speakers: null,
+                custom_query: null,
+              },
+            }
           : null;
-        const apiKey = isCloudModel
-          ? previewSession?.access_token
-          : conn?.apiKey;
-        const preview =
-          conn && (!isCloudModel || previewSession)
-            ? {
-                provider: conn.provider,
-                baseUrl: conn.baseUrl,
-                apiKey: apiKey ?? "",
-                params: {
-                  model: conn.model,
-                  channels: 1,
-                  sample_rate: 16000,
-                  languages: languages || [],
-                  keywords: dictionary || [],
-                  num_speakers: 1,
-                  min_speakers: null,
-                  max_speakers: null,
-                  custom_query: null,
-                },
-              }
-            : null;
-        useDictationStatus.setState({
-          previewUnavailable: livePreview && !preview,
-        });
         abort.signal.throwIfAborted();
-        await waitForDictationPanel(owner, abort.signal);
+        // The HUD is on screen before the microphone opens.
+        const shown = await dictation.hud({ type: "started" });
+        if (shown.status === "error")
+          throw new Error(
+            t`Could not show the dictation indicator. Please try again.`,
+          );
+        hudShown = true;
         abort.signal.throwIfAborted();
         unwrap(
           await dictation.startSystemRecording(
@@ -207,29 +193,23 @@ function ActiveDictation({
             new Channel<RecordingUpdate>((update) => {
               if (
                 disposed ||
+                !livePreview ||
+                update.type !== "transcript" ||
                 recordingAbort.signal.aborted ||
-                recordingAbort !== abort
-              )
-                return;
-              if (
+                recordingAbort !== abort ||
                 !["starting", "recording"].includes(
                   useDictationStatus.getState().phase,
                 )
               )
                 return;
-              if (update.type === "amplitude")
-                useDictationStatus.setState({ amplitude: update.amplitude });
-              else if (!livePreview) return;
-              else if (update.type === "transcript")
-                useDictationStatus.setState({
-                  text: update.text,
-                  partial: update.partial,
-                });
-              else
-                useDictationStatus.setState({
-                  previewUnavailable: true,
-                  partial: "",
-                });
+              hud({
+                type: "preview",
+                stable: update.text,
+                tentative:
+                  update.text && update.partial
+                    ? ` ${update.partial}`
+                    : update.partial,
+              });
             }),
           ),
         );
@@ -263,7 +243,9 @@ function ActiveDictation({
         return text;
       },
       insert: async (text) => {
-        if (!disposed) unwrap(await dictation.insertText(target, text));
+        if (disposed) return;
+        unwrap(await dictation.insertText(target, text));
+        outcome = "completed";
       },
       discard: async (path) => {
         unwrap(await dictation.discardRecording(path));
@@ -273,23 +255,12 @@ function ActiveDictation({
       },
       onError,
       onPhase: (phase) => {
-        if (!disposed)
-          useDictationStatus.setState({
-            phase,
-            ...(phase === "idle"
-              ? {
-                  owner: null,
-                  presentedOwner: null,
-                  text: "",
-                  partial: "",
-                  amplitude: 0,
-                }
-              : {}),
-            ...(phase === "starting" &&
-            useDictationStatus.getState().phase === "idle"
-              ? { owner: null }
-              : {}),
-          });
+        if (!disposed) useDictationStatus.setState({ phase });
+        if (phase === "transcribing") hud({ type: "processing" });
+        if (phase === "idle") {
+          hud({ type: outcome ?? "failed" });
+          hudShown = false;
+        }
         presentation = presentation
           .then(async () => {
             try {
@@ -302,6 +273,7 @@ function ActiveDictation({
       },
     });
     const cancel = () => {
+      outcome ??= "cancelled";
       abort.abort();
       void controller.cancel();
       void stopTranscription(id).catch(onError);
@@ -325,15 +297,10 @@ function ActiveDictation({
           unlisten();
           return;
         }
-        unwrap(await shortcuts.configure(shortcut));
+        unwrap(await shortcuts.configure(configured));
         armed = !disposed;
         if (!disposed)
-          useDictationStatus.setState({
-            ready: true,
-            error: null,
-            cancel,
-            finish: () => controller.release(true),
-          });
+          useDictationStatus.setState({ ready: true, error: null, cancel });
       })
       .catch(onError);
 
@@ -347,17 +314,13 @@ function ActiveDictation({
         phase: "idle",
         lastTranscript: useDictationStatus.getState().lastTranscript,
         cancel: null,
-        finish: null,
-        owner: null,
-        text: "",
-        partial: "",
       });
       lifecycle = lifecycle
         .then(async () => {
           unlisten?.();
           await controller.cancel();
           await presentation;
-          unwrap(await shortcuts.configure(null));
+          unwrap(await shortcuts.configure([]));
         })
         .catch(() => {});
     };

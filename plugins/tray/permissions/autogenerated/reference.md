@@ -5,8 +5,8 @@ Default permissions for the plugin
 #### This default permission set includes the following:
 
 - `allow-set-tray-icon-visible`
+- `allow-set-tray-labels`
 - `allow-set-tray-recording-title`
-- `allow-set-tray-schedule`
 
 ## Permission Table
 
@@ -46,6 +46,32 @@ Denies the set_tray_icon_visible command without any pre-configured scope.
 <tr>
 <td>
 
+`anlg-tray:allow-set-tray-labels`
+
+</td>
+<td>
+
+Enables the set_tray_labels command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`anlg-tray:deny-set-tray-labels`
+
+</td>
+<td>
+
+Denies the set_tray_labels command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `anlg-tray:allow-set-tray-recording-title`
 
 </td>
@@ -65,32 +91,6 @@ Enables the set_tray_recording_title command without any pre-configured scope.
 <td>
 
 Denies the set_tray_recording_title command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`anlg-tray:allow-set-tray-schedule`
-
-</td>
-<td>
-
-Enables the set_tray_schedule command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`anlg-tray:deny-set-tray-schedule`
-
-</td>
-<td>
-
-Denies the set_tray_schedule command without any pre-configured scope.
 
 </td>
 </tr>

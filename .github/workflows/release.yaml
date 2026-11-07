@@ -1,0 +1,220 @@
+name: Desktop release
+
+# Merging a version bump of apps/desktop/package.json into main releases it.
+# A manual run rebuilds the current version, for example after a failed build.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version in apps/desktop/package.json, for example 0.1.0-beta.1"
+        required: true
+        type: string
+  push:
+    branches:
+      - main
+    paths:
+      - apps/desktop/package.json
+
+permissions: {}
+
+concurrency:
+  group: desktop-release
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    name: Draft release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # create or update the draft release
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_id: ${{ steps.release.outputs.release_id }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # The runner's preinstalled Node runs the dependency-free release script.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          version="$(node scripts/release.mjs version)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # Betas ship as regular releases: GitHub's releases/latest skips
+      # prereleases, and the updater reads latest.json from there.
+      - id: release
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          export TAG="desktop_v$VERSION"
+          notes="$RUNNER_TEMP/notes.md"
+          node scripts/release.mjs notes "$VERSION" > "$notes"
+
+          existing="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
+            --jq '.[] | select(.tag_name == env.TAG) | "\(.id) \(.draft)"')"
+          read -r release_id draft <<< "$existing"
+
+          if [[ -z "$release_id" ]]; then
+            release_id="$(gh api -X POST "repos/$GITHUB_REPOSITORY/releases" \
+              -f tag_name="$TAG" -f target_commitish="$GITHUB_SHA" \
+              -f name="Librelog $VERSION" -F draft=true -F prerelease=false \
+              -F "body=@$notes" --jq .id)"
+          elif [[ "$draft" == "true" ]]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+              -F "body=@$notes" > /dev/null
+          elif [[ "$EVENT_NAME" == "push" ]]; then
+            # package.json changed without a version bump.
+            echo "::notice::$TAG is already published; nothing to release."
+            exit 0
+          else
+            echo "::error::Release $TAG is already published."
+            exit 1
+          fi
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+
+  build-macos:
+    name: Build macOS (${{ matrix.target }})
+    needs: draft
+    if: needs.draft.outputs.release_id != ''
+    runs-on: macos-26
+    timeout-minutes: 180
+    # Signing secrets can live in this environment, behind its protection rules.
+    environment: release
+    permissions:
+      contents: write # upload release assets
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            extra_config: ""
+          # MLX-based on-device transcription needs Apple silicon, so Intel
+          # builds ship without its Metal library.
+          - target: x86_64-apple-darwin
+            extra_config: "--config src-tauri/tauri.conf.macos-intel.json"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      # The bundled CLI reports this version.
+      - env:
+          VERSION: ${{ needs.draft.outputs.version }}
+        run: echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - uses: $/.github/actions/install_desktop_deps
+      - uses: $/.github/actions/rust_install
+        with:
+          platform: macos
+      - run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
+      - uses: $/.github/actions/pnpm_install
+      - run: pnpm -F @anlg/ui build
+
+      # Bundles the sidecars. CFBundleVersion must be numeric, so it takes the
+      # run number; CFBundleShortVersionString keeps the semver and beta tag.
+      - env:
+          TAURI_ENV_TARGET_TRIPLE: ${{ matrix.target }}
+        run: |
+          cargo xtask prepare-binaries
+          config=apps/desktop/src-tauri/tauri.conf.stable.json
+          jq --arg build "$GITHUB_RUN_NUMBER" '
+            .bundle.externalBin = ((.bundle.externalBin // []) + ["binaries/librelog-chrome-native-host", "binaries/check-permissions", "resources/cli/librelog-cli"] | unique)
+            | .bundle.macOS.bundleVersion = $build
+          ' "$config" > "$RUNNER_TEMP/tauri.conf.stable.json"
+          mv "$RUNNER_TEMP/tauri.conf.stable.json" "$config"
+
+      # Signs with the self-signed certificate when its secrets exist, so
+      # macOS keeps permission grants across updates; ad-hoc otherwise.
+      - env:
+          MACOS_SIGNING_CERTIFICATE: ${{ secrets.MACOS_SIGNING_CERTIFICATE }}
+          MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
+        run: scripts/macos-signing-keychain.sh import
+
+      - uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: pnpm tauri
+          args: --target ${{ matrix.target }} --config src-tauri/tauri.conf.stable.json ${{ matrix.extra_config }}
+          releaseId: ${{ needs.draft.outputs.release_id }}
+          # The publish job writes latest.json once both builds finish;
+          # per-job writes race and can drop an architecture.
+          uploadUpdaterJson: false
+
+      - env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          app="target/$TARGET/release/bundle/macos/Librelog.app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign --display --requirements - "$app"
+
+      - if: always()
+        run: scripts/macos-signing-keychain.sh cleanup
+
+  publish:
+    name: Publish the release
+    needs: [draft, build-macos]
+    if: needs.draft.outputs.release_id != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # upload release assets
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.draft.outputs.release_id }}
+          VERSION: ${{ needs.draft.outputs.version }}
+        run: |
+          assets="$RUNNER_TEMP/assets"
+          mkdir -p "$assets"
+          release="repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID"
+
+          gh api --paginate "$release/assets" --jq '.[] | "\(.id) \(.name)"' |
+            while read -r id name; do
+              case "$name" in
+                latest.json | SHA256SUMS.txt)
+                  gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$id"
+                  ;;
+                *)
+                  gh api -H "Accept: application/octet-stream" \
+                    "repos/$GITHUB_REPOSITORY/releases/assets/$id" > "$assets/$name"
+                  ;;
+              esac
+            done
+
+          node scripts/release.mjs updater-manifest "$VERSION" "$assets" > "$assets/latest.json"
+          (cd "$assets" && sha256sum -- * > "$RUNNER_TEMP/SHA256SUMS.txt")
+          mv "$RUNNER_TEMP/SHA256SUMS.txt" "$assets/SHA256SUMS.txt"
+
+          for name in latest.json SHA256SUMS.txt; do
+            gh api -X POST -H "Content-Type: application/octet-stream" \
+              "https://uploads.github.com/$release/assets?name=$name" \
+              --input "$assets/$name" > /dev/null
+          done
+
+          # Publishing makes latest.json reachable at releases/latest, which
+          # is where installed apps look for updates.
+          gh api -X PATCH "$release" -F draft=false -F prerelease=false \
+            -f make_latest=true > /dev/null

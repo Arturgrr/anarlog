@@ -99,16 +99,6 @@ mod tests {
                 "wss://api.elevenlabs.io/v1/speech-to-text/realtime",
                 vec![],
             ),
-            (
-                "https://api.anarlog.so?provider=elevenlabs",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "elevenlabs")],
-            ),
-            (
-                "http://localhost:8787/listen?provider=elevenlabs",
-                "ws://localhost:8787/listen",
-                vec![("provider", "elevenlabs")],
-            ),
         ];
 
         for (input, expected_url, expected_params) in cases {
@@ -118,7 +108,7 @@ mod tests {
                 params,
                 expected_params
                     .into_iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .map(|(k, v): (&str, &str)| (k.to_string(), v.to_string()))
                     .collect::<Vec<_>>(),
                 "input: {}",
                 input

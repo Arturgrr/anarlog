@@ -114,21 +114,3 @@ export function scrollTimelineItemIntoView(
     behavior: "smooth",
   });
 }
-
-export function isTimelineItemVisible(
-  container: HTMLDivElement | null,
-  item: HTMLDivElement | null,
-) {
-  if (!container || !item) {
-    return false;
-  }
-
-  const containerRect = container.getBoundingClientRect();
-  const itemRect = item.getBoundingClientRect();
-  const margin = 8;
-
-  return (
-    itemRect.bottom > containerRect.top + margin &&
-    itemRect.top < containerRect.bottom - margin
-  );
-}

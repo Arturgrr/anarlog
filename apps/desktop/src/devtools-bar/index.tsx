@@ -40,8 +40,6 @@ import {
   setRenderOutlinesEnabled,
 } from "./render-tracker";
 
-import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { commands } from "~/types/tauri.gen";
 
 type BuildChannel = "dev" | "staging" | "nightly" | "stable";
@@ -54,20 +52,20 @@ function resolveBuildChannel(identifier: string): BuildChannel {
 }
 
 const CHANNEL_DOT: Record<BuildChannel, string> = {
-  dev: "bg-sky-400",
-  staging: "bg-amber-400",
-  nightly: "bg-violet-400",
-  stable: "bg-neutral-400",
+  dev: "bg-neutral-100",
+  staging: "bg-neutral-300",
+  nightly: "bg-neutral-500",
+  stable: "bg-neutral-600",
 };
 
 const CHANNEL_TEXT: Record<BuildChannel, string> = {
-  dev: "text-sky-300",
-  staging: "text-amber-300",
-  nightly: "text-violet-300",
+  dev: "text-neutral-100",
+  staging: "text-neutral-100",
+  nightly: "text-neutral-100",
   stable: "text-neutral-200",
 };
 
-const COLLAPSED_STORAGE_KEY = "anarlog:devtools-bar:collapsed";
+const COLLAPSED_STORAGE_KEY = "librelog:devtools-bar:collapsed";
 
 const ITEM_CLASS = "flex items-center gap-1.5 px-2";
 const BUTTON_CLASS = cn([
@@ -82,7 +80,7 @@ type Tone = "ok" | "warn" | "bad";
 
 const TONE_CLASS: Record<Tone, string> = {
   ok: "text-neutral-100",
-  warn: "text-amber-400",
+  warn: "text-white font-semibold",
   bad: "text-red-400",
 };
 
@@ -110,7 +108,7 @@ function DevtoolsStatusBarContent(props: Record<never, never>) {
   ignoreRenderTracking(props);
 
   const build = useBuildInfo();
-  const { dialogs, run } = useDevtoolsActions();
+  const run = useDevtoolsActions();
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
   if (!build) {
@@ -129,98 +127,91 @@ function DevtoolsStatusBarContent(props: Record<never, never>) {
 
   if (collapsed) {
     return (
-      <>
-        <button
-          type="button"
-          aria-label="Expand developer bar"
-          title="Expand developer bar"
-          data-testid="devtools-status-bar-collapsed"
+      <button
+        type="button"
+        aria-label="Expand developer bar"
+        title="Expand developer bar"
+        data-testid="devtools-status-bar-collapsed"
+        className={cn([
+          "h-1.5 w-full shrink-0 border-t border-neutral-800 bg-neutral-900",
+          "hover:bg-neutral-700 focus-visible:outline-hidden",
+        ])}
+        onClick={toggleCollapsed}
+      >
+        <span
           className={cn([
-            "h-1.5 w-full shrink-0 border-t border-neutral-800 bg-neutral-900",
-            "hover:bg-neutral-700 focus-visible:outline-hidden",
+            "mx-auto block h-0.5 w-8 rounded-full",
+            CHANNEL_DOT[build.channel],
           ])}
-          onClick={toggleCollapsed}
-        >
-          <span
-            className={cn([
-              "mx-auto block h-0.5 w-8 rounded-full",
-              CHANNEL_DOT[build.channel],
-            ])}
-          />
-        </button>
-        {dialogs}
-      </>
+        />
+      </button>
     );
   }
 
   return (
-    <>
-      <footer
-        aria-label="Developer status bar"
-        data-testid="devtools-status-bar"
-        data-devbar=""
-        className={cn([
-          "flex h-6 shrink-0 items-stretch select-none",
-          "border-t border-neutral-800 bg-neutral-900 text-neutral-300",
-          "font-mono text-[11px] leading-none",
-        ])}
-      >
-        <DevtoolsMenu onAction={run}>
-          <button
-            type="button"
-            title="Devtools actions"
-            className={cn([BUTTON_CLASS, "pl-2.5"])}
+    <footer
+      aria-label="Developer status bar"
+      data-testid="devtools-status-bar"
+      data-devbar=""
+      className={cn([
+        "flex h-6 shrink-0 items-stretch select-none",
+        "border-t border-neutral-800 bg-neutral-900 text-neutral-300",
+        "font-mono text-[11px] leading-none",
+      ])}
+    >
+      <DevtoolsMenu onAction={run}>
+        <button
+          type="button"
+          title="Devtools actions"
+          className={cn([BUTTON_CLASS, "pl-2.5"])}
+        >
+          <span
+            className={cn([
+              "size-1.5 rounded-full",
+              CHANNEL_DOT[build.channel],
+            ])}
+          />
+          <span
+            className={cn([
+              "font-semibold tracking-wider uppercase",
+              CHANNEL_TEXT[build.channel],
+            ])}
           >
-            <span
-              className={cn([
-                "size-1.5 rounded-full",
-                CHANNEL_DOT[build.channel],
-              ])}
-            />
-            <span
-              className={cn([
-                "font-semibold tracking-wider uppercase",
-                CHANNEL_TEXT[build.channel],
-              ])}
-            >
-              {build.channel}
-            </span>
-            <span className="text-neutral-500">
-              {build.version}
-              {build.hash ? ` ${build.hash}` : ""}
-            </span>
-          </button>
-        </DevtoolsMenu>
-        <PlanBadge />
+            {build.channel}
+          </span>
+          <span className="text-neutral-500">
+            {build.version}
+            {build.hash ? ` ${build.hash}` : ""}
+          </span>
+        </button>
+      </DevtoolsMenu>
 
-        <div className="flex min-w-0 flex-1 items-stretch overflow-hidden">
-          <LiveMetrics />
-        </div>
+      <div className="flex min-w-0 flex-1 items-stretch overflow-hidden">
+        <LiveMetrics />
+      </div>
 
-        <ReactScanControls />
-        <Hint content="Copy a diagnostics snapshot (build, device, metrics, top commands and components, sync) as JSON">
-          <button
-            type="button"
-            aria-label="Copy diagnostics"
-            className={BUTTON_CLASS}
-            onClick={() => void copyDiagnostics()}
-          >
-            <Copy size={12} aria-hidden="true" />
-          </button>
-        </Hint>
-        <Hint content="Collapse the developer bar">
-          <button
-            type="button"
-            aria-label="Collapse developer bar"
-            className={cn([BUTTON_CLASS, "pr-2.5"])}
-            onClick={toggleCollapsed}
-          >
-            <Minus size={12} aria-hidden="true" />
-          </button>
-        </Hint>
-      </footer>
-      {dialogs}
-    </>
+      <ReactScanControls />
+      <Hint content="Copy a diagnostics snapshot (build, device, metrics, top commands and components, sync) as JSON">
+        <button
+          type="button"
+          aria-label="Copy diagnostics"
+          className={BUTTON_CLASS}
+          onClick={() => void copyDiagnostics()}
+        >
+          <Copy size={12} aria-hidden="true" />
+        </button>
+      </Hint>
+      <Hint content="Collapse the developer bar">
+        <button
+          type="button"
+          aria-label="Collapse developer bar"
+          className={cn([BUTTON_CLASS, "pr-2.5"])}
+          onClick={toggleCollapsed}
+        >
+          <Minus size={12} aria-hidden="true" />
+        </button>
+      </Hint>
+    </footer>
   );
 }
 
@@ -232,47 +223,8 @@ function readCollapsed(): boolean {
   }
 }
 
-function PlanBadge() {
-  const { session } = useAuth();
-  const billing = useBillingAccess();
-
-  if (!session) {
-    return (
-      <div className={cn([ITEM_CLASS, "text-neutral-500"])}>signed out</div>
-    );
-  }
-
-  if (!billing.isReady) {
-    return null;
-  }
-
-  const label =
-    billing.plan === "trial" && billing.trialDaysRemaining !== null
-      ? `trial ${billing.trialDaysRemaining}d`
-      : billing.isLite
-        ? "lite"
-        : billing.plan;
-
-  return (
-    <Hint
-      content={
-        <Rows
-          rows={[
-            ["plan", billing.plan],
-            ["subscription", billing.subscriptionStatus ?? "none"],
-            ["payment method", billing.hasPaymentMethod ? "yes" : "no"],
-            ["entitlements", billing.entitlements.join(", ") || "none"],
-          ]}
-        />
-      }
-    >
-      <div className={cn([ITEM_CLASS, "text-neutral-400"])}>{label}</div>
-    </Hint>
-  );
-}
-
 // Isolated so the once-per-second metrics tick only re-renders the metrics,
-// not the menu and dialogs above.
+// not the menu above.
 function LiveMetrics() {
   useMountEffect(() => startDevtoolsMetrics());
 
@@ -350,7 +302,9 @@ function LiveMetrics() {
         chart={<Sparkline values={metrics.renders} />}
         trailing={
           <span
-            className={outlinesEnabled ? "text-violet-300" : "text-neutral-500"}
+            className={
+              outlinesEnabled ? "text-neutral-100" : "text-neutral-500"
+            }
           >
             {outlinesEnabled ? "◉" : "○"}
           </span>

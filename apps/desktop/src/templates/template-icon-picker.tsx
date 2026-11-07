@@ -20,17 +20,7 @@ import {
   type TemplateIcon,
 } from "./template-icon";
 
-const ICON_COLORS = [
-  "#9ca3af",
-  "#94a3b8",
-  "#5b67d8",
-  "#25b5c9",
-  "#4ab883",
-  "#f2bd00",
-  "#ef923d",
-  "#c99b92",
-  "#f05257",
-];
+const ICON_COLORS = ["#aeaeae", "#959595", "#808080", "#6b6b6b", "#5c5c5c"];
 
 const EMOJI_CATEGORY_IDS = new Set([
   "people",
@@ -68,7 +58,7 @@ const FREQUENT_EMOJI_IDS = [
   "question",
 ];
 
-const RECENT_EMOJIS_KEY = "anarlog.template-picker.recent-emojis";
+const RECENT_EMOJIS_KEY = "librelog.template-picker.recent-emojis";
 const data = emojiData as EmojiMartData;
 
 type EmojiItem = {
@@ -291,24 +281,26 @@ export function TemplateIconPicker({
         className="w-[420px] max-w-[calc(100vw-24px)]"
       >
         <AppFloatingPanel className="overflow-hidden">
-          <div className="border-border flex h-12 items-end gap-6 border-b px-4">
-            {(["icons", "emojis"] as const).map((nextTab) => (
-              <button
-                key={nextTab}
-                type="button"
-                role="tab"
-                aria-selected={tab === nextTab}
-                onClick={() => setTab(nextTab)}
-                className={cn([
-                  "relative h-full pt-1 text-sm font-medium capitalize",
-                  tab === nextTab
-                    ? "text-foreground after:bg-primary after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5"
-                    : "text-muted-foreground hover:text-foreground",
-                ])}
-              >
-                {nextTab === "icons" ? t`Icons` : t`Emojis`}
-              </button>
-            ))}
+          <div className="border-border-muted border-b px-3 py-2">
+            <div className="bg-layer-1 ring-border flex h-7 w-fit gap-0.5 rounded-md p-0.5 ring-[0.5px]">
+              {(["icons", "emojis"] as const).map((nextTab) => (
+                <button
+                  key={nextTab}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === nextTab}
+                  onClick={() => setTab(nextTab)}
+                  className={cn([
+                    "h-6 rounded-sm px-3 text-sm capitalize transition-[background-color,color,box-shadow] duration-200 ease-out",
+                    tab === nextTab
+                      ? "bg-card text-foreground ring-border-strong ring-[0.5px]"
+                      : "text-muted-foreground hover:text-foreground",
+                  ])}
+                >
+                  {nextTab === "icons" ? t`Icons` : t`Emojis`}
+                </button>
+              ))}
+            </div>
           </div>
 
           {tab === "icons" ? (
@@ -325,7 +317,7 @@ export function TemplateIconPicker({
                         setCustomColorOpen(false);
                         selectColor(color);
                       }}
-                      aria-label={`Use ${color}`}
+                      aria-label={t`Use ${color}`}
                     >
                       {iconColor.toLowerCase() === color.toLowerCase() ? (
                         <Check className="size-4 text-white" />
@@ -336,8 +328,9 @@ export function TemplateIconPicker({
                   <button
                     type="button"
                     className={cn([
-                      "size-7 rounded-full bg-[conic-gradient(from_180deg,red,#ff0,#0f0,#0ff,#00f,#f0f,red)]",
-                      customColorOpen && "ring-primary ring-2 ring-offset-2",
+                      "size-7 rounded-full bg-[conic-gradient(from_180deg,#fafafa,#808080,#161616,#808080,#fafafa)]",
+                      customColorOpen &&
+                        "ring-primary ring-offset-background ring-2 ring-offset-2",
                     ])}
                     onClick={() => setCustomColorOpen((current) => !current)}
                     aria-label={t`Choose custom color`}

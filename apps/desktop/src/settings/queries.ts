@@ -1,7 +1,7 @@
 import { disable, enable } from "@tauri-apps/plugin-autostart";
+import { arch, platform } from "@tauri-apps/plugin-os";
 import { useCallback } from "react";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { commands as detectCommands } from "@anlg/plugin-detect";
 import {
   commands as localSttCommands,
@@ -14,10 +14,6 @@ import { commands as windowsCommands } from "@anlg/plugin-windows";
 
 import { executeTransaction, liveQueryClient, useLiveQuery } from "~/db";
 import { enqueueDatabaseWrite } from "~/db/write-queue";
-import {
-  setErrorReportingEnabled,
-  setSessionReplayAnalyticsEnabled,
-} from "~/error-reporting";
 import { normalizeAudioRetention } from "~/services/audio-retention-policy";
 import {
   LEGACY_MAIN_VALUES_ID,
@@ -32,11 +28,14 @@ import {
 } from "~/settings/schema";
 import { isAppStoreBuild } from "~/shared/app-store";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
-import { isConfiguredSttModel, isOnDeviceSttModel } from "~/stt/capabilities";
+import {
+  getUnsupportedDesktopLocalSttRepair,
+  isConfiguredSttModel,
+  isOnDeviceSttModel,
+} from "~/stt/capabilities";
 import {
   getDefaultSttModel,
   normalizeStoredSttModel,
-  normalizeStoredSttSelection,
 } from "~/stt/model-selection";
 
 type AppSettingRow = { id: string; value_json: string };
@@ -51,6 +50,7 @@ const EMPTY_STORED_SETTINGS: StoredSettingValues = {
   hasValues: new Set(),
 };
 const JSON_ARRAY_KEYS = new Set<SettingKey>([
+  "dictation_shortcuts",
   "spoken_languages",
   "personalization_dictionary_terms",
   "ignored_platforms",
@@ -110,17 +110,20 @@ export async function initializeApplicationSettings(): Promise<void> {
     .getPreferredLanguages()
     .catch(() => null);
   const updates: SettingValues = {};
-  const normalizedSttSelection = normalizeStoredSttSelection(
-    stored.values.current_stt_provider,
-    stored.values.current_stt_model,
-  );
-
-  if (
-    !stored.hasValues.has("crash_reporting_consent") &&
-    stored.hasValues.has("telemetry_consent")
-  ) {
-    updates.crash_reporting_consent = stored.values.telemetry_consent ?? true;
-  }
+  const storedSttSelection = {
+    provider: stored.values.current_stt_provider,
+    model: normalizeStoredSttModel(
+      stored.values.current_stt_provider,
+      stored.values.current_stt_model,
+    ),
+  };
+  const normalizedSttSelection =
+    getUnsupportedDesktopLocalSttRepair(
+      platform(),
+      arch(),
+      storedSttSelection.provider,
+      storedSttSelection.model,
+    ) ?? storedSttSelection;
 
   if (normalizedSttSelection.provider !== stored.values.current_stt_provider) {
     updates.current_stt_provider = normalizedSttSelection.provider;
@@ -487,17 +490,6 @@ function applySettingSideEffects(values: SettingValues): void {
       .setMicActiveThreshold(values.mic_active_threshold)
       .catch(console.error);
   }
-  if (values.telemetry_consent !== undefined) {
-    setSessionReplayAnalyticsEnabled(values.telemetry_consent);
-    void analyticsCommands
-      .setDisabled(!values.telemetry_consent)
-      .catch(console.error);
-  }
-  if (values.crash_reporting_consent !== undefined) {
-    void setErrorReportingEnabled(values.crash_reporting_consent).catch(
-      console.error,
-    );
-  }
   if (values.show_app_in_dock !== undefined) {
     void windowsCommands
       .setShowAppInDock(values.show_app_in_dock)
@@ -520,15 +512,6 @@ function applySettingSideEffects(values: SettingValues): void {
   ) {
     void syncLocalSttServer().catch(console.error);
   }
-  if (
-    values.spoken_languages !== undefined ||
-    values.current_stt_provider !== undefined ||
-    values.current_stt_model !== undefined ||
-    values.current_llm_provider !== undefined ||
-    values.current_llm_model !== undefined
-  ) {
-    void syncAnalyticsSettingProperties().catch(console.error);
-  }
 }
 
 async function syncLocalSttServer(): Promise<void> {
@@ -538,9 +521,7 @@ async function syncLocalSttServer(): Promise<void> {
   const localModelPath = values.local_stt_model_path?.trim();
 
   if (
-    ["anarlog", "soniqo", "apple_speech", "local_file"].includes(
-      provider ?? "",
-    ) &&
+    ["soniqo", "apple_speech", "local_file"].includes(provider ?? "") &&
     model &&
     !isConfiguredSttModel(provider, model)
   ) {
@@ -571,19 +552,6 @@ async function syncLocalSttServer(): Promise<void> {
   } else {
     await localSttCommands.stopServer(null);
   }
-}
-
-async function syncAnalyticsSettingProperties(): Promise<void> {
-  const { values } = await getStoredSettingValues();
-  await analyticsCommands.setProperties({
-    set: {
-      spoken_languages: parseStringArray(values.spoken_languages ?? "[]"),
-      current_stt_provider: values.current_stt_provider ?? null,
-      current_stt_model: values.current_stt_model ?? null,
-      current_llm_provider: values.current_llm_provider ?? null,
-      current_llm_model: values.current_llm_model ?? null,
-    },
-  });
 }
 
 function parseStringArray(value: string): string[] {

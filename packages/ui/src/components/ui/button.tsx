@@ -2,33 +2,55 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { squircleFocusVisibleClassName } from "@anlg/ui/lib/squircle";
+import { focusRingClassName } from "@anlg/ui/lib/focus-ring";
 import { cn } from "@anlg/utils";
 
+// Overlays paint through a pseudo-element so hover/press tint any fill,
+// including the contrast skin's sheen, without swapping its background.
 const buttonVariants = cva(
   cn([
-    squircleFocusVisibleClassName,
-    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-medium whitespace-nowrap transition-all disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+    focusRingClassName,
+    "text-ui font-ui-medium relative isolate inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md whitespace-nowrap select-none",
+    "transition-[opacity,box-shadow] duration-200 ease-out",
+    "before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:content-['']",
+    "disabled:pointer-events-none disabled:cursor-not-allowed",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   ]),
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-xs",
-        outline:
-          "border-input bg-background hover:bg-accent hover:text-accent-foreground border shadow-xs",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-xs",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: cn([
+          "bg-contrast text-primary-foreground shadow-button-contrast",
+          "bg-[linear-gradient(to_bottom,rgb(255_255_255/0.2),rgb(255_255_255/0))]",
+          "hover:before:bg-contrast-hover active:before:bg-contrast-pressed",
+          "disabled:opacity-40",
+        ]),
+        destructive: cn([
+          "bg-button-neutral text-danger shadow-button-neutral",
+          "hover:before:bg-hover active:before:bg-pressed",
+          "disabled:opacity-50",
+        ]),
+        outline: cn([
+          "bg-button-neutral text-foreground shadow-button-neutral",
+          "hover:before:bg-hover active:before:bg-pressed",
+          "disabled:opacity-50",
+        ]),
+        secondary: cn([
+          "bg-button-neutral text-foreground shadow-button-neutral",
+          "hover:before:bg-hover active:before:bg-pressed",
+          "disabled:opacity-50",
+        ]),
+        ghost: cn([
+          "hover:before:bg-hover active:before:bg-pressed",
+          "aria-expanded:before:bg-pressed data-[state=open]:before:bg-pressed",
+          "disabled:opacity-50",
+        ]),
+        link: "text-foreground underline-offset-4 hover:underline disabled:opacity-50",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-7 px-2 text-xs",
-        lg: "h-10 px-8",
+        default: "h-7 px-[11px]",
+        sm: "h-6 rounded-sm px-[9px]",
+        lg: "text-body h-9 rounded-xl px-[18px]",
         icon: "size-7",
       },
     },
@@ -44,28 +66,16 @@ export interface ButtonProps
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
-  smoothCorners?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      className,
-      variant,
-      size,
-      asChild = false,
-      smoothCorners = true,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    const squircleRef = useSquircleRef(ref);
     return (
       <Comp
         className={cn([buttonVariants({ variant, size, className })])}
         {...props}
-        ref={smoothCorners ? squircleRef : ref}
+        ref={ref}
       />
     );
   },

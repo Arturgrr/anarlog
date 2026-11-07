@@ -4,7 +4,6 @@ import { TemplateDetailsColumn } from "./details";
 import { getTemplateCopyTitle, type UserTemplateDraft } from "./queries";
 import { AUTO_TEMPLATE_ID, useTemplateTab } from "./utils";
 
-import { setSettingValue } from "~/settings/queries";
 import { type Tab } from "~/store/zustand/tabs";
 
 export function TemplateView({
@@ -14,14 +13,11 @@ export function TemplateView({
 }) {
   const {
     userTemplates,
-    isWebMode,
     selectedMineId,
-    selectedWebTemplate,
     setSelectedMineId,
     createTemplate,
     createDefaultTemplate,
     deleteTemplate,
-    toggleTemplateFavorite,
   } = useTemplateTab(tab);
   const handleDeleteTemplate = useCallback(
     async (id: string) => {
@@ -31,43 +27,15 @@ export function TemplateView({
     [deleteTemplate, setSelectedMineId],
   );
 
-  const cloneAsMine = useCallback(
-    async (
-      draft: UserTemplateDraft,
-      onCreate?: (id: string) => void | Promise<void>,
-    ) => {
-      const id = await createTemplate(draft);
-      if (!id) return null;
-      await onCreate?.(id);
-      setSelectedMineId(id);
-      return id;
-    },
-    [createTemplate, setSelectedMineId],
-  );
-
   const handleCloneTemplate = useCallback(
     async (draft: UserTemplateDraft) => {
-      await cloneAsMine({
+      const id = await createTemplate({
         ...draft,
         title: getTemplateCopyTitle(draft.title),
       });
+      if (id) setSelectedMineId(id);
     },
-    [cloneAsMine],
-  );
-
-  const handleFavoriteTemplate = useCallback(
-    async (draft: UserTemplateDraft) => {
-      await cloneAsMine(draft, (id) => toggleTemplateFavorite(id));
-    },
-    [cloneAsMine, toggleTemplateFavorite],
-  );
-
-  const handleSetDefaultTemplate = useCallback(
-    async (draft: UserTemplateDraft) => {
-      const id = await cloneAsMine(draft);
-      if (id) await setSettingValue("selected_template_id", id);
-    },
-    [cloneAsMine],
+    [createTemplate, setSelectedMineId],
   );
 
   const handleDuplicateTemplate = useCallback(
@@ -92,16 +60,11 @@ export function TemplateView({
   return (
     <div className="h-full">
       <TemplateDetailsColumn
-        isAutoSelected={!isWebMode && selectedMineId === AUTO_TEMPLATE_ID}
-        isWebMode={isWebMode}
+        isAutoSelected={selectedMineId === AUTO_TEMPLATE_ID}
         selectedMineTemplate={selectedMineTemplate}
-        selectedWebTemplate={selectedWebTemplate}
         handleCreateTemplate={createDefaultTemplate}
         handleDeleteTemplate={handleDeleteTemplate}
         handleDuplicateTemplate={handleDuplicateTemplate}
-        handleCloneTemplate={handleCloneTemplate}
-        handleFavoriteTemplate={handleFavoriteTemplate}
-        handleSetDefaultTemplate={handleSetDefaultTemplate}
       />
     </div>
   );

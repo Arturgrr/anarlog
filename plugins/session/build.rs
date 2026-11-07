@@ -1,6 +1,5 @@
 const COMMANDS: &[&str] = &[
     "create_session",
-    "create_session_for_event",
     "soft_delete_session",
     "restore_deleted_session",
     "add_session_participant",
@@ -13,7 +12,6 @@ const COMMANDS: &[&str] = &[
     "catalog_note_attachment",
     "catalog_session_audio",
     "mark_session_audio_transcription_complete",
-    "set_attachment_cloud_sync_enabled",
     "tombstone_session_audio",
     "mark_session_audio_absent",
     "catalog_folder_material",

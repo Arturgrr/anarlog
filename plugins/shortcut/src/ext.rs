@@ -15,6 +15,16 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Shortcut<'a, R, M> {
         handler.register(self.manager.app_handle().clone(), hotkey, options)
     }
 
+    #[cfg(target_os = "macos")]
+    pub fn register_triggers(
+        &self,
+        triggers: Vec<(usize, anlg_shortcut_macos::Trigger)>,
+        active: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    ) -> Result<(), Error> {
+        let handler = self.manager.state::<Handler>();
+        handler.register_triggers(self.manager.app_handle().clone(), triggers, active)
+    }
+
     pub fn unregister(&self) -> Result<(), Error> {
         self.manager.state::<Handler>().unregister()
     }

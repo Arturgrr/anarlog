@@ -16,10 +16,6 @@ vi.mock("~/chat/hooks/use-chat-appearance", () => ({
   }),
 }));
 
-vi.mock("~/env", () => ({
-  env: { VITE_APP_URL: "http://localhost:3000" },
-}));
-
 import { ErrorMessage, getChatErrorText } from "./error";
 
 describe("ErrorMessage", () => {
@@ -30,9 +26,9 @@ describe("ErrorMessage", () => {
   it("renders a bare string rejection instead of crashing", () => {
     // Tauri `invoke` rejects with the serialized Rust error, which is a plain
     // string; the AI SDK stores it as `useChat().error` as-is.
-    render(<ErrorMessage error="cloudsync_activity_drain_timeout" />);
+    render(<ErrorMessage error="database is locked" />);
 
-    expect(screen.getByText("cloudsync_activity_drain_timeout")).toBeTruthy();
+    expect(screen.getByText("database is locked")).toBeTruthy();
   });
 });
 

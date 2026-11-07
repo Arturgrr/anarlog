@@ -52,11 +52,16 @@ it("uses Venice's text catalog and preserves provider model IDs and vision capab
   });
 });
 
-it("returns no models when the catalog request fails", async () => {
+it("returns no models and the reason when the catalog request fails", async () => {
   vi.mocked(providerFetch).mockResolvedValue(
     new Response("unavailable", { status: 503 }),
   );
   expect(
     await listVeniceModels("https://api.venice.ai/api/v1", "test-key"),
-  ).toEqual({ models: [], ignored: [], metadata: {} });
+  ).toEqual({
+    models: [],
+    ignored: [],
+    metadata: {},
+    error: "HTTP 503 · unavailable",
+  });
 });

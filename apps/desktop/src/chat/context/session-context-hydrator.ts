@@ -8,22 +8,6 @@ import {
   loadMeetingChatRecords,
 } from "~/stt/meeting-chat-records";
 
-function extractEventName(event: unknown): string | null {
-  if (!event || typeof event !== "object") {
-    return null;
-  }
-
-  const record = event as Record<string, unknown>;
-  if (typeof record.name === "string" && record.name) {
-    return record.name;
-  }
-  if (typeof record.title === "string" && record.title) {
-    return record.title;
-  }
-
-  return null;
-}
-
 function recordingNowMs(
   sessionId: string,
   startedAt: number | null,
@@ -83,7 +67,6 @@ export async function hydrateSessionContext(
     .join("\n\n---\n\n");
 
   const transcript = await buildTranscript(sessionId, selfHumanId);
-  const eventName = extractEventName(snapshot.event);
   const meetingChat = formatMeetingChatRecordsAsMarkdown(
     await loadMeetingChatRecords(sessionId),
   );
@@ -97,6 +80,6 @@ export async function hydrateSessionContext(
     meetingChat: meetingChat || null,
     transcript,
     participants,
-    event: eventName ? { name: eventName } : null,
+    event: null,
   };
 }

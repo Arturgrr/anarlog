@@ -1,9 +1,11 @@
+import { t } from "@lingui/core/macro";
+
 import { md2json } from "@anlg/editor/markdown";
 import type { JSONContent, PlaceholderFunction } from "@anlg/editor/note";
 
 export const documentTitlePlaceholder: PlaceholderFunction = ({ node, pos }) =>
   pos === 0 && node.type.name === "heading" && node.attrs.level === 1
-    ? "Untitled"
+    ? t`Untitled`
     : "";
 
 export function extractSectionHeadings(content: JSONContent): string[] {

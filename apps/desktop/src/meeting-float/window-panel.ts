@@ -1,14 +1,13 @@
 import { commands as windowsCommands } from "@anlg/plugin-windows";
 
+import { getFloatingBarLabels } from "./labels";
 import type { FloatingRouteState } from "./route-state";
 
 let sentTranscriptSessionId: string | null = null;
 let sentTranscriptBubbles: FloatingRouteState["transcriptBubbles"] | null =
   null;
 
-export function createFloatingMeetingWindowSynchronizer(
-  onPresented?: (state: FloatingRouteState | null) => void,
-) {
+export function createFloatingMeetingWindowSynchronizer() {
   let desiredRouteState: FloatingRouteState | null = null;
   let desiredRevision = 0;
   let appliedRevision = 0;
@@ -62,7 +61,6 @@ export function createFloatingMeetingWindowSynchronizer(
       } else {
         shownSessionId = nextShownSessionId;
         appliedRouteState = routeState;
-        onPresented?.(routeState);
       }
     }
 
@@ -167,7 +165,6 @@ export async function showFloatingMeetingWindow(
   const updateResult = amplitudeOnly
     ? await windowsCommands.floatingBarUpdateAmplitude(routeState.amplitude)
     : await windowsCommands.floatingBarUpdate({
-        dictation: routeState.dictation ?? null,
         amplitude: routeState.amplitude,
         title: routeState.title,
         status: routeState.status,
@@ -184,6 +181,7 @@ export async function showFloatingMeetingWindow(
           ? routeState.transcriptBubbles
           : null,
         transcriptNotice: routeState.transcriptNotice ?? null,
+        labels: getFloatingBarLabels(routeState.transcriptNotice),
       });
   if (!shouldContinue()) {
     await hideFloatingMeetingPanel();
@@ -226,8 +224,6 @@ function isAmplitudeOnlyFloatingRouteUpdate(
     previousState.amplitude !== nextState.amplitude &&
     previousState.sessionId === nextState.sessionId &&
     previousState.title === nextState.title &&
-    JSON.stringify(previousState.dictation) ===
-      JSON.stringify(nextState.dictation) &&
     previousState.status === nextState.status &&
     previousState.colorScheme === nextState.colorScheme &&
     previousState.opacity === nextState.opacity &&

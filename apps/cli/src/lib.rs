@@ -1,7 +1,6 @@
 #![forbid(unsafe_code)]
 
 mod cli;
-mod cloud;
 mod commands;
 mod db;
 mod error;
@@ -18,11 +17,6 @@ pub const VERSION: &str = match option_env!("APP_VERSION") {
 };
 
 pub async fn run(mut args: Args) -> Result<u8> {
-    if let cli::Command::Auth { command } = &args.command {
-        commands::auth::run(command, args.json).await?;
-        return Ok(0);
-    }
-
     if matches!(&args.command, cli::Command::Doctor) {
         let ready = commands::doctor::run(&args, args.json).await?;
         return Ok(if ready { 0 } else { 1 });
@@ -31,39 +25,24 @@ pub async fn run(mut args: Args) -> Result<u8> {
     let json = args.json;
     let command = std::mem::replace(&mut args.command, cli::Command::Doctor);
     match command {
-        cli::Command::Auth { .. } => unreachable!("auth returns before opening the database"),
         cli::Command::Doctor => unreachable!("doctor returns before opening the database"),
-        cli::Command::Meetings { source, command } => {
-            if matches!(&command, cli::MeetingCommand::PilotUsage { .. })
-                && !matches!(source, cli::MeetingSource::Local)
-            {
-                return Err(Error::operation(
-                    "read pilot capture usage",
-                    "explicit local source required",
-                ));
-            }
+        cli::Command::Meetings { command } => {
             if let cli::MeetingCommand::Delete {
                 id,
                 if_export_sha256,
                 require_transcription_complete,
             } = &command
             {
-                if !matches!(source, cli::MeetingSource::Local) || !require_transcription_complete {
+                if !require_transcription_complete {
                     return Err(Error::operation(
                         "delete meeting",
-                        "explicit local source and completion check required",
+                        "completion check required",
                     ));
                 }
                 commands::meeting_delete::run(&args, id, if_export_sha256, json).await?;
                 return Ok(0);
             }
             if matches!(&command, cli::MeetingCommand::InitializeManaged) {
-                if !matches!(source, cli::MeetingSource::Local) {
-                    return Err(Error::operation(
-                        "initialize managed recorder",
-                        "explicit local source required",
-                    ));
-                }
                 commands::meeting_delete::initialize_managed(&args, json).await?;
                 return Ok(0);
             }
@@ -79,16 +58,10 @@ pub async fn run(mut args: Args) -> Result<u8> {
                 &command,
                 cli::MeetingCommand::Import { .. } | cli::MeetingCommand::ImportStatus { .. }
             ) {
-                if !matches!(source, cli::MeetingSource::Local) {
-                    return Err(Error::operation(
-                        "import recording",
-                        "local source required",
-                    ));
-                }
                 return commands::recording_import::run(&args, command, json).await;
             }
-            let source = commands::meetings::DataSource::open(&args, source).await?;
-            commands::meetings::run(&source, command, json).await?
+            let db = db::open(&args).await?;
+            commands::meetings::run(&db, command, json).await?
         }
         cli::Command::Proposals { command } => {
             let db = db::open_write(&args).await?;
@@ -127,7 +100,6 @@ mod tests {
             db_path: Some(db_path.clone()),
             json: true,
             command: cli::Command::Meetings {
-                source: cli::MeetingSource::Local,
                 command: cli::MeetingCommand::Import {
                     file,
                     title: None,
@@ -153,7 +125,6 @@ mod tests {
             db_path: Some(db_path),
             json: true,
             command: cli::Command::Meetings {
-                source: cli::MeetingSource::Local,
                 command: cli::MeetingCommand::ImportStatus { id: job_id },
             },
         })
@@ -207,7 +178,6 @@ mod tests {
             db_path: Some(db_path),
             json: false,
             command: cli::Command::Meetings {
-                source: cli::MeetingSource::Local,
                 command: cli::MeetingCommand::Export {
                     id: "meeting-1".to_string(),
                     format: cli::ExportFormat::Markdown,

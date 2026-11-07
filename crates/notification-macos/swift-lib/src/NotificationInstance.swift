@@ -229,9 +229,15 @@ class NotificationInstance {
     }
   }
 
+  // The message arrives in the app language with the full timeout in it;
+  // counting that number down keeps the text translated.
   func stopCountdownText(_ remainingSeconds: Double) -> String {
     let seconds = max(0, Int(ceil(remainingSeconds)))
-    return "Anarlog will stop listening in \(seconds) seconds."
+    let total = String(Int(payload.timeoutSeconds))
+    if let range = payload.message.range(of: total) {
+      return payload.message.replacingCharacters(in: range, with: String(seconds))
+    }
+    return "Librelog will stop listening in \(seconds) seconds."
   }
 
   private func startStopCountdownUpdates() {

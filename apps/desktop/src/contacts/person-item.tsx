@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import React, { useCallback } from "react";
 
 import { PushPin } from "@anlg/ui/components/icons";
@@ -13,15 +14,14 @@ export function PersonItem({
   active,
   onClick,
   onDelete,
-  readOnly = false,
 }: {
-  readOnly?: boolean;
   person: HumanRecord;
   active: boolean;
   onClick: () => void;
   onDelete?: (id: string) => void;
 }) {
-  const isPinned = readOnly || Boolean(person.pinned);
+  const { t } = useLingui();
+  const isPinned = Boolean(person.pinned);
   const personName = person.name;
   const personEmail = person.email;
   const facehashName = personName || personEmail || person.id;
@@ -35,12 +35,12 @@ export function PersonItem({
   const showContextMenu = useNativeContextMenu([
     {
       id: "toggle-pin-person",
-      text: isPinned ? "Unpin Contact" : "Pin Contact",
+      text: isPinned ? t`Unpin Contact` : t`Pin Contact`,
       action: togglePin,
     },
     {
       id: "delete-person",
-      text: "Delete Contact",
+      text: t`Delete Contact`,
       action: () => onDelete?.(person.id),
     },
   ]);
@@ -58,7 +58,7 @@ export function PersonItem({
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onContextMenu={readOnly ? undefined : showContextMenu}
+      onContextMenu={showContextMenu}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -66,8 +66,8 @@ export function PersonItem({
         }
       }}
       className={cn([
-        "group flex w-full items-center gap-2 overflow-hidden rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-        active ? "bg-accent" : "hover:bg-accent/50",
+        "group flex w-full items-center gap-2 overflow-hidden rounded-md px-2.5 py-2 text-left text-sm select-none",
+        active ? "bg-layer-2" : "hover:bg-hover active:bg-pressed",
       ])}
     >
       {person.avatarDataUrl ? (
@@ -76,40 +76,27 @@ export function PersonItem({
         <ContactFacehash name={facehashName} size={32} />
       )}
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1 truncate font-medium">
-          {personName || personEmail || "Unnamed"}
+        <div className="font-ui-medium flex items-center gap-1 truncate">
+          {personName || personEmail || t`Unnamed`}
         </div>
         {personEmail && personName && (
-          <div className="text-muted-foreground truncate text-xs">
+          <div className="text-muted-foreground text-small truncate">
             {personEmail}
           </div>
         )}
       </div>
-      {readOnly ? (
-        <span
-          role="img"
-          aria-label="Pinned contact"
-          className="shrink-0 p-1 text-blue-600"
-        >
-          <PushPin className="size-3.5" weight="bold" />
-        </span>
-      ) : (
-        <button
-          onClick={handleTogglePin}
-          className={cn([
-            "shrink-0 rounded-xs p-1 transition-colors",
-            isPinned
-              ? "text-blue-600 hover:text-blue-700"
-              : "text-muted-foreground/70 hover:text-muted-foreground opacity-0 group-hover:opacity-100",
-          ])}
-          aria-label={isPinned ? "Unpin contact" : "Pin contact"}
-        >
-          <PushPin
-            className="size-3.5"
-            weight={isPinned ? "bold" : "regular"}
-          />
-        </button>
-      )}
+      <button
+        onClick={handleTogglePin}
+        className={cn([
+          "shrink-0 rounded-xs p-1 transition-colors",
+          isPinned
+            ? "text-icon hover:text-foreground"
+            : "text-icon-faint hover:text-icon-muted opacity-0 group-hover:opacity-100",
+        ])}
+        aria-label={isPinned ? t`Unpin contact` : t`Pin contact`}
+      >
+        <PushPin className="size-3.5" weight={isPinned ? "bold" : "regular"} />
+      </button>
     </div>
   );
 }

@@ -81,125 +81,11 @@ fn test_documented_language_codes_are_menu_safe() {
 }
 
 #[test]
-fn test_is_anarlog_proxy() {
-    assert!(is_anarlog_proxy("https://api.anarlog.so/stt"));
-    assert!(is_anarlog_proxy("https://api.anarlog.so"));
-    assert!(is_anarlog_proxy("http://localhost:3001/stt"));
-    assert!(is_anarlog_proxy("http://127.0.0.1:3001/stt"));
-
-    assert!(!is_anarlog_proxy("https://api.hyprnote.com/stt"));
-    assert!(!is_anarlog_proxy("https://api.char.com/stt"));
-    assert!(!is_anarlog_proxy("https://notchar.com/stt"));
-    assert!(!is_anarlog_proxy("https://api.deepgram.com"));
-    assert!(!is_anarlog_proxy("http://localhost:50060/v1"));
-}
-
-#[test]
-fn test_is_local_argmax() {
-    assert!(is_local_argmax("http://localhost:50060/v1"));
-    assert!(is_local_argmax("http://127.0.0.1:50060/v1"));
-
-    assert!(!is_local_argmax("https://api.anarlog.so/stt"));
-    assert!(!is_local_argmax("http://localhost:3001/stt"));
-    assert!(!is_local_argmax("http://localhost:8080/v1"));
-    assert!(!is_local_argmax("http://127.0.0.1:8080/listen"));
-    assert!(!is_local_argmax("https://api.deepgram.com"));
-}
-
-#[test]
 fn test_adapter_kind_from_url_and_languages() {
     use anlg_language::ISO639::*;
 
     let cases: &[(&str, &[anlg_language::ISO639], Option<&str>, AdapterKind)] = &[
-        // AnarlogCloud - always routes to Anarlog adapter (proxy owns provider selection)
-        (
-            "https://api.anarlog.so/stt",
-            &[En],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        (
-            "https://api.anarlog.so/stt",
-            &[En],
-            Some("cloud"),
-            AdapterKind::Anarlog,
-        ),
-        (
-            "https://api.anarlog.so/stt",
-            &[En, Ko],
-            Some("cloud"),
-            AdapterKind::Anarlog,
-        ),
-        (
-            "https://api.anarlog.so/stt",
-            &[Zh],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        (
-            "https://api.anarlog.so/stt",
-            &[Ja],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        (
-            "https://api.anarlog.so/stt",
-            &[Ar],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        (
-            "https://api.anarlog.so/stt",
-            &[De],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        // AnarlogCloud - multi-language
-        (
-            "https://api.anarlog.so/stt",
-            &[En, Es],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        (
-            "https://api.anarlog.so/stt",
-            &[En, Ko],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        (
-            "https://api.anarlog.so/stt",
-            &[Ko, En],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        (
-            "https://api.anarlog.so/stt",
-            &[En, De],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        // localhost proxy
-        (
-            "http://localhost:3001/stt",
-            &[En],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        (
-            "http://localhost:3001/stt",
-            &[Ar],
-            None,
-            AdapterKind::Anarlog,
-        ),
-        // localhost argmax
-        (
-            "http://localhost:50060/v1",
-            &[En],
-            None,
-            AdapterKind::Argmax,
-        ),
-        // Other local endpoints are custom Deepgram-compatible providers.
+        // Local endpoints are custom Deepgram-compatible providers.
         (
             "http://localhost:8080/v1",
             &[En],
@@ -257,7 +143,6 @@ fn test_has_live_mode() {
         AdapterKind::SmallestAI,
         AdapterKind::WisprFlow,
         AdapterKind::GoogleGenerativeAi,
-        AdapterKind::Anarlog,
     ];
     for kind in live {
         assert!(kind.has_live_mode(), "{kind:?} should support live mode");
@@ -265,7 +150,6 @@ fn test_has_live_mode() {
 
     let batch_only = [
         AdapterKind::AquaVoice,
-        AdapterKind::Argmax,
         AdapterKind::Pyannote,
         AdapterKind::Cohere,
         AdapterKind::AwsTranscribe,
@@ -285,162 +169,6 @@ fn test_has_live_mode() {
             "{kind:?} should not support live mode"
         );
     }
-}
-
-#[test]
-fn test_build_proxy_ws_url() {
-    let cases: &[(&str, Option<(&str, Vec<(&str, &str)>)>)] = &[
-        ("", None),
-        ("https://api.deepgram.com", None),
-        ("https://api.soniox.com", None),
-        ("https://api.fireworks.ai", None),
-        ("https://api.assemblyai.com", None),
-        (
-            "https://api.anarlog.so/stt?provider=soniox",
-            Some((
-                "wss://api.anarlog.so/stt/listen",
-                vec![("provider", "soniox")],
-            )),
-        ),
-        (
-            "https://api.anarlog.so/stt?provider=deepgram",
-            Some((
-                "wss://api.anarlog.so/stt/listen",
-                vec![("provider", "deepgram")],
-            )),
-        ),
-        (
-            "https://api.anarlog.so/stt?provider=anarlog",
-            Some((
-                "wss://api.anarlog.so/stt/listen",
-                vec![("provider", "anarlog")],
-            )),
-        ),
-        (
-            "https://api.anarlog.so/stt/listen?provider=deepgram",
-            Some((
-                "wss://api.anarlog.so/stt/listen",
-                vec![("provider", "deepgram")],
-            )),
-        ),
-        (
-            "https://api.anarlog.so/stt/some/path?provider=fireworks",
-            Some((
-                "wss://api.anarlog.so/stt/some/path/listen",
-                vec![("provider", "fireworks")],
-            )),
-        ),
-        (
-            "http://localhost:8787/stt?provider=soniox",
-            Some((
-                "ws://localhost:8787/stt/listen",
-                vec![("provider", "soniox")],
-            )),
-        ),
-        (
-            "http://localhost:8787/stt/listen?provider=deepgram",
-            Some((
-                "ws://localhost:8787/stt/listen",
-                vec![("provider", "deepgram")],
-            )),
-        ),
-        (
-            "http://127.0.0.1:8787/stt?provider=assemblyai",
-            Some((
-                "ws://127.0.0.1:8787/stt/listen",
-                vec![("provider", "assemblyai")],
-            )),
-        ),
-    ];
-
-    for (input, expected) in cases {
-        let result = build_proxy_ws_url(input);
-        match (result, expected) {
-            (None, None) => {}
-            (Some((url, params)), Some((expected_url, expected_params))) => {
-                assert_eq!(url.as_str(), *expected_url, "input: {}", input);
-                assert_eq!(
-                    params,
-                    expected_params
-                        .iter()
-                        .map(|(k, v)| (k.to_string(), v.to_string()))
-                        .collect::<Vec<_>>(),
-                    "input: {}",
-                    input
-                );
-            }
-            (result, expected) => {
-                panic!(
-                    "input: {}, expected: {:?}, got: {:?}",
-                    input, expected, result
-                );
-            }
-        }
-    }
-}
-
-#[test]
-fn test_anarlog_proxy_always_selects_anarlog_adapter() {
-    use anlg_language::ISO639::*;
-
-    let proxy_urls = &[
-        "https://api.anarlog.so/stt",
-        "http://localhost:3001/stt",
-        "http://127.0.0.1:3001/stt",
-    ];
-
-    let language_combos: &[&[anlg_language::ISO639]] = &[&[En], &[Ko], &[En, De], &[En, Ko], &[Ar]];
-
-    for url in proxy_urls {
-        for langs in language_combos {
-            let langs: Vec<anlg_language::Language> = langs.iter().map(|l| (*l).into()).collect();
-            assert_eq!(
-                AdapterKind::from_url_and_languages(url, &langs, Some("cloud")),
-                AdapterKind::Anarlog,
-                "proxy URL should always select Anarlog adapter regardless of languages: url={url}, langs={langs:?}"
-            );
-        }
-    }
-}
-
-#[test]
-fn test_anarlog_cloud_adapter_supports_all_languages() {
-    use anlg_language::ISO639::*;
-
-    let combos: &[&[anlg_language::ISO639]] = &[&[En], &[Ko], &[Ar], &[En, De], &[En, Ko], &[Zh]];
-
-    for langs in combos {
-        let langs: Vec<anlg_language::Language> = langs.iter().map(|l| (*l).into()).collect();
-        assert!(
-            AdapterKind::Anarlog.is_supported_languages_live(&langs, Some("cloud")),
-            "Anarlog adapter should support all languages: {langs:?}"
-        );
-    }
-}
-
-#[test]
-fn test_anarlog_soniqo_live_limits_parakeet_languages() {
-    use anlg_language::ISO639::*;
-
-    let fr: Vec<anlg_language::Language> = vec![Fr.into()];
-    let ko: Vec<anlg_language::Language> = vec![Ko.into()];
-
-    assert!(
-        AdapterKind::Anarlog.is_supported_languages_live(&fr, Some("soniqo-parakeet-streaming"))
-    );
-    assert!(
-        !AdapterKind::Anarlog.is_supported_languages_live(&ko, Some("soniqo-parakeet-streaming"))
-    );
-}
-
-#[test]
-fn test_anarlog_soniqo_live_rejects_batch_only_models() {
-    use anlg_language::ISO639::*;
-
-    let fr: Vec<anlg_language::Language> = vec![Fr.into()];
-
-    assert!(!AdapterKind::Anarlog.is_supported_languages_live(&fr, Some("soniqo-parakeet-batch")));
-    assert!(!AdapterKind::Anarlog.is_supported_languages_live(&fr, Some("soniqo-qwen3-small")));
 }
 
 #[test]
@@ -520,17 +248,13 @@ fn test_direct_provider_urls_not_affected() {
         ),
         AdapterKind::GoogleGenerativeAi,
     );
-    assert_eq!(
-        AdapterKind::from_url_and_languages("http://localhost:50060/v1", &en, None),
-        AdapterKind::Argmax,
-    );
 }
 
 #[test]
 fn test_append_provider_param_replaces_existing() {
-    let url = append_provider_param("https://api.anarlog.so/stt?provider=deepgram", "anarlog");
+    let url = append_provider_param("https://stt.example.com/stt?provider=deepgram", "openai");
     assert!(
-        url.contains("provider=anarlog"),
+        url.contains("provider=openai"),
         "new provider value should be present: {url}"
     );
     assert!(
@@ -547,8 +271,8 @@ fn test_append_provider_param_replaces_existing() {
 #[test]
 fn test_append_provider_param_preserves_other_params() {
     let url = append_provider_param(
-        "https://api.anarlog.so/stt?model=cloud&provider=soniox&language=en",
-        "anarlog",
+        "https://stt.example.com/stt?model=cloud&provider=soniox&language=en",
+        "openai",
     );
     assert!(
         url.contains("model=cloud"),
@@ -558,14 +282,14 @@ fn test_append_provider_param_preserves_other_params() {
         url.contains("language=en"),
         "language should be preserved: {url}"
     );
-    assert!(url.contains("provider=anarlog"));
+    assert!(url.contains("provider=openai"));
     assert!(!url.contains("provider=soniox"));
 }
 
 #[test]
 fn test_append_provider_param_no_existing_provider() {
-    let url = append_provider_param("https://api.anarlog.so/stt", "anarlog");
-    assert!(url.contains("provider=anarlog"));
+    let url = append_provider_param("https://stt.example.com/stt", "openai");
+    assert!(url.contains("provider=openai"));
     assert_eq!(url.matches("provider=").count(), 1);
 }
 

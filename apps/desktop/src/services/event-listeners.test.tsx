@@ -36,10 +36,6 @@ const {
   setSettingValueMock,
   openNewMock,
   createSessionMock,
-  getOrCreateSessionForEventIdMock,
-  getCalendarEventStartedAtMock,
-  getCalendarEventMeetingLinkMock,
-  openUrlMock,
   setTriggerAppIdsMock,
   stopMock,
   updateCaptureConfigMock,
@@ -56,14 +52,6 @@ const {
   setSettingValueMock: vi.fn(async () => {}),
   openNewMock: vi.fn(),
   createSessionMock: vi.fn(async () => "session-new"),
-  getOrCreateSessionForEventIdMock: vi.fn(async () => "session-event"),
-  getCalendarEventStartedAtMock: vi.fn(),
-  getCalendarEventMeetingLinkMock: vi.fn(),
-  openUrlMock: vi.fn(
-    async (): Promise<
-      { status: "ok"; data: null } | { status: "error"; error: string }
-    > => ({ status: "ok", data: null }),
-  ),
   setTriggerAppIdsMock: vi.fn(),
   stopMock: vi.fn(),
   updateCaptureConfigMock: vi.fn(),
@@ -76,10 +64,6 @@ vi.mock("@anlg/plugin-notification", () => ({
       listen: notificationListenMock,
     },
   },
-}));
-
-vi.mock("@anlg/plugin-opener2", () => ({
-  commands: { openUrl: openUrlMock },
 }));
 
 vi.mock("@anlg/plugin-updater2", () => ({
@@ -114,12 +98,6 @@ vi.mock("~/settings/queries", () => ({
 
 vi.mock("~/session/queries", () => ({
   createSession: createSessionMock,
-  getOrCreateSessionForEventId: getOrCreateSessionForEventIdMock,
-}));
-
-vi.mock("~/calendar/queries", () => ({
-  getCalendarEventStartedAt: getCalendarEventStartedAtMock,
-  getCalendarEventMeetingLink: getCalendarEventMeetingLinkMock,
 }));
 
 vi.mock("~/store/zustand/tabs", () => ({
@@ -235,10 +213,6 @@ describe("EventListeners notification events", () => {
     setSettingValueMock.mockReset();
     openNewMock.mockReset();
     createSessionMock.mockReset();
-    getOrCreateSessionForEventIdMock.mockReset();
-    getCalendarEventStartedAtMock.mockReset();
-    getCalendarEventMeetingLinkMock.mockReset();
-    openUrlMock.mockReset();
     setTriggerAppIdsMock.mockReset();
     stopMock.mockReset();
     updateCaptureConfigMock.mockReset();
@@ -248,10 +222,6 @@ describe("EventListeners notification events", () => {
     notificationListenMock.mockResolvedValue(() => {});
     updaterListenMock.mockResolvedValue(() => {});
     createSessionMock.mockResolvedValue("session-new");
-    getOrCreateSessionForEventIdMock.mockResolvedValue("session-event");
-    getCalendarEventStartedAtMock.mockResolvedValue(null);
-    getCalendarEventMeetingLinkMock.mockResolvedValue(null);
-    openUrlMock.mockResolvedValue({ status: "ok", data: null });
     liveQuerySubscribeMock.mockImplementation(
       async (_sql, _params, handlers) => {
         handlers.onData([]);
@@ -296,7 +266,6 @@ describe("EventListeners notification events", () => {
           type: "mic_detected",
           app_names: ["Zoom"],
           app_ids: ["us.zoom.xos", "com.existing.app"],
-          event_ids: [],
         },
       },
     });
@@ -348,144 +317,6 @@ describe("EventListeners notification events", () => {
       expect(openNewMock).not.toHaveBeenCalled();
     },
   );
-
-  test("notification_action open_meeting opens the current event link only", async () => {
-    getCalendarEventMeetingLinkMock.mockResolvedValue(
-      "https://meet.example.com/current",
-    );
-    const handler = await renderNotificationHandler();
-
-    handler({
-      payload: {
-        type: "notification_action",
-        action: "open_meeting",
-        source: { type: "calendar_event", event_id: "evt-1" },
-      },
-    });
-
-    await vi.waitFor(() =>
-      expect(openUrlMock).toHaveBeenCalledWith(
-        "https://meet.example.com/current",
-        null,
-      ),
-    );
-    expect(openNewMock).not.toHaveBeenCalled();
-    expect(getOrCreateSessionForEventIdMock).not.toHaveBeenCalled();
-  });
-
-  test("notification_action join_and_record starts immediately and opens the meeting", async () => {
-    getCalendarEventMeetingLinkMock.mockResolvedValue(
-      "https://meet.example.com/current",
-    );
-    const handler = await renderNotificationHandler();
-
-    handler({
-      payload: {
-        type: "notification_action",
-        action: "join_and_record",
-        source: { type: "calendar_event", event_id: "evt-1" },
-      },
-    });
-
-    await vi.waitFor(() =>
-      expect(openUrlMock).toHaveBeenCalledWith(
-        "https://meet.example.com/current",
-        null,
-      ),
-    );
-    expect(openNewMock).toHaveBeenCalledWith({
-      type: "sessions",
-      id: "session-event",
-      state: {
-        view: null,
-        autoStart: true,
-      },
-    });
-  });
-
-  test("notification_action join_and_record still starts when the meeting link is unavailable", async () => {
-    const handler = await renderNotificationHandler();
-
-    handler({
-      payload: {
-        type: "notification_action",
-        action: "join_and_record",
-        source: { type: "calendar_event", event_id: "evt-1" },
-      },
-    });
-
-    await vi.waitFor(() =>
-      expect(openNewMock).toHaveBeenCalledWith({
-        type: "sessions",
-        id: "session-event",
-        state: {
-          view: null,
-          autoStart: true,
-        },
-      }),
-    );
-    expect(openUrlMock).not.toHaveBeenCalled();
-  });
-
-  test("notification_action join_and_record still opens the meeting when recording setup fails", async () => {
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-    getOrCreateSessionForEventIdMock.mockRejectedValue(
-      new Error("database unavailable"),
-    );
-    getCalendarEventMeetingLinkMock.mockResolvedValue(
-      "https://meet.example.com/current",
-    );
-    const handler = await renderNotificationHandler();
-
-    handler({
-      payload: {
-        type: "notification_action",
-        action: "join_and_record",
-        source: { type: "calendar_event", event_id: "evt-1" },
-      },
-    });
-
-    await vi.waitFor(() =>
-      expect(openUrlMock).toHaveBeenCalledWith(
-        "https://meet.example.com/current",
-        null,
-      ),
-    );
-    expect(openNewMock).not.toHaveBeenCalled();
-    consoleError.mockRestore();
-  });
-
-  test("notification_action reports meeting opener result errors", async () => {
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-    openUrlMock.mockResolvedValue({
-      status: "error",
-      error: "No application",
-    });
-    getCalendarEventMeetingLinkMock.mockResolvedValue(
-      "https://meet.example.com/current",
-    );
-    const handler = await renderNotificationHandler();
-
-    handler({
-      payload: {
-        type: "notification_action",
-        action: "open_meeting",
-        source: { type: "calendar_event", event_id: "evt-1" },
-      },
-    });
-
-    await vi.waitFor(() =>
-      expect(consoleError).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ message: "No application" }),
-      ),
-    );
-    consoleError.mockRestore();
-  });
 
   test("live capture config sync pushes remotes before the transcript snapshot", async () => {
     vi.useFakeTimers();
@@ -792,25 +623,8 @@ describe("EventListeners notification events", () => {
     });
   });
 
-  test.each(["notification_confirm", "notification_accept"])(
-    "%s opens Team settings for an invitation without creating a session",
-    async (type) => {
-      const handler = await renderNotificationHandler();
-
-      handler({
-        payload: { type, key: "team-invitation:inv-1", source: null },
-      });
-
-      expect(createSessionMock).not.toHaveBeenCalled();
-      expect(openNewMock).toHaveBeenCalledWith({
-        type: "settings",
-        state: { tab: "team" },
-      });
-    },
-  );
-
   test.each([
-    ["notification_confirm", "cloudsync-initial-sync-complete-user-1"],
+    ["notification_confirm", "informational-notification"],
     ["notification_accept", "unknown-informational-notification"],
   ])(
     "%s for %s leaves the current note and recording alone",
@@ -844,12 +658,11 @@ describe("EventListeners notification events", () => {
       state: {
         view: null,
         autoStart: null,
-        scheduledAutoStart: null,
       },
     });
   });
 
-  test("notification_confirm with mic_detected source opens detected event and sets triggerAppIds", async () => {
+  test("notification_confirm with mic_detected source starts a new note and sets triggerAppIds", async () => {
     const handler = await renderNotificationHandler();
 
     handler({
@@ -859,23 +672,20 @@ describe("EventListeners notification events", () => {
           type: "mic_detected",
           app_names: ["Zoom"],
           app_ids: ["us.zoom.xos"],
-          event_ids: ["event-1"],
         },
       },
     });
 
     await vi.waitFor(() => expect(openNewMock).toHaveBeenCalledTimes(1));
 
-    expect(getOrCreateSessionForEventIdMock).toHaveBeenCalledWith("event-1");
-    expect(createSessionMock).not.toHaveBeenCalled();
+    expect(createSessionMock).toHaveBeenCalledTimes(1);
     expect(setTriggerAppIdsMock).toHaveBeenCalledWith(["us.zoom.xos"]);
     expect(openNewMock).toHaveBeenCalledWith({
       type: "sessions",
-      id: "session-event",
+      id: "session-new",
       state: {
         view: null,
         autoStart: true,
-        scheduledAutoStart: null,
       },
     });
   });
@@ -891,7 +701,6 @@ describe("EventListeners notification events", () => {
           type: "mic_detected",
           app_names: ["Zoom"],
           app_ids: ["us.zoom.xos"],
-          event_ids: [],
         },
       },
     });
@@ -899,49 +708,6 @@ describe("EventListeners notification events", () => {
     expect(setTriggerAppIdsMock).toHaveBeenCalledWith(["us.zoom.xos"]);
     await vi.waitFor(() => expect(openNewMock).toHaveBeenCalledTimes(1));
   });
-
-  test.each([
-    {
-      name: "upcoming",
-      now: "2026-05-15T12:00:00.000Z",
-      startedAt: "2026-05-15T12:02:00.000Z",
-      autoStart: null,
-    },
-    {
-      name: "started",
-      now: "2026-05-15T12:02:00.000Z",
-      startedAt: "2026-05-15T12:00:00.000Z",
-      autoStart: true,
-    },
-  ])(
-    "notification_confirm with $name calendar_event sets autoStart $autoStart",
-    async ({ now, startedAt, autoStart }) => {
-      vi.spyOn(Date, "now").mockReturnValue(new Date(now).getTime());
-      getCalendarEventStartedAtMock.mockResolvedValue(startedAt);
-      const handler = await renderNotificationHandler();
-
-      handler({
-        payload: {
-          type: "notification_confirm",
-          source: { type: "calendar_event", event_id: "evt-1" },
-        },
-      });
-
-      await vi.waitFor(() =>
-        expect(openNewMock).toHaveBeenCalledWith({
-          type: "sessions",
-          id: "session-event",
-          state: {
-            view: null,
-            autoStart,
-            scheduledAutoStart: null,
-          },
-        }),
-      );
-      expect(openUrlMock).not.toHaveBeenCalled();
-      expect(setTriggerAppIdsMock).not.toHaveBeenCalled();
-    },
-  );
 
   test("cleans up an updater subscription that resolves after unmount", async () => {
     let resolveUpdater: ((unlisten: () => void) => void) | undefined;

@@ -17,9 +17,9 @@ use std::str::FromStr;
 
 use owhisper_client::AdapterKind;
 
-fn is_anarlog_provider(provider: &str) -> bool {
-    matches!(provider, "anarlog" | "hyprnote")
-}
+// whisper.cpp files have no remote adapter; their language support comes from the
+// on-device runtime.
+const LOCAL_FILE_PROVIDER: &str = "local_file";
 
 pub fn is_supported_languages_live(
     provider: &str,
@@ -48,34 +48,12 @@ pub fn is_supported_languages_live(
         return Ok(model.supports_live_on_current_platform() && model.supports_languages(languages));
     }
 
-    if is_anarlog_provider(provider)
-        && let Some(model) = model
-        && model != "cloud"
-    {
-        if let Ok(model) = model.parse::<anlg_transcribe_soniqo::SoniqoModel>() {
-            return Ok(
-                model.supports_live_on_current_platform() && model.supports_languages(languages)
-            );
-        }
-
-        if let Ok(model) = model.parse::<anlg_transcribe_speechanalyzer::AppleSpeechModel>() {
-            return Ok(
-                model.supports_live_on_current_platform() && model.supports_languages(languages)
-            );
-        }
-
-        if model.starts_with("am-") || model.starts_with("whisper-") {
-            return Ok(false);
-        }
+    if provider == LOCAL_FILE_PROVIDER {
+        return Ok(model.is_none_or(|model| !model.starts_with("whisper-")));
     }
 
-    let adapter_provider = if is_anarlog_provider(provider) {
-        "anarlog"
-    } else {
-        provider
-    };
-    let adapter_kind = AdapterKind::from_str(adapter_provider)
-        .map_err(|_| format!("unknown_provider: {}", provider))?;
+    let adapter_kind =
+        AdapterKind::from_str(provider).map_err(|_| format!("unknown_provider: {}", provider))?;
 
     Ok(adapter_kind.is_supported_languages_live(languages, model))
 }
@@ -107,21 +85,7 @@ pub fn is_supported_languages_batch(
         return Ok(model.supports_languages(languages));
     }
 
-    if is_anarlog_provider(provider) {
-        if let Some(model) =
-            model.and_then(|model| model.parse::<anlg_transcribe_soniqo::SoniqoModel>().ok())
-        {
-            return Ok(model.supports_languages(languages));
-        }
-
-        if let Some(model) = model.and_then(|model| {
-            model
-                .parse::<anlg_transcribe_speechanalyzer::AppleSpeechModel>()
-                .ok()
-        }) {
-            return Ok(model.supports_languages(languages));
-        }
-
+    if provider == LOCAL_FILE_PROVIDER {
         return Ok(true);
     }
 
@@ -133,7 +97,6 @@ pub fn is_supported_languages_batch(
 
 pub fn suggest_providers_for_languages_live(languages: &[anlg_language::Language]) -> Vec<String> {
     let all_providers = [
-        AdapterKind::Argmax,
         AdapterKind::Soniox,
         AdapterKind::Fireworks,
         AdapterKind::Deepgram,
@@ -170,7 +133,6 @@ pub fn suggest_providers_for_languages_live(languages: &[anlg_language::Language
 
 pub fn suggest_providers_for_languages_batch(languages: &[anlg_language::Language]) -> Vec<String> {
     let all_providers = [
-        AdapterKind::Argmax,
         AdapterKind::Soniox,
         AdapterKind::Fireworks,
         AdapterKind::Deepgram,
@@ -227,11 +189,10 @@ mod tests {
     fn batch_language_support_by_provider_and_model() {
         let cases: &[(&str, &str, &[&str], bool)] = &[
             ("soniqo", "soniqo-parakeet-batch", &["fr"], true),
-            ("anarlog", "soniqo-parakeet-batch", &["ko"], false),
+            ("soniqo", "soniqo-parakeet-batch", &["ko"], false),
             ("soniqo", "soniqo-omnilingual", &["fr"], true),
-            ("anarlog", "cloud", &["fr"], true),
+            ("local_file", "local-file", &["ko"], true),
             ("mistral", "voxtral-mini-2602", &["de-DE", "en-US"], true),
-            ("hyprnote", "cloud", &["ko"], true),
         ];
 
         for (provider, model, language_codes, expected) in cases {
@@ -250,15 +211,14 @@ mod tests {
     #[test]
     fn live_language_support_by_provider_and_model() {
         let cases: &[(&str, &str, &[&str], bool)] = &[
-            ("anarlog", "soniqo-parakeet-streaming", &["ko"], false),
+            ("soniqo", "soniqo-parakeet-streaming", &["ko"], false),
             (
-                "anarlog",
+                "soniqo",
                 "soniqo-parakeet-streaming",
                 &["fr"],
                 cfg!(all(target_os = "macos", target_arch = "aarch64")),
             ),
-            ("anarlog", "cloud", &["ko"], true),
-            ("hyprnote", "cloud", &["ko"], true),
+            ("local_file", "local-file", &["ko"], true),
         ];
 
         for (provider, model, language_codes, expected) in cases {
@@ -303,11 +263,11 @@ mod tests {
         assert!(
             !is_supported_languages_live("apple-speech", Some("apple-speech"), &hindi).unwrap()
         );
-
-        // Local models are surfaced under the Anarlog provider in settings.
-        assert!(is_supported_languages_live("anarlog", Some("apple-speech"), &korean).unwrap());
-        assert!(!is_supported_languages_live("anarlog", Some("apple-speech"), &hindi).unwrap());
-        assert!(is_supported_languages_batch("anarlog", Some("apple-speech"), &korean).unwrap());
-        assert!(!is_supported_languages_batch("anarlog", Some("apple-speech"), &hindi).unwrap());
+        assert!(
+            is_supported_languages_batch("apple-speech", Some("apple-speech"), &korean).unwrap()
+        );
+        assert!(
+            !is_supported_languages_batch("apple-speech", Some("apple-speech"), &hindi).unwrap()
+        );
     }
 }

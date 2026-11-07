@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 exclude = ["/js", "/node_modules"]
 links = "tauri-plugin-local-api"
-description = "Outbound meeting webhooks, markdown export, and cloud snapshot preparation"
+description = "Outbound meeting webhooks and markdown export"
 
 [build-dependencies]
 tauri-plugin = { workspace = true, features = ["build"] }

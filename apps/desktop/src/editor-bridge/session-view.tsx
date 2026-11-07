@@ -15,9 +15,8 @@ import {
 } from "@anlg/editor/tasks";
 import { cn, safeParseDate } from "@anlg/utils";
 
-import { toTz, useTimezone } from "~/calendar/hooks";
 import { useSession } from "~/session/queries";
-import { getSessionEvent } from "~/session/utils";
+import { toTz, useTimezone } from "~/shared/hooks/useNow";
 import { useTimeFormat } from "~/shared/hooks/useTimeFormat";
 import { useTabs } from "~/store/zustand/tabs";
 import { useListener } from "~/stt/contexts";
@@ -37,29 +36,10 @@ export const SessionNodeView = forwardRef<
   const isRecording =
     liveSessionId === sessionId &&
     (liveStatus === "active" || liveStatus === "finalizing");
-  const event = useMemo(() => getSessionEvent(session ?? {}), [session]);
   const displayTime = useMemo(() => {
-    if (event?.is_all_day) {
-      return null;
-    }
-
-    const rawDate = event?.started_at ?? session?.created_at;
-    const parsed = rawDate ? safeParseDate(rawDate) : null;
-
+    const parsed = safeParseDate(session?.created_at);
     return parsed ? format(toTz(parsed, tz), timeFormat) : null;
-  }, [
-    event?.is_all_day,
-    event?.started_at,
-    session?.created_at,
-    tz,
-    timeFormat,
-  ]);
-
-  const isMeetingOver = useMemo(() => {
-    if (!event?.ended_at) return false;
-    const endedAt = safeParseDate(event.ended_at);
-    return endedAt ? endedAt.getTime() <= Date.now() : false;
-  }, [event]);
+  }, [session?.created_at, tz, timeFormat]);
 
   const linkedItemOpenBehavior = useLinkedItemOpenBehavior();
   const openCurrent = useTabs((state) => state.openCurrent);
@@ -89,13 +69,11 @@ export const SessionNodeView = forwardRef<
     [openSession],
   );
 
-  const derivedChecked = !isRecording && isMeetingOver;
   const explicitStatus = getOptionalTaskStatus(
     node.attrs.status,
     node.attrs.checked,
   );
-  const status =
-    explicitStatus ?? normalizeTaskStatus(undefined, derivedChecked);
+  const status = explicitStatus ?? normalizeTaskStatus(undefined, false);
 
   const handleToggle = useEditorEventCallback((view) => {
     if (!view) return;
@@ -134,7 +112,7 @@ export const SessionNodeView = forwardRef<
             className="flex size-[18px] shrink-0 items-center justify-center"
             contentEditable={false}
           >
-            <div className="size-2.5 animate-pulse rounded-full bg-red-500" />
+            <div className="bg-foreground animate-status-pulse size-2 rounded-full" />
           </div>
         ) : (
           <TaskCheckbox status={status} isInteractive onToggle={handleToggle} />

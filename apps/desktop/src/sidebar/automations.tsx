@@ -3,8 +3,7 @@ import { useMemo, useState } from "react";
 
 import { Lightning, MagnifyingGlass, Plus, X } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { cn, formatDistanceToNow } from "@anlg/utils";
+import { cn } from "@anlg/utils";
 
 import { CustomSidebarHeader } from "./custom-sidebar-header";
 
@@ -24,22 +23,16 @@ import {
 import {
   type AutomationWorkflow,
   createEmptyWorkflow,
-  GOOGLE_DRIVE_STARTER_WORKFLOW_ID,
   saveAutomationWorkflows,
   useAutomationWorkflows,
 } from "~/automations/workflows";
 import { type ChatGroupRecord, useChatGroups } from "~/chat/store/queries";
-import {
-  importSharedAutomation,
-  parseSharedAutomationPayload,
-  SharedResourceLibrarySection,
-} from "~/resource-sharing";
+import { formatRelativeToNow } from "~/i18n/format";
 import { useNativeContextMenu } from "~/shared/hooks/useNativeContextMenu";
 
 export function AutomationsNav() {
   const { t } = useLingui();
   const [search, setSearch] = useState("");
-  const searchRef = useSquircleRef<HTMLDivElement>();
   const starters = useStarterAutomations();
   const chatAutomations = useChatGroups("automations");
   const workflows = useAutomationWorkflows();
@@ -75,9 +68,7 @@ export function AutomationsNav() {
   );
   const filteredWorkflows = useMemo(() => {
     return workflows.filter(
-      (workflow) =>
-        workflow.id !== GOOGLE_DRIVE_STARTER_WORKFLOW_ID &&
-        (!query || workflow.title.toLowerCase().includes(query)),
+      (workflow) => !query || workflow.title.toLowerCase().includes(query),
     );
   }, [query, workflows]);
   const filteredChatAutomations = useMemo(() => {
@@ -120,13 +111,12 @@ export function AutomationsNav() {
 
       <div className="pb-2">
         <div
-          ref={searchRef}
           className={cn([
-            "border-border bg-accent/50 flex h-8 w-full shrink-0 items-center gap-2 rounded-lg border px-3",
-            "focus-within:bg-accent transition-colors",
+            "bg-card shadow-button-neutral flex h-7 w-full shrink-0 items-center gap-2 rounded-md px-2",
+            "focus-within:outline-ring transition-[box-shadow,outline-color] duration-200 ease-out focus-within:shadow-none focus-within:outline-1",
           ])}
         >
-          <MagnifyingGlass className="text-muted-foreground h-4 w-4 shrink-0" />
+          <MagnifyingGlass className="text-icon-muted h-4 w-4 shrink-0" />
           <input
             type="text"
             value={search}
@@ -137,7 +127,7 @@ export function AutomationsNav() {
               }
             }}
             placeholder={t`Search automations...`}
-            className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm placeholder:text-sm focus:outline-hidden"
+            className="placeholder:text-faint text-ui-compact min-w-0 flex-1 bg-transparent focus:outline-hidden"
           />
           {search ? (
             <button
@@ -175,7 +165,7 @@ export function AutomationsNav() {
           <>
             {filteredStarters.length > 0 ? (
               <div className="pb-2">
-                <h3 className="text-muted-foreground px-3 pt-1 pb-1 text-xs font-medium">
+                <h3 className="text-faint text-small font-ui-medium px-2.5 pt-1 pb-1.5">
                   <Trans>Get started</Trans>
                 </h3>
                 {filteredStarters.map((starter) => (
@@ -196,7 +186,7 @@ export function AutomationsNav() {
             filteredWorkflows.length > 0 ||
             filteredChatAutomations.length > 0 ? (
               <div>
-                <h3 className="text-muted-foreground px-3 pt-1 pb-1 text-xs font-medium">
+                <h3 className="text-faint text-small font-ui-medium px-2.5 pt-1 pb-1.5">
                   <Trans>My automations</Trans>
                 </h3>
                 {filteredDraftIds.map((draftId) => (
@@ -234,18 +224,6 @@ export function AutomationsNav() {
                 ))}
               </div>
             ) : null}
-            <SharedResourceLibrarySection
-              resourceType="automation"
-              search={search}
-              onImport={async (resource) => {
-                const workflow = parseSharedAutomationPayload(resource.payload);
-                const workflowId = await importSharedAutomation({
-                  version: 1,
-                  workflow,
-                });
-                selectWorkflow(workflowId);
-              }}
-            />
           </>
         )}
       </div>
@@ -292,15 +270,15 @@ function StarterListItem({
         void showContextMenu(event);
       }}
       className={cn([
-        "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-        selected ? "bg-accent" : "hover:bg-accent/50",
+        "w-full rounded-md px-2.5 py-2 text-left text-sm select-none",
+        selected ? "bg-layer-2" : "hover:bg-hover active:bg-pressed",
       ])}
     >
       <span className="flex items-center gap-2">
         <span className="flex size-4 shrink-0 items-center justify-center">
           {starter.renderIcon(16)}
         </span>
-        <span className="min-w-0 flex-1 truncate font-medium">
+        <span className="font-ui-medium min-w-0 flex-1 truncate">
           {starter.title}
         </span>
       </span>
@@ -348,15 +326,15 @@ function DraftListItem({
         void showContextMenu(event);
       }}
       className={cn([
-        "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-        selected ? "bg-accent" : "hover:bg-accent/50",
+        "w-full rounded-md px-2.5 py-2 text-left text-sm select-none",
+        selected ? "bg-layer-2" : "hover:bg-hover active:bg-pressed",
       ])}
     >
       <span className="flex items-center gap-2">
-        <Lightning className="size-4 shrink-0 text-violet-500" />
+        <Lightning className="text-icon-muted size-4 shrink-0" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium">{title}</span>
-          <span className="text-muted-foreground mt-0.5 block truncate text-xs">
+          <span className="font-ui-medium block truncate">{title}</span>
+          <span className="text-muted-foreground text-small mt-0.5 block truncate">
             <Trans>Draft</Trans>
           </span>
         </span>
@@ -404,17 +382,17 @@ function WorkflowListItem({
         void showContextMenu(event);
       }}
       className={cn([
-        "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-        selected ? "bg-accent" : "hover:bg-accent/50",
+        "w-full rounded-md px-2.5 py-2 text-left text-sm select-none",
+        selected ? "bg-layer-2" : "hover:bg-hover active:bg-pressed",
       ])}
     >
       <span className="flex items-center gap-2">
-        <Lightning className="size-4 shrink-0 text-violet-500" />
+        <Lightning className="text-icon-muted size-4 shrink-0" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium">
+          <span className="font-ui-medium block truncate">
             {workflow.title.trim() || t`Untitled automation`}
           </span>
-          <span className="text-muted-foreground mt-0.5 block truncate text-xs">
+          <span className="text-muted-foreground text-small mt-0.5 block truncate">
             {workflow.enabled ? <Trans>Enabled</Trans> : <Trans>Draft</Trans>}
           </span>
         </span>
@@ -432,7 +410,7 @@ function ChatAutomationListItem({
   selected: boolean;
   onSelect: (groupId: string) => void;
 }) {
-  const { t } = useLingui();
+  const { i18n, t } = useLingui();
   const deleteChatAutomation = useDeleteChatAutomation();
   const contextMenu = useMemo(
     () => [
@@ -452,7 +430,7 @@ function ChatAutomationListItem({
   );
   const showContextMenu = useNativeContextMenu(contextMenu);
   const createdAt = automation.createdAt
-    ? formatDistanceToNow(new Date(automation.createdAt), { addSuffix: true })
+    ? formatRelativeToNow(new Date(automation.createdAt), i18n.locale)
     : "";
 
   return (
@@ -465,16 +443,18 @@ function ChatAutomationListItem({
         void showContextMenu(event);
       }}
       className={cn([
-        "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-        selected ? "bg-accent" : "hover:bg-accent/50",
+        "w-full rounded-md px-2.5 py-2 text-left text-sm select-none",
+        selected ? "bg-layer-2" : "hover:bg-hover active:bg-pressed",
       ])}
     >
       <span className="flex items-center gap-2">
-        <Lightning className="size-4 shrink-0 text-violet-500" />
+        <Lightning className="text-icon-muted size-4 shrink-0" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium">{automation.title}</span>
+          <span className="font-ui-medium block truncate">
+            {automation.title}
+          </span>
           {createdAt ? (
-            <span className="text-muted-foreground mt-0.5 block truncate text-xs">
+            <span className="text-muted-foreground text-small mt-0.5 block truncate">
               {createdAt}
             </span>
           ) : null}

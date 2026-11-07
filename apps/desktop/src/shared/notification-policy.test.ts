@@ -33,9 +33,9 @@ describe("shouldShowNotificationFromSettings", () => {
       shouldShowNotificationFromSettings(
         stored({
           notification_disabled: true,
-          notification_cloudsync_complete: true,
+          notification_summary_complete: true,
         }),
-        "notification_cloudsync_complete",
+        "notification_summary_complete",
       ),
     ).toBe(false);
   });

@@ -8,9 +8,6 @@ const TabContentAutomations = lazy(async () => ({
 const TabContentFolders = lazy(async () => ({
   default: (await import("~/folders")).TabContentFolders,
 }));
-const TabContentCalendar = lazy(async () => ({
-  default: (await import("~/calendar")).TabContentCalendar,
-}));
 const TabContentChangelog = lazy(async () => ({
   default: (await import("~/changelog")).TabContentChangelog,
 }));
@@ -31,15 +28,6 @@ const TabContentOnboarding = lazy(async () => ({
 }));
 const TabContentSettings = lazy(async () => ({
   default: (await import("~/settings")).TabContentSettings,
-}));
-const TabContentSharedNote = lazy(async () => ({
-  default: (await import("~/shared-notes")).TabContentSharedNote,
-}));
-const TabContentSharedNotePreview = lazy(async () => ({
-  default: (await import("~/shared-notes")).TabContentSharedNotePreview,
-}));
-const TabContentTask = lazy(async () => ({
-  default: (await import("~/task")).TabContentTask,
 }));
 const TabContentTemplate = lazy(async () => ({
   default: (await import("~/templates")).TabContentTemplate,
@@ -63,20 +51,11 @@ function LazyTabContent({ tab }: { tab: Tab }) {
   if (tab.type === "sessions") {
     return <TabContentNote tab={tab} />;
   }
-  if (tab.type === "shared_sessions") {
-    return <TabContentSharedNote tab={tab} />;
-  }
-  if (tab.type === "shared_note_preview") {
-    return <TabContentSharedNotePreview tab={tab} />;
-  }
   if (tab.type === "humans") {
     return <TabContentHuman tab={tab} />;
   }
   if (tab.type === "contacts") {
     return <TabContentContact tab={tab} />;
-  }
-  if (tab.type === "calendar") {
-    return <TabContentCalendar />;
   }
   if (tab.type === "changelog") {
     return <TabContentChangelog tab={tab} />;
@@ -92,9 +71,6 @@ function LazyTabContent({ tab }: { tab: Tab }) {
   }
   if (tab.type === "edit") {
     return <TabContentEdit tab={tab} />;
-  }
-  if (tab.type === "task") {
-    return <TabContentTask tab={tab} />;
   }
   return null;
 }

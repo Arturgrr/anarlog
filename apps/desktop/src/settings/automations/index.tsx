@@ -22,25 +22,16 @@ import {
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
 import { toast } from "@anlg/ui/components/ui/toast";
-import { cn, formatDistanceToNow } from "@anlg/utils";
+import { cn } from "@anlg/utils";
 
-import { GoogleDriveConfig, DriveExportResult } from "./google-drive-config";
-import {
-  AutomationLastRunLine,
-  LinearIssuesConfig,
-  MarkdownExportConfig,
-  NotionUpdateConfig,
-  SlackRecapConfig,
-} from "./starter-config";
+import { AutomationLastRunLine, MarkdownExportConfig } from "./starter-config";
 import { useSaveWorkflow, WorkflowBuilder } from "./workflow-builder";
 
-import { useBillingAccess } from "~/auth/billing-context";
 import {
   useDeleteChatAutomation,
   useDeleteWorkflow,
   useRemoveStarterDraft,
 } from "~/automations/actions";
-import { parseAutomationTargetRef } from "~/automations/engine";
 import {
   useAutomationSelection,
   useEffectiveAutomationSelection,
@@ -52,10 +43,6 @@ import {
 } from "~/automations/starters";
 import {
   type AutomationWorkflow,
-  type WorkflowStep,
-  GOOGLE_DRIVE_STARTER_WORKFLOW_ID,
-  createGoogleDriveWorkflow,
-  mutateAutomationWorkflows,
   createEmptyWorkflow,
   isWorkflowReady,
   parseAutomationWorkflows,
@@ -63,20 +50,15 @@ import {
   useAutomationWorkflows,
 } from "~/automations/workflows";
 import { useChatGroup } from "~/chat/store/queries";
-import {
-  ResourceShareButton,
-  sharedAutomationPayload,
-} from "~/resource-sharing";
+import { formatRelativeToNow } from "~/i18n/format";
 import { SettingsHydrationBoundary } from "~/settings/hydration-boundary";
 import { SettingsPageTitle } from "~/settings/page-title";
-import { useNotifyPlanRequired } from "~/settings/plan-gate";
 import {
   getStoredSettingValues,
   setSettingValue,
   setSettingValues,
   useStoredSettingValues,
 } from "~/settings/queries";
-import type { SettingValues } from "~/settings/schema";
 import { StandardContentWrapper } from "~/shared/main";
 
 export function TabContentAutomations() {
@@ -132,8 +114,8 @@ function AutomationsOverview() {
           </p>
         </div>
 
-        <section className="border-border bg-muted/20 flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-10 text-center">
-          <span className="bg-background border-border flex size-11 items-center justify-center rounded-2xl border">
+        <section className="border-border-strong flex min-h-56 flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center">
+          <span className="bg-card shadow-raised flex size-11 items-center justify-center rounded-lg">
             <Lightning className="text-muted-foreground" size={20} />
           </span>
           <h3 className="mt-4 text-sm font-semibold">
@@ -256,11 +238,11 @@ function AutomationActionsMenu({
 }
 
 function ChatAutomationDetails({ groupId }: { groupId: string }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const group = useChatGroup(groupId, "automations");
   const deleteChatAutomation = useDeleteChatAutomation();
   const createdAt = group?.createdAt
-    ? formatDistanceToNow(new Date(group.createdAt), { addSuffix: true })
+    ? formatRelativeToNow(new Date(group.createdAt), i18n.locale)
     : "";
   const workflow = useEnsuredWorkflow({
     chatGroupId: groupId,
@@ -309,8 +291,6 @@ function CustomWorkflowDetails({
   onDelete: () => void;
 }) {
   const { t } = useLingui();
-  const billing = useBillingAccess();
-  const notifyPlanRequired = useNotifyPlanRequired();
   const workflows = useAutomationWorkflows();
   const saveWorkflow = useSaveWorkflow();
 
@@ -319,33 +299,23 @@ function CustomWorkflowDetails({
   };
 
   const handleEnable = (enabled: boolean) => {
-    if (enabled && !billing.isPro) {
-      notifyPlanRequired("pro");
-      return;
-    }
     persist({ ...workflow, enabled });
   };
 
   return (
     <AutomationDetailsLayout
-      icon={<Lightning className="text-violet-500" size={16} />}
+      icon={<Lightning className="text-icon" size={16} />}
       title={title}
       description={description}
       actions={
         <div className="flex items-center gap-2">
-          <ResourceShareButton
-            resourceType="automation"
-            sourceId={workflow.id}
-            title={workflow.title.trim() || t`Untitled automation`}
-            buildPayload={() => sharedAutomationPayload(workflow)}
-          />
           {workflow.enabled ? (
             <Button
               type="button"
               size="sm"
               variant="outline"
               onClick={() => handleEnable(false)}
-              disabled={!billing.isReady || saveWorkflow.isPending}
+              disabled={saveWorkflow.isPending}
             >
               <Trans>Disable</Trans>
             </Button>
@@ -354,13 +324,9 @@ function CustomWorkflowDetails({
               type="button"
               size="sm"
               onClick={() => handleEnable(true)}
-              disabled={
-                !billing.isReady ||
-                saveWorkflow.isPending ||
-                (billing.isPro && !isWorkflowReady(workflow))
-              }
+              disabled={saveWorkflow.isPending || !isWorkflowReady(workflow)}
               title={
-                billing.isPro && !isWorkflowReady(workflow)
+                !isWorkflowReady(workflow)
                   ? t`Add and configure at least one action first.`
                   : undefined
               }
@@ -434,63 +400,26 @@ function useEnsuredWorkflow({
 
 function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
   const { t } = useLingui();
-  const billing = useBillingAccess();
-  const notifyPlanRequired = useNotifyPlanRequired();
   const starter = useStarterAutomations().find((item) => item.id === starterId);
   const [showPreview, setShowPreview] = useState(false);
-  const workflows = useAutomationWorkflows();
-  const driveFallback = useMemo(
-    () => ({
-      ...createGoogleDriveWorkflow(starter?.title ?? ""),
-      id: GOOGLE_DRIVE_STARTER_WORKFLOW_ID,
-    }),
-    [starter?.title],
-  );
-  const driveWorkflow =
-    workflows.find((item) => item.id === GOOGLE_DRIVE_STARTER_WORKFLOW_ID) ??
-    driveFallback;
-  const driveStep = driveWorkflow.steps.find(
-    (step) => step.type === "google_drive_export",
-  );
-  const legacyKeys =
-    starterId === "google-drive" ? null : STARTER_AUTOMATIONS[starterId];
-  const saveDrive = (
-    updates: { enabled?: boolean; steps?: WorkflowStep[] } = {},
-  ) =>
-    mutateAutomationWorkflows((items) => {
-      const current =
-        items.find((item) => item.id === GOOGLE_DRIVE_STARTER_WORKFLOW_ID) ??
-        driveFallback;
-      return [
-        { ...current, ...updates },
-        ...items.filter((item) => item.id !== current.id),
-      ];
-    });
-  const configureDrive = useMutation({
-    mutationFn: (step: WorkflowStep) => saveDrive({ steps: [step] }),
-    onError: () => toast.error(t`Could not update the automation`),
-  });
+  const starterKeys = STARTER_AUTOMATIONS[starterId];
   const { values: settingValues } = useStoredSettingValues();
   const removeStarterDraft = useRemoveStarterDraft();
 
   const saveDraftMutation = useMutation({
     mutationKey: ["automation-draft-template"],
-    mutationFn: async () => {
-      if (starterId === "google-drive") await saveDrive();
-      await setSettingValue("automation_draft_template", starterId);
-    },
+    mutationFn: () => setSettingValue("automation_draft_template", starterId),
     onSuccess: () => toast.success(t`Automation draft saved`),
     onError: () => toast.error(t`Could not save the automation draft`),
   });
 
   const setEnabledMutation = useMutation({
     mutationKey: ["automation-starter-enabled"],
-    mutationFn: async ({ enabled }: { enabled: boolean }) => {
-      const updates: SettingValues = { automation_draft_template: starterId };
-      if (legacyKeys) updates[legacyKeys.enabledKey] = enabled;
-      else await saveDrive({ enabled });
-      return setSettingValues(updates);
-    },
+    mutationFn: ({ enabled }: { enabled: boolean }) =>
+      setSettingValues({
+        automation_draft_template: starterId,
+        [starterKeys.enabledKey]: enabled,
+      }),
     onSuccess: (_, { enabled }) =>
       toast.success(enabled ? t`Automation enabled` : t`Automation disabled`),
     onError: () => toast.error(t`Could not update the automation`),
@@ -500,48 +429,10 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
     return null;
   }
 
-  const isEnabled = legacyKeys
-    ? Boolean(settingValues[legacyKeys.enabledKey])
-    : driveWorkflow.enabled;
-  const targetRaw = legacyKeys
-    ? (settingValues[legacyKeys.targetKey] ?? "")
-    : "";
+  const isEnabled = Boolean(settingValues[starterKeys.enabledKey]);
   const isReady =
-    starterId === "google-drive"
-      ? isWorkflowReady(driveWorkflow)
-      : starterId === "markdown-export"
-        ? targetRaw.trim().length > 0
-        : parseAutomationTargetRef(targetRaw) !== null;
-  const readinessHint = (() => {
-    switch (starterId) {
-      case "google-drive":
-        return t`Choose a Google Drive folder first.`;
-      case "markdown-export":
-        return t`Choose an export folder first.`;
-      case "slack-recap":
-        return t`Choose a Slack channel first.`;
-      case "linear-action-items":
-        return t`Choose a Linear team first.`;
-      case "notion-project-notes":
-        return t`Choose a Notion page first.`;
-    }
-  })();
-
-  const handleSaveDraft = () => {
-    if (!billing.isPro) {
-      notifyPlanRequired("pro");
-      return;
-    }
-    saveDraftMutation.mutate();
-  };
-
-  const handleEnable = () => {
-    if (!billing.isPro) {
-      notifyPlanRequired("pro");
-      return;
-    }
-    setEnabledMutation.mutate({ enabled: true });
-  };
+    (settingValues[starterKeys.targetKey] ?? "").trim().length > 0;
+  const readinessHint = t`Choose an export folder first.`;
 
   return (
     <AutomationDetailsLayout
@@ -556,13 +447,13 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
       }
     >
       <section
-        className="border-border bg-background overflow-hidden rounded-2xl border"
+        className="bg-card shadow-raised overflow-hidden rounded-lg"
         aria-labelledby="automation-draft-title"
       >
         <div className="border-border flex flex-wrap items-start justify-between gap-3 border-b px-5 py-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <Lightning className="text-primary" size={17} />
+              <Lightning className="text-icon" size={17} />
               <h3
                 id="automation-draft-title"
                 className="truncate text-sm font-semibold"
@@ -610,8 +501,8 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
             <Button
               type="button"
               size="sm"
-              onClick={handleSaveDraft}
-              disabled={!billing.isReady || saveDraftMutation.isPending}
+              onClick={() => saveDraftMutation.mutate()}
+              disabled={saveDraftMutation.isPending}
             >
               <FloppyDisk size={14} />
               <Trans>Save draft</Trans>
@@ -622,7 +513,7 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
                 size="sm"
                 variant="outline"
                 onClick={() => setEnabledMutation.mutate({ enabled: false })}
-                disabled={!billing.isReady || setEnabledMutation.isPending}
+                disabled={setEnabledMutation.isPending}
               >
                 <Trans>Disable</Trans>
               </Button>
@@ -630,13 +521,9 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
               <Button
                 type="button"
                 size="sm"
-                onClick={handleEnable}
-                disabled={
-                  !billing.isReady ||
-                  setEnabledMutation.isPending ||
-                  (billing.isPro && !isReady)
-                }
-                title={billing.isPro && !isReady ? readinessHint : undefined}
+                onClick={() => setEnabledMutation.mutate({ enabled: true })}
+                disabled={setEnabledMutation.isPending || !isReady}
+                title={!isReady ? readinessHint : undefined}
               >
                 <Lightning size={14} />
                 <Trans>Save &amp; enable</Trans>
@@ -652,11 +539,9 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
                 <span
                   className={cn([
                     "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                    step.kind === "ai"
-                      ? "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300"
-                      : step.kind === "trigger"
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                        : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+                    step.kind === "trigger"
+                      ? "bg-contrast text-primary-foreground"
+                      : "bg-layer-2 text-foreground",
                   ])}
                 >
                   {step.kind === "ai" ? <Sparkle size={13} /> : index + 1}
@@ -689,26 +574,8 @@ function StarterAutomationDetails({ starterId }: { starterId: StarterId }) {
         </div>
 
         <div className="border-border border-t px-5 py-4">
-          {starterId === "google-drive" && driveStep ? (
-            <>
-              <GoogleDriveConfig
-                step={driveStep}
-                onChange={(step) => configureDrive.mutate(step)}
-              />
-              <DriveExportResult workflow={driveWorkflow} step={driveStep} />
-            </>
-          ) : starterId === "markdown-export" ? (
-            <MarkdownExportConfig />
-          ) : starterId === "slack-recap" ? (
-            <SlackRecapConfig />
-          ) : starterId === "linear-action-items" ? (
-            <LinearIssuesConfig />
-          ) : (
-            <NotionUpdateConfig />
-          )}
-          {legacyKeys ? (
-            <AutomationLastRunLine settingKey={legacyKeys.lastRunKey} />
-          ) : null}
+          <MarkdownExportConfig />
+          <AutomationLastRunLine settingKey={starterKeys.lastRunKey} />
         </div>
 
         {showPreview ? (

@@ -98,12 +98,6 @@ vi.mock("@anlg/editor/chat", async () => {
   };
 });
 
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: {
-    event: vi.fn(() => Promise.resolve()),
-  },
-}));
-
 vi.mock("@anlg/ui/components/ui/toast", () => ({
   toast: { error: toastError },
 }));

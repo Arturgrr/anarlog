@@ -52,10 +52,6 @@ impl AssemblyAIAdapter {
             );
         }
 
-        if let Some(proxy_result) = super::build_proxy_ws_url(api_base) {
-            return proxy_result;
-        }
-
         if api_base.contains(".eu.") || api_base.ends_with("-eu") {
             return (
                 "wss://streaming.eu.assemblyai.com/v3/ws"
@@ -117,16 +113,6 @@ mod tests {
                 vec![],
             ),
             ("", "wss://streaming.assemblyai.com/v3/ws", vec![]),
-            (
-                "https://api.anarlog.so?provider=assemblyai",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "assemblyai")],
-            ),
-            (
-                "http://localhost:8787?provider=assemblyai",
-                "ws://localhost:8787/listen",
-                vec![("provider", "assemblyai")],
-            ),
         ];
 
         for (input, expected_url, expected_params) in cases {
@@ -136,7 +122,7 @@ mod tests {
                 params,
                 expected_params
                     .into_iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .map(|(k, v): (&str, &str)| (k.to_string(), v.to_string()))
                     .collect::<Vec<_>>(),
                 "input: {input}"
             );

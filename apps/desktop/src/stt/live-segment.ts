@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type {
   ChannelProfile as BoundChannelProfile,
   LiveTranscriptSegment,
@@ -130,6 +132,11 @@ export const SegmentKeyUtils = {
     manager?: SpeakerLabelManager,
   ): string => {
     const assignedHumanId = key.speaker_human_id;
+    const selfHumanId = ctx?.getSelfHumanId();
+
+    if (selfHumanId && assignedHumanId === selfHumanId) {
+      return t`You`;
+    }
 
     if (ctx && assignedHumanId != null) {
       const human = ctx.getHumanName(assignedHumanId);
@@ -138,15 +145,8 @@ export const SegmentKeyUtils = {
       }
     }
 
-    if (ctx && key.channel === "DirectMic") {
-      const selfHumanId = ctx.getSelfHumanId();
-      if (
-        selfHumanId &&
-        (assignedHumanId == null || assignedHumanId === selfHumanId)
-      ) {
-        const selfHuman = ctx.getHumanName(selfHumanId);
-        return selfHuman || "You";
-      }
+    if (selfHumanId && key.channel === "DirectMic" && assignedHumanId == null) {
+      return t`You`;
     }
 
     if (ctx && key.channel === "RemoteParty" && assignedHumanId == null) {
@@ -158,7 +158,7 @@ export const SegmentKeyUtils = {
 
     if (manager) {
       const speakerNumber = manager.getUnknownSpeakerNumber(key);
-      return `Speaker ${speakerNumber}`;
+      return t`Speaker ${speakerNumber}`;
     }
 
     const channelLabel =
@@ -168,9 +168,11 @@ export const SegmentKeyUtils = {
           ? "B"
           : "C";
 
-    return key.speaker_index !== null && key.speaker_index !== undefined
-      ? `Speaker ${key.speaker_index + 1}`
-      : `Speaker ${channelLabel}`;
+    const speakerNumber =
+      key.speaker_index !== null && key.speaker_index !== undefined
+        ? String(key.speaker_index + 1)
+        : channelLabel;
+    return t`Speaker ${speakerNumber}`;
   },
 };
 

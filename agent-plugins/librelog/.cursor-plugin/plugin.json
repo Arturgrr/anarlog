@@ -1,0 +1,30 @@
+{
+  "name": "librelog",
+  "version": "1.3.5",
+  "description": "Search your local Librelog meetings through the Librelog CLI and local MCP server.",
+  "author": {
+    "name": "Artur Guerra",
+    "url": "https://github.com/Arturgrr"
+  },
+  "homepage": "https://github.com/Arturgrr/librelog/tree/main/agent-plugins/librelog",
+  "repository": "https://github.com/Arturgrr/librelog/tree/main/agent-plugins/librelog",
+  "license": "MIT",
+  "keywords": [
+    "meetings",
+    "notes",
+    "transcripts",
+    "productivity",
+    "mcp",
+    "local"
+  ],
+  "logo": "assets/icon.png",
+  "skills": "./skills/",
+  "mcpServers": {
+    "librelog": {
+      "command": "librelog",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

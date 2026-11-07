@@ -1,4 +1,3 @@
-import { getIdentifier } from "@tauri-apps/api/app";
 import {
   getCurrentWindow,
   type Theme,
@@ -13,7 +12,7 @@ import { applyDocumentTheme, writeStoredThemePreference } from "./apply";
 import {
   type AppIconPreference,
   normalizeAppIconPreference,
-  resolveDockIconName,
+  resolveAppIconName,
 } from "./icon";
 import type { ThemePreference } from "./resolve";
 import { useSettingsThemeReady } from "./use-settings-theme-ready";
@@ -30,24 +29,17 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   return (
     <>
       {settingsReady ? (
-        <ThemeSync
-          key={`${theme}:${appIcon}`}
-          theme={theme}
-          appIcon={appIcon}
-        />
+        <>
+          <ThemeSync key={theme} theme={theme} />
+          <DockIconSync key={appIcon} appIcon={appIcon} />
+        </>
       ) : null}
       {children}
     </>
   );
 }
 
-function ThemeSync({
-  theme,
-  appIcon,
-}: {
-  theme: ThemePreference;
-  appIcon: AppIconPreference;
-}) {
+function ThemeSync({ theme }: { theme: ThemePreference }) {
   useMountEffect(() => {
     activeThemePreference = theme;
     const appWindow = getCurrentWindow();
@@ -60,7 +52,7 @@ function ThemeSync({
         return;
       }
 
-      void applyAppearance(theme, appIcon, systemIsDark);
+      applyAppearance(theme, systemIsDark);
     };
 
     const refreshSystemTheme = async () => {
@@ -113,44 +105,42 @@ function ThemeSync({
   return null;
 }
 
-export async function applyThemePreference(
-  theme: ThemePreference,
-  appIcon: AppIconPreference = "default",
-) {
+function DockIconSync({ appIcon }: { appIcon: AppIconPreference }) {
+  useMountEffect(() => {
+    void applyAppIconPreference(appIcon);
+  });
+
+  return null;
+}
+
+export async function applyThemePreference(theme: ThemePreference) {
   activeThemePreference = theme;
   const appWindow = getCurrentWindow();
 
   if (theme !== "system") {
-    await Promise.all([
-      setNativeThemePreference(appWindow, theme),
-      applyAppearance(theme, appIcon, theme === "dark"),
-    ]);
+    applyAppearance(theme, theme === "dark");
+    await setNativeThemePreference(appWindow, theme);
     return;
   }
 
   await setNativeThemePreference(appWindow, theme);
-  await applyAppearance(theme, appIcon, await readSystemIsDark(appWindow));
+  applyAppearance(theme, await readSystemIsDark(appWindow));
 }
 
-async function applyAppearance(
-  theme: ThemePreference,
-  appIcon: AppIconPreference,
-  systemIsDark: boolean,
-) {
+function applyAppearance(theme: ThemePreference, systemIsDark: boolean) {
   applyDocumentTheme(theme, systemIsDark);
   writeStoredThemePreference(theme);
-  await applyDockIcon(appIcon, theme, systemIsDark);
 }
 
-export async function applyAppIconPreference(
-  appIcon: AppIconPreference,
-  theme: ThemePreference = "system",
-) {
-  await applyDockIcon(
-    appIcon,
-    theme,
-    theme === "system" ? await readSystemIsDark() : theme === "dark",
-  );
+export async function applyAppIconPreference(appIcon: AppIconPreference) {
+  try {
+    const result = await iconCommands.setDockIcon(resolveAppIconName(appIcon));
+    if (result.status === "error") {
+      console.error("[theme] failed to update Dock icon", result.error);
+    }
+  } catch (error) {
+    console.error("[theme] failed to update Dock icon", error);
+  }
 }
 
 async function setNativeThemePreference(
@@ -164,9 +154,7 @@ async function setNativeThemePreference(
   }
 }
 
-async function readSystemIsDark(
-  appWindow: Window = getCurrentWindow(),
-): Promise<boolean> {
+async function readSystemIsDark(appWindow: Window): Promise<boolean> {
   try {
     return isDarkTheme(await appWindow.theme());
   } catch (error) {
@@ -181,25 +169,4 @@ function isDarkTheme(theme: Theme | null): boolean {
 
 function prefersDarkColorScheme(): boolean {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
-async function applyDockIcon(
-  appIcon: AppIconPreference,
-  theme: ThemePreference,
-  systemIsDark: boolean,
-) {
-  const appIdentifier = await getIdentifier().catch(
-    () => "com.hyprnote.stable",
-  );
-
-  try {
-    const result = await iconCommands.setDockIcon(
-      resolveDockIconName(appIcon, theme, systemIsDark, appIdentifier),
-    );
-    if (result.status === "error") {
-      console.error("[theme] failed to update Dock icon", result.error);
-    }
-  } catch (error) {
-    console.error("[theme] failed to update Dock icon", error);
-  }
 }

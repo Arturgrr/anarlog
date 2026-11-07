@@ -121,7 +121,7 @@ describe("providerFetch", () => {
           ),
       ).toEqual([
         "Bearer local-key",
-        "Bearer anarlog-invalid-key-verification",
+        "Bearer librelog-invalid-key-verification",
       ]);
       await expect(
         verifyProviderCredentials(

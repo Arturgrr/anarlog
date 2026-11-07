@@ -30,9 +30,6 @@ pub(crate) fn pixbuf_for_icon(icon: Option<&NotificationIcon>) -> Option<Pixbuf>
 fn pixbuf_for_asset(asset: &NotificationIconAsset) -> Option<Pixbuf> {
     match asset {
         NotificationIconAsset::AppIcon => default_app_icon(),
-        NotificationIconAsset::Calendar => icon_theme_pixbuf("x-office-calendar")
-            .or_else(|| icon_theme_pixbuf("office-calendar"))
-            .or_else(|| icon_theme_pixbuf("calendar")),
         NotificationIconAsset::SystemSymbol { name } => {
             icon_theme_pixbuf(system_symbol_icon_name(name))
         }
@@ -56,9 +53,8 @@ fn expand_home(path: &str) -> String {
 }
 
 fn default_app_icon() -> Option<Pixbuf> {
-    icon_theme_pixbuf("com.hyprnote.dev")
-        .or_else(|| icon_theme_pixbuf("anarlog"))
-        .or_else(|| icon_theme_pixbuf("hyprnote"))
+    icon_theme_pixbuf("librelog")
+        .or_else(|| icon_theme_pixbuf("io.github.arturgrr.Librelog"))
         .or_else(|| icon_theme_pixbuf("application-x-executable"))
 }
 
@@ -120,11 +116,11 @@ mod tests {
     fn expands_home_prefixed_icon_paths() {
         let previous = std::env::var("HOME").ok();
         unsafe {
-            std::env::set_var("HOME", "/home/anarlog");
+            std::env::set_var("HOME", "/home/librelog");
         }
         assert_eq!(
             expand_home("~/icons/zoom.svg"),
-            "/home/anarlog/icons/zoom.svg"
+            "/home/librelog/icons/zoom.svg"
         );
         assert_eq!(expand_home("/usr/share/zoom.png"), "/usr/share/zoom.png");
         match previous {

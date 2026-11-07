@@ -9,8 +9,4 @@ permissions = [
     "allow-create-todo",
     "allow-complete-todo",
     "allow-delete-todo",
-    "allow-linear-list-teams",
-    "allow-linear-list-tickets",
-    "allow-github-issue-state",
-    "allow-github-issue-detail",
 ]

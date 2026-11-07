@@ -77,5 +77,12 @@ const tauri: UserConfig = {
       process.env.TAURI_ENV_PLATFORM == "windows" ? "chrome105" : "safari13",
     minify: process.env.TAURI_ENV_DEBUG ? false : "terser",
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
+    rolldownOptions: {
+      // The dictation HUD's own light page (Windows and Linux).
+      input: {
+        main: "index.html",
+        "dictation-hud": "dictation-hud.html",
+      },
+    },
   },
 };

@@ -73,16 +73,8 @@ export function isSupportedLocalSttModel(
     typeof model === "string" &&
     (model.startsWith("soniqo-") ||
       model === "apple-speech" ||
-      model.startsWith("am-") ||
       model.startsWith("Quantized"))
   );
-}
-
-export function isAnarlogCloudSttModel(
-  provider?: string | null,
-  model?: string | null,
-) {
-  return provider === "anarlog" && model === "cloud";
 }
 
 // Batch models that accept a whole meeting in one request. Their recordings are
@@ -115,7 +107,7 @@ export function isOnDeviceSttModel(
     return model === "apple-speech";
   }
 
-  return provider === "anarlog";
+  return false;
 }
 
 export function isLocalFileSttModel(
@@ -137,7 +129,6 @@ export function getUnsupportedDesktopLocalSttRepair(
   currentArch: string,
   provider: string | undefined,
   model: string | undefined,
-  canUseCloud: boolean,
 ) {
   if (
     isDesktopLocalSttAvailable(currentPlatform, currentArch) ||
@@ -147,9 +138,7 @@ export function getUnsupportedDesktopLocalSttRepair(
     return null;
   }
 
-  return canUseCloud
-    ? { provider: "anarlog", model: "cloud" }
-    : { provider: "", model: "" };
+  return { provider: "", model: "" };
 }
 
 export function isConfiguredSttModel(
@@ -158,10 +147,6 @@ export function isConfiguredSttModel(
 ) {
   if (!provider || !model) {
     return false;
-  }
-
-  if (provider === "anarlog") {
-    return model === "cloud" || isSupportedLocalSttModel(model);
   }
 
   if (provider === "soniqo") {
@@ -292,10 +277,6 @@ function baseLanguageCode(language: string) {
 }
 
 function languageSupportProvider(provider: string) {
-  if (provider === "local_file") {
-    return "anarlog";
-  }
-
   if (provider === "custom" || provider === "cloudflare_workers_ai") {
     return "deepgram";
   }

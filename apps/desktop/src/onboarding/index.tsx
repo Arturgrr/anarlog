@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useQueryClient } from "@tanstack/react-query";
 import { platform } from "@tauri-apps/plugin-os";
 import { motion } from "motion/react";
@@ -9,23 +9,33 @@ import { SpeakerHigh, SpeakerX } from "@anlg/ui/components/icons";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
-import { LoginSection } from "./account";
-import { CalendarSection } from "./calendar";
 import {
   getInitialStep,
   getNextStep,
   getPrevStep,
   getStepStatus,
+  limitToMissingSelection,
+  type OnboardingStep,
+  saveOnboardingStep,
 } from "./config";
-import { FinalDescription, FinalSection, finishOnboarding } from "./final";
-import { ImportSection } from "./imports";
+import { FinalStep } from "./final";
+import { WelcomeLanguagePicker } from "./language-picker";
+import {
+  IntelligenceStep,
+  IntelligenceSummary,
+  TranscriptionStep,
+  TranscriptionSummary,
+} from "./model-setup";
 import { PermissionsSection } from "./permissions";
 import { OnboardingSection } from "./shared";
 
-import { trackAnalyticsEvent } from "~/analytics";
-import { useAuth } from "~/auth";
+import { NotificationProvider } from "~/contexts/notifications";
+import { useSettingsReady } from "~/settings/queries";
+import { useConfigValues } from "~/shared/config";
 import { StandaloneWindowShell } from "~/shared/window-shell";
+import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
+import { isConfiguredSttModel } from "~/stt/capabilities";
 
 export function TabContentOnboarding({
   tab: _tab,
@@ -63,13 +73,17 @@ export function StandaloneOnboardingScreen({
 }: {
   onFinish: (sessionId: string) => void;
 }) {
+  // The main window's provider is not mounted yet, and model downloads started
+  // here report their progress and select the model through this one.
   return (
     <StandaloneWindowShell>
-      <OnboardingScreenContent
-        onFinish={onFinish}
-        headerClassName="px-12 pt-4 pb-8"
-        headerDragRegion
-      />
+      <NotificationProvider>
+        <OnboardingScreenContent
+          onFinish={onFinish}
+          headerClassName="px-12 pt-4 pb-8"
+          headerDragRegion
+        />
+      </NotificationProvider>
     </StandaloneWindowShell>
   );
 }
@@ -84,47 +98,29 @@ function OnboardingScreenContent({
   headerDragRegion?: boolean;
 }) {
   const queryClient = useQueryClient();
-  const auth = useAuth();
+  const { t } = useLingui();
   const [isMuted, setIsMuted] = useState(false);
-  const [currentStep, setCurrentStep] = useState(getInitialStep);
-  const [didSkipLogin, setDidSkipLogin] = useState(false);
+  const [savedStep, setSavedStep] = useState(getInitialStep);
+  const missingSelectionStep = useMissingSelectionStep();
+  const currentStep = limitToMissingSelection(savedStep, missingSelectionStep);
   const onboardingVideoRef = useRef<HTMLVideoElement>(null);
   const currentPlatform = platform();
 
-  const goNext = useCallback(() => {
-    trackAnalyticsEvent("onboarding_step_completed", {
-      step: currentStep,
-      platform: currentPlatform,
-    });
-    const next = getNextStep(currentStep);
-    if (next) setCurrentStep(next);
-  }, [currentPlatform, currentStep]);
+  const goTo = useCallback((step: OnboardingStep | null) => {
+    if (!step) return;
+    saveOnboardingStep(step);
+    setSavedStep(step);
+  }, []);
 
-  const skipCurrentStep = useCallback(() => {
-    trackAnalyticsEvent("onboarding_step_skipped", {
-      step: currentStep,
-      platform: currentPlatform,
-    });
-    const next = getNextStep(currentStep);
-    if (next) setCurrentStep(next);
-  }, [currentPlatform, currentStep]);
+  const goNext = useCallback(
+    () => goTo(getNextStep(currentStep)),
+    [currentStep, goTo],
+  );
 
-  const goBack = useCallback(() => {
-    const prev = getPrevStep(currentStep);
-    if (prev) setCurrentStep(prev);
-  }, [currentStep]);
-
-  const handleCalendarSignIn = useCallback(() => {
-    setCurrentStep("login");
-    void auth.signIn();
-  }, [auth]);
-
-  useEffect(() => {
-    trackAnalyticsEvent("onboarding_step_viewed", {
-      step: currentStep,
-      platform: currentPlatform,
-    });
-  }, [currentPlatform, currentStep]);
+  const goBack = useCallback(
+    () => goTo(getPrevStep(currentStep)),
+    [currentStep, goTo],
+  );
 
   useMountEffect(() => {
     sfxCommands.play("BGM").catch(console.error);
@@ -145,14 +141,10 @@ function OnboardingScreenContent({
 
   const handleFinish = useCallback(
     (sessionId: string) => {
-      trackAnalyticsEvent("onboarding_step_completed", {
-        step: "final",
-        platform: currentPlatform,
-      });
       void queryClient.invalidateQueries({ queryKey: ["onboarding-needed"] });
       onFinish(sessionId);
     },
-    [currentPlatform, onFinish, queryClient],
+    [onFinish, queryClient],
   );
 
   return (
@@ -166,7 +158,7 @@ function OnboardingScreenContent({
         >
           <video
             ref={onboardingVideoRef}
-            className="absolute inset-0 h-full w-full object-cover object-bottom opacity-28"
+            className="absolute inset-0 h-full w-full object-cover object-bottom opacity-28 grayscale"
             autoPlay
             loop
             muted
@@ -191,13 +183,14 @@ function OnboardingScreenContent({
 
       <div
         data-tauri-drag-region={headerDragRegion || undefined}
-        className="relative z-30 flex h-12 shrink-0 items-center justify-end pr-3 pl-12"
+        className="relative z-30 flex h-12 shrink-0 items-center justify-end gap-1 pr-3 pl-12"
       >
+        <WelcomeLanguagePicker />
         <button
           onClick={() => setIsMuted((prev) => !prev)}
           data-tauri-drag-region="false"
-          className="hover:bg-accent rounded-full p-1.5 transition-colors"
-          aria-label={isMuted ? "Unmute" : "Mute"}
+          className="hover:bg-hover active:bg-pressed rounded-md p-1.5"
+          aria-label={isMuted ? t`Unmute` : t`Mute`}
         >
           {isMuted ? (
             <SpeakerX size={16} className="text-muted-foreground" />
@@ -214,26 +207,26 @@ function OnboardingScreenContent({
           headerClassName,
         ])}
       >
-        <h1 className="font-hand text-foreground text-4xl leading-none font-semibold tracking-normal">
-          <Trans>Welcome to Anarlog</Trans>
+        <h1 className="text-foreground font-sans text-4xl leading-none font-medium tracking-normal">
+          <Trans>Welcome to Librelog</Trans>
         </h1>
       </div>
 
-      <div className="scroll-fade-y relative z-10 flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-4 px-12 pb-16">
+      <div className="scroll-fade-y relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="flex flex-1 flex-col gap-4 px-12 pb-8">
           <OnboardingSection
             title={<Trans>Start with permissions</Trans>}
             completedTitle={<Trans>Permissions granted</Trans>}
             description={
               currentPlatform === "macos" ? (
                 <Trans>
-                  Anarlog needs microphone and system audio to transcribe your
+                  Librelog needs microphone and system audio to transcribe your
                   meetings, plus Accessibility to read meeting controls, visible
                   chat.
                 </Trans>
               ) : (
                 <Trans>
-                  Anarlog needs access to your microphone and system audio to
+                  Librelog needs access to your microphone and system audio to
                   record and transcribe your meetings
                 </Trans>
               )
@@ -247,81 +240,80 @@ function OnboardingScreenContent({
           </OnboardingSection>
 
           <OnboardingSection
-            title={<Trans>Create account</Trans>}
-            completedTitle={
-              auth.session ? (
-                <Trans>Signed in</Trans>
-              ) : didSkipLogin ? (
-                <Trans>Skipped</Trans>
-              ) : (
-                <Trans>Account</Trans>
-              )
-            }
-            status={getStepStatus("login", currentStep)}
-            onBack={goBack}
-            onNext={goNext}
-            onSkip={() => {
-              setDidSkipLogin(true);
-              trackAnalyticsEvent("onboarding_login_skipped");
-              trackAnalyticsEvent("onboarding_step_skipped", {
-                step: "login",
-                platform: currentPlatform,
-              });
-              const next = getNextStep("login");
-              if (next) setCurrentStep(next);
-            }}
-          >
-            <LoginSection onContinue={goNext} />
-          </OnboardingSection>
-
-          <OnboardingSection
-            title={<Trans>Connect calendar</Trans>}
+            eyebrow={<Trans>1 of 2 · Transcription</Trans>}
+            title={<Trans>How your meetings become text</Trans>}
+            completedTitle={<TranscriptionSummary />}
             description={
               <Trans>
-                Anarlog will sync your calendar to get meeting reminders
+                Install a model on your Mac or connect a cloud provider. It’s
+                the same list as Settings › Transcription.
               </Trans>
             }
-            completedTitle={<Trans>Calendar connected</Trans>}
-            status={getStepStatus("calendar", currentStep)}
-            onBack={goBack}
-            onNext={goNext}
-            onSkip={skipCurrentStep}
-          >
-            <CalendarSection
-              onContinue={goNext}
-              onSignIn={handleCalendarSignIn}
-            />
-          </OnboardingSection>
-
-          <OnboardingSection
-            title={<Trans>Bring your meeting history</Trans>}
-            description={
-              <Trans>
-                Import notes and transcripts from the meeting apps you already
-                use.
-              </Trans>
-            }
-            completedTitle={<Trans>Meeting history imported</Trans>}
-            status={getStepStatus("imports", currentStep)}
-            onBack={goBack}
-            onNext={goNext}
-            onSkip={skipCurrentStep}
-          >
-            <ImportSection onContinue={goNext} onSkip={skipCurrentStep} />
-          </OnboardingSection>
-
-          <OnboardingSection
-            title={<Trans>Ready to go</Trans>}
-            description={<FinalDescription />}
-            status={getStepStatus("final", currentStep)}
+            status={getStepStatus("transcription", currentStep)}
+            fill
             skippable={false}
             onBack={goBack}
-            onNext={() => void finishOnboarding(handleFinish)}
+            onNext={goNext}
+            onEdit={() => goTo("transcription")}
           >
-            <FinalSection onContinue={handleFinish} />
+            <TranscriptionStep onContinue={goNext} />
           </OnboardingSection>
+
+          <OnboardingSection
+            eyebrow={<Trans>2 of 2 · Intelligence</Trans>}
+            title={<Trans>Who writes your summaries</Trans>}
+            completedTitle={<IntelligenceSummary />}
+            description={
+              <Trans>
+                Run a model on your Mac, sign in with a subscription or use an
+                API key. It’s the same list as Settings › Intelligence.
+              </Trans>
+            }
+            status={getStepStatus("intelligence", currentStep)}
+            fill
+            skippable={false}
+            onBack={goBack}
+            onNext={goNext}
+            onEdit={() => goTo("intelligence")}
+          >
+            <IntelligenceStep onBack={goBack} onContinue={goNext} />
+          </OnboardingSection>
+
+          {currentStep === "final" ? (
+            <FinalStep
+              onBack={goBack}
+              onChangeModel={() => goTo("transcription")}
+              onFinish={handleFinish}
+            />
+          ) : null}
         </div>
       </div>
     </div>
   );
+}
+
+function useMissingSelectionStep(): OnboardingStep | null {
+  const settingsReady = useSettingsReady();
+  const pendingStt = usePendingSttSelection((state) => state.selection);
+  const {
+    current_stt_provider,
+    current_stt_model,
+    current_llm_provider,
+    current_llm_model,
+  } = useConfigValues([
+    "current_stt_provider",
+    "current_stt_model",
+    "current_llm_provider",
+    "current_llm_model",
+  ] as const);
+
+  if (!settingsReady) return null;
+  if (
+    !pendingStt &&
+    !isConfiguredSttModel(current_stt_provider, current_stt_model)
+  ) {
+    return "transcription";
+  }
+  if (!current_llm_provider || !current_llm_model) return "intelligence";
+  return null;
 }

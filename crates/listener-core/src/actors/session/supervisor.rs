@@ -49,7 +49,6 @@ pub enum SessionMsg {
     RetryRecorder,
     SourceHealthy,
     SourceRoutingChanged,
-    UpdateCredentials(String),
     UpdateConfig(SessionConfigUpdate),
 }
 
@@ -156,15 +155,6 @@ impl Actor for SessionActor {
                 state.shutting_down = true;
                 children::shutdown_children(state, "session_stop").await;
                 myself.stop(None);
-            }
-            SessionMsg::UpdateCredentials(api_key) => {
-                if !api_key.is_empty() && api_key != state.ctx.params.api_key {
-                    state.ctx.params.api_key = api_key;
-                    if state.listener_cell.is_none() && !state.shutting_down {
-                        state.listener_retry_attempt = 0;
-                        retry_listener(myself, state).await;
-                    }
-                }
             }
             SessionMsg::RetryRecorder => {
                 if !state.shutting_down && state.recorder_cell.is_none() {
@@ -872,7 +862,7 @@ mod tests {
         let update = test_update(vec![], vec!["self", "remote-a", "remote-b"], Some("self"));
         assert!(
             !update_requires_listener_refresh(&state.ctx.params, &update),
-            "calendar attendance"
+            "participant list"
         );
 
         let mut ctx = test_ctx();
@@ -917,12 +907,6 @@ mod tests {
                 "stt-v4",
                 false,
                 "direct soniox preserves recording",
-            ),
-            (
-                "https://api.anarlog.so/stt?provider=soniox",
-                "cloud",
-                false,
-                "anarlog proxy soniox enters batch fallback",
             ),
             (
                 "http://localhost:1234",
@@ -1028,8 +1012,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn stalled_cloud_and_soniox_listeners_schedule_reconnection_without_stopping_recording() {
-        for base_url in ["https://api.anarlog.so/stt", "https://api.soniox.com"] {
+    async fn stalled_remote_listeners_schedule_reconnection_without_stopping_recording() {
+        for base_url in ["https://api.deepgram.com/v1", "https://api.soniox.com"] {
             let runtime = Arc::new(RecordingRuntime {
                 lifecycle_events: std::sync::Mutex::new(vec![]),
             });

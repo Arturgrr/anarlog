@@ -3,16 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PastSessionNote } from "~/session/insights/past-notes";
 
+const ADA = {
+  humanId: "ada",
+  source: "manual",
+  name: "Ada",
+  email: "ada@example.com",
+};
+
 const mocks = vi.hoisted(() => ({
-  event: {
-    title: "Weekly Product Sync",
-    started_at: "2026-08-21T09:00:00.000Z",
-    ended_at: "2026-08-21T10:00:00.000Z",
-    is_all_day: false,
-    description: "Review the launch plan.",
-    participants: [{ name: "Ada" }],
-  } as Record<string, unknown> | null,
-  now: new Date("2026-08-21T08:00:00.000Z"),
   model: { id: "model-1" } as { id: string } | null,
   notes: [] as PastSessionNote[],
   rawMd: "",
@@ -31,14 +29,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("~/ai/hooks", () => ({
   useLanguageModel: () => mocks.model,
-}));
-
-vi.mock("~/calendar/hooks", () => ({
-  useNow: () => mocks.now,
-}));
-
-vi.mock("~/calendar/queries", () => ({
-  useSessionCalendarEvent: () => mocks.event,
 }));
 
 vi.mock("~/session/insights/past-notes", () => ({
@@ -99,15 +89,6 @@ function renderBriefHook(
 
 describe("useCreatePreMeetingBrief", () => {
   beforeEach(() => {
-    mocks.event = {
-      title: "Weekly Product Sync",
-      started_at: "2026-08-21T09:00:00.000Z",
-      ended_at: "2026-08-21T10:00:00.000Z",
-      is_all_day: false,
-      description: "Review the launch plan.",
-      participants: [{ name: "Ada" }],
-    };
-    mocks.now = new Date("2026-08-21T08:00:00.000Z");
     mocks.model = { id: "model-1" };
     mocks.notes = [
       {
@@ -116,7 +97,7 @@ describe("useCreatePreMeetingBrief", () => {
         dateLabel: "Aug 14, 2026",
         occurredAt: "2026-08-14T09:00:00.000Z",
         sourceSummary: "Ada will share the prototype.",
-        relationship: "same_series",
+        relationship: "shared_participants",
         summary: "Ada will share the prototype.",
         isGenerating: false,
       },
@@ -124,7 +105,7 @@ describe("useCreatePreMeetingBrief", () => {
     mocks.rawMd = "";
     mocks.title = "";
     mocks.userId = "me";
-    mocks.participants = [];
+    mocks.participants = [ADA];
     mocks.streamPreMeetingBrief.mockReset();
     mocks.streamPreMeetingBrief.mockImplementation(
       async ({ onText }: { onText?: (text: string) => void }) => {
@@ -142,7 +123,7 @@ describe("useCreatePreMeetingBrief", () => {
     cleanup();
   });
 
-  it("is available only for upcoming meetings with prior notes", () => {
+  it("is available only with prior notes", () => {
     const { result, rerender } = renderBriefHook();
 
     expect(result.current.visible).toBe(true);
@@ -153,8 +134,8 @@ describe("useCreatePreMeetingBrief", () => {
   });
 
   it("shows create brief on untitled notes after participants are added", () => {
-    mocks.event = null;
     mocks.title = "";
+    mocks.participants = [];
 
     const { result, rerender } = renderBriefHook();
 
@@ -165,32 +146,11 @@ describe("useCreatePreMeetingBrief", () => {
         humanId: "yujong",
         source: "manual",
         name: "Yujong Lee",
-        email: "yujonglee@fastrepl.com",
+        email: "yujong@example.com",
       },
     ];
     rerender();
     expect(result.current.visible).toBe(true);
-  });
-
-  it("hides and disables create brief when the meeting ends even with participants", () => {
-    mocks.participants = [
-      {
-        humanId: "ada",
-        source: "manual",
-        name: "Ada",
-        email: "ada@example.com",
-      },
-    ];
-    mocks.now = new Date("2026-08-21T09:59:00.000Z");
-    const { result, rerender } = renderBriefHook();
-    expect(result.current.visible).toBe(true);
-
-    mocks.now = new Date("2026-08-21T10:00:00.000Z");
-    rerender();
-    expect(result.current.visible).toBe(false);
-
-    act(() => result.current.createBrief());
-    expect(mocks.streamPreMeetingBrief).not.toHaveBeenCalled();
   });
 
   it("hides after the memo has content and returns when the memo is cleared", () => {

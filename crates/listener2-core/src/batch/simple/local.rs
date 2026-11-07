@@ -143,13 +143,13 @@ fn create_channel_tempfile(parent: Option<&Path>) -> std::io::Result<tempfile::N
         && crate::batch::upload::is_recovery_directory(parent)
     {
         return tempfile::Builder::new()
-            .prefix("anarlog_channel_")
+            .prefix("librelog_channel_")
             .suffix(".wav")
             .tempfile_in(parent);
     }
     let in_parent = parent.and_then(|parent| {
         tempfile::Builder::new()
-            .prefix("anarlog_channel_")
+            .prefix("librelog_channel_")
             .suffix(".wav")
             .tempfile_in(parent)
             .ok()
@@ -157,7 +157,7 @@ fn create_channel_tempfile(parent: Option<&Path>) -> std::io::Result<tempfile::N
     match in_parent {
         Some(file) => Ok(file),
         None => tempfile::Builder::new()
-            .prefix("anarlog_channel_")
+            .prefix("librelog_channel_")
             .suffix(".wav")
             .tempfile(),
     }

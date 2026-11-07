@@ -17,23 +17,29 @@ const SCROLL_DELAY_MS = 350;
 export type SectionStatus = "completed" | "active" | "upcoming";
 
 export function OnboardingSection({
+  eyebrow,
   title,
   completedTitle,
   description,
   status,
+  fill = false,
   onBack,
   onNext,
   onSkip,
+  onEdit,
   skippable = true,
   children,
 }: {
+  eyebrow?: ReactNode;
   title: ReactNode;
   completedTitle?: ReactNode;
   description?: ReactNode;
   status: SectionStatus | null;
+  fill?: boolean;
   onBack?: () => void;
   onNext?: () => void;
   onSkip?: () => void;
+  onEdit?: () => void;
   skippable?: boolean;
   children: ReactNode;
 }) {
@@ -57,7 +63,10 @@ export function OnboardingSection({
   if (!status || status === "upcoming") return null;
 
   return (
-    <section ref={sectionRef}>
+    <section
+      ref={sectionRef}
+      className={cn([isActive && fill && "flex min-h-[26rem] flex-1 flex-col"])}
+    >
       <div
         className={cn([
           "flex items-center gap-2 transition-all duration-300",
@@ -65,57 +74,73 @@ export function OnboardingSection({
         ])}
       >
         {isCompleted && (
-          <Check className="size-4 shrink-0 text-green-600" weight="bold" />
+          <Check className="text-foreground size-4 shrink-0" weight="bold" />
         )}
         <div className="flex min-w-0 flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <h2
-              className={cn([
-                "transition-all duration-300",
-                isCompleted
-                  ? "text-muted-foreground/70 text-xs font-normal"
-                  : "text-foreground font-sans text-xl font-semibold",
-              ])}
-            >
-              {isCompleted ? (completedTitle ?? title) : title}
-            </h2>
-            {isActive && (
-              <div className="flex items-center gap-2">
-                {import.meta.env.DEV && onBack && (
-                  <button
-                    onClick={onBack}
-                    aria-label={t`Go to previous section`}
-                    className="text-muted-foreground hover:text-muted-foreground rounded p-0.5 transition-colors"
-                  >
-                    <CaretLeft className="size-3" />
-                  </button>
-                )}
-                {onNext &&
-                  (skippable ? (
+          <div className="flex flex-col gap-0.5">
+            {isActive && eyebrow ? (
+              <span className="text-small text-faint font-medium tracking-[0.04em] uppercase">
+                {eyebrow}
+              </span>
+            ) : null}
+            <div className="flex items-center gap-2">
+              <h2
+                className={cn([
+                  "transition-all duration-300",
+                  isCompleted
+                    ? "text-muted-foreground/70 text-xs font-normal"
+                    : "text-foreground font-sans text-xl font-semibold",
+                ])}
+              >
+                {isCompleted ? (completedTitle ?? title) : title}
+              </h2>
+              {isCompleted && onEdit ? (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
+                >
+                  <Trans>Change</Trans>
+                </button>
+              ) : null}
+              {isActive && (
+                <div className="flex items-center gap-2">
+                  {import.meta.env.DEV && onBack && (
                     <button
-                      onClick={() => {
-                        if (onSkip) {
-                          onSkip();
-                        } else {
-                          onNext?.();
-                        }
-                      }}
-                      className="text-muted-foreground hover:text-muted-foreground flex items-center gap-1 text-sm transition-colors"
-                    >
-                      <Trans>Skip</Trans>
-                      <CaretRight className="size-3" />
-                    </button>
-                  ) : import.meta.env.DEV ? (
-                    <button
-                      onClick={onNext}
-                      aria-label={t`Go to next section`}
+                      onClick={onBack}
+                      aria-label={t`Go to previous section`}
                       className="text-muted-foreground hover:text-muted-foreground rounded p-0.5 transition-colors"
                     >
-                      <CaretRight className="size-3" />
+                      <CaretLeft className="size-3" />
                     </button>
-                  ) : null)}
-              </div>
-            )}
+                  )}
+                  {onNext &&
+                    (skippable ? (
+                      <button
+                        onClick={() => {
+                          if (onSkip) {
+                            onSkip();
+                          } else {
+                            onNext?.();
+                          }
+                        }}
+                        className="text-muted-foreground hover:text-muted-foreground flex items-center gap-1 text-sm transition-colors"
+                      >
+                        <Trans>Skip</Trans>
+                        <CaretRight className="size-3" />
+                      </button>
+                    ) : import.meta.env.DEV ? (
+                      <button
+                        onClick={onNext}
+                        aria-label={t`Go to next section`}
+                        className="text-muted-foreground hover:text-muted-foreground rounded p-0.5 transition-colors"
+                      >
+                        <CaretRight className="size-3" />
+                      </button>
+                    ) : null)}
+                </div>
+              )}
+            </div>
           </div>
           {isActive && description && (
             <div className="text-muted-foreground text-sm">{description}</div>
@@ -131,7 +156,10 @@ export function OnboardingSection({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="-mx-5 -mb-5 overflow-hidden px-5 pt-3 pb-5"
+            className={cn([
+              "-mx-5 -mb-5 overflow-hidden px-5 pt-3 pb-5",
+              fill && "flex min-h-0 flex-1 flex-col",
+            ])}
           >
             {children}
           </motion.div>
@@ -152,11 +180,11 @@ export function OnboardingButton({
     <button
       {...props}
       className={cn([
-        "w-fit rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-200",
+        "w-fit rounded-lg px-6 py-2.5 text-sm font-medium transition-[background-color,color,opacity] duration-200 ease-out",
         variant === "primary" &&
-          "border-primary bg-primary text-primary-foreground hover:bg-primary/90 border-2 shadow-[0_2px_6px_rgba(87,83,78,0.22),0_10px_18px_-10px_rgba(87,83,78,0.65)]",
+          "bg-primary text-primary-foreground shadow-button-contrast hover:bg-primary/90 disabled:opacity-40",
         variant === "secondary" &&
-          "border-border/60 bg-card/55 text-muted-foreground hover:bg-card/75 hover:text-foreground border shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] backdrop-blur-sm disabled:opacity-50",
+          "bg-button-neutral text-foreground shadow-button-neutral hover:bg-layer-2 disabled:opacity-50",
         variant === "ghost" &&
           "text-muted-foreground hover:text-muted-foreground",
         className,
@@ -174,14 +202,14 @@ export function StepRow({
 }) {
   return (
     <div className="flex items-center gap-2 text-sm">
-      {status === "done" && <CheckCircle className="size-4 text-emerald-600" />}
+      {status === "done" && <CheckCircle className="text-foreground size-4" />}
       {status === "active" && (
         <CircleNotch className="text-muted-foreground size-4 animate-spin" />
       )}
-      {status === "failed" && <XCircle className="size-4 text-red-400" />}
+      {status === "failed" && <XCircle className="text-danger size-4" />}
       <span
         className={
-          status === "failed" ? "text-red-500" : "text-muted-foreground"
+          status === "failed" ? "text-danger" : "text-muted-foreground"
         }
       >
         {label}

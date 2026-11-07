@@ -108,7 +108,7 @@ export function MainChatPanels({
                 >
                   <div
                     data-chat-right-panel
-                    className="border-border bg-card -mb-1 h-[calc(100%+0.25rem)] min-h-0 overflow-hidden rounded-tr-xl border-x"
+                    className="border-border-weak bg-card my-2 mr-2 h-[calc(100%-1rem)] min-h-0 overflow-hidden rounded-lg border"
                   >
                     <ChatPanelFrame
                       layout="right-panel"

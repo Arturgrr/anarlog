@@ -11,7 +11,7 @@ extension NotificationManager {
     }
 
     let actionButton = CompactActionButton()
-    let actionLabel = notification.payload.actionLabel ?? "Open Anarlog"
+    let actionLabel = notification.payload.actionLabel ?? "Open Librelog"
     if notification.payload.isDestructiveAction {
       actionButton.configureDestructiveAction(label: actionLabel)
       actionButton.showsProgress = notification.payload.showsStopCountdown
@@ -50,7 +50,7 @@ extension NotificationManager {
     menuButton.toolTip = actionMenu.label
     menuButton.setBackgroundColors(
       normal: NSColor.clear.cgColor,
-      pressed: NSColor.black.withAlphaComponent(0.08).cgColor
+      pressed: Colors.pressedOverlay
     )
     menuButton.contentTintColor = actionButton.contentTintColor
     menuButton.layer?.borderWidth = 0
@@ -59,7 +59,7 @@ extension NotificationManager {
     let divider = NSView()
     divider.translatesAutoresizingMaskIntoConstraints = false
     divider.wantsLayer = true
-    divider.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.12).cgColor
+    divider.layer?.backgroundColor = Colors.divider
 
     surface.addSubview(actionButton)
     surface.addSubview(menuButton)

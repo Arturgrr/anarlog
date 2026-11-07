@@ -123,8 +123,8 @@ export function SpokenLanguagesView({
       <div className="relative">
         <div
           className={cn([
-            "border-border bg-card focus-within:border-border flex min-h-[38px] w-full flex-wrap items-center gap-1.5 rounded-2xl border px-2 py-1.5",
-            languageInputFocused && "border-border",
+            "bg-card shadow-button-neutral flex min-h-7 w-full flex-wrap items-center gap-1.5 rounded-md px-2 py-1",
+            languageInputFocused && "outline-ring outline outline-1",
           ])}
           onClick={() =>
             document.getElementById("language-search-input")?.focus()
@@ -186,7 +186,7 @@ export function SpokenLanguagesView({
           <div
             id="language-options"
             role="listbox"
-            className="border-border bg-card absolute top-full right-0 left-0 z-10 mt-1 flex max-h-60 w-full flex-col overflow-hidden overflow-y-auto rounded-2xl border shadow-md"
+            className="bg-layer-1 shadow-floating absolute top-full right-0 left-0 z-10 mt-1 flex max-h-60 w-full flex-col overflow-hidden overflow-y-auto rounded-md p-0.5"
           >
             {filteredLanguages.length > 0 ? (
               filteredLanguages.map((langCode, index) => (
@@ -204,10 +204,10 @@ export function SpokenLanguagesView({
                   onMouseDown={(e) => e.preventDefault()}
                   onMouseEnter={() => setLanguageSelectedIndex(index)}
                   className={cn([
-                    "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors",
+                    "flex h-7 w-full shrink-0 items-center justify-between rounded-sm pr-1.5 pl-3 text-left text-sm",
                     languageSelectedIndex === index
-                      ? "bg-accent"
-                      : "hover:bg-accent",
+                      ? "bg-hover"
+                      : "hover:bg-hover",
                   ])}
                 >
                   <span className="truncate font-medium">

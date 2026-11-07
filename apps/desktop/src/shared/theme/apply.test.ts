@@ -9,7 +9,6 @@ vi.mock("~/settings/queries", () => ({
 import {
   bootstrapThemeFromSettings,
   normalizeThemePreference,
-  readStoredThemePreference,
   resolveBootIsDark,
 } from "./apply";
 
@@ -51,14 +50,6 @@ describe("normalizeThemePreference", () => {
   });
 });
 
-describe("readStoredThemePreference", () => {
-  it("falls back to the legacy storage key", () => {
-    localStorage.setItem("hypr-theme", "dark");
-
-    expect(readStoredThemePreference()).toBe("dark");
-  });
-});
-
 describe("resolveBootIsDark", () => {
   it.each([
     ["light", true, false],
@@ -87,7 +78,7 @@ describe("bootstrapThemeFromSettings", () => {
     await bootstrapThemeFromSettings({ timeoutMs: 100 });
 
     expect(document.documentElement.classList.contains("dark")).toBe(true);
-    expect(localStorage.getItem("anarlog-theme")).toBe("dark");
+    expect(localStorage.getItem("librelog-theme")).toBe("dark");
   });
 
   it("does not hold startup past the deadline when settings load stalls", async () => {
@@ -112,7 +103,7 @@ describe("bootstrapThemeFromSettings", () => {
     await vi.advanceTimersByTimeAsync(20);
 
     expect(resolved).toBe(true);
-    expect(localStorage.getItem("anarlog-theme")).toBe(null);
+    expect(localStorage.getItem("librelog-theme")).toBe(null);
 
     resolveLoad({
       values: { theme: "dark" },
@@ -121,6 +112,6 @@ describe("bootstrapThemeFromSettings", () => {
     await Promise.resolve();
 
     expect(document.documentElement.classList.contains("dark")).toBe(true);
-    expect(localStorage.getItem("anarlog-theme")).toBe("dark");
+    expect(localStorage.getItem("librelog-theme")).toBe("dark");
   });
 });

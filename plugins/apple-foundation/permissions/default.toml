@@ -1,0 +1,8 @@
+[default]
+description = "Default permissions for the plugin"
+permissions = [
+    "allow-foundation-model-availability",
+    "allow-foundation-model-begin",
+    "allow-foundation-model-cancel",
+    "allow-foundation-model-generate",
+]

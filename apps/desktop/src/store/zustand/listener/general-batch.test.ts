@@ -8,7 +8,6 @@ import {
   syntheticBatchProgress,
 } from "./general-batch";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { BatchResponseProcessingError } from "~/stt/batch-response-processing-error";
 
 const {
@@ -38,8 +37,6 @@ const {
   startTranscriptionMock: vi.fn(),
   stopTranscriptionMock: vi.fn(),
 }));
-
-vi.mock("~/analytics", () => ({ trackAnalyticsEvent: vi.fn() }));
 
 vi.mock("@tauri-apps/api/window", () => ({
   UserAttentionType: { Critical: 1, Informational: 2 },
@@ -128,7 +125,7 @@ describe("runBatchSession", () => {
         "dictation",
         {
           session_id: "dictation",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/dictation.wav",
           base_url: "",
           api_key: "",
@@ -157,7 +154,7 @@ describe("runBatchSession", () => {
     expect(
       shouldUseSyntheticBatchProgress({
         session_id: "session-1",
-        provider: "anarlog",
+        provider: "deepgram",
         file_path: "/tmp/session.wav",
         base_url: "",
         api_key: "",
@@ -179,34 +176,6 @@ describe("runBatchSession", () => {
         file_path: "/tmp/session.wav",
         model: "gpt-4o-transcribe",
         base_url: "",
-        api_key: "",
-      }),
-    ).toBe(false);
-    expect(
-      shouldUseSyntheticBatchProgress({
-        session_id: "session-1",
-        provider: "am",
-        file_path: "/tmp/session.wav",
-        base_url: "https://api.deepgram.com/v1",
-        api_key: "",
-      }),
-    ).toBe(true);
-    expect(
-      shouldUseSyntheticBatchProgress({
-        session_id: "session-1",
-        provider: "am",
-        file_path: "/tmp/session.wav",
-        base_url: "http://localhost:50060/v1",
-        api_key: "",
-      }),
-    ).toBe(false);
-    expect(
-      shouldUseSyntheticBatchProgress({
-        session_id: "session-1",
-        provider: "am",
-        file_path: "/tmp/session.wav",
-        model: "gpt-4o-transcribe",
-        base_url: "https://api.openai.com/v1",
         api_key: "",
       }),
     ).toBe(false);
@@ -277,7 +246,7 @@ describe("runBatchSession", () => {
         "session-1",
         {
           session_id: "session-1",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/session.wav",
           base_url: "",
           api_key: "",
@@ -379,7 +348,7 @@ describe("runBatchSession", () => {
         "session-1",
         {
           session_id: "session-1",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/session.wav",
           base_url: "",
           api_key: "",
@@ -489,7 +458,7 @@ describe("runBatchSession", () => {
       "session-1",
       {
         session_id: "session-1",
-        provider: "anarlog",
+        provider: "deepgram",
         file_path: "/tmp/session.wav",
         base_url: "",
         api_key: "",
@@ -678,7 +647,7 @@ describe("runBatchSession", () => {
         "session-1",
         {
           session_id: "session-1",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/session.wav",
           base_url: "",
           api_key: "",
@@ -777,7 +746,7 @@ describe("runBatchSession", () => {
       "session-1",
       {
         session_id: "session-1",
-        provider: "anarlog",
+        provider: "deepgram",
         file_path: "/tmp/session.wav",
         base_url: "",
         api_key: "",
@@ -876,7 +845,7 @@ describe("runBatchSession", () => {
           "session-1",
           {
             session_id: "session-1",
-            provider: "anarlog",
+            provider: "deepgram",
             file_path: "/tmp/session.wav",
             base_url: "",
             api_key: "",
@@ -888,21 +857,6 @@ describe("runBatchSession", () => {
       );
 
       expect(handleBatchFailed).toHaveBeenCalledWith("session-1", message);
-      if (recovery && empty) {
-        expect(trackAnalyticsEvent).not.toHaveBeenCalledWith(
-          "transcription_failed",
-          expect.anything(),
-        );
-      } else {
-        expect(trackAnalyticsEvent).toHaveBeenCalledWith(
-          "transcription_failed",
-          { mode: "batch", failure_stage: "persist" },
-        );
-      }
-      expect(trackAnalyticsEvent).not.toHaveBeenCalledWith(
-        "transcription_completed",
-        expect.anything(),
-      );
       expect(clearBatchPersist).toHaveBeenCalledWith("session-1");
       expect(clearBatchSession).not.toHaveBeenCalled();
     },
@@ -967,7 +921,7 @@ describe("runBatchSession", () => {
         "session-1",
         {
           session_id: "session-1",
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/session.wav",
           base_url: "",
           api_key: "",
@@ -1049,7 +1003,7 @@ describe("runBatchSession", () => {
           "session-1",
           {
             session_id: "session-1",
-            provider: "anarlog",
+            provider: "deepgram",
             file_path: "/tmp/session.wav",
             base_url: "",
             api_key: "",
@@ -1066,12 +1020,6 @@ describe("runBatchSession", () => {
         code === "timed_out" ? "timed_out" : "failed",
         code,
       );
-      expect(trackAnalyticsEvent).toHaveBeenCalledWith("transcription_failed", {
-        mode: "batch",
-        failure_stage: code === "timed_out" ? "timed_out" : "failed",
-        error_code: code,
-        provider: "anarlog",
-      });
       expect(handleBatchStopped).not.toHaveBeenCalled();
     },
   );

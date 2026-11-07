@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Anarlog Staging",
-  "mainBinaryName": "anarlog-staging",
-  "identifier": "com.hyprnote.staging",
+  "productName": "Librelog Staging",
+  "mainBinaryName": "librelog-staging",
+  "identifier": "com.arturgrr.librelog.staging",
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["anarlog-staging", "hyprnote-staging"]
+        "schemes": ["librelog-staging"]
       }
     },
     "updater": {
@@ -24,7 +24,7 @@
     "macOS": {
       "files": {
         "Resources/mlx-swift_Cmlx.bundle/default.metallib": "resources/mlx.metallib",
-        "Resources/AppIcon.icns": "resources/staging/AppIcon.icns"
+        "Resources/AppIcon.icns": "resources/graphite/AppIcon.icns"
       },
       "dmg": {
         "background": "assets/dmg-background-staging.png"

@@ -44,7 +44,6 @@ const hoisted = vi.hoisted(() => ({
   liveDegraded: null as unknown,
   liveMuted: false,
   sessionMode: "inactive",
-  sessionEvent: null as { ended_at?: string } | null,
   transcriptMetadata: [] as Array<{
     id: string;
     sessionId: string;
@@ -135,12 +134,6 @@ vi.mock("@anlg/editor/markdown", () => ({
   parseJsonContent: () => ({}),
 }));
 
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: {
-    event: vi.fn(),
-  },
-}));
-
 vi.mock("@anlg/ui/components/ui/spinner", () => ({
   Spinner: () => <span data-testid="view-spinner" />,
 }));
@@ -158,7 +151,7 @@ vi.mock("~/audio-player", () => ({
   }),
 }));
 
-vi.mock("~/calendar/hooks", () => ({
+vi.mock("~/shared/hooks/useNow", () => ({
   useNow: () => new Date(hoisted.nowMs),
 }));
 
@@ -188,10 +181,6 @@ vi.mock("~/session/components/shared", () => ({
 vi.mock("~/stt/queries", async (importOriginal) => ({
   ...(await importOriginal()),
   useSessionTranscriptMetadata: () => hoisted.transcriptMetadata,
-}));
-
-vi.mock("~/session/hooks/useSessionEvent", () => ({
-  useSessionEvent: () => hoisted.sessionEvent,
 }));
 
 vi.mock("~/services/enhancer", () => ({
@@ -244,10 +233,6 @@ vi.mock("~/shared/hooks/useNativeContextMenu", () => ({
     hoisted.nativeContextMenus.push(items);
     return vi.fn();
   },
-}));
-
-vi.mock("~/shared/ui/resource-list", () => ({
-  useWebResources: () => ({ data: [], isLoading: false }),
 }));
 
 vi.mock("~/store/zustand/tabs", () => ({
@@ -313,9 +298,6 @@ vi.mock("~/templates", async () => {
       color: "#9ca3af",
     },
     TemplateIconGlyph,
-    filterWebTemplatesAgainstUserTemplates: () => [],
-    getTemplateCreatorLabel: () => "You",
-    parseWebTemplates: () => [],
     useCreateTemplate: () => vi.fn(),
     useOpenTemplatesTab: () => vi.fn(),
     useTemplateCreatorName: () => "You",
@@ -396,7 +378,6 @@ describe("SessionViewSwitcher", () => {
     hoisted.liveDegraded = null;
     hoisted.liveMuted = false;
     hoisted.sessionMode = "inactive";
-    hoisted.sessionEvent = null;
     hoisted.transcriptMetadata = [
       {
         id: "transcript-1",
@@ -729,7 +710,3 @@ describe("useEditorTabs", () => {
     },
   );
 });
-
-vi.mock("~/shared-notes/event-keys", () => ({
-  useSessionSharedNoteIds: () => [],
-}));

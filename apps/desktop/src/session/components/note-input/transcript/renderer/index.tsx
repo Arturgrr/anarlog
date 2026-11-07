@@ -39,7 +39,6 @@ import {
   useScrollDetection,
 } from "./viewport-hooks";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { useAudioPlayer } from "~/audio-player";
 import { useAudioTime } from "~/audio-player/provider";
 import type { Segment } from "~/stt/live-segment";
@@ -195,13 +194,6 @@ export function TranscriptViewer({
           ),
         ),
       );
-      trackAnalyticsEvent("participant_assigned", {
-        assignment_scope: "selection",
-        word_count: selection.groups.reduce(
-          (count, group) => count + group.wordIds.length,
-          0,
-        ),
-      });
     },
     [],
   );
@@ -259,13 +251,6 @@ export function TranscriptViewer({
         ),
       ),
     );
-    trackAnalyticsEvent("participant_assigned", {
-      assignment_scope: "merge",
-      word_count: groups.reduce(
-        (count, group) => count + group.wordIds.length,
-        0,
-      ),
-    });
   }, [collectEntries, selectedEntries]);
   const handleDeleteSelection = useCallback(
     async (selection: TranscriptWordSelection) => {
@@ -542,7 +527,7 @@ export function TranscriptViewer({
             data-transcript-scroll-controls
             className={cn([
               "group/scroll-controls absolute top-1/2 right-1 z-40 flex -translate-y-1/2 flex-col overflow-hidden",
-              "text-muted-foreground/45 rounded-full border border-transparent bg-transparent",
+              "text-muted-foreground/45 rounded-md border border-transparent bg-transparent",
               "transition-[background-color,border-color,color,box-shadow,backdrop-filter] duration-150",
               "hover:border-border/50 hover:bg-background/65 hover:text-foreground hover:shadow-sm hover:backdrop-blur-md",
               "focus-within:border-border/50 focus-within:bg-background/65 focus-within:text-foreground focus-within:shadow-sm focus-within:backdrop-blur-md",

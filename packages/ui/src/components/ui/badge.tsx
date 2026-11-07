@@ -1,28 +1,23 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
 const badgeVariants = cva(
-  "focus:outline-ring inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-2 focus:outline-offset-2",
+  "focus:outline-ring text-small font-ui-medium inline-flex h-[18px] items-center gap-1 rounded-xs border-[0.5px] px-1.5 whitespace-nowrap focus:outline-2 focus:outline-offset-2",
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground hover:bg-primary/80 border-transparent",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 border-transparent",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/80 border-transparent",
-        outline: "text-foreground",
-        success:
-          "border-transparent bg-green-500 text-white hover:bg-green-600",
+        default: "bg-contrast text-primary-foreground border-transparent",
+        secondary: "bg-layer-2 text-muted-foreground border-border",
+        destructive: "bg-danger-bg text-danger border-danger-border",
+        outline: "text-muted-foreground border-border-strong",
+        success: "bg-layer-2 text-foreground border-border",
       },
       size: {
-        default: "px-2.5 py-0.5 text-xs",
-        sm: "px-2 py-0.5 text-xs",
-        lg: "px-3 py-1 text-sm",
+        default: "",
+        sm: "h-4 px-1",
+        lg: "text-ui h-5 px-2",
       },
       disabled: {
         true: "pointer-events-none cursor-not-allowed opacity-50",
@@ -55,14 +50,13 @@ function Badge({
   ref,
   ...props
 }: BadgeProps) {
-  const squircleRef = useSquircleRef<HTMLDivElement>(ref);
   return (
     <div
       className={cn([badgeVariants({ variant, size, disabled }), className])}
       aria-label={label}
       role="status"
       {...props}
-      ref={squircleRef}
+      ref={ref}
     >
       {children}
     </div>

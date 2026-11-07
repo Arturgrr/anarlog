@@ -2,7 +2,7 @@ import { Effect, pipe, Schema } from "effect";
 
 import {
   DEFAULT_RESULT,
-  extractMetadataMap,
+  listModelsFailure,
   fetchJson,
   isDateSnapshot,
   isNonChatModel,
@@ -59,15 +59,11 @@ export async function listOpenAIModels(
       return {
         models: sortModelsByRecency(result.models),
         ignored: result.ignored,
-        metadata: extractMetadataMap(
-          data,
-          (model) => model.id,
-          (_model) => ({ input_modalities: ["text", "image"] }),
-        ),
+        metadata: {},
       };
     }),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }
@@ -86,7 +82,7 @@ export async function listGenericModels(
     Effect.andThen((json) => Schema.decodeUnknown(OpenAIModelSchema)(json)),
     Effect.map(({ data }) => processGenericModels(data, options)),
     Effect.timeout(REQUEST_TIMEOUT),
-    Effect.catchAll(() => Effect.succeed(DEFAULT_RESULT)),
+    Effect.catchAll((error) => Effect.succeed(listModelsFailure(error))),
     Effect.runPromise,
   );
 }
@@ -119,10 +115,6 @@ export function processGenericModels(
   return {
     models: sortModelsByRecency(result.models),
     ignored: result.ignored,
-    metadata: extractMetadataMap(
-      data,
-      (model) => model.id,
-      () => ({ input_modalities: ["text"] }),
-    ),
+    metadata: {},
   };
 }

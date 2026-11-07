@@ -5,14 +5,14 @@ import { ArrowSquareOut } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
 
 import { CliSettingsSections } from "./cli";
-import { CloudApiSection } from "./cloud-api";
 import { WebhooksSection } from "./webhooks";
 
 import { SettingsPageTitle } from "~/settings/page-title";
+import { docsUrl } from "~/shared/links";
 
 export { buildMcpConfiguration, getCliInstallNotification } from "./cli";
 
-const DEVELOPERS_GUIDE_URL = "https://docs.anarlog.so/agents/overview";
+const DEVELOPERS_GUIDE_URL = docsUrl("agents/overview");
 
 export function SettingsDevelopers() {
   return (
@@ -32,7 +32,6 @@ export function SettingsDevelopers() {
         </Button>
       </div>
       <CliSettingsSections />
-      <CloudApiSection />
       <WebhooksSection />
     </div>
   );

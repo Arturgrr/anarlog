@@ -39,25 +39,9 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .invoke_handler(specta_builder.invoke_handler())
         .setup(|app, _| {
             assert!(app.manage(ext::Store2State::<R>::default()));
-            migrate(app).ok();
             Ok(())
         })
         .build()
-}
-
-fn migrate<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<(), Error> {
-    let old_path = app.path().app_data_dir()?.join(FILENAME);
-    let new_path = store_path(app)?;
-    if !old_path.exists() {
-        return Ok(());
-    }
-
-    if new_path.exists() {
-        return Ok(());
-    }
-
-    std::fs::rename(&old_path, &new_path)?;
-    Ok(())
 }
 
 #[cfg(test)]
@@ -84,9 +68,13 @@ mod test {
     impl TestVault {
         fn new(label: &str) -> Self {
             let counter = TEST_PATH_COUNTER.fetch_add(1, Ordering::Relaxed);
-            let identifier = format!("com.hyprnote.store2test{}{}", std::process::id(), counter);
+            let identifier = format!(
+                "com.arturgrr.librelog.store2test{}{}",
+                std::process::id(),
+                counter
+            );
             let primary = std::env::temp_dir().join(format!(
-                "anarlog-store2-{label}-{}-{counter}",
+                "librelog-store2-{label}-{}-{counter}",
                 std::process::id()
             ));
             std::fs::create_dir_all(&primary).unwrap();

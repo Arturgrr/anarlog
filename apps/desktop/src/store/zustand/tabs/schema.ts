@@ -9,30 +9,19 @@ import type {
 
 export type { EditorView };
 
-export type SessionsState = WindowsSessionsState & {
-  scheduledAutoStart?: boolean | null;
-};
+export type SessionsState = WindowsSessionsState;
 
 type WindowsSupportedWindowTabInput = Exclude<
   WindowsTabInput,
   { type: "extension" } | { type: "extensions" } | { type: "folders" }
 >;
 
-export type SupportedWindowTabInput =
-  | Exclude<WindowsSupportedWindowTabInput, { type: "sessions" }>
-  | (Omit<
-      Extract<WindowsSupportedWindowTabInput, { type: "sessions" }>,
-      "state"
-    > & {
-      state?: SessionsState | null;
-    });
+export type SupportedWindowTabInput = WindowsSupportedWindowTabInput;
 
 export type TabInput =
   | SupportedWindowTabInput
   | { type: "automations" }
-  | { type: "folders" }
-  | { type: "shared_sessions"; id: string }
-  | { type: "shared_note_preview"; id: string };
+  | { type: "folders" };
 
 export const isTabInputSupported = (
   tab: WindowsTabInput,
@@ -45,20 +34,13 @@ export const isTabInputSupported = (
 };
 
 export type SettingsTab =
-  | "account"
-  | "billing"
-  | "referrals"
   | "stats"
   | "insights"
   | "app"
   | "meetings"
   | "audio"
   | "appearance"
-  | "sync"
-  | "team"
   | "notifications"
-  | "imports"
-  | "crm"
   | "developers"
   | "privacy"
   | "permissions"
@@ -68,22 +50,14 @@ export type SettingsTab =
   | "intelligence"
   | "todo";
 
-const normalizeSettingsTab = (
-  tab: string | null | undefined,
-): Exclude<SettingsTab, "account"> => {
+const normalizeSettingsTab = (tab: string | null | undefined): SettingsTab => {
   switch (tab) {
-    case "billing":
-    case "referrals":
     case "stats":
     case "insights":
     case "app":
     case "meetings":
     case "appearance":
-    case "sync":
-    case "team":
     case "notifications":
-    case "imports":
-    case "crm":
     case "developers":
     case "privacy":
     case "permissions":
@@ -97,9 +71,6 @@ const normalizeSettingsTab = (
       return "meetings";
     case "personalization":
       return "dictionary";
-    case "data":
-      return "imports";
-    case "account":
     default:
       return "app";
   }
@@ -127,8 +98,6 @@ export type Tab =
       id: string;
       state: SessionsState;
     })
-  | (BaseTab & { type: "shared_sessions"; id: string })
-  | (BaseTab & { type: "shared_note_preview"; id: string })
   | (BaseTab & {
       type: "contacts";
       state: ContactsState;
@@ -145,7 +114,6 @@ export type Tab =
     })
   | (BaseTab & { type: "organizations"; id: string })
   | (BaseTab & { type: "empty" })
-  | (BaseTab & { type: "calendar" })
   | (BaseTab & {
       type: "changelog";
       state: ChangelogState;
@@ -154,19 +122,10 @@ export type Tab =
   | (BaseTab & { type: "onboarding" })
   | (BaseTab & { type: "edit"; requestId: string })
   | (BaseTab & {
-      type: "task";
-      id: string;
-      resources: TaskResource[];
-    })
-  | (BaseTab & {
       type: "daily_summary";
       id: string;
       state: DailySummaryState;
     });
-
-export type TaskResource =
-  | { type: "github_issue"; owner: string; repo: string; number: number }
-  | { type: "github_pr"; owner: string; repo: string; number: number };
 
 export const getDefaultState = (tab: TabInput): Tab => {
   const base = { active: false, slotId: "", pinned: false };
@@ -177,21 +136,11 @@ export const getDefaultState = (tab: TabInput): Tab => {
         ...base,
         type: "sessions",
         id: tab.id,
-        state: tab.state
-          ? {
-              ...tab.state,
-              scheduledAutoStart: tab.state.scheduledAutoStart ?? null,
-            }
-          : {
-              view: null,
-              autoStart: null,
-              scheduledAutoStart: null,
-            },
+        state: tab.state ?? {
+          view: null,
+          autoStart: null,
+        },
       };
-    case "shared_sessions":
-      return { ...base, type: "shared_sessions", id: tab.id };
-    case "shared_note_preview":
-      return { ...base, type: "shared_note_preview", id: tab.id };
     case "contacts":
       return {
         ...base,
@@ -206,9 +155,7 @@ export const getDefaultState = (tab: TabInput): Tab => {
         type: "templates",
         state: tab.state ?? {
           showHomepage: false,
-          isWebMode: true,
           selectedMineId: null,
-          selectedWebIndex: null,
         },
       };
     case "automations":
@@ -221,8 +168,6 @@ export const getDefaultState = (tab: TabInput): Tab => {
       return { ...base, type: "organizations", id: tab.id };
     case "empty":
       return { ...base, type: "empty" };
-    case "calendar":
-      return { ...base, type: "calendar" };
     case "changelog":
       return {
         ...base,
@@ -231,9 +176,6 @@ export const getDefaultState = (tab: TabInput): Tab => {
       };
     case "settings": {
       const subtab = tab.state?.tab as string | null | undefined;
-      if (subtab === "calendar") {
-        return { ...base, type: "calendar" };
-      }
       if (subtab === "automations") {
         return { ...base, type: "automations" };
       }
@@ -244,7 +186,7 @@ export const getDefaultState = (tab: TabInput): Tab => {
         ...base,
         type: "settings",
         state: {
-          tab: subtab === "account" ? "account" : normalizeSettingsTab(subtab),
+          tab: normalizeSettingsTab(subtab),
         },
       };
     }
@@ -262,10 +204,6 @@ export const uniqueIdfromTab = (tab: Tab): string => {
   switch (tab.type) {
     case "sessions":
       return `sessions-${tab.id}`;
-    case "shared_sessions":
-      return `shared-sessions-${tab.id}`;
-    case "shared_note_preview":
-      return `shared-note-preview-${tab.id}`;
     case "humans":
       return `humans-${tab.id}`;
     case "organizations":
@@ -280,8 +218,6 @@ export const uniqueIdfromTab = (tab: Tab): string => {
       return `folders`;
     case "empty":
       return `empty-${tab.slotId}`;
-    case "calendar":
-      return `calendar`;
     case "changelog":
       return "changelog";
     case "settings":
@@ -290,8 +226,6 @@ export const uniqueIdfromTab = (tab: Tab): string => {
       return `onboarding`;
     case "edit":
       return `edit-${tab.requestId}`;
-    case "task":
-      return `task-${tab.id}`;
     case "daily_summary":
       return `daily_summary-${tab.id}`;
   }

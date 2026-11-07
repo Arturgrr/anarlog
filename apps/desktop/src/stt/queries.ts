@@ -298,7 +298,7 @@ export async function getSessionTranscriptRecords(
 }
 
 // Drop excluded people and any contact that is the current user (or a
-// calendar copy with the same email) so a 1:1 meeting still has one remote.
+// duplicate contact with the same email) so a 1:1 meeting still has one remote.
 const SESSION_REMOTE_PARTICIPANT_IDS_SQL = `
       SELECT DISTINCT participant.human_id
       FROM session_participants AS participant
@@ -398,6 +398,7 @@ function getTranscriptHumansQuery(humanIds: readonly string[]) {
       FROM humans
       WHERE id IN (${placeholders || "NULL"})
         AND name <> ''
+        AND id <> owner_user_id
       ORDER BY id
     `,
   };

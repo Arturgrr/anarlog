@@ -63,7 +63,7 @@ export function MarkdownExportOptionsConfig({
           value={options.filename}
           placeholder="{date} {title}.md"
           aria-describedby={helpId}
-          className="h-8 text-xs"
+          className="h-7"
           onChange={(event) =>
             onChange({ ...options, filename: event.target.value })
           }

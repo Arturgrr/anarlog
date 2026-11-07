@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 
@@ -171,7 +172,7 @@ export function useDesktopUpdateControl(): DesktopUpdateControl {
           setEventState({
             kind: "failed",
             version: payload.version,
-            errorMessage: "Failed to download update.",
+            errorMessage: t`Failed to download update.`,
           });
         }),
         updaterEvents.updatedEvent.listen(({ payload }) => {
@@ -373,5 +374,5 @@ function readErrorMessage(error: unknown): string {
     return error;
   }
 
-  return "Unknown update error.";
+  return t`Unknown update error.`;
 }

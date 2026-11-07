@@ -75,9 +75,14 @@ fn styled_label(
 }
 
 fn build_title(mtm: MainThreadMarker, assisted_pane: AssistedPane) -> Retained<NSTextField> {
+    let title = if assisted_pane.anchor == "Privacy_Accessibility" {
+        crate::assistant::labels::labels().allow_accessibility
+    } else {
+        format!("Allow {}", assisted_pane.title)
+    };
     styled_label(
         mtm,
-        &format!("Allow {}", assisted_pane.title),
+        &title,
         &NSFont::boldSystemFontOfSize(14.0),
         &NSColor::labelColor(),
     )
@@ -86,7 +91,7 @@ fn build_title(mtm: MainThreadMarker, assisted_pane: AssistedPane) -> Retained<N
 fn build_subtitle(mtm: MainThreadMarker) -> Retained<NSTextField> {
     styled_label(
         mtm,
-        "Drag the app below into the list above.",
+        &crate::assistant::labels::labels().drag_hint,
         &NSFont::systemFontOfSize(12.0),
         &NSColor::secondaryLabelColor(),
     )

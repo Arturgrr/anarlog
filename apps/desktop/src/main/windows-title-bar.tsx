@@ -22,13 +22,13 @@ import { WindowsWindowControls } from "./windows-window-controls";
 
 import { useShell } from "~/contexts/shell";
 import { usesTitleBarSidebarActions } from "~/shared/hooks/useWindowControlsGutter";
+import { DOCS_URL, ISSUES_URL } from "~/shared/links";
 import { useOpenNoteDialog } from "~/shared/open-note-dialog";
 import { useNewNote } from "~/shared/useNewNote";
 import {
   TITLE_BAR_SIDEBAR_ACTIONS_SLOT_ID,
   useCustomSidebarBack,
 } from "~/sidebar/custom-sidebar-header";
-import { useSidebarUpcomingMeetingStatus } from "~/sidebar/timeline/upcoming-meeting";
 import { hasCustomSidebarTab } from "~/sidebar/use-custom-sidebar";
 import { useTabs } from "~/store/zustand/tabs";
 
@@ -44,17 +44,9 @@ export function WindowsTitleBar({
   const openNew = useTabs((state) => state.openNew);
   const createNewNote = useNewNote();
   const openNoteDialog = useOpenNoteDialog();
-  const upcomingMeetingStatus = useSidebarUpcomingMeetingStatus();
   const goBack = useCustomSidebarBack();
   const showBackButton = hasCustomSidebarTab(currentTab);
   const editTargetRef = useRef<HTMLElement | null>(null);
-  const currentSessionId =
-    currentTab?.type === "sessions" ? currentTab.id : undefined;
-  const showUpcomingMeetingBadge =
-    !leftsidebar.expanded &&
-    !!upcomingMeetingStatus &&
-    (!currentSessionId ||
-      upcomingMeetingStatus.itemKey !== `session-${currentSessionId}`);
 
   const rememberEditTarget = useCallback(() => {
     editTargetRef.current =
@@ -98,7 +90,6 @@ export function WindowsTitleBar({
         ) : (
           <LeftSurfaceChromeButton
             ariaLabel={leftsidebar.expanded ? t`Hide sidebar` : t`Show sidebar`}
-            badge={showUpcomingMeetingBadge ? "upcomingMeeting" : null}
             onClick={leftsidebar.toggleExpanded}
           >
             {leftsidebar.expanded ? (
@@ -179,24 +170,18 @@ export function WindowsTitleBar({
           </TitleBarMenu>
           <TitleBarMenu label={t`Help`} onPointerDown={rememberEditTarget}>
             <DropdownMenuItem
-              onSelect={() =>
-                void openerCommands.openUrl("https://docs.anarlog.so", null)
-              }
+              onSelect={() => void openerCommands.openUrl(DOCS_URL, null)}
             >
               {t`Documentation`}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onSelect={() =>
-                void openerCommands.openUrl("https://anarlog.so/discord", null)
-              }
+              onSelect={() => void openerCommands.openUrl(ISSUES_URL, null)}
             >
               {t`Report a Bug`}
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={() =>
-                void openerCommands.openUrl("https://anarlog.so/discord", null)
-              }
+              onSelect={() => void openerCommands.openUrl(ISSUES_URL, null)}
             >
               {t`Suggest a Feature`}
             </DropdownMenuItem>
@@ -226,20 +211,16 @@ function TitleBarMenu({
           data-tauri-drag-region="false"
           role="menuitem"
           className={cn([
-            "text-muted-foreground h-7 rounded-md px-2.5 text-sm",
-            "hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground",
-            "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+            "text-muted-foreground text-ui h-7 rounded-sm px-2.5",
+            "hover:bg-hover hover:text-foreground data-[state=open]:bg-pressed data-[state=open]:text-foreground",
+            "focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-[2.5px]",
           ])}
           onPointerDown={onPointerDown}
         >
           {label}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        sideOffset={1}
-        className="w-56 rounded-lg"
-      >
+      <DropdownMenuContent align="start" sideOffset={1} className="w-56">
         {children}
       </DropdownMenuContent>
     </DropdownMenu>

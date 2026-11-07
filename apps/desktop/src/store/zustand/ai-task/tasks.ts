@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { APICallError, type LanguageModel } from "ai";
 import { create as mutate } from "mutative";
 import type { StoreApi } from "zustand";
@@ -379,8 +380,8 @@ export const createTasksSlice = <T extends TasksState & TasksActions>(
             throw withAIErrorSource(
               new Error(
                 fullText.trim()
-                  ? "The AI model stopped responding before it finished."
-                  : "AI generation did not return any text.",
+                  ? t`The AI model stopped responding before it finished.`
+                  : t`AI generation did not return any text.`,
               ),
               streamStallSource(getModelProviderId(config.model)),
             );
@@ -413,7 +414,7 @@ export const createTasksSlice = <T extends TasksState & TasksActions>(
               MAX_AI_TASK_STREAM_CHARACTERS
             ) {
               workflowAbortController.abort();
-              throw new Error("AI generation exceeded the safe output limit.");
+              throw new Error(t`AI generation exceeded the safe output limit.`);
             }
             fullText += chunk.text;
 

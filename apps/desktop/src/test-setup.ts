@@ -65,64 +65,15 @@ vi.mock("@tauri-apps/api/path", () => ({
 }));
 
 vi.mock("@anlg/plugin-db", () => ({
-  CLOUDSYNC_ACTIVITY_DEFERRED_ERROR: "cloudsync_activity_deferred",
-  beginCloudsyncActivity: vi.fn().mockResolvedValue(undefined),
-  endCloudsyncActivity: vi.fn().mockResolvedValue(undefined),
-  isCloudsyncActivityDeferredError: (error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error);
-    return message === "cloudsync_activity_deferred";
-  },
-  bindCloudsyncAccount: vi.fn().mockResolvedValue(true),
-  configureCloudsyncToken: vi.fn().mockResolvedValue("configured"),
-  configureE2eeReplica: vi.fn().mockResolvedValue("configured"),
-  sealWorkspaceE2eeKeyForRecipients: vi.fn(),
   execute: vi.fn().mockResolvedValue([]),
   executeProxy: vi.fn().mockResolvedValue({ rows: [] }),
   executeTransaction: vi.fn().mockResolvedValue([]),
-  getE2eeIdentityStatus: vi.fn().mockResolvedValue({
-    configured: true,
-    keyId: "abcdefghijklmnopqrstuv",
-  }),
-  getOrCreateE2eeDeviceIdentity: vi
-    .fn()
-    .mockResolvedValue({ publicKey: "A".repeat(43) }),
-  createE2eeIdentity: vi.fn(),
-  inspectE2eeRecoveryKey: vi
-    .fn()
-    .mockResolvedValue({ keyId: "abcdefghijklmnopqrstuv" }),
-  importE2eeIdentity: vi.fn(),
-  importE2eeDeviceEnrollment: vi
-    .fn()
-    .mockResolvedValue({ keyId: "abcdefghijklmnopqrstuv" }),
-  sealE2eeRecoveryKeyForDevice: vi.fn().mockResolvedValue({
-    ephemeralPublicKey: "E".repeat(43),
-    nonce: "N".repeat(32),
-    ciphertext: "C".repeat(100),
-  }),
-  getCloudsyncStatus: vi.fn().mockResolvedValue({
-    cloudsync_enabled: true,
-    extension_loaded: true,
-    configured: false,
-    running: false,
-    network_initialized: false,
-    activity_paused: false,
-    last_sync: null,
-    last_sync_at_ms: null,
-    has_unsent_changes: null,
-    last_error: null,
-    last_error_kind: null,
-    consecutive_failures: 0,
-    deferred_for_capture: false,
-  }),
   getMeeting: vi.fn(),
   getMeetingTranscript: vi.fn(),
   getRecurringMeetingHistory: vi.fn(),
   listMeetings: vi.fn(),
   subscribe: vi.fn().mockResolvedValue(() => Promise.resolve()),
   waitUntilReady: vi.fn().mockResolvedValue(undefined),
-  suspendCloudsync: vi.fn().mockResolvedValue(undefined),
-  suspendCloudsyncAfterAuthLoss: vi.fn().mockResolvedValue(undefined),
-  suspendCloudsyncForSignOut: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@anlg/plugin-session", () => ({
@@ -220,15 +171,6 @@ vi.mock("@lingui/react", () => ({
         new Date(value).toLocaleDateString("en", format ?? {}),
     },
   }),
-}));
-
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: {
-    event: vi.fn().mockResolvedValue({ status: "ok", data: null }),
-    setProperties: vi.fn().mockResolvedValue({ status: "ok", data: null }),
-    setDisabled: vi.fn().mockResolvedValue({ status: "ok", data: null }),
-    isDisabled: vi.fn().mockResolvedValue({ status: "ok", data: false }),
-  },
 }));
 
 vi.mock("./types/tauri.gen", () => ({

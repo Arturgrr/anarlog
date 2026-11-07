@@ -3,20 +3,14 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { open as selectFile } from "@tauri-apps/plugin-dialog";
 
 import { commands as localSttCommands } from "@anlg/plugin-local-stt";
-import { Check, CircleNotch, FolderOpen, X } from "@anlg/ui/components/icons";
+import { CircleNotch, FolderOpen, X } from "@anlg/ui/components/icons";
 import { toast } from "@anlg/ui/components/ui/toast";
-
-import type { HealthStatus } from "./health";
 
 import { setSettingValue, setSettingValues } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
 
-export function LocalFileModel({
-  healthStatus,
-}: {
-  healthStatus: HealthStatus["status"];
-}) {
-  const { t } = useLingui();
+export function LocalFileModel() {
+  const { t, i18n } = useLingui();
   const modelPath = useConfigValue("local_stt_model_path")?.trim() ?? "";
   const modelInfo = useQuery({
     queryKey: ["local-stt-model-file", modelPath],
@@ -86,7 +80,7 @@ export function LocalFileModel({
   const isPending = chooseModel.isPending || clearModel.isPending;
 
   return (
-    <div className="border-input bg-card flex h-9 min-w-0 items-center gap-2 rounded-full border px-3 text-left shadow-none">
+    <div className="bg-card shadow-button-neutral flex h-7 min-w-0 items-center gap-2 rounded-md px-2 text-left">
       <button
         type="button"
         className="flex min-w-0 flex-1 items-center gap-2 text-left"
@@ -95,16 +89,16 @@ export function LocalFileModel({
         onClick={() => chooseModel.mutate()}
       >
         {chooseModel.isPending ? (
-          <CircleNotch className="size-4 shrink-0 animate-spin" />
+          <CircleNotch className="size-4 shrink-0 animate-spin" aria-hidden />
         ) : (
-          <FolderOpen className="size-4 shrink-0" />
+          <FolderOpen className="size-4 shrink-0" aria-hidden />
         )}
         <span className="min-w-0 flex-1 truncate text-sm">
           {filename || <Trans>Choose a .bin model</Trans>}
         </span>
         {modelInfo.data ? (
           <span className="text-muted-foreground shrink-0 text-[11px]">
-            {formatModelSize(modelInfo.data.sizeBytes)} · GGML ·{" "}
+            {formatModelSize(modelInfo.data.sizeBytes, i18n.locale)} · GGML ·{" "}
             <Trans>After recording</Trans>
           </span>
         ) : null}
@@ -114,28 +108,21 @@ export function LocalFileModel({
         <button
           type="button"
           aria-label={t`Clear selected model`}
-          className="text-muted-foreground hover:text-foreground flex size-6 shrink-0 items-center justify-center rounded-full"
+          className="text-muted-foreground hover:text-foreground hover:bg-hover flex size-5 shrink-0 items-center justify-center rounded-sm"
           onClick={() => clearModel.mutate()}
         >
-          <X className="size-3.5" />
+          <X className="size-3.5" aria-hidden />
         </button>
-      ) : null}
-
-      {modelPath && healthStatus === "pending" ? (
-        <CircleNotch className="text-muted-foreground size-4 shrink-0 animate-spin" />
-      ) : null}
-      {modelPath && healthStatus === "success" ? (
-        <Check className="size-4 shrink-0 text-green-600" />
       ) : null}
     </div>
   );
 }
 
-function formatModelSize(sizeBytes: number) {
+function formatModelSize(sizeBytes: number, locale: string) {
   const unit = sizeBytes >= 1024 * 1024 * 1024 ? "GB" : "MB";
   const value =
     unit === "GB" ? sizeBytes / 1024 / 1024 / 1024 : sizeBytes / 1024 / 1024;
-  return `${value.toLocaleString(undefined, {
+  return `${value.toLocaleString(locale, {
     maximumFractionDigits: value >= 10 ? 0 : 1,
   })} ${unit}`;
 }

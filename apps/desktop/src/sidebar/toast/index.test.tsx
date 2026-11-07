@@ -2,7 +2,6 @@ import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  signIn: vi.fn(),
   dismissToast: vi.fn(),
   openNew: vi.fn(),
   updateSettingsTabState: vi.fn(),
@@ -70,20 +69,12 @@ vi.mock("@anlg/ui/components/ui/toast", async (importOriginal) => {
   };
 });
 
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: null, signIn: mocks.signIn }),
-}));
-
-vi.mock("~/auth/cloudsync-progress", () => ({
-  useCloudsyncInitialSyncProgress: () => ({ state: "idle" }),
-}));
-
 vi.mock("~/contexts/notifications", () => ({
   useNotifications: () => mocks.notifications,
 }));
 
 vi.mock("~/main/update-banner", () => ({
-  useDesktopUpdateControl: () => mocks.update,
+  useDesktopUpdateControl: () => ({ ...mocks.update }),
 }));
 
 vi.mock("~/shared/config", () => ({
@@ -117,7 +108,6 @@ vi.mock("~/store/zustand/tabs", () => ({
 
 vi.mock("~/stt/capabilities", () => ({
   isConfiguredSttModel: () => true,
-  isAnarlogCloudSttModel: () => false,
 }));
 
 vi.mock("~/stt/contexts", () => ({
@@ -152,7 +142,6 @@ describe("ToastNotifications", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.stubGlobal("localStorage", localStorageMock);
-    mocks.signIn.mockClear();
     mocks.dismissToast.mockClear();
     mocks.message.mockClear();
     mocks.error.mockClear();
@@ -188,39 +177,6 @@ describe("ToastNotifications", () => {
     cleanup();
     vi.unstubAllGlobals();
     vi.useRealTimers();
-  });
-
-  it("routes the sign-in suggestion through the shared toaster", () => {
-    render(<ToastNotifications />);
-
-    act(() => vi.advanceTimersByTime(500));
-
-    expect(mocks.message).toHaveBeenCalledWith(
-      "Sign in to get the most out of Anarlog",
-      expect.objectContaining({
-        id: "sign-in-benefits",
-        duration: Infinity,
-        closeButton: true,
-        action: expect.objectContaining({ label: "Sign in" }),
-      }),
-    );
-
-    const options = mocks.message.mock.calls[0][1];
-    options.action.onClick();
-    expect(mocks.signIn).toHaveBeenCalledOnce();
-
-    options.onDismiss();
-    expect(mocks.dismissToast).not.toHaveBeenCalled();
-  });
-
-  it("persists explicit toast dismissals", () => {
-    render(<ToastNotifications />);
-
-    act(() => vi.advanceTimersByTime(500));
-
-    const options = mocks.message.mock.calls[0][1];
-    options.onDismiss();
-    expect(mocks.dismissToast).toHaveBeenCalledWith("auth-promotion");
   });
 
   it("lets users dismiss a model download toast until the next download", () => {
@@ -320,7 +276,7 @@ describe("ToastNotifications", () => {
     view.rerender(<ToastNotifications />);
 
     expect(mocks.message).toHaveBeenCalledWith(
-      "Anarlog 1.0.34 is ready to install",
+      "Librelog 1.0.34 is ready to install",
       expect.objectContaining({
         id: "desktop-update:1.0.34:ready",
         action: expect.objectContaining({ label: "Restart" }),
@@ -342,7 +298,7 @@ describe("ToastNotifications", () => {
     act(() => vi.advanceTimersByTime(500));
 
     expect(mocks.loading).toHaveBeenCalledWith(
-      "Downloading Anarlog 1.0.34 (10%)",
+      "Downloading Librelog 1.0.34 (10%)",
       expect.objectContaining({
         id: "desktop-update:1.0.34:downloading",
         duration: Infinity,
@@ -356,7 +312,7 @@ describe("ToastNotifications", () => {
 
     expect(mocks.dismiss).not.toHaveBeenCalled();
     expect(mocks.loading).toHaveBeenCalledWith(
-      "Downloading Anarlog 1.0.34 (58%)",
+      "Downloading Librelog 1.0.34 (58%)",
       expect.objectContaining({
         id: "desktop-update:1.0.34:downloading",
       }),
@@ -364,7 +320,6 @@ describe("ToastNotifications", () => {
   });
 
   it("uses the latest registry action while a toast remains visible", () => {
-    mocks.dismissedToastIds.add("auth-promotion");
     mocks.config.current_llm_provider = null;
     mocks.config.current_llm_model = null;
 
@@ -433,7 +388,7 @@ describe("ToastNotifications", () => {
     act(() => vi.advanceTimersByTime(500));
 
     expect(mocks.message).toHaveBeenCalledWith(
-      "Anarlog 1.0.34 is ready to install",
+      "Librelog 1.0.34 is ready to install",
       expect.objectContaining({ id: "desktop-update:1.0.34:ready" }),
     );
   });
@@ -469,7 +424,7 @@ describe("ToastNotifications", () => {
     act(() => vi.advanceTimersByTime(500));
 
     expect(mocks.message).toHaveBeenCalledWith(
-      "Anarlog 1.0.34 is available",
+      "Librelog 1.0.34 is available",
       expect.objectContaining({ id: "desktop-update:1.0.34:available" }),
     );
 
@@ -484,7 +439,7 @@ describe("ToastNotifications", () => {
     view.rerender(<ToastNotifications />);
 
     expect(mocks.message).toHaveBeenCalledWith(
-      "Anarlog 1.0.34 is available",
+      "Librelog 1.0.34 is available",
       expect.objectContaining({ id: "desktop-update:1.0.34:available" }),
     );
   });
@@ -503,7 +458,7 @@ describe("ToastNotifications", () => {
     mocks.live = { status: "active", sessionId: "meeting-1" };
     view.rerender(<ToastNotifications />);
     expect(mocks.message).not.toHaveBeenCalledWith(
-      "Anarlog 1.0.34 is available",
+      "Librelog 1.0.34 is available",
       expect.anything(),
     );
 
@@ -511,7 +466,7 @@ describe("ToastNotifications", () => {
     view.rerender(<ToastNotifications />);
 
     expect(mocks.message).not.toHaveBeenCalledWith(
-      "Anarlog 1.0.34 is available",
+      "Librelog 1.0.34 is available",
       expect.anything(),
     );
   });

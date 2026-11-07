@@ -1,12 +1,10 @@
 import { useLingui } from "@lingui/react/macro";
 import { platform } from "@tauri-apps/plugin-os";
 import {
-  createContext,
   memo,
   type DragEvent,
   type RefCallback,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from "react";
@@ -18,33 +16,22 @@ import {
   Lock,
   LockOpen,
   Square,
-  Users,
 } from "@anlg/ui/components/icons";
 import { DancingSticks } from "@anlg/ui/components/ui/dancing-sticks";
 import { Spinner } from "@anlg/ui/components/ui/spinner";
 import { cn, format, getYear, safeParseDate, TZDate } from "@anlg/utils";
 
-import {
-  type EventTimelineItem,
-  isTimelineItemInFuture,
-  type SessionTimelineItem,
-  type TimelineItem,
-  TimelinePrecision,
-} from "./utils";
+import type { TimelineItem, TimelinePrecision } from "./utils";
 
-import { useIgnoredEvents } from "~/calendar/ignored-events";
 import { writeSessionContextDragData } from "~/chat/context/session-drag";
+import { formatMonthDay } from "~/i18n/format";
 import { DEVICE_AUTH_REASON } from "~/lock/auth";
 import { isLockedFlag } from "~/lock/flag";
 import { revealLockedNote, setSessionLocked } from "~/lock/notes";
 import { useAppLock } from "~/lock/store";
 import { useDeleteSession } from "~/session/hooks/useDeleteSession";
 import { useIsSessionEnhancing } from "~/session/hooks/useEnhancedNotes";
-import {
-  getOrCreateSessionForEventId,
-  preloadSession,
-} from "~/session/queries";
-import { getSessionEvent } from "~/session/utils";
+import { preloadSession } from "~/session/queries";
 import { openStandaloneNoteWindow } from "~/session/window";
 import { useConfigValue } from "~/shared/config";
 import type { MenuItemDef } from "~/shared/hooks/useNativeContextMenu";
@@ -61,11 +48,6 @@ import { useTimelineSelection } from "~/store/zustand/timeline-selection";
 import { useListener } from "~/stt/contexts";
 
 const EMPTY_TIMELINE_ITEM_KEYS: string[] = [];
-const EMPTY_MANAGED_SHARED_SESSION_IDS = new Set<string>();
-
-export const ManagedSharedSessionIdsContext = createContext<
-  ReadonlySet<string>
->(EMPTY_MANAGED_SHARED_SESSION_IDS);
 
 type ItemBaseProps = {
   title: string;
@@ -75,12 +57,9 @@ type ItemBaseProps = {
   isLive?: boolean;
   amplitude?: number;
   showSpinner?: boolean;
-  isShared?: boolean;
   isLocked?: boolean;
   isLockRevealed?: boolean;
   selected: boolean;
-  ignored?: boolean;
-  muted?: boolean;
   multiSelected: boolean;
   onClick: () => void;
   onDoubleClick?: () => void;
@@ -91,10 +70,7 @@ type ItemBaseProps = {
   contextMenu: MenuItemDef[];
   draggable?: boolean;
   selectedNodeRef?: RefCallback<HTMLDivElement>;
-  itemNodeRef?: RefCallback<HTMLDivElement>;
   timelineSessionId?: string;
-  isUpcoming?: boolean;
-  upcomingProgress?: number;
   onPreload?: () => void;
 };
 
@@ -108,9 +84,6 @@ export const TimelineItemComponent = memo(
     flatItemKeys,
     getFlatItemKeys,
     selectedNodeRef,
-    itemNodeRef,
-    isUpcoming,
-    upcomingProgress,
   }: {
     item: TimelineItem;
     precision: TimelinePrecision;
@@ -120,30 +93,10 @@ export const TimelineItemComponent = memo(
     flatItemKeys?: string[];
     getFlatItemKeys?: () => string[];
     selectedNodeRef?: RefCallback<HTMLDivElement>;
-    itemNodeRef?: RefCallback<HTMLDivElement>;
-    isUpcoming?: boolean;
-    upcomingLabel?: string;
-    upcomingProgress?: number;
   }) => {
     const readFlatItemKeys =
       getFlatItemKeys ?? (() => flatItemKeys ?? EMPTY_TIMELINE_ITEM_KEYS);
 
-    if (item.type === "event") {
-      return (
-        <EventItem
-          item={item}
-          precision={precision}
-          selected={selected}
-          timezone={timezone}
-          multiSelected={multiSelected}
-          getFlatItemKeys={readFlatItemKeys}
-          selectedNodeRef={selectedNodeRef}
-          itemNodeRef={itemNodeRef}
-          isUpcoming={isUpcoming}
-          upcomingProgress={upcomingProgress}
-        />
-      );
-    }
     return (
       <SessionItem
         item={item}
@@ -153,9 +106,6 @@ export const TimelineItemComponent = memo(
         multiSelected={multiSelected}
         getFlatItemKeys={readFlatItemKeys}
         selectedNodeRef={selectedNodeRef}
-        itemNodeRef={itemNodeRef}
-        isUpcoming={isUpcoming}
-        upcomingProgress={upcomingProgress}
       />
     );
   },
@@ -169,12 +119,9 @@ const ItemBase = memo(function ItemBase({
   isLive,
   amplitude,
   showSpinner,
-  isShared,
   isLocked,
   isLockRevealed,
   selected,
-  ignored,
-  muted,
   multiSelected,
   onClick,
   onDoubleClick,
@@ -185,38 +132,19 @@ const ItemBase = memo(function ItemBase({
   contextMenu,
   draggable,
   selectedNodeRef,
-  itemNodeRef,
   timelineSessionId,
-  isUpcoming,
-  upcomingProgress,
   onPreload,
 }: ItemBaseProps) {
   const { t } = useLingui();
   const hasSelection = useTimelineSelection((s) => s.selectedIds.length > 0);
   const showLiveStop = isLive && onStop;
-  const showUpcomingGauge =
-    typeof upcomingProgress === "number" &&
-    Boolean(isUpcoming) &&
-    !isLive &&
-    !showSpinner;
-  const upcomingGaugePercent =
-    typeof upcomingProgress === "number"
-      ? Math.round(Math.max(0, Math.min(upcomingProgress, 1)) * 100)
-      : 0;
   const folderLabel = folder ?? "";
   const tagLine = formatSidebarItemTags(tags ?? []);
   const extraRows = Number(Boolean(folderLabel)) + Number(Boolean(tagLine));
-  const setItemRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      selectedNodeRef?.(node);
-      itemNodeRef?.(node);
-    },
-    [selectedNodeRef, itemNodeRef],
-  );
 
   return (
     <div
-      ref={setItemRef}
+      ref={selectedNodeRef}
       data-sidebar-timeline-session-id={timelineSessionId}
       onFocus={onPreload}
       onPointerDown={onPreload}
@@ -230,31 +158,22 @@ const ItemBase = memo(function ItemBase({
       ])}
     >
       <InteractiveButton
-        onClick={ignored ? undefined : onClick}
-        onDoubleClick={ignored ? undefined : onDoubleClick}
-        onCmdClick={ignored ? undefined : onCmdClick}
-        onShiftClick={ignored ? undefined : onShiftClick}
+        onClick={onClick}
+        onDoubleClick={onDoubleClick}
+        onCmdClick={onCmdClick}
+        onShiftClick={onShiftClick}
         onDragStart={onDragStart}
         contextMenu={hasSelection ? undefined : contextMenu}
         className={cn([
-          "w-full rounded-lg px-3 py-2 text-left",
-          showUpcomingGauge && "pl-4",
+          "w-full cursor-pointer rounded-md px-3 py-2 text-left",
           showLiveStop && "pr-10",
-          ignored ? "cursor-default" : "cursor-pointer",
-          multiSelected && "bg-accent",
-          !multiSelected && selected && "bg-accent",
-          !multiSelected && !selected && "hover:bg-accent/50",
-          isUpcoming &&
-            !isLive && [
-              "bg-destructive/8 text-foreground",
-              "focus-visible:ring-destructive/25",
-            ],
+          multiSelected && "bg-layer-2",
+          !multiSelected && selected && "bg-layer-2",
+          !multiSelected && !selected && "hover:bg-hover active:bg-pressed",
           isLive && [
-            "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-            "focus-visible:ring-destructive/40 focus-visible:ring-2 focus-visible:outline-hidden",
+            "bg-contrast text-primary-foreground shadow-button-contrast hover:bg-contrast/90",
+            "focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2",
           ],
-          ignored && "opacity-40",
-          !ignored && muted && !isLive && !isUpcoming && "opacity-65",
         ])}
         draggable={draggable}
       >
@@ -265,7 +184,7 @@ const ItemBase = memo(function ItemBase({
                 className={cn([
                   "pointer-events-none flex min-w-0 items-center gap-1 text-[11px] leading-4",
                   isLive
-                    ? "text-destructive-foreground/65"
+                    ? "text-primary-foreground/65"
                     : "text-muted-foreground",
                 ])}
               >
@@ -273,12 +192,7 @@ const ItemBase = memo(function ItemBase({
                 <span className="min-w-0 truncate">{folderLabel}</span>
               </div>
             ) : null}
-            <div
-              className={cn(
-                "pointer-events-none min-w-0 truncate text-sm font-normal",
-                ignored && "line-through",
-              )}
-            >
+            <div className="font-ui-medium pointer-events-none min-w-0 truncate text-sm">
               {title || t`Untitled`}
             </div>
             {displayTime && (
@@ -286,7 +200,7 @@ const ItemBase = memo(function ItemBase({
                 className={cn([
                   "font-mono text-xs",
                   isLive
-                    ? "text-destructive-foreground/65"
+                    ? "text-primary-foreground/65"
                     : "text-muted-foreground",
                 ])}
               >
@@ -298,7 +212,7 @@ const ItemBase = memo(function ItemBase({
                 className={cn([
                   "pointer-events-none min-w-0 truncate text-[11px] leading-4",
                   isLive
-                    ? "text-destructive-foreground/65"
+                    ? "text-primary-foreground/65"
                     : "text-muted-foreground",
                 ])}
               >
@@ -325,27 +239,9 @@ const ItemBase = memo(function ItemBase({
               aria-hidden
               className="text-muted-foreground shrink-0"
             />
-          ) : isShared ? (
-            <Users
-              aria-label={t`Shared note`}
-              className="text-muted-foreground size-3.5 shrink-0"
-            />
           ) : null}
         </div>
       </InteractiveButton>
-      {showUpcomingGauge ? (
-        <div
-          aria-hidden
-          data-sidebar-timeline-upcoming-gauge
-          className="bg-destructive/20 pointer-events-none absolute top-2 bottom-2 left-1.5 w-0.5 overflow-hidden rounded-full"
-        >
-          <div
-            data-sidebar-timeline-upcoming-gauge-fill
-            className="bg-destructive absolute bottom-0 left-0 w-full rounded-full transition-[height] duration-300 ease-linear"
-            style={{ height: `${upcomingGaugePercent}%` }}
-          />
-        </div>
-      ) : null}
       {showLiveStop ? (
         <button
           type="button"
@@ -395,12 +291,9 @@ function itemBasePropsAreEqual(prev: ItemBaseProps, next: ItemBaseProps) {
     prev.isLive === next.isLive &&
     prev.amplitude === next.amplitude &&
     prev.showSpinner === next.showSpinner &&
-    prev.isShared === next.isShared &&
     prev.isLocked === next.isLocked &&
     prev.isLockRevealed === next.isLockRevealed &&
     prev.selected === next.selected &&
-    prev.ignored === next.ignored &&
-    prev.muted === next.muted &&
     prev.multiSelected === next.multiSelected &&
     prev.onClick === next.onClick &&
     prev.onDoubleClick === next.onDoubleClick &&
@@ -411,195 +304,10 @@ function itemBasePropsAreEqual(prev: ItemBaseProps, next: ItemBaseProps) {
     prev.contextMenu === next.contextMenu &&
     prev.draggable === next.draggable &&
     prev.selectedNodeRef === next.selectedNodeRef &&
-    prev.itemNodeRef === next.itemNodeRef &&
     prev.timelineSessionId === next.timelineSessionId &&
-    prev.isUpcoming === next.isUpcoming &&
-    prev.upcomingProgress === next.upcomingProgress &&
     prev.onPreload === next.onPreload
   );
 }
-
-const EventItem = memo(
-  ({
-    item,
-    precision,
-    selected,
-    timezone,
-    multiSelected,
-    getFlatItemKeys,
-    selectedNodeRef,
-    itemNodeRef,
-    isUpcoming,
-    upcomingProgress,
-  }: {
-    item: EventTimelineItem;
-    precision: TimelinePrecision;
-    selected: boolean;
-    timezone?: string;
-    multiSelected: boolean;
-    getFlatItemKeys: () => string[];
-    selectedNodeRef?: RefCallback<HTMLDivElement>;
-    itemNodeRef?: RefCallback<HTMLDivElement>;
-    isUpcoming?: boolean;
-    upcomingProgress?: number;
-  }) => {
-    const { t } = useLingui();
-    const openCurrent = useTabs((state) => state.openCurrent);
-
-    const eventId = item.id;
-    const trackingIdEvent = item.data.tracking_id_event;
-    const title = item.data.title || t`Untitled`;
-    const recurrenceSeriesId = item.data.recurrence_series_id;
-    const groupBy = useSidebarNotes((state) => state.groupBy);
-    const showFolder = useConfigValue("sidebar_show_folder");
-    const { folder } = resolveSidebarItemMeta({
-      folderId: item.data.session_folder,
-      showFolder,
-      showTags: false,
-      groupBy,
-    });
-
-    const {
-      isIgnored,
-      ignoreEvent,
-      unignoreEvent,
-      ignoreSeries,
-      unignoreSeries,
-    } = useIgnoredEvents();
-
-    const ignored = isIgnored(trackingIdEvent, recurrenceSeriesId);
-
-    const timeFormat = useTimeFormat();
-    const displayTime = useMemo(
-      () =>
-        formatDisplayTime(
-          item.data.started_at,
-          precision,
-          timezone,
-          timeFormat,
-        ),
-      [item.data.started_at, precision, timezone, timeFormat],
-    );
-
-    const [isOpening, setIsOpening] = useState(false);
-    const openEvent = useCallback(() => {
-      if (!eventId || isOpening) return;
-      setIsOpening(true);
-      void getOrCreateSessionForEventId(eventId, title)
-        .then((sessionId) => {
-          openCurrent({ id: sessionId, type: "sessions" });
-        })
-        .catch((error) => {
-          console.error("[timeline] failed to open event note", error);
-        })
-        .finally(() => {
-          setIsOpening(false);
-        });
-    }, [eventId, title, openCurrent, isOpening]);
-
-    const itemKey = `event-${item.id}`;
-    const muted = isTimelineItemInFuture(item);
-
-    const handleClick = useCallback(() => {
-      useTimelineSelection.getState().setAnchor(itemKey);
-      openEvent();
-    }, [openEvent, itemKey]);
-
-    const handleCmdClick = useCallback(() => {
-      useTimelineSelection.getState().toggleSelect(itemKey);
-    }, [itemKey]);
-
-    const handleShiftClick = useCallback(() => {
-      useTimelineSelection.getState().selectRange(getFlatItemKeys(), itemKey);
-    }, [getFlatItemKeys, itemKey]);
-
-    const handleIgnore = useCallback(() => {
-      if (!trackingIdEvent) return;
-      ignoreEvent(trackingIdEvent);
-    }, [trackingIdEvent, ignoreEvent]);
-
-    const handleUnignore = useCallback(() => {
-      if (!trackingIdEvent) return;
-      unignoreEvent(trackingIdEvent);
-    }, [trackingIdEvent, unignoreEvent]);
-
-    const handleUnignoreSeries = useCallback(() => {
-      if (!recurrenceSeriesId) return;
-      unignoreSeries(recurrenceSeriesId);
-    }, [recurrenceSeriesId, unignoreSeries]);
-
-    const handleIgnoreSeries = useCallback(() => {
-      if (!recurrenceSeriesId) return;
-      ignoreSeries(recurrenceSeriesId);
-    }, [recurrenceSeriesId, ignoreSeries]);
-
-    const contextMenu = useMemo(() => {
-      if (ignored) {
-        if (recurrenceSeriesId) {
-          return [
-            {
-              id: "unignore",
-              text: t`Show This Event`,
-              action: handleUnignore,
-            },
-            {
-              id: "unignore-series",
-              text: t`Show All Recurring Events`,
-              action: handleUnignoreSeries,
-            },
-          ];
-        }
-        return [
-          { id: "unignore", text: t`Show Event`, action: handleUnignore },
-        ];
-      }
-      const menu: MenuItemDef[] = [
-        {
-          id: "ignore",
-          text: recurrenceSeriesId ? t`Delete This Event` : t`Delete Event`,
-          action: handleIgnore,
-        },
-      ];
-      if (recurrenceSeriesId) {
-        menu.push({
-          id: "ignore-series",
-          text: t`Delete All Recurring Events`,
-          action: handleIgnoreSeries,
-        });
-      }
-      return menu;
-    }, [
-      ignored,
-      handleIgnore,
-      handleUnignore,
-      handleUnignoreSeries,
-      handleIgnoreSeries,
-      recurrenceSeriesId,
-      t,
-    ]);
-
-    return (
-      <ItemBase
-        title={title}
-        displayTime={displayTime}
-        folder={folder}
-        showSpinner={isOpening}
-        selected={selected}
-        ignored={ignored}
-        muted={muted}
-        multiSelected={multiSelected}
-        onClick={handleClick}
-        onCmdClick={handleCmdClick}
-        onShiftClick={handleShiftClick}
-        contextMenu={contextMenu}
-        selectedNodeRef={selected ? selectedNodeRef : undefined}
-        itemNodeRef={itemNodeRef}
-        isUpcoming={isUpcoming}
-        upcomingProgress={upcomingProgress}
-      />
-    );
-  },
-);
 
 const SessionItem = memo(
   ({
@@ -610,25 +318,18 @@ const SessionItem = memo(
     multiSelected,
     getFlatItemKeys,
     selectedNodeRef,
-    itemNodeRef,
-    isUpcoming,
-    upcomingProgress,
   }: {
-    item: SessionTimelineItem;
+    item: TimelineItem;
     precision: TimelinePrecision;
     selected: boolean;
     timezone?: string;
     multiSelected: boolean;
     getFlatItemKeys: () => string[];
     selectedNodeRef?: RefCallback<HTMLDivElement>;
-    itemNodeRef?: RefCallback<HTMLDivElement>;
-    isUpcoming?: boolean;
-    upcomingProgress?: number;
   }) => {
-    const { t } = useLingui();
+    const { i18n, t } = useLingui();
     const openCurrent = useTabs((state) => state.openCurrent);
     const deleteSession = useDeleteSession();
-    const managedSharedSessionIds = useContext(ManagedSharedSessionIdsContext);
 
     const sessionId = item.id;
     const title = useSessionTitle(sessionId, item.data.title ?? undefined);
@@ -666,26 +367,18 @@ const SessionItem = memo(
       !isLive &&
       (isFinalizing || isEnhancing || isBatching || isOpening);
 
-    const sessionEvent = getSessionEvent(item.data);
-
     const timeFormat = useTimeFormat();
     const displayTime = useMemo(
       () =>
         formatDisplayTime(
-          sessionEvent?.started_at ?? item.data.created_at,
+          item.data.created_at,
           precision,
           timezone,
           timeFormat,
+          i18n.locale,
         ),
-      [
-        sessionEvent?.started_at,
-        item.data.created_at,
-        precision,
-        timezone,
-        timeFormat,
-      ],
+      [item.data.created_at, precision, timezone, timeFormat, i18n.locale],
     );
-    const muted = isTimelineItemInFuture(item);
 
     const itemKey = `session-${item.id}`;
 
@@ -740,11 +433,8 @@ const SessionItem = memo(
     );
 
     const handleDelete = useCallback(() => {
-      deleteSession(sessionId, {
-        trackingId: sessionEvent?.tracking_id,
-        title,
-      });
-    }, [deleteSession, sessionId, sessionEvent?.tracking_id, title]);
+      deleteSession(sessionId, { title });
+    }, [deleteSession, sessionId, title]);
 
     const handleToggleLock = useCallback(() => {
       void setSessionLocked(sessionId, !noteLocked);
@@ -814,11 +504,9 @@ const SessionItem = memo(
           Math.min(Math.hypot(amplitude?.mic ?? 0, amplitude?.speaker ?? 0), 1),
         )}
         showSpinner={showSpinner}
-        isShared={managedSharedSessionIds.has(sessionId)}
         isLocked={noteLocked}
         isLockRevealed={noteRevealed}
         selected={selected}
-        muted={muted}
         multiSelected={multiSelected}
         onClick={handleClick}
         onDoubleClick={handleOpenStandaloneWindow}
@@ -828,10 +516,7 @@ const SessionItem = memo(
         onDragStart={handleDragStart}
         contextMenu={contextMenu}
         selectedNodeRef={selected ? selectedNodeRef : undefined}
-        itemNodeRef={itemNodeRef}
         timelineSessionId={sessionId}
-        isUpcoming={isUpcoming}
-        upcomingProgress={upcomingProgress}
         onPreload={handlePreload}
         draggable
       />
@@ -844,6 +529,7 @@ function formatDisplayTime(
   precision: TimelinePrecision,
   timezone: string | undefined,
   timeFormat: string,
+  locale: string,
 ): string {
   const parsed = safeParseDate(timestamp);
   if (!parsed) {
@@ -859,9 +545,10 @@ function formatDisplayTime(
 
   const now = timezone ? new TZDate(new Date(), timezone) : new Date();
   const sameYear = getYear(date) === getYear(now);
-  const dateStr = sameYear
-    ? format(date, "MMM d")
-    : format(date, "MMM d, yyyy");
+  const dateStr = formatMonthDay(parsed, locale, {
+    year: !sameYear,
+    timeZone: timezone,
+  });
 
   return `${dateStr}, ${time}`;
 }

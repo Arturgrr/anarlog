@@ -1,8 +1,8 @@
+import { plural, t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ChatEditorHandle, JSONContent } from "@anlg/editor/chat";
 import { EMPTY_DOC } from "@anlg/editor/markdown";
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
@@ -110,7 +110,6 @@ export function useSubmit({
       return;
     }
 
-    void analyticsCommands.event({ event: "message_sent" });
     onSendMessage(text, [{ type: "text", text }], mentionRefs);
     editorRef.current?.clearContent();
     draftCache.delete(draftKey);
@@ -296,15 +295,17 @@ function hasAttachmentNode(json: JSONContent | undefined): boolean {
 
 function draftRetentionFailureMessage(failure: DraftRetentionFailure) {
   if (failure.reason === "draft-too-large") {
-    return "This unsent chat draft is too large to keep after closing the editor.";
+    return t`This unsent chat draft is too large to keep after closing the editor.`;
   }
   if (failure.reason === "older-draft-removed") {
-    return failure.removedDraftCount === 1
-      ? "An older unsent chat draft was removed to keep your current draft."
-      : `${failure.removedDraftCount} older unsent chat drafts were removed to keep your current draft.`;
+    return plural(failure.removedDraftCount ?? 0, {
+      one: "An older unsent chat draft was removed to keep your current draft.",
+      other:
+        "# older unsent chat drafts were removed to keep your current draft.",
+    });
   }
 
-  return "This unsent chat draft could not be kept because draft storage is full.";
+  return t`This unsent chat draft could not be kept because draft storage is full.`;
 }
 
 export function extractContextRefsFromTiptapJson(

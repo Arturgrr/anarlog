@@ -367,10 +367,22 @@
           "markdownDescription": "Denies the reset_permission command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-open-permission`\n- `allow-check-permission`\n- `allow-request-permission`\n- `allow-reset-permission`\n- `allow-permission-guidance`\n- `allow-close-permission-assistant`",
+          "description": "Enables the set_permission_assistant_labels command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-permission-assistant-labels",
+          "markdownDescription": "Enables the set_permission_assistant_labels command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_permission_assistant_labels command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-permission-assistant-labels",
+          "markdownDescription": "Denies the set_permission_assistant_labels command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-open-permission`\n- `allow-check-permission`\n- `allow-request-permission`\n- `allow-reset-permission`\n- `allow-permission-guidance`\n- `allow-close-permission-assistant`\n- `allow-set-permission-assistant-labels`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-open-permission`\n- `allow-check-permission`\n- `allow-request-permission`\n- `allow-reset-permission`\n- `allow-permission-guidance`\n- `allow-close-permission-assistant`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-open-permission`\n- `allow-check-permission`\n- `allow-request-permission`\n- `allow-reset-permission`\n- `allow-permission-guidance`\n- `allow-close-permission-assistant`\n- `allow-set-permission-assistant-labels`"
         }
       ]
     }

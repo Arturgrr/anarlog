@@ -49,9 +49,7 @@ function createSnapshot() {
     ownerUserId: "user-1",
     title: "Weekly Review",
     createdAt: "2026-07-10T00:00:00.000Z",
-    event: null,
     sourceApps: [],
-    eventId: null,
     rawNoteId: "session-1",
     rawTemplateId: "",
     rawUpdatedAt: "",
@@ -1460,11 +1458,11 @@ describe("enhanceTransform.transformArgs", () => {
       { sessionId: "session-1", enhancedNoteId: "note-1" },
       {
         ...settingsValues,
-        personalization_dictionary_terms: JSON.stringify(["Anarlog", "Char"]),
+        personalization_dictionary_terms: JSON.stringify(["Librelog", "Char"]),
       },
     );
 
-    expect(result.dictionaryTerms).toEqual(["Anarlog", "Char"]);
+    expect(result.dictionaryTerms).toEqual(["Librelog", "Char"]);
   });
 
   it("falls back to generic enhancement when template loading fails", async () => {

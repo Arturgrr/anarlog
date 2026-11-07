@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { json2md, parseJsonContent } from "@anlg/editor/markdown";
 import { toast } from "@anlg/ui/components/ui/toast";
 import { cn } from "@anlg/utils";
@@ -98,17 +100,11 @@ export function iconHeaderViewClassName(
   const heightClassName = size === "tray" ? "h-6" : "h-7";
 
   return cn([
-    "group/header-view rounded-pill flex shrink-0 items-center justify-center transition-colors select-none [corner-shape:round] [&>svg]:shrink-0",
+    "group/header-view flex shrink-0 items-center justify-center transition-[background-color,color,box-shadow] duration-200 ease-out select-none [&>svg]:shrink-0",
+    size === "tray" ? "rounded-sm" : "rounded-md",
     isActive
-      ? [
-          "text-foreground bg-white shadow-xs",
-          "dark:bg-accent dark:text-foreground dark:shadow-none",
-        ]
-      : [
-          "text-muted-foreground/70",
-          "hover:bg-background/60 hover:text-foreground",
-          "dark:hover:bg-accent/80 dark:hover:text-foreground",
-        ],
+      ? "bg-card text-foreground ring-border-strong ring-[0.5px]"
+      : "text-muted-foreground hover:text-foreground",
     heightClassName,
     className,
   ]);
@@ -129,7 +125,7 @@ export function getEnhancedNoteTitle({
 
   const title = typeof rawTitle === "string" ? rawTitle.trim() : "";
   if (!title) {
-    return "Summary";
+    return t`Summary`;
   }
 
   const isGeneratedTitle =
@@ -139,7 +135,7 @@ export function getEnhancedNoteTitle({
     ISO_TITLE_RE.test(title);
 
   if (isGeneratedTitle) {
-    return "Summary";
+    return t`Summary`;
   }
 
   return title;

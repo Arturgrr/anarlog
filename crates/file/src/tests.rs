@@ -3,7 +3,7 @@ use super::*;
 #[test]
 #[ignore]
 fn test_calculate_file_size_and_checksum() {
-    let base = "/Users/yujonglee/dev/anarlog/.cache";
+    let base = "/Users/yujonglee/dev/librelog/.cache";
 
     fn walk_dir(dir: &std::path::Path) -> std::io::Result<()> {
         for entry in std::fs::read_dir(dir)? {
@@ -196,55 +196,6 @@ async fn test_download_file_with_callback_range_validation() {
 
 #[tokio::test]
 #[ignore]
-async fn test_download_file_with_callback_s3() {
-    use std::sync::{Arc, Mutex};
-    use tempfile::NamedTempFile;
-
-    let temp_file = NamedTempFile::new().unwrap();
-    let temp_path = temp_file.path();
-
-    let s3_url = "https://storage2.hyprnote.com/v0/ggerganov/whisper.cpp/main/ggml-tiny-q8_0.bin";
-
-    let partial_content = b"PARTIAL_CONTENT".repeat(100);
-    std::fs::write(temp_path, &partial_content).unwrap();
-
-    let initial_size = std::fs::metadata(temp_path).unwrap().len();
-    assert_eq!(initial_size, 1500);
-
-    let range_response = request_with_range(s3_url, Some(initial_size))
-        .await
-        .unwrap();
-    assert_eq!(
-        range_response.status().as_u16(),
-        206,
-        "Server should respond with 206 for range requests"
-    );
-
-    let progress_events = Arc::new(Mutex::new(Vec::new()));
-    let progress_events_clone = Arc::clone(&progress_events);
-
-    let result = download_file_with_callback(s3_url, temp_path, |progress| {
-        progress_events_clone.lock().unwrap().push(progress);
-    })
-    .await;
-
-    assert!(result.is_ok());
-
-    let file_size = std::fs::metadata(temp_path).unwrap().len();
-    assert!(
-        file_size > initial_size,
-        "File should have grown from resume"
-    );
-
-    let events = progress_events.lock().unwrap();
-    assert!(
-        !events.is_empty(),
-        "Progress events should have been recorded"
-    );
-}
-
-#[tokio::test]
-#[ignore]
 async fn test_download_file_parallel_mock() {
     use std::time::Instant;
     use tempfile::NamedTempFile;
@@ -355,112 +306,6 @@ async fn test_download_file_parallel_mock() {
     assert_eq!(
         serial_size, content_length as u64,
         "Downloaded file should match expected size"
-    );
-
-    assert!(
-        speedup >= 1.1,
-        "Parallel download should be at least 10% faster: serial={:?}, parallel={:?}, speedup={:.2}x",
-        serial_duration,
-        parallel_duration,
-        speedup
-    );
-}
-
-#[tokio::test]
-#[ignore]
-async fn test_download_file_parallel_s3() {
-    use std::time::Instant;
-    use tempfile::NamedTempFile;
-
-    let url = "https://storage2.hyprnote.com/v0/yujonglee/hypr-llm-sm/model_q4_k_m.gguf";
-    let test_client = reqwest::Client::builder().http1_only().build().unwrap();
-
-    let head_response = test_client
-        .head(url)
-        .header("User-Agent", "curl/8.14.1")
-        .header("Accept", "*/*")
-        .send()
-        .await
-        .unwrap();
-
-    let file_size = get_content_length_from_headers(&head_response).unwrap_or(0);
-
-    let supports_ranges = head_response
-        .headers()
-        .get("accept-ranges")
-        .map(|v| v.to_str().unwrap_or(""))
-        .unwrap_or("")
-        == "bytes";
-    assert!(file_size > 0, "File size should be greater than 0");
-
-    println!(
-        "Server supports ranges: {}, File size: {} MB",
-        supports_ranges,
-        file_size / 1024 / 1024
-    );
-
-    let temp_file1 = NamedTempFile::new().unwrap();
-    let start = Instant::now();
-    download_file_with_callback(url, temp_file1.path(), {
-        use std::cell::RefCell;
-        let last_percent = RefCell::new(0u8);
-        move |progress| match progress {
-            DownloadProgress::Started => println!("Serial download started"),
-            DownloadProgress::Progress(downloaded, total) => {
-                let percent = (downloaded as f64 / total as f64 * 100.0) as u8;
-                let mut last = last_percent.borrow_mut();
-                if percent >= *last + 10 {
-                    println!(
-                        "Serial download: {}% ({}/{} bytes)",
-                        percent, downloaded, total
-                    );
-                    *last = percent;
-                }
-            }
-            DownloadProgress::Finished => println!("Serial download finished"),
-        }
-    })
-    .await
-    .unwrap();
-    let serial_duration = start.elapsed();
-
-    let temp_file2 = NamedTempFile::new().unwrap();
-    let start = Instant::now();
-    download_file_parallel(url, temp_file2.path(), {
-        use std::sync::{Arc, Mutex};
-        let last_percent = Arc::new(Mutex::new(0u8));
-        move |progress| match progress {
-            DownloadProgress::Started => println!("Parallel download started"),
-            DownloadProgress::Progress(downloaded, total) => {
-                let percent = (downloaded as f64 / total as f64 * 100.0) as u8;
-                let mut last = last_percent.lock().unwrap();
-                if percent >= *last + 10 {
-                    println!(
-                        "Parallel download: {}% ({}/{} bytes)",
-                        percent, downloaded, total
-                    );
-                    *last = percent;
-                }
-            }
-            DownloadProgress::Finished => println!("Parallel download finished"),
-        }
-    })
-    .await
-    .unwrap();
-    let parallel_duration = start.elapsed();
-
-    println!(
-        "Serial: {:?}, Parallel: {:?}",
-        serial_duration, parallel_duration
-    );
-    let speedup = serial_duration.as_secs_f64() / parallel_duration.as_secs_f64();
-    println!("Speedup: {:.2}x", speedup);
-
-    let serial_size = std::fs::metadata(temp_file1.path()).unwrap().len();
-    let parallel_size = std::fs::metadata(temp_file2.path()).unwrap().len();
-    assert_eq!(
-        serial_size, parallel_size,
-        "Both downloads should produce files of the same size"
     );
 
     assert!(

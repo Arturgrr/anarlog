@@ -1,4 +1,4 @@
-import { Trans, useLingui } from "@lingui/react/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import React, { useCallback, useRef, useState } from "react";
 
 import {
@@ -39,14 +39,6 @@ import {
 import { RelatedNotesSection } from "./related-notes";
 import { ContactFacehash } from "./shared";
 
-import { useOptionalAuth } from "~/auth";
-import {
-  EnrichContactButton,
-  EnrichContactStatus,
-  useCrmEnrichment,
-} from "~/crm/enrich-contact";
-import { useOwnerUserId } from "~/shared/owner-user";
-
 export function DetailsColumn({
   human,
   humans,
@@ -60,15 +52,6 @@ export function DetailsColumn({
   handleSessionClick: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const localOwnerUserId = useOwnerUserId();
-  const auth = useOptionalAuth();
-  const ownerUserId = auth?.session?.user.id ?? localOwnerUserId;
-  const readOnly = human?.id === ownerUserId;
-  const user = humans.find((candidate) => candidate.id === ownerUserId) ?? null;
-  const enrichment = useCrmEnrichment({
-    human,
-    ownerUserId: ownerUserId ?? "",
-  });
   const { t } = useLingui();
   const [showCompactIdentity, setShowCompactIdentity] = useState(false);
   const [addingEmail, setAddingEmail] = useState(false);
@@ -106,7 +89,6 @@ export function DetailsColumn({
     )?.name ?? null;
   const contactSummary = useContactSummary({
     human,
-    user,
     organizationName,
     sessions: personSessions,
   });
@@ -115,7 +97,7 @@ export function DetailsColumn({
     const humanEmails = contactEmails(human);
     const humanName = human.name.trim().toLowerCase();
     return humans.filter((candidate) => {
-      if (candidate.id === human.id || candidate.id === ownerUserId) {
+      if (candidate.id === human.id) {
         return false;
       }
       const candidateEmails = contactEmails(candidate);
@@ -125,7 +107,7 @@ export function DetailsColumn({
       const candidateName = candidate.name.trim().toLowerCase();
       return humanName !== "" && candidateName === humanName;
     });
-  }, [human, humans, ownerUserId]);
+  }, [human, humans]);
 
   const handleMergeContacts = useCallback(
     (duplicateId: string) => {
@@ -144,7 +126,6 @@ export function DetailsColumn({
       {human ? (
         <>
           <ContactPageHeader
-            readOnly={readOnly}
             title={human.name || human.email || t`Unnamed`}
             compactIdentity={
               human.avatarDataUrl ? (
@@ -166,11 +147,6 @@ export function DetailsColumn({
                 ? () => persistContactAvatar("human", human.id, null)
                 : undefined
             }
-            actions={
-              !readOnly && ownerUserId ? (
-                <EnrichContactButton enrichment={enrichment} human={human} />
-              ) : undefined
-            }
           />
 
           <div
@@ -180,51 +156,41 @@ export function DetailsColumn({
             }}
           >
             <div className="border-border flex items-center justify-center border-b py-6">
-              {readOnly ? (
-                human.avatarDataUrl ? (
+              <AvatarUploadButton
+                label={t`Change photo`}
+                onUpload={(dataUrl) =>
+                  persistContactAvatar("human", human.id, dataUrl)
+                }
+              >
+                {human.avatarDataUrl ? (
                   <ContactImage src={human.avatarDataUrl} size={64} />
                 ) : (
                   <ContactFacehash name={facehashName} size={64} />
-                )
-              ) : (
-                <AvatarUploadButton
-                  label={t`Change photo`}
-                  onUpload={(dataUrl) =>
-                    persistContactAvatar("human", human.id, dataUrl)
-                  }
-                >
-                  {human.avatarDataUrl ? (
-                    <ContactImage src={human.avatarDataUrl} size={64} />
-                  ) : (
-                    <ContactFacehash name={facehashName} size={64} />
-                  )}
-                </AvatarUploadButton>
-              )}
+                )}
+              </AvatarUploadButton>
             </div>
 
-            {!readOnly && ownerUserId && (
-              <EnrichContactStatus enrichment={enrichment} human={human} />
-            )}
-
-            {!readOnly && duplicatesWithData.length > 0 && (
-              <div className="border-border border-b bg-red-50 px-6 py-4">
-                <h4 className="mb-1 text-sm font-semibold text-red-900">
-                  Duplicate Contact
-                  {duplicatesWithData.length > 1 ? "s" : ""} Found
+            {duplicatesWithData.length > 0 && (
+              <div className="border-border bg-layer-2 border-b px-6 py-4">
+                <h4 className="text-foreground mb-1 text-sm font-semibold">
+                  <Plural
+                    value={duplicatesWithData.length}
+                    one="Duplicate Contact Found"
+                    other="Duplicate Contacts Found"
+                  />
                 </h4>
-                <p className="mb-3 text-sm text-red-800">
-                  {duplicatesWithData.length > 1
-                    ? `${duplicatesWithData.length} contacts`
-                    : "Another contact"}{" "}
-                  with the same name or email{" "}
-                  {duplicatesWithData.length > 1 ? "exist" : "exists"}. Merge to
-                  consolidate all related notes and information.
+                <p className="text-muted-foreground mb-3 text-sm">
+                  <Plural
+                    value={duplicatesWithData.length}
+                    one="Another contact with the same name or email exists. Merge to consolidate all related notes and information."
+                    other="# contacts with the same name or email exist. Merge to consolidate all related notes and information."
+                  />
                 </p>
                 <div className="flex flex-col gap-2">
                   {duplicatesWithData.map((dup) => (
                     <div
                       key={dup.id}
-                      className="border-border bg-muted flex items-center justify-between rounded-md border p-2"
+                      className="bg-card shadow-raised flex items-center justify-between rounded-lg p-2"
                     >
                       <div className="flex items-center gap-2">
                         {dup.avatarDataUrl ? (
@@ -237,7 +203,7 @@ export function DetailsColumn({
                         )}
                         <div>
                           <div className="text-foreground text-sm font-medium">
-                            {dup.name || "Unnamed Contact"}
+                            {dup.name || t`Unnamed Contact`}
                           </div>
                           <div className="text-muted-foreground text-xs">
                             {dup.email}
@@ -249,7 +215,7 @@ export function DetailsColumn({
                         size="sm"
                         variant="default"
                       >
-                        Merge
+                        <Trans>Merge</Trans>
                       </Button>
                     </div>
                   ))}
@@ -257,156 +223,125 @@ export function DetailsColumn({
               </div>
             )}
 
-            {readOnly ? (
-              <div>
-                {[
-                  [t`Name`, human.name],
-                  [t`Job Title`, human.jobTitle],
-                  [t`Company`, organizationName],
-                  [
-                    t`Email`,
-                    [human.email, ...human.additionalEmails]
-                      .filter((email) => email.trim() !== "")
-                      .join("\n"),
-                  ],
-                  [t`Phone`, human.phone],
-                  [t`LinkedIn`, human.linkedinUsername],
-                  [t`Notes`, human.memo],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="border-border flex items-center border-b px-4 py-3"
-                  >
-                    <div className="text-muted-foreground w-28 text-sm">
-                      {label}
-                    </div>
-                    <div className="min-w-0 flex-1 text-base break-words whitespace-pre-wrap">
-                      {value}
-                    </div>
-                  </div>
-                ))}
+            <div>
+              <div className="border-border flex items-center border-b px-4 py-3">
+                <div className="text-muted-foreground w-28 text-sm">
+                  <Trans>Name</Trans>
+                </div>
+                <div className="flex-1">
+                  <EditablePersonNameField
+                    key={`${human.id}:name`}
+                    personId={human.id}
+                    value={human.name}
+                  />
+                </div>
               </div>
-            ) : (
-              <div>
+              <EditablePersonJobTitleField
+                key={`${human.id}:job-title`}
+                personId={human.id}
+                value={human.jobTitle}
+              />
+
+              <div className="border-border flex items-center border-b px-4 py-3">
+                <div className="text-muted-foreground w-28 text-sm">
+                  <Trans>Company</Trans>
+                </div>
+                <div className="flex-1">
+                  <ContactOrganizationSelector
+                    onChange={(organizationId) =>
+                      persistHumanUpdate(human.id, {
+                        organizationId: organizationId ?? "",
+                      })
+                    }
+                    organization={
+                      organizations.find(
+                        (organization) =>
+                          organization.id === human.organizationId,
+                      ) ?? null
+                    }
+                    organizations={organizations}
+                  />
+                </div>
+              </div>
+
+              <EditablePersonEmailField
+                key={`${human.id}:email`}
+                personId={human.id}
+                value={human.email}
+              />
+              {human.additionalEmails.map((email) => (
+                <EditableAdditionalEmailRow
+                  key={`${human.id}:${email}`}
+                  value={email}
+                  onCommit={(next, previous) => {
+                    const trimmed = next.trim();
+                    if (trimmed === previous) return;
+                    const current = currentAdditionalEmails();
+                    persistAdditionalEmails(
+                      trimmed
+                        ? current.map((entry) =>
+                            entry === previous ? trimmed : entry,
+                          )
+                        : current.filter((entry) => entry !== previous),
+                    );
+                  }}
+                  onRemove={(current) => {
+                    persistAdditionalEmails(
+                      currentAdditionalEmails().filter(
+                        (entry) => entry !== current,
+                      ),
+                    );
+                  }}
+                />
+              ))}
+              {addingEmail ? (
+                <EditableAdditionalEmailRow
+                  key={`${human.id}:new-email`}
+                  value=""
+                  autoFocus
+                  onCommit={(next) => {
+                    setAddingEmail(false);
+                    const trimmed = next.trim();
+                    if (trimmed) {
+                      persistAdditionalEmails([
+                        ...currentAdditionalEmails(),
+                        trimmed,
+                      ]);
+                    }
+                  }}
+                />
+              ) : (
                 <div className="border-border flex items-center border-b px-4 py-3">
-                  <div className="text-muted-foreground w-28 text-sm">
-                    <Trans>Name</Trans>
-                  </div>
+                  <div className="w-28" />
                   <div className="flex-1">
-                    <EditablePersonNameField
-                      key={`${human.id}:name`}
-                      personId={human.id}
-                      value={human.name}
-                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground -ml-2 h-7 px-2"
+                      onClick={() => setAddingEmail(true)}
+                    >
+                      <Trans>Add email</Trans>
+                    </Button>
                   </div>
                 </div>
-                <EditablePersonJobTitleField
-                  key={`${human.id}:job-title`}
-                  personId={human.id}
-                  value={human.jobTitle}
-                />
-
-                <div className="border-border flex items-center border-b px-4 py-3">
-                  <div className="text-muted-foreground w-28 text-sm">
-                    <Trans>Company</Trans>
-                  </div>
-                  <div className="flex-1">
-                    <ContactOrganizationSelector
-                      onChange={(organizationId) =>
-                        persistHumanUpdate(human.id, {
-                          organizationId: organizationId ?? "",
-                        })
-                      }
-                      organization={
-                        organizations.find(
-                          (organization) =>
-                            organization.id === human.organizationId,
-                        ) ?? null
-                      }
-                      organizations={organizations}
-                    />
-                  </div>
-                </div>
-
-                <EditablePersonEmailField
-                  key={`${human.id}:email`}
-                  personId={human.id}
-                  value={human.email}
-                />
-                {human.additionalEmails.map((email) => (
-                  <EditableAdditionalEmailRow
-                    key={`${human.id}:${email}`}
-                    value={email}
-                    onCommit={(next, previous) => {
-                      const trimmed = next.trim();
-                      if (trimmed === previous) return;
-                      const current = currentAdditionalEmails();
-                      persistAdditionalEmails(
-                        trimmed
-                          ? current.map((entry) =>
-                              entry === previous ? trimmed : entry,
-                            )
-                          : current.filter((entry) => entry !== previous),
-                      );
-                    }}
-                    onRemove={(current) => {
-                      persistAdditionalEmails(
-                        currentAdditionalEmails().filter(
-                          (entry) => entry !== current,
-                        ),
-                      );
-                    }}
-                  />
-                ))}
-                {addingEmail ? (
-                  <EditableAdditionalEmailRow
-                    key={`${human.id}:new-email`}
-                    value=""
-                    autoFocus
-                    onCommit={(next) => {
-                      setAddingEmail(false);
-                      const trimmed = next.trim();
-                      if (trimmed) {
-                        persistAdditionalEmails([
-                          ...currentAdditionalEmails(),
-                          trimmed,
-                        ]);
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="border-border flex items-center border-b px-4 py-3">
-                    <div className="w-28" />
-                    <div className="flex-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground -ml-2 h-7 px-2"
-                        onClick={() => setAddingEmail(true)}
-                      >
-                        <Trans>Add email</Trans>
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                <EditablePersonPhoneField
-                  key={`${human.id}:phone`}
-                  personId={human.id}
-                  value={human.phone}
-                />
-                <EditablePersonLinkedInField
-                  key={`${human.id}:linkedin`}
-                  personId={human.id}
-                  value={human.linkedinUsername}
-                />
-                <EditablePersonMemoField
-                  key={`${human.id}:memo`}
-                  personId={human.id}
-                  value={human.memo}
-                />
-              </div>
-            )}
+              )}
+              <EditablePersonPhoneField
+                key={`${human.id}:phone`}
+                personId={human.id}
+                value={human.phone}
+              />
+              <EditablePersonLinkedInField
+                key={`${human.id}:linkedin`}
+                personId={human.id}
+                value={human.linkedinUsername}
+              />
+              <EditablePersonMemoField
+                key={`${human.id}:memo`}
+                personId={human.id}
+                value={human.memo}
+              />
+            </div>
 
             {personSessions.length > 0 && (
               <ContactSummarySection summary={contactSummary} />
@@ -474,7 +409,7 @@ function ContactSummarySection({
                 />
                 <div
                   className={cn([
-                    "bg-muted-foreground/10 h-3 animate-pulse rounded-full",
+                    "bg-muted-foreground/10 h-3 animate-pulse rounded-xs",
                     width,
                   ])}
                   style={{ animationDelay: `${index * 150}ms` }}
@@ -773,7 +708,7 @@ export function ContactOrganizationSelector({
               <span className="text-base md:text-sm">{organization.name}</span>
               <span className="group text-muted-foreground ml-2">
                 <MinusCircle
-                  className="text-muted-foreground size-4 cursor-pointer hover:text-red-600"
+                  className="text-icon-muted hover:text-danger size-4 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRemoveOrganization();
@@ -901,7 +836,7 @@ function OrganizationControl({
                   onClick={() => selectOrganization(org.id)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                 >
-                  <span className="bg-muted mr-2 flex size-5 shrink-0 items-center justify-center rounded-full">
+                  <span className="bg-layer-2 mr-2 flex size-5 shrink-0 items-center justify-center rounded-sm">
                     <Buildings className="size-3" />
                   </span>
                   <span className="truncate font-medium">{org.name}</span>
@@ -920,14 +855,16 @@ function OrganizationControl({
                   onClick={() => void handleCreateOrganization()}
                   onMouseEnter={() => setHighlightedIndex(organizations.length)}
                 >
-                  <span className="bg-accent mr-2 flex size-5 shrink-0 items-center justify-center rounded-full">
+                  <span className="bg-layer-2 mr-2 flex size-5 shrink-0 items-center justify-center rounded-sm">
                     <span className="text-xs">+</span>
                   </span>
                   <span className="text-muted-foreground flex items-center gap-1 font-medium">
-                    Create
-                    <span className="text-foreground max-w-[140px] truncate">
-                      &quot;{searchTerm.trim()}&quot;
-                    </span>
+                    <Trans>
+                      Create
+                      <span className="text-foreground max-w-[140px] truncate">
+                        &quot;{searchTerm.trim()}&quot;
+                      </span>
+                    </Trans>
                   </span>
                 </button>
               )}
@@ -947,7 +884,7 @@ function OrganizationControl({
                   onClick={() => selectOrganization(org.id)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                 >
-                  <span className="bg-muted mr-2 flex size-5 shrink-0 items-center justify-center rounded-full">
+                  <span className="bg-layer-2 mr-2 flex size-5 shrink-0 items-center justify-center rounded-sm">
                     <Buildings className="size-3" />
                   </span>
                   <span className="truncate font-medium">{org.name}</span>

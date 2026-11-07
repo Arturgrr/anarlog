@@ -58,7 +58,7 @@ fn no_attendees_call_names_self_and_title_candidate_without_creating_identities(
             .iter()
             .map(|s| s.speaker_label.as_str())
             .collect::<Vec<_>>(),
-        ["John", "덕행"]
+        ["You", "덕행"]
     );
     assert!(segments.iter().all(|s| s.key.speaker_human_id.is_none()));
     assert_eq!(
@@ -72,7 +72,7 @@ fn unknown_title_leaves_remote_numbered_from_one() {
     let mut context = context();
     context.intervals[0].self_names.clear();
     let segments = render_transcript_segments(request(context, &[(0, 0), (1, 1)]));
-    assert_eq!(segments[0].speaker_label, "John");
+    assert_eq!(segments[0].speaker_label, "You");
     assert_eq!(segments[1].speaker_label, "Speaker 1");
 }
 
@@ -130,7 +130,7 @@ fn word_spanning_adjacent_isolated_intervals_keeps_the_mic_human() {
     req.transcripts[0].words[0].end_ms = 1100;
     let segments = render_transcript_segments(req);
     assert_eq!(segments.len(), 1);
-    assert_eq!(segments[0].speaker_label, "John");
+    assert_eq!(segments[0].speaker_label, "You");
     assert_eq!(segments[0].key.speaker_human_id.as_deref(), Some("self"));
 }
 
@@ -159,7 +159,7 @@ fn word_spanning_adjacent_isolated_intervals_is_named_via_context() {
     req.transcripts[0].words[0].end_ms = 1100;
     let segments = render_transcript_segments(req);
     assert_eq!(segments.len(), 1);
-    assert_eq!(segments[0].speaker_label, "John");
+    assert_eq!(segments[0].speaker_label, "You");
     assert_eq!(segments[0].key.speaker_human_id.as_deref(), Some("self"));
 }
 
@@ -179,7 +179,7 @@ fn isolated_indexless_word_beats_scoped_guest_assignment() {
     req.transcripts[0].words[0].speaker_index = None;
     let segments = render_transcript_segments(req);
     assert_eq!(segments.len(), 1);
-    assert_eq!(segments[0].speaker_label, "John");
+    assert_eq!(segments[0].speaker_label, "You");
     assert_eq!(segments[0].key.speaker_human_id.as_deref(), Some("self"));
 }
 
@@ -258,7 +258,7 @@ fn headset_hears_only_its_wearer_however_diarization_splits_the_voice() {
     let segments = render_transcript_segments(request(context(), &[(0, 0), (0, 1)]));
     assert_eq!(segments.len(), 2);
     assert!(segments.iter().all(|s| {
-        s.speaker_label == "John"
+        s.speaker_label == "You"
             && s.provisional_speaker.as_ref().unwrap().reason
                 == SpeakerResolutionReason::PersonalMicrophone
     }));
@@ -269,7 +269,7 @@ fn room_microphone_on_a_call_needs_a_single_local_voice() {
     let mut context = context();
     context.intervals[0].mic_isolated = Some(false);
     let segments = render_transcript_segments(request(context.clone(), &[(0, 0)]));
-    assert_eq!(segments[0].speaker_label, "John");
+    assert_eq!(segments[0].speaker_label, "You");
     assert_eq!(
         segments[0].provisional_speaker.as_ref().unwrap().reason,
         SpeakerResolutionReason::VirtualMeetingMicrophone
@@ -289,7 +289,7 @@ fn room_microphone_on_a_call_names_only_the_dominant_local_voice() {
     ));
     for segment in &segments {
         let expected = if segment.key.speaker_index == Some(0) {
-            "John"
+            "You"
         } else {
             "Speaker 1"
         };
@@ -341,7 +341,7 @@ fn changing_devices_splits_the_interval_without_renaming_earlier_words() {
     context.intervals.push(next);
     let segments = render_transcript_segments(request(context, &[(0, 0), (0, 0)]));
     assert_eq!(segments.len(), 2);
-    assert_eq!(segments[0].speaker_label, "John");
+    assert_eq!(segments[0].speaker_label, "You");
     assert_eq!(segments[1].speaker_label, "Speaker 1");
 }
 
@@ -530,7 +530,7 @@ fn assigned_speakers_stay_merged_across_context_intervals() {
 
     let saved = render_transcript_segments(req.clone());
     assert_eq!(saved.len(), 3);
-    assert_eq!(saved[0].speaker_label, "John");
+    assert_eq!(saved[0].speaker_label, "You");
     assert_eq!(
         saved[0]
             .words
@@ -542,7 +542,7 @@ fn assigned_speakers_stay_merged_across_context_intervals() {
     assert_eq!((saved[0].start_ms, saved[0].end_ms), (0, 2500));
     assert!(saved[0].provisional_speaker.is_none());
     assert!(saved[1].key.speaker_human_id.is_none());
-    assert_eq!(saved[2].speaker_label, "John");
+    assert_eq!(saved[2].speaker_label, "You");
 
     req.preview = Some(saved.clone());
     let preview = render_transcript_segments(req);

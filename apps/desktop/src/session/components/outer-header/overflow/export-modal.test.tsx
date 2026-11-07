@@ -21,7 +21,7 @@ const mocks = vi.hoisted(() => ({
   onOpenChange: vi.fn(),
   save: vi.fn(),
   isAppStoreBuild: vi.fn(),
-  sharedNote: undefined as { body: unknown } | undefined,
+  enhancedNote: undefined as { content: string } | undefined,
 }));
 
 vi.mock("@tauri-apps/api/path", () => ({
@@ -56,22 +56,13 @@ vi.mock("~/shared/app-store", () => ({
 }));
 vi.mock("~/session/queries", () => ({
   useSession: () => ({ title: "Project review" }),
-  useEnhancedNote: () => undefined,
+  useEnhancedNote: (id: string) => (id ? mocks.enhancedNote : undefined),
   useSessionParticipants: () => [],
 }));
-vi.mock("~/session/utils", () => ({ getSessionEvent: () => null }));
 vi.mock("~/session/components/note-input/transcript/export-data", () => ({
   useTranscriptExportSegments: () => ({ data: [], isLoading: false }),
 }));
 vi.mock("~/stt/queries", () => ({ useSessionTranscriptMetadata: () => [] }));
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: { user: { id: "viewer" } } }),
-}));
-vi.mock("~/shared-notes/cache", () => ({
-  useDurableSharedNote: (_viewer: string | null, shareId: string) => ({
-    data: shareId ? mocks.sharedNote : undefined,
-  }),
-}));
 
 import { ExportModal } from "./export-modal";
 
@@ -100,6 +91,7 @@ function renderModal(
 describe("ExportModal", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mocks.enhancedNote = undefined;
     mocks.settings.mockResolvedValue({ values: {} });
     mocks.storedValues = {};
     mocks.settingsValues = {};
@@ -152,25 +144,6 @@ describe("ExportModal", () => {
       );
     },
   );
-
-  it("exports the shared summary from a shared tab", async () => {
-    mocks.sharedNote = {
-      body: {
-        type: "doc",
-        content: [
-          {
-            type: "paragraph",
-            content: [{ type: "text", text: "Shared decisions" }],
-          },
-        ],
-      },
-    };
-    renderModal({ type: "shared", id: "share-1" });
-    fireEvent.click(screen.getByRole("radio", { name: "Markdown" }));
-    fireEvent.click(screen.getByRole("button", { name: "Export" }));
-    await waitFor(() => expect(mocks.onOpenChange).toHaveBeenCalledWith(false));
-    expect(mocks.writeTextFile.mock.calls[0][1]).toContain("Shared decisions");
-  });
 
   it("does not export to Downloads if reading the saved preference fails", async () => {
     mocks.settings.mockRejectedValue(new Error("Database unavailable"));
@@ -320,8 +293,8 @@ describe("ExportModal", () => {
   });
 
   it("builds the file from the submitted sections when selections change", async () => {
-    mocks.sharedNote = {
-      body: {
+    mocks.enhancedNote = {
+      content: JSON.stringify({
         type: "doc",
         content: [
           {
@@ -329,9 +302,9 @@ describe("ExportModal", () => {
             content: [{ type: "text", text: "Shared decisions" }],
           },
         ],
-      },
+      }),
     };
-    renderModal({ type: "shared", id: "share-1" });
+    renderModal({ type: "enhanced", id: "note-1" });
     fireEvent.click(screen.getByRole("radio", { name: "TXT" }));
     fireEvent.click(screen.getByRole("button", { name: "Export" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Summary" }));

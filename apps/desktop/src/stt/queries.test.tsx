@@ -353,21 +353,28 @@ describe("transcript SQLite queries", () => {
     );
   });
 
-  it("keeps historical speaker names after the assigned contact is deleted", async () => {
+  it("keeps deleted contacts' speaker names but never the local user's", async () => {
     const db = new DatabaseSync(":memory:");
     try {
       db.exec(
-        "CREATE TABLE humans (id TEXT PRIMARY KEY, name TEXT, deleted_at TEXT)",
+        "CREATE TABLE humans (id TEXT PRIMARY KEY, owner_user_id TEXT, name TEXT, deleted_at TEXT)",
       );
-      db.prepare("INSERT INTO humans VALUES (?, ?, ?)").run(
+      db.prepare("INSERT INTO humans VALUES (?, ?, ?, ?)").run(
         "artem",
+        "user-1",
         "Artem",
         "2026-09-24",
+      );
+      db.prepare("INSERT INTO humans VALUES (?, ?, ?, ?)").run(
+        "user-1",
+        "user-1",
+        "Ada Owner",
+        null,
       );
       mocks.execute.mockImplementationOnce((sql: string, params: string[]) =>
         Promise.resolve(db.prepare(sql).all(...params)),
       );
-      await expect(getTranscriptHumans(["artem"])).resolves.toEqual([
+      await expect(getTranscriptHumans(["artem", "user-1"])).resolves.toEqual([
         { human_id: "artem", name: "Artem" },
       ]);
     } finally {

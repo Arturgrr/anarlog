@@ -1,14 +1,16 @@
 mod commands;
 mod ext;
+mod feedback;
+mod labels;
 mod macos_position;
 mod menu_items;
-mod schedule;
+mod title;
 mod tray_icon;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub use ext::*;
-pub use menu_items::{AnlgMenuItem, UpdateMenuState, handle_agenda_menu_event, quit_completely};
+pub use menu_items::{AnlgMenuItem, UpdateMenuState, quit_completely};
 
 const PLUGIN_NAME: &str = "anlg-tray";
 static UPDATES_ENABLED: AtomicBool = AtomicBool::new(true);
@@ -74,8 +76,8 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
         .plugin_name(PLUGIN_NAME)
         .commands(tauri_specta::collect_commands![
             commands::set_tray_icon_visible,
-            commands::set_tray_schedule,
             commands::set_tray_recording_title,
+            commands::set_tray_labels,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }

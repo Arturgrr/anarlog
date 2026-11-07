@@ -1,27 +1,18 @@
+import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { useQuery } from "@tanstack/react-query";
 import { generateText } from "ai";
 import { useEffect } from "react";
 
-import { Spinner } from "@anlg/ui/components/ui/spinner";
-
 import { useLanguageModel } from "~/ai/hooks";
 
-export type LlmHealthStatus = {
+type LlmHealthStatus = {
   status: "pending" | "error" | "success" | null;
   message?: string;
 };
 
-export function HealthStatusIndicator() {
-  const health = useConnectionHealth();
-
-  if (health.status === "pending") {
-    return <Spinner size={14} className="text-muted-foreground shrink-0" />;
-  }
-
-  return null;
-}
-
 export function useConnectionHealth(): LlmHealthStatus {
+  const { t } = useLingui();
   const model = useLanguageModel();
 
   const text = useQuery({
@@ -54,7 +45,7 @@ export function useConnectionHealth(): LlmHealthStatus {
   if (text.status === "error") {
     return {
       status: "error",
-      message: `Connection failed: ${llmHealthErrorMessage(text.error)}`,
+      message: t`Connection failed: ${llmHealthErrorMessage(text.error)}`,
     };
   }
 
@@ -63,7 +54,7 @@ export function useConnectionHealth(): LlmHealthStatus {
 
 export function llmHealthErrorMessage(error: unknown): string {
   if (!error || typeof error !== "object") {
-    return "Unknown error";
+    return t`Unknown error`;
   }
 
   const api = error as {
@@ -81,10 +72,10 @@ export function llmHealthErrorMessage(error: unknown): string {
     return fromPayload;
   }
   if (typeof api.message === "string" && api.message.trim()) {
-    return firstUsefulLine(api.message) || "Unknown error";
+    return firstUsefulLine(api.message) || t`Unknown error`;
   }
 
-  return "Unknown error";
+  return t`Unknown error`;
 }
 
 function apiErrorFromUnknown(value: unknown): string | undefined {

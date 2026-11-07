@@ -28,12 +28,13 @@ import { useChatGroup } from "~/chat/store/queries";
 import { useChatActions } from "~/chat/store/use-chat-actions";
 import { useShell } from "~/contexts/shell";
 import { useMentionConfig } from "~/editor-bridge/mention-config";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { localizeExternalMessage } from "~/i18n/external-messages";
+import { useLocalUserId } from "~/shared/owner-user";
 
 export function ComposerScreen() {
   const { chat } = useShell();
-  const model = useLanguageModel("chat");
-  const userId = useOwnerUserId();
+  const model = useLanguageModel();
+  const userId = useLocalUserId();
   const currentChatGroup = useChatGroup(chat.groupId, chat.scope);
   const { handleSendMessage } = useChatActions({
     chatScope: chat.scope,
@@ -100,7 +101,7 @@ export function ComposerScreen() {
               }
               onStop={sessionProps.stop}
               onSendMessage={sendMessage}
-              title={currentChatGroup?.title || t`Ask Anarlog AI anything`}
+              title={currentChatGroup?.title || t`Ask Librelog AI anything`}
             />
           ) : (
             <ComposerSettingsCard />
@@ -115,7 +116,7 @@ function ComposerSettingsCard() {
   return (
     <div
       className={cn([
-        "h-full w-full rounded-[28px] px-5 py-4",
+        "h-full w-full rounded-xl px-5 py-4",
         "bg-primary/88 text-primary-foreground",
       ])}
     >
@@ -134,7 +135,7 @@ function ComposerSettingsCard() {
           onClick={() => void dismissComposer()}
           data-tauri-drag-region="false"
           className={cn([
-            "inline-flex size-8 items-center justify-center rounded-full",
+            "inline-flex size-7 items-center justify-center rounded-md",
             "bg-primary-foreground/7 text-primary-foreground/65 transition-colors",
             "hover:bg-primary-foreground/12 hover:text-primary-foreground",
           ])}
@@ -147,7 +148,7 @@ function ComposerSettingsCard() {
         type="button"
         onClick={() => void openSettingsInMainWindow()}
         className={cn([
-          "inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium",
+          "inline-flex h-7 items-center gap-1.5 rounded-md px-3 text-sm font-medium",
           "bg-primary-foreground/7 text-primary-foreground/85 transition-colors",
           "hover:bg-primary-foreground/10 hover:text-primary-foreground",
         ])}
@@ -200,7 +201,7 @@ function ComposerInput({
   return (
     <div
       className={cn([
-        "h-full w-full rounded-[28px] px-5 py-4",
+        "h-full w-full rounded-xl px-5 py-4",
         "bg-primary/88 text-primary-foreground",
       ])}
     >
@@ -220,20 +221,20 @@ function ComposerInput({
             onClick={() => void openMainWindow()}
             data-tauri-drag-region="false"
             className={cn([
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium",
+              "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium",
               "bg-primary-foreground/7 text-primary-foreground/76",
               "hover:bg-primary-foreground/12 hover:text-primary-foreground transition-colors",
             ])}
           >
             <ArrowUpRight className="size-3.5" />
-            {t`Open Anarlog`}
+            {t`Open Librelog`}
           </button>
           <button
             type="button"
             onClick={() => void dismissComposer()}
             data-tauri-drag-region="false"
             className={cn([
-              "inline-flex size-8 items-center justify-center rounded-full",
+              "inline-flex size-7 items-center justify-center rounded-md",
               "bg-primary-foreground/7 text-primary-foreground/65 transition-colors",
               "hover:bg-primary-foreground/12 hover:text-primary-foreground",
             ])}
@@ -245,7 +246,9 @@ function ComposerInput({
 
       <ChatEditor
         ref={editorRef}
-        onAttachmentError={(message) => toast.error(message)}
+        onAttachmentError={(message) =>
+          toast.error(localizeExternalMessage(message))
+        }
         className={cn([
           "text-primary-foreground max-h-[88px] min-h-[34px] overflow-y-auto text-[15px] leading-6",
           "[&_.ProseMirror]:min-h-[34px] [&_.ProseMirror]:outline-none",
@@ -260,10 +263,10 @@ function ComposerInput({
 
       <div className="mt-3 flex items-center justify-between gap-3">
         <div className="text-primary-foreground/40 flex items-center gap-2 text-[11px]">
-          <span className="bg-primary-foreground/8 rounded-full px-2 py-1">
+          <span className="bg-primary-foreground/8 rounded-sm px-1.5 py-0.5">
             {t`Esc to dismiss`}
           </span>
-          <span className="bg-primary-foreground/8 rounded-full px-2 py-1">
+          <span className="bg-primary-foreground/8 rounded-sm px-1.5 py-0.5">
             {t`${primaryModifier} ↩ to send`}
           </span>
         </div>
@@ -273,7 +276,7 @@ function ComposerInput({
             type="button"
             onClick={onStop}
             className={cn([
-              "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium",
+              "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium",
               "bg-primary-foreground/8 text-primary-foreground/82 transition-colors",
               "hover:bg-primary-foreground/12 hover:text-primary-foreground",
             ])}
@@ -287,11 +290,11 @@ function ComposerInput({
             onClick={handleSubmit}
             disabled={disabled}
             className={cn([
-              "inline-flex size-10 items-center justify-center rounded-full",
+              "inline-flex size-9 items-center justify-center rounded-xl",
               disabled
                 ? "bg-primary-foreground/8 text-primary-foreground/25 cursor-default"
                 : [
-                    "bg-primary-foreground text-primary",
+                    "bg-primary-foreground text-black",
                     "transition-transform hover:scale-[1.02]",
                   ],
               !hasContent && !disabled && "opacity-55",
@@ -307,7 +310,7 @@ function ComposerInput({
 
 const composerPlaceholder: PlaceholderFunction = ({ node, pos }) => {
   if (node.type.name === "paragraph" && pos === 0) {
-    return t`Message Anarlog AI`;
+    return t`Message Librelog AI`;
   }
 
   return "";

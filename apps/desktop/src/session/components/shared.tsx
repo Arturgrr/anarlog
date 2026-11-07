@@ -9,7 +9,6 @@ import {
   useSession,
   useSessionHasTranscript,
 } from "~/session/queries";
-import { useSessionSharedNoteIds } from "~/shared-notes/event-keys";
 import type { SessionMode } from "~/store/zustand/listener/general";
 import type { Tab } from "~/store/zustand/tabs/schema";
 import { type EditorView } from "~/store/zustand/tabs/schema";
@@ -57,23 +56,14 @@ export function useCurrentNoteTab(
     hasTranscript && sessionMode === "inactive",
   );
 
-  const sharedNoteIds = useSessionSharedNoteIds(tab.id);
-
   return useMemo(() => {
     return computeCurrentNoteTab(
       tab.state.view ?? null,
       isLiveSessionActive,
       enhancedNoteIds,
       canShowTranscript,
-      sharedNoteIds,
     );
-  }, [
-    tab.state.view,
-    isLiveSessionActive,
-    enhancedNoteIds,
-    canShowTranscript,
-    sharedNoteIds,
-  ]);
+  }, [tab.state.view, isLiveSessionActive, enhancedNoteIds, canShowTranscript]);
 }
 
 export function useCanShowTranscript(
@@ -126,8 +116,7 @@ export function getCanShowTranscript({
 export function RecordingIcon() {
   return (
     <span className="relative flex size-3 items-center justify-center">
-      <span className="absolute size-2.5 animate-ping rounded-full bg-red-500/40" />
-      <span className="relative size-2 rounded-full bg-red-500" />
+      <span className="bg-foreground animate-status-pulse relative size-2 rounded-full" />
     </span>
   );
 }

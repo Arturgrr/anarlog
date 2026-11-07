@@ -24,25 +24,3 @@ export function parseAutomationRunRecord(
   }
   return null;
 }
-
-export type AutomationTargetRef = {
-  id: string;
-  name: string;
-};
-
-export function parseAutomationTargetRef(
-  value: string | undefined,
-): AutomationTargetRef | null {
-  if (!value) {
-    return null;
-  }
-  try {
-    const parsed = JSON.parse(value);
-    if (typeof parsed?.id === "string" && typeof parsed.name === "string") {
-      return { id: parsed.id, name: parsed.name };
-    }
-  } catch {
-    // fall through
-  }
-  return null;
-}

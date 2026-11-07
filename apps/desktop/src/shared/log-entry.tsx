@@ -1,11 +1,11 @@
 import { cn } from "@anlg/utils";
 
 const levelColors: Record<string, string> = {
-  ERROR: "text-red-700 dark:text-red-400",
-  WARN: "text-amber-700 dark:text-amber-400",
-  INFO: "text-blue-700 dark:text-blue-400",
-  DEBUG: "text-violet-700 dark:text-violet-400",
-  TRACE: "text-muted-foreground",
+  ERROR: "text-danger",
+  WARN: "text-foreground font-medium",
+  INFO: "text-muted-foreground",
+  DEBUG: "text-faint",
+  TRACE: "text-faint",
 };
 
 export function LogEntry({ text }: { text: string }) {

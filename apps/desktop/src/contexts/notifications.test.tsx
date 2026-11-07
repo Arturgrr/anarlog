@@ -70,7 +70,11 @@ function DownloadStatus() {
 describe("NotificationProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    usePendingSttSelection.setState({ selection: null, queuedDownloads: [] });
+    usePendingSttSelection.setState({
+      selection: null,
+      queuedDownloads: [],
+      failedDownloads: {},
+    });
     mocks.setDownloadedSttSelection.mockResolvedValue(undefined);
     mocks.downloadHandler = null;
     mocks.listen.mockImplementation(async (handler) => {
@@ -113,10 +117,17 @@ describe("NotificationProvider", () => {
       { description: "download server rejected the model" },
     );
     expect(usePendingSttSelection.getState().selection).toBeNull();
+    expect(
+      usePendingSttSelection.getState().failedDownloads[
+        "soniqo-parakeet-batch"
+      ],
+    ).toBe("download server rejected the model");
   });
 
   it("selects the pending download only after completion and honors a newer choice", async () => {
     const queryClient = new QueryClient();
+    const connectionKey = ["stt-connection", "soniqo", "soniqo-parakeet-batch"];
+    queryClient.setQueryData(connectionKey, { status: "not_downloaded" });
     render(
       <QueryClientProvider client={queryClient}>
         <NotificationProvider>
@@ -159,6 +170,7 @@ describe("NotificationProvider", () => {
     expect(mocks.toastSuccess).toHaveBeenCalledWith("Model downloaded", {
       description: "Soniqo Parakeet Batch",
     });
+    expect(queryClient.getQueryState(connectionKey)?.isInvalidated).toBe(true);
     expect(screen.getByTestId("download-status").textContent).toBe("");
 
     mocks.setDownloadedSttSelection.mockClear();

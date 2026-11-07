@@ -28,10 +28,6 @@ vi.mock("~/sidebar/timeline", () => ({
   ),
 }));
 
-vi.mock("~/sidebar/calendar", () => ({
-  CalendarNav: () => <div data-testid="calendar-nav" />,
-}));
-
 vi.mock("~/sidebar/automations", () => ({
   AutomationsNav: () => <div data-testid="automations-nav" />,
 }));
@@ -52,10 +48,6 @@ vi.mock("~/sidebar/folders", () => ({
   FoldersNav: () => <div data-testid="folders-nav" />,
 }));
 
-vi.mock("~/sidebar/shared-notes", () => ({
-  SharedNotesNav: () => <div data-testid="shared-notes-nav" />,
-}));
-
 import { LeftSidebar } from "./index";
 
 describe("LeftSidebar", () => {
@@ -68,13 +60,6 @@ describe("LeftSidebar", () => {
     cleanup();
   });
 
-  it("shows received notes without the personal timeline", () => {
-    render(<LeftSidebar noteFilter="shared" />);
-
-    expect(screen.queryByTestId("timeline-view")).toBeNull();
-    expect(screen.getByTestId("shared-notes-nav")).toBeTruthy();
-  });
-
   it("keeps the personal timeline when filtering to a folder", () => {
     render(<LeftSidebar folderFilter="CS 101" />);
 
@@ -85,7 +70,6 @@ describe("LeftSidebar", () => {
     expect(
       screen.getByTestId("folder-materials").getAttribute("data-folder-path"),
     ).toBe("CS 101");
-    expect(screen.queryByTestId("shared-notes-nav")).toBeNull();
   });
 
   it("hides folder materials when viewing all notes", () => {
@@ -96,7 +80,6 @@ describe("LeftSidebar", () => {
 
   it.each([
     ["settings", "settings-nav"],
-    ["calendar", "calendar-nav"],
     ["contacts", "contacts-nav"],
     ["templates", "templates-nav"],
     ["automations", "automations-nav"],

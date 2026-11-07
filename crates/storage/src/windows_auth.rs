@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 const FILENAME: &str = "auth.dpapi";
 #[cfg(any(target_os = "windows", test))]
-const FORMAT_PREFIX: &str = "anarlog-auth-dpapi-v1:";
+const FORMAT_PREFIX: &str = "librelog-auth-dpapi-v1:";
 
 pub fn secure_path(plaintext_path: &Path) -> PathBuf {
     plaintext_path.with_file_name(FILENAME)
@@ -204,7 +204,7 @@ mod tests {
     #[cfg(target_os = "windows")]
     #[test]
     fn dpapi_protects_and_round_trips_for_current_user() {
-        let plaintext = b"anarlog-windows-dpapi-round-trip";
+        let plaintext = b"librelog-windows-dpapi-round-trip";
 
         let protected = protect(plaintext).unwrap();
 

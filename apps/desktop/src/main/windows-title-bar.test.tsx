@@ -60,10 +60,6 @@ vi.mock("~/shared/open-note-dialog", () => ({
   useOpenNoteDialog: () => ({ open: mocks.openNoteDialog }),
 }));
 
-vi.mock("~/sidebar/timeline/upcoming-meeting", () => ({
-  useSidebarUpcomingMeetingStatus: () => null,
-}));
-
 vi.mock("~/store/zustand/tabs", () => {
   const getState = () => ({
     canGoBack: false,
@@ -142,7 +138,7 @@ describe("WindowsTitleBar", () => {
   });
 
   it("closes an open chat from the title bar back button first", () => {
-    mocks.currentTab = { type: "calendar" };
+    mocks.currentTab = { type: "contacts" };
     mocks.chatMode = "Floating";
 
     render(<WindowsTitleBar showSidebarTimelineChrome={false} />);

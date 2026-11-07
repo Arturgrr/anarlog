@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
@@ -61,6 +62,6 @@ export function formatTranscriptExportSegments(
   segments: Array<{ speaker: string | null; text: string }>,
 ) {
   return segments
-    .map((segment) => `${segment.speaker ?? "Speaker"}: ${segment.text}`)
+    .map((segment) => `${segment.speaker ?? t`Speaker`}: ${segment.text}`)
     .join("\n\n");
 }

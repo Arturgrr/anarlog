@@ -1,4 +1,12 @@
-import { Component, Fragment, type ErrorInfo, type ReactNode } from "react";
+import {
+  Component,
+  Fragment,
+  type ContextType,
+  type ErrorInfo,
+  type ReactNode,
+} from "react";
+
+import { EditorLabelsContext } from "./labels";
 
 type EditorErrorBoundaryProps = {
   children: ReactNode;
@@ -17,6 +25,9 @@ export class EditorErrorBoundary extends Component<
   EditorErrorBoundaryProps,
   EditorErrorBoundaryState
 > {
+  static contextType = EditorLabelsContext;
+  declare context: ContextType<typeof EditorLabelsContext>;
+
   constructor(props: EditorErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, recoveryAttempts: 0, recoveryKey: 0 };
@@ -65,15 +76,13 @@ export class EditorErrorBoundary extends Component<
           role="alert"
           className="border-border bg-muted text-muted-foreground flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
         >
-          <span>
-            The editor failed to render. Your recording is still running.
-          </span>
+          <span>{this.context.editorFailed}</span>
           <button
             type="button"
             onClick={this.retry}
             className="border-border bg-card text-muted-foreground hover:bg-accent shrink-0 rounded-md border px-2 py-1 text-xs font-medium"
           >
-            Reload editor
+            {this.context.reloadEditor}
           </button>
         </div>
       );

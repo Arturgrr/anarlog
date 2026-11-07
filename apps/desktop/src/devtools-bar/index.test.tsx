@@ -5,19 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   stopDevtoolsMetrics: vi.fn(),
-  identifier: "com.hyprnote.staging",
+  identifier: "com.arturgrr.librelog.staging",
   outlinesEnabled: true,
   topComponents: [] as Array<{ name: string; count: number }>,
-  session: { user: { id: "user-1" } } as object | null,
-  billing: {
-    isReady: true,
-    plan: "trial" as "free" | "trial" | "pro",
-    isLite: false,
-    trialDaysRemaining: 12 as number | null,
-    subscriptionStatus: "trialing",
-    hasPaymentMethod: false,
-    entitlements: ["pro"],
-  },
   setRenderOutlinesEnabled: vi.fn(),
   runAction: vi.fn(),
   copyDiagnostics: vi.fn(),
@@ -90,14 +80,6 @@ vi.mock("./menu", () => ({
   }) => <div data-hint={description}>{children}</div>,
 }));
 
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: mocks.session }),
-}));
-
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => mocks.billing,
-}));
-
 vi.mock("./actions", () => ({
   DEVTOOLS_MENU: [
     {
@@ -118,10 +100,7 @@ vi.mock("./actions", () => ({
       ],
     },
   ],
-  useDevtoolsActions: () => ({
-    dialogs: <div data-testid="devtools-dialogs" />,
-    run: mocks.runAction,
-  }),
+  useDevtoolsActions: () => mocks.runAction,
 }));
 
 vi.mock("./quick-settings", () => ({
@@ -167,15 +146,12 @@ function renderBar() {
 describe("DevtoolsStatusBar", () => {
   beforeEach(() => {
     localStorage.clear();
-    mocks.identifier = "com.hyprnote.staging";
+    mocks.identifier = "com.arturgrr.librelog.staging";
     vi.mocked(getIdentifier).mockImplementation(() =>
       Promise.resolve(mocks.identifier),
     );
     mocks.outlinesEnabled = true;
     mocks.topComponents = [];
-    mocks.session = { user: { id: "user-1" } };
-    mocks.billing.plan = "trial";
-    mocks.billing.trialDaysRemaining = 12;
     vi.mocked(commands.showDevtool).mockResolvedValue(true);
     resetDevtoolsMetrics();
     useDevtoolsMetrics.setState({

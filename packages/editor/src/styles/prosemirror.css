@@ -8,7 +8,6 @@
 @import "./prosemirror/nodes/hashtag.css";
 @import "./prosemirror/nodes/comment-anchor.css";
 
-@import "./prosemirror/dark.css";
 @import "./prosemirror/mention.css";
 
 /* Last so note surfaces win specificity ties against the shared rules. */
@@ -23,10 +22,10 @@
   align-items: center;
   box-sizing: border-box;
   height: 1.25rem;
-  border: 1px solid hsl(var(--border));
-  border-radius: 9999px;
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  border: 0.5px solid var(--border, #0000001a);
+  border-radius: 2px;
+  background: var(--layer-2, #f2f2f2);
+  color: var(--muted-foreground, #5c5c5c);
   padding: 0 0.45rem;
   font-size: 0.75rem;
   font-weight: 500;
@@ -36,14 +35,14 @@
 }
 
 .ProseMirror .prompt-token.ProseMirror-selectednode {
-  outline: 2px solid hsl(var(--ring));
+  outline: 2px solid var(--ring, #5c5c5c);
   outline-offset: 1px;
 }
 
 .ProseMirror .is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: #e5e5e5;
+  color: var(--text-faint, #808080);
   pointer-events: none;
   height: 0;
 }
@@ -51,7 +50,7 @@
 .ProseMirror .is-empty::before {
   content: attr(data-placeholder);
   float: left;
-  color: #e5e5e5;
+  color: var(--text-faint, #808080);
   pointer-events: none;
   height: 0;
 }
@@ -69,5 +68,5 @@
   pointer-events: auto;
   user-select: none;
   height: 0;
-  color: #e5e5e5;
+  color: var(--text-faint, #808080);
 }

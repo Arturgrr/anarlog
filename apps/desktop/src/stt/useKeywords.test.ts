@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const execute = vi.hoisted(() => vi.fn());
@@ -19,6 +20,10 @@ import {
   extractKeywordsFromMarkdown,
   getSessionKeywords,
 } from "./useKeywords";
+
+const { DatabaseSync } = createRequire(import.meta.url)(
+  "node:sqlite",
+) as typeof import("node:sqlite");
 
 beforeEach(() => {
   execute.mockReset();
@@ -128,26 +133,13 @@ Next steps: testing and validation of the algorithms
 });
 
 describe("buildKeywordSourceText", () => {
-  it("includes session note, title, and event metadata", () => {
+  it("includes the session note and title", () => {
     expect(
       buildKeywordSourceText({
         rawMd: "Discuss product launch",
         title: "Erebor sync",
-        eventJson: JSON.stringify({
-          title: "OpenWorld review",
-          description: "Airborne Brothers follow-up",
-          location: "Zoom",
-        }),
       }),
-    ).toBe(
-      [
-        "Discuss product launch",
-        "Erebor sync",
-        "OpenWorld review",
-        "Airborne Brothers follow-up",
-        "Zoom",
-      ].join("\n"),
-    );
+    ).toBe(["Discuss product launch", "Erebor sync"].join("\n"));
   });
 });
 
@@ -157,55 +149,79 @@ describe("getSessionKeywords", () => {
       {
         raw_md: "Discuss #Launch and production systems",
         title: "Erebor sync",
-        event_json: JSON.stringify({
-          title: "OpenWorld review",
-          description: "Airborne Brothers follow-up",
-          location: "Zoom",
-        }),
         participant_names_json: "[]",
-        event_participants_json: "[]",
       },
     ]);
 
     await expect(
       getSessionKeywords({
         sessionId: "session-1",
-        dictionaryTerms: ["Anarlog"],
+        dictionaryTerms: ["Librelog"],
       }),
-    ).resolves.toEqual(expect.arrayContaining(["Anarlog", "Launch"]));
+    ).resolves.toEqual(expect.arrayContaining(["Librelog", "Launch"]));
   });
 
-  it("prioritizes mapped participants and attached event attendees", async () => {
+  it("prioritizes mapped participants", async () => {
     execute.mockResolvedValue([
       {
         raw_md: "Discuss #Launch and production systems",
         title: "Erebor sync",
-        event_json: JSON.stringify({
-          title: "OpenWorld review",
-          description: "Airborne Brothers follow-up",
-          location: "Zoom",
-        }),
-        participant_names_json: JSON.stringify(["Alice Kim"]),
-        event_participants_json: JSON.stringify([
-          { name: "Alice Kim", email: "alice@example.com" },
-          { name: "Mina Park", email: "mina@example.com" },
-          {
-            name: "John Jeong",
-            email: "john@example.com",
-            is_current_user: true,
-          },
-        ]),
+        participant_names_json: JSON.stringify(["Alice Kim", "Mina Park"]),
       },
     ]);
 
     const result = await getSessionKeywords({
       sessionId: "session-1",
-      dictionaryTerms: ["Anarlog"],
+      dictionaryTerms: ["Librelog"],
     });
 
-    expect(result.slice(0, 3)).toEqual(["Alice Kim", "Mina Park", "Anarlog"]);
+    expect(result.slice(0, 3)).toEqual(["Alice Kim", "Mina Park", "Librelog"]);
     expect(result).toEqual(expect.arrayContaining(["Launch"]));
-    expect(result).not.toContain("John Jeong");
+  });
+
+  it("never sends the local user's name as a transcription keyword", async () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec(`
+        CREATE TABLE sessions (
+          id TEXT, owner_user_id TEXT, title TEXT, event_json TEXT,
+          event_id TEXT, deleted_at TEXT
+        );
+        CREATE TABLE session_documents (
+          id TEXT, kind TEXT, body TEXT, deleted_at TEXT
+        );
+        CREATE TABLE session_participants (
+          id TEXT, session_id TEXT, human_id TEXT, display_name TEXT,
+          source TEXT, deleted_at TEXT
+        );
+        CREATE TABLE humans (id TEXT, name TEXT, deleted_at TEXT);
+        CREATE TABLE events (
+          id TEXT, tracking_id_event TEXT, calendar_id TEXT,
+          participants_json TEXT, started_at TEXT, deleted_at TEXT
+        );
+        INSERT INTO sessions VALUES
+          ('session-1', 'owner-1', 'Sync', '{}', '', NULL);
+        INSERT INTO humans VALUES
+          ('owner-1', 'Ada Owner', NULL),
+          ('human-1', 'Alice Kim', NULL);
+        INSERT INTO session_participants VALUES
+          ('mapping-self', 'session-1', 'owner-1', 'Ada Owner', 'manual', NULL),
+          ('mapping-1', 'session-1', 'human-1', '', 'manual', NULL);
+      `);
+      execute.mockImplementationOnce((sql: string, params: unknown[]) =>
+        Promise.resolve(db.prepare(sql).all(...(params as string[]))),
+      );
+
+      const result = await getSessionKeywords({
+        sessionId: "session-1",
+        dictionaryTerms: [],
+      });
+
+      expect(result).toContain("Alice Kim");
+      expect(result).not.toContain("Ada Owner");
+    } finally {
+      db.close();
+    }
   });
 });
 
@@ -214,9 +230,7 @@ describe("buildKeywords", () => {
     const result = buildKeywords({
       rawMd: "",
       title: "",
-      eventJson: "",
-      sessionParticipantTerms: ["Alice Kim"],
-      eventParticipantTerms: ["alice kim", "Mina Park"],
+      sessionParticipantTerms: ["Alice Kim", "alice kim", "Mina Park"],
       dictionaryTerms: Array.from(
         { length: 60 },
         (_, index) => `Term ${index}`,
@@ -238,13 +252,13 @@ describe("dictionary term helpers", () => {
   it.each([
     {
       name: "parses stored JSON dictionary terms",
-      run: () => parseDictionaryTermsJson(JSON.stringify(["Anarlog", "Char"])),
-      expected: ["Anarlog", "Char"],
+      run: () => parseDictionaryTermsJson(JSON.stringify(["Librelog", "Char"])),
+      expected: ["Librelog", "Char"],
     },
     {
       name: "parses an array payload and drops duplicate spellings",
-      run: () => parseDictionaryTermsJson(["Anarlog", " anarlog "]),
-      expected: ["Anarlog"],
+      run: () => parseDictionaryTermsJson(["Librelog", " librelog "]),
+      expected: ["Librelog"],
     },
     {
       name: "returns no terms for malformed JSON",
@@ -254,21 +268,21 @@ describe("dictionary term helpers", () => {
     {
       name: "parses newline and comma separated terms",
       run: () =>
-        parseDictionaryTermsText("Anarlog\nFastConformer, Parakeet TDT"),
-      expected: ["Anarlog", "FastConformer", "Parakeet TDT"],
+        parseDictionaryTermsText("Librelog\nFastConformer, Parakeet TDT"),
+      expected: ["Librelog", "FastConformer", "Parakeet TDT"],
     },
     {
       name: "normalizes duplicate terms while preserving first spelling",
-      run: () => normalizeKeywordList(["Anarlog", " anarlog ", "Parakeet"]),
-      expected: ["Anarlog", "Parakeet"],
+      run: () => normalizeKeywordList(["Librelog", " librelog ", "Parakeet"]),
+      expected: ["Librelog", "Parakeet"],
     },
   ])("$name", ({ run, expected }) => {
     expect(run()).toEqual(expected);
   });
 
   it("formats stored terms one per line", () => {
-    expect(formatDictionaryTerms(["Anarlog", "Parakeet TDT"])).toBe(
-      "Anarlog\nParakeet TDT",
+    expect(formatDictionaryTerms(["Librelog", "Parakeet TDT"])).toBe(
+      "Librelog\nParakeet TDT",
     );
   });
 });

@@ -167,21 +167,6 @@ mod tests {
                 "wss://stt-rt.soniox.com/transcribe-websocket",
                 vec![],
             ),
-            (
-                "https://api.anarlog.so?provider=soniox",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "soniox")],
-            ),
-            (
-                "https://api.anarlog.so/listen?provider=soniox",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "soniox")],
-            ),
-            (
-                "http://localhost:8787/listen?provider=soniox",
-                "ws://localhost:8787/listen",
-                vec![("provider", "soniox")],
-            ),
         ];
 
         for (input, expected_url, expected_params) in cases {
@@ -191,7 +176,7 @@ mod tests {
                 params,
                 expected_params
                     .into_iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .map(|(k, v): (&str, &str)| (k.to_string(), v.to_string()))
                     .collect::<Vec<_>>(),
                 "input: {}",
                 input

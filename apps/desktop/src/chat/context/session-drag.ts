@@ -1,6 +1,8 @@
+import { t } from "@lingui/core/macro";
+
 import type { ContextRef } from "./entities";
 
-const SESSION_CONTEXT_DRAG_TYPE = "application/x-anarlog-session-context";
+const SESSION_CONTEXT_DRAG_TYPE = "application/x-librelog-session-context";
 
 type SessionDragPayload = {
   sessionId: string;
@@ -34,7 +36,7 @@ export const writeSessionContextDragData = (
   sessionId: string,
   fallbackText: string,
 ) => {
-  const title = fallbackText.trim() || "Untitled";
+  const title = fallbackText.trim() || t`Untitled`;
 
   dataTransfer.effectAllowed = "copy";
   dataTransfer.setData(
@@ -92,6 +94,6 @@ export const readSessionMentionDragData = (
 
   return {
     id: payload.sessionId,
-    label: payload.title ?? "Untitled",
+    label: payload.title ?? t`Untitled`,
   };
 };

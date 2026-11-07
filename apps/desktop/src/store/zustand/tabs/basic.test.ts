@@ -138,39 +138,9 @@ describe("Basic Tab Actions", () => {
       state: {
         view: { type: "enhanced", id: "summary-1" },
         autoStart: true,
-        scheduledAutoStart: null,
       },
     });
     expect(useTabs.getState().tabs).toHaveLength(1);
-  });
-
-  test("shared-note tabs are distinct, idempotent, and not pinnable", () => {
-    useTabs.getState().openNew({ type: "shared_sessions", id: "share-1" });
-    useTabs.getState().openNew({ type: "shared_sessions", id: "share-1" });
-
-    const tab = useTabs.getState().currentTab!;
-    expect(useTabs.getState().tabs).toHaveLength(1);
-    expect(tab).toMatchObject({
-      type: "shared_sessions",
-      id: "share-1",
-      pinned: false,
-    });
-
-    useTabs.getState().pin(tab);
-    expect(useTabs.getState().currentTab?.pinned).toBe(false);
-  });
-
-  test("ephemeral shared-note previews are not pinnable", () => {
-    useTabs.getState().openNew({
-      type: "shared_note_preview",
-      id: "13697a87-f69b-456d-8679-4202d4f5d498",
-    });
-
-    const tab = useTabs.getState().currentTab!;
-    useTabs.getState().pin(tab);
-
-    expect(tab.type).toBe("shared_note_preview");
-    expect(useTabs.getState().currentTab?.pinned).toBe(false);
   });
 
   test("openNew reuses contacts tab and updates the selected entity", () => {
@@ -249,7 +219,7 @@ describe("Basic Tab Actions", () => {
     });
   });
 
-  test.each(["calendar", "contacts", "templates"] as const)(
+  test.each(["contacts", "templates"] as const)(
     "openNew tracks where %s was opened from",
     (type) => {
       useTabs.getState().openNew({ type: "settings" });
@@ -392,11 +362,14 @@ describe("Basic Tab Actions", () => {
   test.each([
     [undefined, "app"],
     ["lab", "app"],
-    ["data", "imports"],
+    ["data", "app"],
+    ["imports", "app"],
     ["personalization", "dictionary"],
     ["audio", "meetings"],
-    ["billing", "billing"],
-    ["referrals", "referrals"],
+    ["billing", "app"],
+    ["referrals", "app"],
+    ["team", "app"],
+    ["crm", "app"],
   ] as const)(
     "openNew normalizes settings tab %s to %s",
     (requested, expected) => {

@@ -1,9 +1,4 @@
-import { platform } from "@tauri-apps/plugin-os";
-
 import { cn } from "@anlg/utils";
-
-import { SyncProvider } from "~/calendar/components/context";
-import { usesWindowsStyleTitleBar } from "~/shared/hooks/useWindowControlsGutter";
 
 export type MainSurfaceChrome = "default" | "top" | "top-borderless" | "left";
 
@@ -16,51 +11,37 @@ export function MainShellScaffold({
   edgeToEdge?: boolean;
   mainSurfaceChrome?: MainSurfaceChrome;
 }) {
-  const runtimePlatform = platform();
-  const isMacos = runtimePlatform === "macos";
-  const hasCustomTitleBar = usesWindowsStyleTitleBar();
   const resolvedMainSurfaceChrome =
     mainSurfaceChrome ?? (edgeToEdge ? "top" : "default");
-  const hasTopMainSurfaceChrome =
+  // The content panel floats on the window chrome with an 8px gutter; rows
+  // that already reserve a top chrome strip skip the top gutter. With the
+  // sidebar collapsed the panel's own header shares the traffic-light row, so
+  // the panel fills the window to keep that row on the traffic lights' line.
+  const hasTopChromeRow =
     resolvedMainSurfaceChrome === "top" ||
-    resolvedMainSurfaceChrome === "top-borderless";
+    resolvedMainSurfaceChrome === "default";
+  const flush = edgeToEdge || resolvedMainSurfaceChrome === "top-borderless";
 
   return (
-    <SyncProvider>
-      <div
-        className={cn([
-          "bg-background flex h-full gap-1 overflow-hidden",
-          !hasTopMainSurfaceChrome && "pl-1",
-          hasTopMainSurfaceChrome && [
-            isMacos && "[&_[data-chat-floating-anchor]]:rounded-t-xl",
-            "[&_[data-chat-floating-anchor]]:rounded-b-none",
-            "[&_[data-chat-floating-anchor]]:border-x-0",
-            resolvedMainSurfaceChrome === "top" || hasCustomTitleBar
-              ? "[&_[data-chat-floating-anchor]]:border-t"
-              : "[&_[data-chat-floating-anchor]]:!border-t-0",
-            "[&_[data-chat-floating-anchor]]:border-b-0",
-          ],
-          resolvedMainSurfaceChrome === "left" && [
-            isMacos && "[&_[data-chat-floating-anchor]]:rounded-l-xl",
-            !isMacos && "[&_[data-chat-floating-anchor]]:rounded-tl-xl",
-            "[&_[data-chat-floating-anchor]]:rounded-r-none",
-            hasCustomTitleBar
-              ? [
-                  "[&_[data-chat-floating-anchor]]:border-t",
-                  "[&_[data-chat-floating-anchor]]:border-b-0",
-                ]
-              : "[&_[data-chat-floating-anchor]]:border-y-0",
-            "[&_[data-chat-floating-anchor]]:border-r-0",
-            "[&_[data-chat-floating-anchor]]:border-l",
-          ],
-          hasTopMainSurfaceChrome &&
-            !isMacos &&
-            "[&_[data-chat-floating-anchor]]:rounded-t-xl",
-        ])}
-        data-testid="main-app-shell"
-      >
-        {children}
-      </div>
-    </SyncProvider>
+    <div
+      className={cn([
+        "bg-background flex h-full overflow-hidden",
+        flush
+          ? [
+              "[&_[data-chat-floating-anchor]]:rounded-none",
+              "[&_[data-chat-floating-anchor]]:border-0",
+            ]
+          : [
+              "[&_[data-chat-floating-anchor]]:mr-2",
+              "[&_[data-chat-floating-anchor]]:mb-2",
+              !hasTopChromeRow && "[&_[data-chat-floating-anchor]]:mt-2",
+              resolvedMainSurfaceChrome !== "left" &&
+                "[&_[data-chat-floating-anchor]]:ml-2",
+            ],
+      ])}
+      data-testid="main-app-shell"
+    >
+      {children}
+    </div>
   );
 }

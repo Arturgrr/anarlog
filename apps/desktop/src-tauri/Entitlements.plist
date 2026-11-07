@@ -4,9 +4,8 @@
 <dict>
     <key>com.apple.security.device.audio-input</key>
     <true/>
+    <!-- Apple Reminders reads through EventKit, which needs the calendars entitlement. -->
     <key>com.apple.security.personal-information.calendars</key>
-    <true/>
-    <key>com.apple.security.personal-information.addressbook</key>
     <true/>
     <key>com.apple.security.cs.allow-jit</key>
     <true/>

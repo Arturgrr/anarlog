@@ -41,9 +41,7 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(
-    Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct ListMeetingsInput {
     #[schemars(description = "Case-insensitive title or meeting id substring")]
@@ -62,9 +60,7 @@ pub struct ListMeetingsInput {
     pub offset: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct ListFoldersInput {
     #[schemars(description = "Case-insensitive folder path substring")]
@@ -76,21 +72,17 @@ pub struct ListFoldersInput {
     pub offset: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct GetMeetingInput {
-    #[schemars(description = "Anarlog meeting id")]
+    #[schemars(description = "Librelog meeting id")]
     pub meeting_id: String,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct GetMeetingTranscriptInput {
-    #[schemars(description = "Anarlog meeting id")]
+    #[schemars(description = "Librelog meeting id")]
     pub meeting_id: String,
     #[schemars(description = "Word offset; defaults to 0")]
     pub offset: Option<u32>,
@@ -99,9 +91,7 @@ pub struct GetMeetingTranscriptInput {
     pub limit: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct GetRecurringMeetingHistoryInput {
     #[schemars(description = "A meeting id used to resolve its recurring series")]
@@ -113,9 +103,7 @@ pub struct GetRecurringMeetingHistoryInput {
     pub offset: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Pagination {
     pub offset: u32,
@@ -125,9 +113,7 @@ pub struct Pagination {
     pub next_offset: Option<u32>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct MeetingListItem {
     pub id: String,
@@ -144,18 +130,14 @@ pub struct MeetingListItem {
     pub folder_path: Option<String>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct MeetingPage {
     pub meetings: Vec<MeetingListItem>,
     pub pagination: Pagination,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Folder {
     /// Slash-separated folder path used for filtering, such as `Projects/Launch`.
@@ -166,16 +148,14 @@ pub struct Folder {
     pub parent_path: Option<String>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct FolderPage {
     pub folders: Vec<Folder>,
     pub pagination: Pagination,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct TranscriptPage {
     pub meeting_id: String,
@@ -184,9 +164,7 @@ pub struct TranscriptPage {
     pub pagination: Pagination,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Document {
     pub id: String,
@@ -199,9 +177,7 @@ pub struct Document {
     pub updated_at: String,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Participant {
     pub human_id: String,
@@ -213,9 +189,7 @@ pub struct Participant {
     pub organization_name: String,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct ActionItem {
     pub id: String,
@@ -226,9 +200,7 @@ pub struct ActionItem {
     pub completed_at: Option<String>,
 }
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Meeting {
     pub id: String,
@@ -251,17 +223,7 @@ pub struct Meeting {
     pub action_items: Vec<ActionItem>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    JsonSchema,
-    Type,
-    utoipa::ToSchema,
-    sqlx::FromRow,
-)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, sqlx::FromRow)]
 pub struct RecordingAttachment {
     pub id: String,
     pub relative_path: String,
@@ -271,7 +233,7 @@ pub struct RecordingAttachment {
     pub sha256: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Transcript {
     pub id: String,
@@ -287,7 +249,7 @@ pub struct Transcript {
     pub speaker_hints: Vec<Value>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct MeetingExport {
     #[serde(flatten)]
@@ -304,7 +266,7 @@ pub struct MeetingExport {
     pub speaker_context: Option<Value>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type, utoipa::ToSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Type)]
 #[serde(rename_all = "snake_case")]
 pub struct Speaker {
     pub human_id: String,
@@ -509,7 +471,7 @@ pub async fn get_recurring_meeting_history(
 }
 
 /// Local-only capture metadata. Cloud/API/MCP meeting contracts do not expose
-/// filesystem paths or imported calendar bodies.
+/// filesystem paths or imported event bodies.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct LocalMeetingExport {
     #[serde(flatten)]
@@ -614,12 +576,25 @@ async fn load_speaker_context(pool: &SqlitePool, meeting_id: &str) -> Result<Opt
                 action: "load speaker context",
                 source,
             })?;
-    Ok(metadata_json
+    let Some(mut context) = metadata_json
         .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
         .and_then(|mut metadata| match metadata.get_mut("speaker_context") {
             Some(context) if context.is_object() => Some(context.take()),
             _ => None,
-        }))
+        })
+    else {
+        return Ok(None);
+    };
+    // Older captures stored the local user's own name as `self_names`; exports
+    // never carry it.
+    if let Some(intervals) = context.get_mut("intervals").and_then(Value::as_array_mut) {
+        for interval in intervals {
+            if let Some(self_names) = interval.get_mut("self_names") {
+                *self_names = Value::Array(Vec::new());
+            }
+        }
+    }
+    Ok(Some(context))
 }
 
 async fn load_speakers(
@@ -634,45 +609,56 @@ async fn load_speakers(
     {
         human_ids.push(self_id.clone());
     }
-    if human_ids.is_empty() {
-        return Ok(Vec::new());
-    }
+    let is_self = |human_id: &str| self_human_id.as_deref() == Some(human_id);
+    // The local user is identified by `is_self` only; their name is never read.
+    let named_ids = human_ids
+        .iter()
+        .filter(|human_id| !is_self(human_id))
+        .collect::<Vec<_>>();
 
-    let mut query = sqlx::QueryBuilder::<sqlx::Sqlite>::new(
-        "SELECT id, name FROM humans WHERE deleted_at IS NULL AND id IN (",
-    );
-    let mut separated = query.separated(", ");
-    for id in &human_ids {
-        separated.push_bind(id);
+    let mut names = std::collections::HashMap::new();
+    if !named_ids.is_empty() {
+        let mut query = sqlx::QueryBuilder::<sqlx::Sqlite>::new(
+            "SELECT id, name FROM humans WHERE deleted_at IS NULL AND id IN (",
+        );
+        let mut separated = query.separated(", ");
+        for id in &named_ids {
+            separated.push_bind(*id);
+        }
+        separated.push_unseparated(") ORDER BY id");
+        names = query
+            .build_query_as::<(String, String)>()
+            .fetch_all(pool)
+            .await
+            .map_err(|source| Error::Database {
+                action: "load speakers",
+                source,
+            })?
+            .into_iter()
+            .collect();
     }
-    separated.push_unseparated(") ORDER BY id");
-    let names = query
-        .build_query_as::<(String, String)>()
-        .fetch_all(pool)
-        .await
-        .map_err(|source| Error::Database {
-            action: "load speakers",
-            source,
-        })?
-        .into_iter()
-        .collect::<std::collections::HashMap<_, _>>();
 
     Ok(human_ids
         .into_iter()
         .map(|human_id| {
-            let name = names
-                .get(&human_id)
-                .cloned()
-                .or_else(|| {
-                    meeting
-                        .participants
-                        .iter()
-                        .find(|participant| participant.human_id == human_id)
-                        .map(|participant| participant.display_name.clone())
-                })
-                .unwrap_or_default();
+            let is_self = is_self(&human_id);
+            let name = if is_self {
+                String::new()
+            } else {
+                names
+                    .get(&human_id)
+                    .cloned()
+                    .or_else(|| {
+                        meeting
+                            .participants
+                            .iter()
+                            .find(|participant| participant.human_id == human_id)
+                            .map(|participant| participant.display_name.clone())
+                    })
+                    .unwrap_or_default()
+            };
             Speaker {
-                is_self: self_human_id.as_deref() == Some(human_id.as_str()),
+                is_self,
                 human_id,
                 name,
             }
@@ -1116,11 +1102,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn meeting_export_markdown_labels_speakers() {
+    async fn meeting_export_labels_speakers_without_the_local_user_name() {
         let db = test_db().await;
         sqlx::query(
-            "INSERT INTO sessions (id, title, started_at, owner_user_id)
-             VALUES ('meeting-1', 'Planning', '2026-07-13', 'self-1')",
+            "INSERT INTO sessions (id, title, started_at, owner_user_id, metadata_json)
+             VALUES ('meeting-1', 'Planning', '2026-07-13', 'self-1',
+               '{\"speaker_context\":{\"intervals\":[{\"self_names\":[\"Me\"]}]}}')",
         )
         .execute(db.pool())
         .await
@@ -1170,10 +1157,14 @@ mod tests {
                 },
                 Speaker {
                     human_id: "self-1".to_string(),
-                    name: "Me".to_string(),
+                    name: String::new(),
                     is_self: true,
                 },
             ]
+        );
+        assert_eq!(
+            export.speaker_context,
+            Some(serde_json::json!({"intervals": [{"self_names": []}]}))
         );
         let markdown = export.to_markdown();
         assert!(

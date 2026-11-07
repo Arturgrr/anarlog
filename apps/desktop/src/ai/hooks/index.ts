@@ -5,5 +5,4 @@ export {
   useLLMConnection,
   useLLMConnectionStatus,
 } from "./useLLMConnection";
-export { useModelMetadata } from "./useModelMetadata";
 export { useTitleGenerating } from "./useTitleGenerating";

@@ -2,7 +2,6 @@
 description = "Default permissions for the plugin"
 permissions = [
   "allow-create-session",
-  "allow-create-session-for-event",
   "allow-soft-delete-session",
   "allow-restore-deleted-session",
   "allow-add-session-participant",
@@ -15,7 +14,6 @@ permissions = [
   "allow-catalog-note-attachment",
   "allow-catalog-session-audio",
   "allow-mark-session-audio-transcription-complete",
-  "allow-set-attachment-cloud-sync-enabled",
   "allow-tombstone-session-audio",
   "allow-mark-session-audio-absent",
   "allow-catalog-folder-material",

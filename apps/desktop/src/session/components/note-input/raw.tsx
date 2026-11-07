@@ -9,7 +9,6 @@ import {
   type NoteEditorRef,
   normalizePortableAttachmentUrls,
 } from "@anlg/editor/note";
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { Plus } from "@anlg/ui/components/icons";
 import { cn } from "@anlg/utils";
 
@@ -19,19 +18,16 @@ import { useNoteFileHandlerConfig } from "./file-handler";
 import { MeetingChatHighlights } from "./meeting-chat-highlights";
 import { MeetingScreenGallery } from "./meeting-screen-gallery";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { useAudioPlayer } from "~/audio-player";
-import { useSessionEventParticipants } from "~/calendar/queries";
 import { AppLinkView } from "~/editor-bridge/app-link-view";
 import { useMentionConfig } from "~/editor-bridge/mention-config";
 import { openEditorLink } from "~/editor-bridge/open-editor-link";
 import { sessionMentionDropConfig } from "~/editor-bridge/session-mention-drop";
 import { SessionNodeView } from "~/editor-bridge/session-view";
-import { useSessionCommentAnchors } from "~/session-sharing/comment-anchors";
 import { useCanShowTranscript } from "~/session/components/shared";
 import { useAttachmentResolver } from "~/session/hooks/useAttachmentResolver";
 import { useCreatePreMeetingBrief } from "~/session/hooks/useCreatePreMeetingBrief";
-import { useUpdateSession } from "~/session/queries";
+import { useSessionParticipants, useUpdateSession } from "~/session/queries";
 import type { AppliedTemplateSnapshot } from "~/session/queries/types";
 import { removeDocumentTitle } from "~/session/title-content";
 import { useListener } from "~/stt/contexts";
@@ -86,8 +82,6 @@ export const RawEditor = forwardRef<
     sessionId: string;
     rawMd: string;
     sessionTitle: string;
-    eventTitle?: string;
-    eventDescription?: string;
     className?: string;
     onNavigateToTitle?: (pixelWidth?: number) => void;
     syncTasks?: boolean;
@@ -101,8 +95,6 @@ export const RawEditor = forwardRef<
       sessionId,
       rawMd,
       sessionTitle,
-      eventTitle,
-      eventDescription,
       className,
       onNavigateToTitle,
       syncTasks = true,
@@ -170,20 +162,6 @@ export const RawEditor = forwardRef<
     const pendingTemplateSnapshotRef = useRef<
       AppliedTemplateSnapshot | undefined
     >(undefined);
-    const hasTrackedWriteRef = useRef(false);
-    const trackedSessionIdRef = useRef(sessionId);
-    if (trackedSessionIdRef.current !== sessionId) {
-      trackedSessionIdRef.current = sessionId;
-      hasTrackedWriteRef.current = false;
-    }
-
-    const hasNonEmptyText = useCallback(
-      (node?: JSONContent): boolean =>
-        !!node?.text?.trim() ||
-        !!node?.content?.some((child: JSONContent) => hasNonEmptyText(child)),
-      [],
-    );
-
     const handleChange = useCallback(
       (input: JSONContent) => {
         const templateId = pendingTemplateIdRef.current;
@@ -195,16 +173,8 @@ export const RawEditor = forwardRef<
             console.error("[raw-editor] failed to persist note", error);
           },
         );
-
-        if (!hasTrackedWriteRef.current) {
-          const hasContent = hasNonEmptyText(input);
-          if (hasContent) {
-            hasTrackedWriteRef.current = true;
-            void trackNoteEdited();
-          }
-        }
       },
-      [persistChange, hasNonEmptyText],
+      [persistChange],
     );
 
     const handleDocumentChange = useCallback(
@@ -282,13 +252,9 @@ export const RawEditor = forwardRef<
       };
       editor.commands.replaceContent(nextContent);
       editor.flushPendingChanges();
-      trackAnalyticsEvent("template_applied", {
-        entry_point: "memo",
-      });
     }, []);
 
     const mentionConfig = useMentionConfig();
-    const commentAnchors = useSessionCommentAnchors(sessionId);
     // Stable identity: NoteEditor keys whole-document memos off this.
     const taskSource = useMemo(
       () =>
@@ -328,15 +294,8 @@ export const RawEditor = forwardRef<
               extraNodeViews={extraNodeViews}
               showFormatToolbar={showFormatToolbar}
               enforceTitleHeading={false}
-              commentAnchorsEnabled
-              onViewReady={(view) => {
-                commentAnchors.onViewReady(view);
-                onViewReady?.(view);
-              }}
-              onViewDisposed={(view) => {
-                commentAnchors.onViewDisposed(view);
-                onViewDisposed?.(view);
-              }}
+              onViewReady={onViewReady}
+              onViewDisposed={onViewDisposed}
             />
             {isMemoEmpty && !isGenerating ? (
               <div className="pointer-events-none absolute inset-x-0 top-8 z-10 flex flex-col">
@@ -346,8 +305,7 @@ export const RawEditor = forwardRef<
                 {audioExistsResolved && !canShowTranscript ? (
                   <TemplateEmptyState
                     sessionId={sessionId}
-                    eventTitle={eventTitle ?? sessionTitle}
-                    eventDescription={eventDescription}
+                    title={sessionTitle}
                     onApply={handleApplyTemplate}
                   />
                 ) : null}
@@ -383,12 +341,10 @@ function getSuggestedTemplates(
   templates: UserTemplate[],
   favoriteTemplates: UserTemplate[],
   {
-    eventTitle,
-    eventDescription,
+    title,
     participantCount,
   }: {
-    eventTitle?: string;
-    eventDescription?: string;
+    title: string;
     participantCount: number;
   },
 ) {
@@ -398,9 +354,8 @@ function getSuggestedTemplates(
       !favoriteIds.has(template.id) &&
       template.sections.some((section) => section.title.trim()),
   );
-  const eventText = `${eventTitle ?? ""} ${eventDescription ?? ""}`;
   const contextualIds = contextualTemplateRules
-    .filter((rule) => rule.pattern.test(eventText))
+    .filter((rule) => rule.pattern.test(title))
     .map((rule) => rule.id);
   if (participantCount === 2) {
     contextualIds.push("default-one-on-one-meeting");
@@ -429,19 +384,19 @@ function getSuggestedTemplates(
 
 function TemplateEmptyState({
   sessionId,
-  eventTitle,
-  eventDescription,
+  title,
   onApply,
 }: {
   sessionId: string;
-  eventTitle?: string;
-  eventDescription?: string;
+  title: string;
   onApply: (template: UserTemplate) => void;
 }) {
   const { t } = useLingui();
   const userTemplates = useUserTemplates();
-  const eventParticipants = useSessionEventParticipants(sessionId);
-  const createTemplate = useCreateTemplate("session_note");
+  const participantCount = useSessionParticipants(sessionId).filter(
+    (participant) => participant.source !== "excluded",
+  ).length;
+  const createTemplate = useCreateTemplate();
   const openTemplatesTab = useOpenTemplatesTab();
   const favoriteTemplates = useMemo(
     () => getFavoriteTemplates(userTemplates),
@@ -450,22 +405,15 @@ function TemplateEmptyState({
   const suggestedTemplates = useMemo(
     () =>
       getSuggestedTemplates(userTemplates, favoriteTemplates, {
-        eventTitle,
-        eventDescription,
-        participantCount: eventParticipants.length,
+        title,
+        participantCount,
       }),
-    [
-      eventDescription,
-      eventParticipants.length,
-      eventTitle,
-      favoriteTemplates,
-      userTemplates,
-    ],
+    [favoriteTemplates, participantCount, title, userTemplates],
   );
   const handleCreateTemplate = useCallback(() => {
     void (async () => {
       const templateId = await createTemplate({
-        title: "New Template",
+        title: t`New Template`,
         description: "",
         sections: [],
       });
@@ -475,12 +423,10 @@ function TemplateEmptyState({
 
       openTemplatesTab({
         selectedMineId: templateId,
-        selectedWebIndex: null,
-        isWebMode: false,
         showHomepage: false,
       });
     })();
-  }, [createTemplate, openTemplatesTab]);
+  }, [createTemplate, openTemplatesTab, t]);
 
   return (
     <>
@@ -546,15 +492,4 @@ function TemplateSection({
       ))}
     </>
   );
-}
-
-async function trackNoteEdited() {
-  try {
-    await analyticsCommands.event({
-      event: "note_edited",
-      has_content: true,
-    });
-  } catch (error) {
-    console.error("[raw-editor] failed to record note analytics", error);
-  }
 }

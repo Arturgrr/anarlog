@@ -76,7 +76,7 @@ describe("LocalFileModel", () => {
   });
 
   test("validates and persists a selected whisper.cpp model", async () => {
-    renderWithQueryClient(<LocalFileModel healthStatus={null} />);
+    renderWithQueryClient(<LocalFileModel />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Choose a .bin model" }),
@@ -111,7 +111,7 @@ describe("LocalFileModel", () => {
         "transcribe.cpp GGUF models are not supported yet. Select a whisper.cpp .bin model instead",
     });
 
-    renderWithQueryClient(<LocalFileModel healthStatus={null} />);
+    renderWithQueryClient(<LocalFileModel />);
     fireEvent.click(
       screen.getByRole("button", { name: "Choose a .bin model" }),
     );

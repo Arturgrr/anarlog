@@ -11,13 +11,20 @@
 
 .prosemirror-editor {
   font-variant-ligatures: common-ligatures contextual;
-  font-feature-settings: "liga" 1, "calt" 1;
+  font-feature-settings:
+    "liga" 1,
+    "calt" 1,
+    "cv02",
+    "cv03",
+    "cv04",
+    "cv11",
+    "ss01";
   word-break: break-word;
   overflow-wrap: break-word;
   white-space: pre-wrap;
   hyphens: auto;
   padding-bottom: 24px;
-  caret-color: #374151;
+  caret-color: var(--foreground, #161616);
   min-height: 100%;
 
   :first-child {

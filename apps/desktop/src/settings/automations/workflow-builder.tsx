@@ -14,15 +14,8 @@ import {
 import { toast } from "@anlg/ui/components/ui/toast";
 import { cn } from "@anlg/utils";
 
-import { GoogleDriveConfig, DriveExportResult } from "./google-drive-config";
 import { MarkdownExportOptionsConfig } from "./markdown-export-options";
-import {
-  AutomationLastRunLine,
-  LinearIssuesConfig,
-  MarkdownExportConfig,
-  NotionUpdateConfig,
-  SlackRecapConfig,
-} from "./starter-config";
+import { AutomationLastRunLine, MarkdownExportConfig } from "./starter-config";
 
 import { DEFAULT_MARKDOWN_EXPORT_OPTIONS } from "~/automations/markdown-export";
 import {
@@ -31,7 +24,6 @@ import {
   isWorkflowStepReady,
   type AutomationWorkflow,
   type WorkflowStep,
-  type WorkflowStepType,
   type WorkflowTrigger,
 } from "~/automations/workflows";
 
@@ -54,8 +46,10 @@ export function WorkflowBuilder({
     });
   };
 
-  const addStep = (type: WorkflowStepType) => {
-    update({ steps: [...workflow.steps, createWorkflowStep(type)] });
+  const addStep = () => {
+    update({
+      steps: [...workflow.steps, createWorkflowStep("markdown_export")],
+    });
   };
 
   const removeStep = (stepId: string) => {
@@ -64,7 +58,7 @@ export function WorkflowBuilder({
 
   return (
     <section
-      className="border-border bg-background overflow-hidden rounded-2xl border"
+      className="bg-card shadow-raised overflow-hidden rounded-lg"
       aria-labelledby="workflow-builder-title"
     >
       <div className="border-border flex flex-wrap items-start justify-between gap-3 border-b px-5 py-4">
@@ -104,19 +98,14 @@ export function WorkflowBuilder({
               update({ trigger: value as WorkflowTrigger })
             }
           >
-            <SelectTrigger className="h-8 w-full max-w-xs text-xs">
+            <SelectTrigger className="h-7 w-full max-w-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="note_enhanced">
                 <Trans>After the meeting summary is ready</Trans>
               </SelectItem>
-              <SelectItem
-                value="meeting_completed"
-                disabled={workflow.steps.some(
-                  (step) => step.type === "google_drive_export",
-                )}
-              >
+              <SelectItem value="meeting_completed">
                 <Trans>After the meeting ends</Trans>
               </SelectItem>
             </SelectContent>
@@ -130,52 +119,19 @@ export function WorkflowBuilder({
             </div>
             <WorkflowCard
               kind="action"
-              title={`${t`Then`} ${index + 1}`}
+              title={t`Then ${index + 1}`}
               badge={<Trans>Action</Trans>}
               ready={isWorkflowStepReady(step)}
               onRemove={() => removeStep(step.id)}
             >
-              <Select
-                value={step.type}
-                onValueChange={(value) =>
-                  updateStep(
-                    step.id,
-                    createWorkflowStep(value as WorkflowStepType),
-                  )
-                }
-              >
-                <SelectTrigger className="h-8 w-full max-w-xs text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="slack_recap">
-                    <Trans>Post a recap to Slack</Trans>
-                  </SelectItem>
-                  <SelectItem value="notion_update">
-                    <Trans>Append an update to Notion</Trans>
-                  </SelectItem>
-                  <SelectItem value="linear_issues">
-                    <Trans>Create Linear issues from action items</Trans>
-                  </SelectItem>
-                  <SelectItem
-                    value="google_drive_export"
-                    disabled={workflow.trigger !== "note_enhanced"}
-                  >
-                    <Trans>Save to Google Drive</Trans>
-                  </SelectItem>
-                  <SelectItem value="markdown_export">
-                    <Trans>Export the meeting as Markdown</Trans>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <p className="text-xs">
+                <Trans>Export the meeting as Markdown</Trans>
+              </p>
               <div className="mt-3">
                 <WorkflowStepConfig
                   step={step}
                   onChange={(next) => updateStep(step.id, next)}
                 />
-                {step.type === "google_drive_export" ? (
-                  <DriveExportResult workflow={workflow} step={step} />
-                ) : null}
               </div>
             </WorkflowCard>
           </div>
@@ -185,7 +141,7 @@ export function WorkflowBuilder({
           <ArrowRight className="rotate-90" size={13} />
         </div>
 
-        <AddWorkflowStep onAdd={addStep} trigger={workflow.trigger} />
+        <AddWorkflowStep onAdd={addStep} />
       </div>
 
       <div className="border-border border-t px-5 py-4">
@@ -207,55 +163,21 @@ function WorkflowStepConfig({
   step: WorkflowStep;
   onChange: (step: WorkflowStep) => void;
 }) {
-  if (step.type === "google_drive_export")
-    return <GoogleDriveConfig step={step} onChange={onChange} />;
-  if (step.type === "markdown_export") {
-    return (
-      <>
-        <MarkdownExportConfig
-          value={step.directory}
-          onChange={(directory) => onChange({ ...step, directory })}
-        />
-        <MarkdownExportOptionsConfig
-          options={step.options ?? DEFAULT_MARKDOWN_EXPORT_OPTIONS}
-          onChange={(options) => onChange({ ...step, options })}
-        />
-      </>
-    );
-  }
-  if (step.type === "slack_recap") {
-    return (
-      <SlackRecapConfig
-        value={step.target}
-        onChange={(target) => onChange({ ...step, target })}
-      />
-    );
-  }
-  if (step.type === "linear_issues") {
-    return (
-      <LinearIssuesConfig
-        value={step.target}
-        onChange={(target) => onChange({ ...step, target })}
-      />
-    );
-  }
   return (
-    <NotionUpdateConfig
-      value={step.target}
-      onChange={(target) => onChange({ ...step, target })}
-    />
+    <>
+      <MarkdownExportConfig
+        value={step.directory}
+        onChange={(directory) => onChange({ ...step, directory })}
+      />
+      <MarkdownExportOptionsConfig
+        options={step.options ?? DEFAULT_MARKDOWN_EXPORT_OPTIONS}
+        onChange={(options) => onChange({ ...step, options })}
+      />
+    </>
   );
 }
 
-function AddWorkflowStep({
-  onAdd,
-  trigger,
-}: {
-  onAdd: (type: WorkflowStepType) => void;
-  trigger: WorkflowTrigger;
-}) {
-  const { t } = useLingui();
-
+function AddWorkflowStep({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="border-border bg-muted/20 flex items-center justify-between gap-3 rounded-xl border border-dashed p-4">
       <div>
@@ -266,36 +188,16 @@ function AddWorkflowStep({
           <Trans>Stack another destination. Steps run top to bottom.</Trans>
         </p>
       </div>
-      <Select onValueChange={(value) => onAdd(value as WorkflowStepType)}>
-        <SelectTrigger className="h-8 w-44 shrink-0 text-xs">
-          <span>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-              <Plus size={12} className="shrink-0" />
-              {t`Add step`}
-            </span>
-          </span>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="slack_recap">
-            <Trans>Slack recap</Trans>
-          </SelectItem>
-          <SelectItem value="notion_update">
-            <Trans>Notion update</Trans>
-          </SelectItem>
-          <SelectItem value="linear_issues">
-            <Trans>Linear issues</Trans>
-          </SelectItem>
-          <SelectItem
-            value="google_drive_export"
-            disabled={trigger !== "note_enhanced"}
-          >
-            <Trans>Save to Google Drive</Trans>
-          </SelectItem>
-          <SelectItem value="markdown_export">
-            <Trans>Markdown export</Trans>
-          </SelectItem>
-        </SelectContent>
-      </Select>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="shrink-0"
+        onClick={onAdd}
+      >
+        <Plus size={12} />
+        <Trans>Add step</Trans>
+      </Button>
     </div>
   );
 }
@@ -315,14 +217,16 @@ function WorkflowCard({
   onRemove?: () => void;
   children: React.ReactNode;
 }) {
+  const { t } = useLingui();
+
   return (
     <div className="border-border bg-card flex items-start gap-3 rounded-xl border p-4">
       <span
         className={cn([
           "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
           kind === "trigger"
-            ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-            : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+            ? "bg-contrast text-primary-foreground"
+            : "bg-layer-2 text-foreground",
         ])}
       >
         {kind === "trigger" ? "1" : "+"}
@@ -345,7 +249,7 @@ function WorkflowCard({
               variant="ghost"
               className="text-muted-foreground ml-auto size-7"
               onClick={onRemove}
-              aria-label="Remove step"
+              aria-label={t`Remove step`}
             >
               <Trash size={13} />
             </Button>
@@ -377,7 +281,6 @@ export function useSaveWorkflow() {
               ...next,
               lastRun: existing.lastRun,
               processedSessionIds: existing.processedSessionIds,
-              driveExports: existing.driveExports,
             }
           : next;
         return existing

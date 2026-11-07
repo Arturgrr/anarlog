@@ -28,10 +28,10 @@ function flattenTextContent(node: React.ReactNode): string {
 }
 
 const changelogLinkClassName =
-  "text-blue-600 underline decoration-blue-400/40 underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:decoration-blue-500/50 dark:hover:text-blue-300";
+  "text-foreground decoration-border-strong hover:decoration-foreground underline underline-offset-2";
 
 const changelogHeadingClassName =
-  "mt-4 mb-1 min-h-6 font-semibold text-[#374151] first:mt-0 dark:text-[#e7e5e4]";
+  "text-strong mt-4 mb-1 min-h-6 font-semibold first:mt-0";
 const changelogBodyClassName = "text-foreground";
 
 const baseChangelogComponents = {
@@ -76,15 +76,13 @@ const baseChangelogComponents = {
     </p>
   ),
   strong: ({ children }: { children?: React.ReactNode }) => (
-    <strong className="font-semibold text-[#374151] dark:text-[#e7e5e4]">
-      {children}
-    </strong>
+    <strong className="text-strong font-semibold">{children}</strong>
   ),
   em: ({ children }: { children?: React.ReactNode }) => (
     <em className="italic">{children}</em>
   ),
   code: ({ children }: { children?: React.ReactNode }) => (
-    <code className="rounded-[0.4rem] border border-[#e5e5e5] px-[0.3em] py-[0.15em] align-middle font-mono text-[0.85rem] leading-none text-black dark:border-[#57534e] dark:text-[#e7e5e4]">
+    <code className="border-border bg-layer-2 text-strong rounded-sm border-[0.5px] px-[0.3em] py-[0.15em] align-middle font-mono text-[0.85rem] leading-none">
       {children}
     </code>
   ),
@@ -102,7 +100,7 @@ const baseChangelogComponents = {
     <li className="mb-1">{children}</li>
   ),
   blockquote: ({ children }: { children?: React.ReactNode }) => (
-    <blockquote className="mb-1 border-l-[3px] border-black pl-2 dark:border-[#a8a29e]">
+    <blockquote className="border-border-strong mb-1 border-l-[3px] pl-2">
       {children}
     </blockquote>
   ),
@@ -136,25 +134,16 @@ export const changelogComponents = {
       data-changelog-banner
       data-variant={variant ?? "default"}
       className={cn([
-        "mb-2 rounded-xl border px-5 pt-4 pb-4",
+        "text-foreground mb-2 rounded-lg border px-5 pt-4 pb-4",
         variant === "warning"
-          ? "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
-          : variant === "info"
-            ? "border-blue-300 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100"
-            : "border-border bg-muted text-foreground",
+          ? "border-border-strong bg-layer-2"
+          : "border-border bg-muted",
       ])}
     >
       {title && (
         <div
           data-changelog-banner-title
-          className={cn([
-            "mb-1 text-sm font-semibold",
-            variant === "warning"
-              ? "text-amber-900 dark:text-amber-100"
-              : variant === "info"
-                ? "text-blue-900 dark:text-blue-100"
-                : "text-foreground",
-          ])}
+          className="text-foreground mb-1 text-sm font-semibold"
         >
           {title}
         </div>

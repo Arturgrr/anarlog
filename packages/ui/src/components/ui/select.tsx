@@ -1,13 +1,14 @@
-import type { SmoothCornerOptions } from "@lisse/react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import * as React from "react";
 
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { squircleFocusVisibleClassName } from "@anlg/ui/lib/squircle";
 import { cn } from "@anlg/utils";
 
 import { CaretDown, CaretUp, Check } from "../icons";
-import { appFloatingItemClassName } from "./floating-content";
+import {
+  floatingMenuItemClassName,
+  floatingMenuSurfaceClassName,
+} from "./floating-content";
+import { inputSurfaceClassName } from "./input";
 
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
@@ -15,28 +16,23 @@ const SelectValue = SelectPrimitive.Value;
 
 const SelectTrigger = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
-    corners?: SmoothCornerOptions;
-  }
->(({ className, children, corners, ...props }, ref) => {
-  const squircleRef = useSquircleRef(ref, corners);
-  return (
-    <SelectPrimitive.Trigger
-      ref={squircleRef}
-      className={cn([
-        squircleFocusVisibleClassName,
-        "border-input data-placeholder:text-muted-foreground flex h-9 w-full items-center justify-between rounded-full border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-        className,
-      ])}
-      {...props}
-    >
-      {children}
-      <SelectPrimitive.Icon asChild>
-        <CaretDown className="-mr-1 h-4 w-4 shrink-0 opacity-50" />
-      </SelectPrimitive.Icon>
-    </SelectPrimitive.Trigger>
-  );
-});
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
+>(({ className, children, ...props }, ref) => (
+  <SelectPrimitive.Trigger
+    ref={ref}
+    className={cn([
+      inputSurfaceClassName,
+      "text-ui-compact data-placeholder:text-faint flex h-7 w-full cursor-pointer items-center justify-between gap-1.5 pr-1.5 pl-2 whitespace-nowrap [&>span]:line-clamp-1",
+      className,
+    ])}
+    {...props}
+  >
+    {children}
+    <SelectPrimitive.Icon asChild>
+      <CaretDown className="text-icon-muted size-4 shrink-0" />
+    </SelectPrimitive.Icon>
+  </SelectPrimitive.Trigger>
+));
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 
 const SelectScrollUpButton = React.forwardRef<
@@ -51,7 +47,7 @@ const SelectScrollUpButton = React.forwardRef<
     ])}
     {...props}
   >
-    <CaretUp className="h-4 w-4" />
+    <CaretUp className="text-icon-muted size-4" />
   </SelectPrimitive.ScrollUpButton>
 ));
 SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
@@ -68,7 +64,7 @@ const SelectScrollDownButton = React.forwardRef<
     ])}
     {...props}
   >
-    <CaretDown className="h-4 w-4" />
+    <CaretDown className="text-icon-muted size-4" />
   </SelectPrimitive.ScrollDownButton>
 ));
 SelectScrollDownButton.displayName =
@@ -82,7 +78,8 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn([
-        "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-[18px] border shadow-md",
+        floatingMenuSurfaceClassName,
+        "data-[state=open]:animate-overlay-in relative z-50 max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto p-0",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
         className,
@@ -93,7 +90,7 @@ const SelectContent = React.forwardRef<
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn([
-          "p-1",
+          "p-0.5",
           position === "popper" &&
             "h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width)",
         ])}
@@ -112,7 +109,10 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn(["px-2 py-1.5 text-sm font-semibold", className])}
+    className={cn([
+      "text-small font-ui-medium text-faint px-3 pt-2 pb-1",
+      className,
+    ])}
     {...props}
   />
 ));
@@ -124,16 +124,12 @@ const SelectItem = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Item
     ref={ref}
-    className={cn([
-      "data-highlighted:bg-accent data-highlighted:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50",
-      appFloatingItemClassName,
-      className,
-    ])}
+    className={cn([floatingMenuItemClassName, "w-full pr-7", className])}
     {...props}
   >
-    <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+    <span className="absolute right-1.5 flex size-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
+        <Check className="text-icon size-3.5" />
       </SelectPrimitive.ItemIndicator>
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -147,7 +143,7 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn(["bg-muted -mx-1 my-1 h-px", className])}
+    className={cn(["bg-border-muted -mx-0.5 my-0.5 h-px", className])}
     {...props}
   />
 ));

@@ -8,11 +8,9 @@ function dependencies(): ToolDependencies {
   return {
     search: vi.fn(),
     getContactSearchResults: vi.fn(),
-    getCalendarEventSearchResults: vi.fn(),
     getSessionId: vi.fn(),
     getEnhancedNoteId: vi.fn(),
     openEditTab: vi.fn(),
-    getAuthHeaders: vi.fn(),
   };
 }
 

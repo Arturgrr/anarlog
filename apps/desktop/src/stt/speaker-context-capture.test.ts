@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
   mic: vi.fn(),
   currentDevice: vi.fn(),
   participants: vi.fn(),
-  eventJson: "{}",
 }));
 
 vi.mock("@anlg/plugin-detect", () => ({
@@ -32,10 +31,6 @@ vi.mock("~/db", () => ({
         : [
             {
               title: "John x Alex",
-              name: "John",
-              event_json: mocks.eventJson,
-              owner_user_id: "self",
-              aliases: null,
             },
           ],
   },
@@ -75,14 +70,13 @@ describe("capturing speaker context", () => {
       data: "AirPods Pro",
     });
     mocks.participants.mockResolvedValue([]);
-    mocks.eventJson = "{}";
   });
   afterEach(async () => {
     await stopSpeakerContextCapture("session");
     vi.useRealTimers();
   });
 
-  it("records a joined Meet call without any calendar event or attendees", async () => {
+  it("records a joined Meet call without attendees", async () => {
     startSpeakerContextCapture("session");
     observeSpeakerMicrophone("session", { isolated: true });
     await vi.advanceTimersByTimeAsync(0);
@@ -145,37 +139,6 @@ describe("capturing speaker context", () => {
     startSpeakerContextCapture("session");
     await vi.advanceTimersByTimeAsync(0);
     expect(mocks.context.intervals[0]?.mic_isolated).toBe(true);
-  });
-
-  it("counts a browser holding the microphone toward a scheduled Meet link", async () => {
-    mocks.eventJson = JSON.stringify({
-      meeting_link: "https://meet.google.com/abc-defg-hij",
-    });
-    mocks.inspect.mockResolvedValue({ status: "ok", data: [] });
-    mocks.mic.mockResolvedValue({
-      status: "ok",
-      data: [{ id: "com.google.Chrome", name: "Google Chrome" }],
-    });
-    startSpeakerContextCapture("session");
-    await vi.advanceTimersByTimeAsync(0);
-    expect(mocks.context.intervals[0]).toMatchObject({
-      active_call: false,
-      calendar_call: true,
-    });
-  });
-
-  it("counts Aside holding the microphone toward a scheduled Meet link", async () => {
-    mocks.eventJson = JSON.stringify({
-      meeting_link: "https://meet.google.com/abc-defg-hij",
-    });
-    mocks.inspect.mockResolvedValue({ status: "ok", data: [] });
-    mocks.mic.mockResolvedValue({
-      status: "ok",
-      data: [{ id: "at.studio.AsideBrowser", name: "Aside" }],
-    });
-    startSpeakerContextCapture("session");
-    await vi.advanceTimersByTimeAsync(0);
-    expect(mocks.context.intervals[0]).toMatchObject({ calendar_call: true });
   });
 
   it("closes headset evidence when the actual input changes to a room device", async () => {

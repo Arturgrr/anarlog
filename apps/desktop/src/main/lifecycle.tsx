@@ -1,25 +1,15 @@
 import { useRouteContext } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 
-import { useLanguageModel, useLLMConnection } from "~/ai/hooks";
-import { AttachmentTransferLifecycle } from "~/attachment-sync/lifecycle";
-import { useAuth } from "~/auth";
-import { CloudsyncKeychainRepairToast } from "~/auth/cloudsync-keychain-repair";
-import { searchCalendarEvents } from "~/calendar/queries";
+import { useLanguageModel } from "~/ai/hooks";
 import { useSessionTab } from "~/chat/components/use-session-tab";
 import { buildChatTools } from "~/chat/tools";
-import { CloudApiBackfillLifecycle } from "~/cloud-api/lifecycle";
 import { searchContacts } from "~/contacts/queries";
 import { useRegisterTools } from "~/contexts/tool";
 import { DictationLifecycle } from "~/dictation/lifecycle";
 import { takePendingWelcomeSession } from "~/onboarding/welcome-note";
 import { useSearchEngine } from "~/search/contexts/engine";
 import { initEnhancerService } from "~/services/enhancer";
-import { FolderDefaultAccessRunner } from "~/session-sharing/folder-default-access-runner";
-import { OwnedSharedNotePublisher } from "~/session-sharing/sync";
-import { SharedAttachmentCacheLifecycle } from "~/shared-notes/attachment-cache-lifecycle";
-import { SharedNotePreviewAuthLifecycle } from "~/shared-notes/preview";
-import { DurableSharedNoteCacheSync } from "~/shared-notes/sync";
 import { useConfigValue } from "~/shared/config";
 import { useDesktopTabLifecycle } from "~/shared/desktop-tab-lifecycle";
 import { folderIdForNewNote, useSidebarNotes } from "~/sidebar/note-filter";
@@ -27,7 +17,6 @@ import { useTabs } from "~/store/zustand/tabs";
 import { BatchTranscriptionRecovery } from "~/stt/batch-transcription-recovery";
 import { LiveCaptureRecovery } from "~/stt/live-capture-recovery";
 import { RecordingImportWorker } from "~/stt/recording-import";
-import { ScheduledMeetingAutoStart } from "~/stt/scheduled-auto-start";
 import { MainListenerControlBridge } from "~/stt/window-control";
 
 export function useClassicMainLifecycle() {
@@ -54,18 +43,9 @@ export function useClassicMainLifecycle() {
 export function ClassicMainServices() {
   return (
     <>
-      <AttachmentTransferLifecycle />
-      <CloudsyncKeychainRepairToast />
-      <CloudApiBackfillLifecycle />
-      <DurableSharedNoteCacheSync />
-      <SharedAttachmentCacheLifecycle />
-      <OwnedSharedNotePublisher />
-      <FolderDefaultAccessRunner />
-      <SharedNotePreviewAuthLifecycle />
       <LiveCaptureRecovery />
       <BatchTranscriptionRecovery />
       <RecordingImportWorker />
-      <ScheduledMeetingAutoStart />
       <MainListenerControlBridge />
       <DictationLifecycle />
       <ToolRegistration />
@@ -75,19 +55,15 @@ export function ClassicMainServices() {
 }
 
 function ToolRegistration() {
-  const auth = useAuth();
   const { search } = useSearchEngine();
 
   const getContactSearchResults = searchContacts;
-
-  const getCalendarEventSearchResults = searchCalendarEvents;
 
   const { getSessionId, getEnhancedNoteId } = useSessionTab();
   const getFolderFilter = useCallback(() => {
     const { noteFilter, folderFilter } = useSidebarNotes.getState();
     return folderIdForNewNote(noteFilter, folderFilter) ?? null;
   }, []);
-  const getAuthHeaders = useCallback(() => auth?.getHeaders(), [auth]);
   const openEditTab = useCallback((requestId: string) => {
     useTabs.getState().openNew({ type: "edit", requestId });
   }, []);
@@ -98,22 +74,18 @@ function ToolRegistration() {
       buildChatTools({
         search,
         getContactSearchResults,
-        getCalendarEventSearchResults,
         getSessionId,
         getFolderFilter,
         getEnhancedNoteId,
         openEditTab,
-        getAuthHeaders,
       }),
     [
       search,
       getContactSearchResults,
-      getCalendarEventSearchResults,
       getSessionId,
       getFolderFilter,
       getEnhancedNoteId,
       openEditTab,
-      getAuthHeaders,
     ],
   );
 
@@ -125,14 +97,11 @@ function EnhancerInit() {
     from: "__root__",
   });
 
-  const model = useLanguageModel("enhance");
-  const { conn: llmConn } = useLLMConnection();
+  const model = useLanguageModel();
   const selectedTemplateId = useConfigValue("selected_template_id");
 
   const modelRef = useRef(model);
   modelRef.current = model;
-  const llmConnRef = useRef(llmConn);
-  llmConnRef.current = llmConn;
   const templateIdRef = useRef(selectedTemplateId);
   templateIdRef.current = selectedTemplateId;
 
@@ -142,7 +111,6 @@ function EnhancerInit() {
     const service = initEnhancerService({
       aiTaskStore,
       getModel: () => modelRef.current,
-      getLLMConn: () => llmConnRef.current,
       getSelectedTemplateId: () => templateIdRef.current || undefined,
     });
 

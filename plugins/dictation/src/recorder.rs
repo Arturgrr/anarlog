@@ -14,8 +14,14 @@ use crate::preview::{Preview, PreviewConfig, RecordingUpdate};
 use tauri::ipc::Channel;
 
 const SAMPLE_RATE: u32 = 16_000;
-const CHUNK_SIZE: usize = 1_600;
+/// 20 ms buffers, so the HUD meters the voice as often as Hex does.
+const CHUNK_SIZE: usize = 320;
+/// The live preview streams 100 ms packets, as it always has.
+const PREVIEW_CHUNK_SIZE: usize = 1_600;
 const MAX_RECORDING_SECONDS: u64 = 300;
+
+/// Receives the RMS of each captured buffer.
+pub type Meter = Arc<dyn Fn(f32) + Send + Sync>;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -51,7 +57,7 @@ impl Recorder {
         microphone_device: Option<String>,
         owner: String,
     ) -> Result<(), Error> {
-        self.start_with_feedback(audio, microphone_device, owner, None, None)
+        self.start_with_feedback(audio, microphone_device, owner, None, None, None)
     }
 
     pub fn start_with_feedback(
@@ -61,6 +67,7 @@ impl Recorder {
         owner: String,
         preview: Option<PreviewConfig>,
         updates: Option<Channel<RecordingUpdate>>,
+        meter: Option<Meter>,
     ) -> Result<(), Error> {
         let mut active = self
             .active
@@ -74,7 +81,7 @@ impl Recorder {
             .open_mic_capture(microphone_device, SAMPLE_RATE, CHUNK_SIZE)
             .map_err(|error| Error::Capture(error.to_string()))?;
         let temporary_file = tempfile::Builder::new()
-            .prefix("anarlog-dictation-")
+            .prefix("librelog-dictation-")
             .suffix(".wav")
             .tempfile()
             .map_err(|error| Error::Recording(error.to_string()))?;
@@ -89,14 +96,14 @@ impl Recorder {
         let task_finalize = finalize.clone();
         let task = tauri::async_runtime::spawn(async move {
             let preview = preview
-                .zip(updates.clone())
+                .zip(updates)
                 .map(|(config, updates)| Preview::start(config, updates));
             let result = record_to_file(
                 stream,
                 task_cancellation,
                 &task_path,
                 preview,
-                updates,
+                meter,
                 task_finalize,
             )
             .await;
@@ -184,7 +191,7 @@ async fn record_to_file(
     cancellation: CancellationToken,
     path: &Path,
     mut preview: Option<Preview>,
-    updates: Option<Channel<RecordingUpdate>>,
+    meter: Option<Meter>,
     finalize: Arc<AtomicBool>,
 ) -> Result<RecordedAudio, Error> {
     let specification = hound::WavSpec {
@@ -198,6 +205,7 @@ async fn record_to_file(
     let deadline = tokio::time::sleep(std::time::Duration::from_secs(MAX_RECORDING_SECONDS));
     tokio::pin!(deadline);
     let mut sample_count = 0_u64;
+    let mut pending = Vec::with_capacity(PREVIEW_CHUNK_SIZE);
 
     loop {
         tokio::select! {
@@ -215,15 +223,27 @@ async fn record_to_file(
                         .map_err(|error| Error::Recording(error.to_string()))?;
                 }
                 sample_count += samples.len() as u64;
-                if let Some(updates) = &updates {
-                    let rms = (samples.iter().map(|s| f64::from(*s).powi(2)).sum::<f64>() / samples.len().max(1) as f64).sqrt();
-                    let _ = updates.send(RecordingUpdate::Amplitude { amplitude: (rms * 8.0).clamp(0.0, 1.0) });
-                    if preview.as_ref().is_some_and(|preview| !preview.send(&samples)) {
-                        preview = None;
+                if let Some(meter) = &meter {
+                    meter(crate::events::rms(&samples));
+                }
+                if preview.is_some() {
+                    pending.extend_from_slice(&samples);
+                    if pending.len() >= PREVIEW_CHUNK_SIZE {
+                        if preview.as_ref().is_some_and(|preview| !preview.send(&pending)) {
+                            preview = None;
+                        }
+                        pending.clear();
                     }
                 }
             }
         }
+    }
+    if !pending.is_empty()
+        && preview
+            .as_ref()
+            .is_some_and(|preview| !preview.send(&pending))
+    {
+        preview = None;
     }
 
     writer
@@ -383,6 +403,7 @@ mod tests {
                     params: Default::default(),
                 }),
                 Some(updates),
+                None,
             )
             .unwrap();
         tokio::time::timeout(std::time::Duration::from_secs(1), async {
@@ -396,6 +417,30 @@ mod tests {
         let recorded = recorder.stop("test").await.unwrap();
         assert!(recorded.duration_ms > 0);
         recorder.discard(recorded.file_path).unwrap();
+    }
+
+    /// The HUD's auto level reads raw loudness; the old feed scaled the RMS
+    /// by 8 and pinned ordinary speech at full.
+    #[tokio::test]
+    async fn the_hud_meter_gets_each_buffers_raw_rms() {
+        let levels = Arc::new(Mutex::new(Vec::new()));
+        let heard = levels.clone();
+        let recorder = Recorder::new();
+        recorder
+            .start_with_feedback(
+                Arc::new(TestAudio),
+                None,
+                "test".into(),
+                None,
+                None,
+                Some(Arc::new(move |rms| heard.lock().unwrap().push(rms))),
+            )
+            .unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        recorder.cancel("test").await.unwrap();
+        let levels = levels.lock().unwrap();
+        assert!(!levels.is_empty());
+        assert!(levels.iter().all(|rms| (rms - 0.25).abs() < 1e-6));
     }
 
     #[tokio::test]

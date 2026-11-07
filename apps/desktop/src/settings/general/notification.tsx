@@ -61,10 +61,8 @@ export function NotificationSettingsView() {
 
   const configs = useConfigValues([
     "notification_disabled",
-    "notification_event",
     "notification_detect",
     "notification_summary_complete",
-    "notification_cloudsync_complete",
     "notification_recording",
     "notification_completion_sound",
     "notification_completion_sound_name",
@@ -120,10 +118,8 @@ export function NotificationSettingsView() {
   const form = useForm({
     defaultValues: {
       notification_disabled: configs.notification_disabled,
-      notification_event: configs.notification_event,
       notification_detect: configs.notification_detect,
       notification_summary_complete: configs.notification_summary_complete,
-      notification_cloudsync_complete: configs.notification_cloudsync_complete,
       notification_recording: configs.notification_recording,
       notification_completion_sound: configs.notification_completion_sound,
       notification_completion_sound_name: normalizeCompletionSoundName(
@@ -143,10 +139,8 @@ export function NotificationSettingsView() {
     onSubmit: async ({ value }) => {
       setSettingValues({
         notification_disabled: value.notification_disabled,
-        notification_event: value.notification_event,
         notification_detect: value.notification_detect,
         notification_summary_complete: value.notification_summary_complete,
-        notification_cloudsync_complete: value.notification_cloudsync_complete,
         notification_recording: value.notification_recording,
         notification_completion_sound: value.notification_completion_sound,
         notification_completion_sound_name:
@@ -224,34 +218,6 @@ export function NotificationSettingsView() {
               )}
             </form.Field>
 
-            <form.Field name="notification_cloudsync_complete">
-              {(field) => (
-                <SettingSwitchRow
-                  title={<Trans>Cloud sync complete</Trans>}
-                  description={
-                    <Trans>Show when initial cloud sync finishes.</Trans>
-                  }
-                  checked={field.state.value}
-                  onChange={field.handleChange}
-                  disabled={notificationsDisabled}
-                />
-              )}
-            </form.Field>
-
-            <form.Field name="notification_event">
-              {(field) => (
-                <SettingSwitchRow
-                  title={<Trans>Event notifications</Trans>}
-                  description={
-                    <Trans>Prepare for events with a 5-minute reminder.</Trans>
-                  }
-                  checked={field.state.value}
-                  onChange={field.handleChange}
-                  disabled={notificationsDisabled}
-                />
-              )}
-            </form.Field>
-
             <form.Field name="notification_recording">
               {(field) => (
                 <SettingSwitchRow
@@ -259,7 +225,7 @@ export function NotificationSettingsView() {
                   description={
                     <Trans>
                       Ask before stopping when a meeting may have ended. When
-                      alerts are off, Anarlog keeps listening.
+                      alerts are off, Librelog keeps listening.
                     </Trans>
                   }
                   checked={field.state.value}
@@ -471,8 +437,8 @@ export function NotificationSettingsView() {
                                       tabIndex={0}
                                       aria-expanded={searchOpen}
                                       className={cn([
-                                        "flex min-h-[38px] w-full cursor-text flex-wrap items-center gap-2 rounded-2xl border p-2",
-                                        "focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-hidden",
+                                        "bg-card shadow-button-neutral flex min-h-7 w-full cursor-text flex-wrap items-center gap-2 rounded-md px-2 py-1",
+                                        "focus-visible:outline-ring focus-visible:outline focus-visible:outline-1",
                                       ])}
                                       onKeyDown={(event) => {
                                         if (
@@ -502,7 +468,7 @@ export function NotificationSettingsView() {
                                               ])}
                                               title={
                                                 isDefault
-                                                  ? "default"
+                                                  ? t`Default`
                                                   : undefined
                                               }
                                             >
@@ -610,8 +576,7 @@ export function NotificationSettingsView() {
                 <form.Subscribe
                   selector={(state) =>
                     !state.values.notification_disabled &&
-                    (state.values.notification_event ||
-                      state.values.notification_detect)
+                    state.values.notification_detect
                   }
                 >
                   {(anyNotificationEnabled) => (

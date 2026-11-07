@@ -112,11 +112,7 @@ export function FolderNameDialog({
             >
               <Trans>Cancel</Trans>
             </GlassDialogCancelButton>
-            <Button
-              type="submit"
-              className="h-8 rounded-full px-4 text-xs font-medium shadow-sm"
-              disabled={busy}
-            >
+            <Button type="submit" className="h-7 px-3" disabled={busy}>
               {confirmLabel}
             </Button>
           </DialogFooter>

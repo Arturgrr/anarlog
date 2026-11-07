@@ -270,7 +270,7 @@ pub async fn send_test(
     let _permit = acquire_test_delivery_slot().await?;
     let body = Bytes::from(envelope(
         EVENT_TEST,
-        serde_json::json!({ "message": "This is a test delivery from Anarlog." }),
+        serde_json::json!({ "message": "This is a test delivery from Librelog." }),
     ));
     let delivery_id = format!("dlv_{}", uuid::Uuid::new_v4().simple());
     let status = deliver_once(endpoint, EVENT_TEST, &body, &delivery_id).await;
@@ -348,14 +348,14 @@ async fn deliver_once(
     let response = client
         .post(&endpoint.url)
         .header("content-type", "application/json")
-        .header("x-anarlog-event", event)
-        .header("x-anarlog-delivery", delivery_id)
+        .header("x-librelog-event", event)
+        .header("x-librelog-delivery", delivery_id)
         .header(
-            "x-anarlog-timestamp",
+            "x-librelog-timestamp",
             chrono::Utc::now().timestamp().to_string(),
         )
         .header(
-            "x-anarlog-signature",
+            "x-librelog-signature",
             format!(
                 "sha256={}",
                 sign_payload_bytes(&endpoint.secret, body.as_ref())

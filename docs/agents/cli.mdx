@@ -1,20 +1,19 @@
 ---
 title: "CLI for agents"
-description: "Use structured Anarlog CLI output as an agent-friendly MCP fallback."
+description: "Use structured Librelog CLI output as an agent-friendly alternative to MCP."
 ---
 
 Use the global `--json` flag whenever an agent consumes CLI output.
 
 A successful response contains `schema_version`, `command`, `data`, and optional `pagination`. Read results from `data`. Follow `pagination.next_offset` only when you need another page.
 
-Meeting reads default to the local database. Use `meetings --source cloud` after `anarlog auth login` to read opted-in Cloud snapshots, or `meetings --source auto` to use Cloud only when the local database is absent.
+Meeting reads use the local database on your computer.
 
 ## Resolve meeting context
 
 ```bash
-anarlog --json meetings list --query "weekly planning" --limit 10
-anarlog --json meetings get MEETING_ID
-anarlog --json meetings --source cloud list --query "weekly planning" --limit 10
+librelog --json meetings list --query "weekly planning" --limit 10
+librelog --json meetings get MEETING_ID
 ```
 
 Search is case-insensitive across meeting titles and IDs. If several meetings match, ask the user to choose one.
@@ -22,9 +21,9 @@ Search is case-insensitive across meeting titles and IDs. If several meetings ma
 ## Read the smallest useful surface
 
 ```bash
-anarlog --json meetings note MEETING_ID --kind note
-anarlog --json meetings note MEETING_ID --kind summary
-anarlog --json meetings history MEETING_ID --limit 10 --offset 0
+librelog --json meetings note MEETING_ID --kind note
+librelog --json meetings note MEETING_ID --kind summary
+librelog --json meetings history MEETING_ID --limit 10 --offset 0
 ```
 
 Use `meetings get` when participants or action items matter. Use `meetings note` when note content alone is enough.
@@ -32,10 +31,10 @@ Use `meetings get` when participants or action items matter. Use `meetings note`
 ## Stage an edit
 
 ```bash
-anarlog --json proposals create --meeting MEETING_ID --kind summary --content "Replacement markdown"
-anarlog --json proposals list --meeting MEETING_ID
-anarlog --json proposals show PROPOSAL_ID
-anarlog --json proposals decline PROPOSAL_ID
+librelog --json proposals create --meeting MEETING_ID --kind summary --content "Replacement markdown"
+librelog --json proposals list --meeting MEETING_ID
+librelog --json proposals show PROPOSAL_ID
+librelog --json proposals decline PROPOSAL_ID
 ```
 
 <Note>
@@ -45,15 +44,24 @@ anarlog --json proposals decline PROPOSAL_ID
 ## Transcripts
 
 ```bash
-anarlog --json meetings transcript MEETING_ID --limit 200 --offset 0
+librelog --json meetings transcript MEETING_ID --limit 200 --offset 0
 ```
 
 Transcript limits are measured in words. A page defaults to 200 words and caps at 500. Stop paging once you have enough evidence.
 
+## Import a recording
+
+```bash
+librelog --json meetings import ./call.m4a --title "Customer call" --wait
+librelog --json meetings import-status JOB_ID
+```
+
+The desktop app must be open on the same database. Import only when the user explicitly asks; the desktop transcribes the audio with its configured Transcription provider.
+
 ## Diagnose setup
 
 ```bash
-anarlog --json doctor
+librelog --json doctor
 ```
 
 The report includes the CLI version, resolved database path, read-only connection status, and schema readiness. When `ready` is false, the command still prints the report to standard output and exits with status 1.
@@ -63,9 +71,8 @@ The report includes the CLI version, resolved database path, read-only connectio
 Only export a complete meeting when the user explicitly requests a file:
 
 ```bash
-anarlog meetings export MEETING_ID --format markdown --output meeting.md
-anarlog meetings export MEETING_ID --format json --output meeting.json
-anarlog meetings --source cloud export MEETING_ID --format json --output meeting.json
+librelog meetings export MEETING_ID --format markdown --output meeting.md
+librelog meetings export MEETING_ID --format json --output meeting.json
 ```
 
 <Warning>

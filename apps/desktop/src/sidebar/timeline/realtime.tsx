@@ -1,11 +1,8 @@
-import { forwardRef, useEffect, useMemo, useState } from "react";
+import { forwardRef, useMemo, useState } from "react";
 
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
-import { TZDate, format, safeParseDate } from "@anlg/utils";
+import { TZDate, format } from "@anlg/utils";
 
-import type { TimelineEventsTable, TimelineSessionsTable } from "./utils";
-
-import { getSessionEvent } from "~/session/utils";
 import { useTimeFormat } from "~/shared/hooks/useTimeFormat";
 
 const MINUTE_MS = 60_000;
@@ -13,14 +10,10 @@ const CURRENT_TIME_TICK_OFFSET_MS = 100;
 
 export const CurrentTimeIndicator = forwardRef<
   HTMLDivElement,
-  { timezone?: string; variant?: "seam" | "inside"; progress?: number }
->(function CurrentTimeIndicator(
-  { timezone, variant = "seam", progress = 0.5 },
-  ref,
-) {
+  { timezone?: string }
+>(function CurrentTimeIndicator({ timezone }, ref) {
   const currentTimeMs = useCurrentTimeMs();
   const timeFormat = useTimeFormat();
-  const insideOffset = `${(1 - progress) * 100}%`;
   const label = useMemo(() => {
     const now = timezone
       ? new TZDate(new Date(currentTimeMs), timezone)
@@ -29,25 +22,16 @@ export const CurrentTimeIndicator = forwardRef<
   }, [currentTimeMs, timezone, timeFormat]);
 
   return (
-    <div
-      ref={ref}
-      aria-hidden
-      className={
-        variant === "inside"
-          ? "group absolute inset-x-0 z-30 h-px"
-          : "group relative z-30 h-px"
-      }
-      style={variant === "inside" ? { top: insideOffset } : undefined}
-    >
+    <div ref={ref} aria-hidden className="group relative z-30 h-px">
       <div className="absolute inset-x-0 top-0 -translate-y-1/2">
         <div
           data-sidebar-current-time-line
-          className="absolute top-1/2 right-0 left-0 h-px -translate-y-1/2 bg-red-500/85 dark:bg-red-400/70"
+          className="bg-foreground/70 absolute top-1/2 right-0 left-0 h-px -translate-y-1/2"
         />
         <div className="relative flex h-5 items-center justify-center">
           <div
             data-sidebar-current-time-label
-            className="rounded-full border border-red-500 bg-red-500 px-2 py-0.5 font-mono text-[11px] font-semibold text-white opacity-0 shadow-xs transition-opacity group-hover:opacity-100 dark:border-red-500 dark:bg-red-500 dark:text-white"
+            className="bg-contrast text-primary-foreground shadow-elements rounded-sm px-2 py-0.5 font-mono text-[11px] font-semibold opacity-0 transition-opacity group-hover:opacity-100"
           >
             {label}
           </div>
@@ -116,68 +100,4 @@ function getCurrentTimeTickDelay(
     MINUTE_MS - msIntoMinute + CURRENT_TIME_TICK_OFFSET_MS,
     maxTickDelayMs,
   );
-}
-
-export function useSmartCurrentTime(
-  eventsTable: TimelineEventsTable,
-  sessionsTable: TimelineSessionsTable,
-) {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-    const scheduleNext = () => {
-      const currentTime = Date.now();
-      setNow(currentTime);
-
-      const importantTimes: number[] = [];
-
-      if (eventsTable) {
-        Object.values(eventsTable).forEach((event) => {
-          const startTime = safeParseDate(event.started_at);
-          const endTime = safeParseDate(event.ended_at);
-
-          if (startTime && startTime.getTime() > currentTime) {
-            importantTimes.push(startTime.getTime());
-          }
-          if (endTime && endTime.getTime() > currentTime) {
-            importantTimes.push(endTime.getTime());
-          }
-        });
-      }
-
-      if (sessionsTable) {
-        Object.values(sessionsTable).forEach((session) => {
-          const time = safeParseDate(
-            getSessionEvent(session)?.started_at ?? session.created_at,
-          );
-          if (time && time.getTime() > currentTime) {
-            importantTimes.push(time.getTime());
-          }
-        });
-      }
-
-      let nextUpdateDelay: number;
-      if (importantTimes.length > 0) {
-        const nextTime = Math.min(...importantTimes);
-        const msUntilNext = nextTime - currentTime;
-        nextUpdateDelay = Math.max(100, Math.min(msUntilNext + 100, 60_000));
-      } else {
-        nextUpdateDelay = 60_000;
-      }
-
-      timeoutId = setTimeout(scheduleNext, nextUpdateDelay);
-    };
-
-    scheduleNext();
-
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [eventsTable, sessionsTable]);
-
-  return now;
 }

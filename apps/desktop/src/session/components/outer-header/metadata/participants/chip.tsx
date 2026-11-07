@@ -1,15 +1,9 @@
-import { Trans, useLingui } from "@lingui/react/macro";
+import { useLingui } from "@lingui/react/macro";
 import { useCallback, useState } from "react";
 
-import { CircleNotch, Sparkle, X } from "@anlg/ui/components/icons";
+import { X } from "@anlg/ui/components/icons";
 import { Badge } from "@anlg/ui/components/ui/badge";
 import { Button } from "@anlg/ui/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@anlg/ui/components/ui/tooltip";
-import { cn } from "@anlg/utils";
 
 import {
   removeSessionParticipant,
@@ -18,18 +12,12 @@ import {
 import { useTabs } from "~/store/zustand/tabs/index";
 import { removeHumanSpeakerAssignments } from "~/stt/queries";
 
-export function ParticipantChip({
-  mappingId,
-  enhancingHumanId,
-  onEnhanceContact,
-}: {
-  mappingId: string;
-  enhancingHumanId?: string;
-  onEnhanceContact?: (humanId: string) => void;
-}) {
+export function ParticipantChip({ mappingId }: { mappingId: string }) {
+  const { t } = useLingui();
   const details = useParticipantDetails(mappingId);
 
   const assignedHumanId = details?.humanId;
+  const isSelf = details?.isSelf ?? false;
   const sessionId = details?.sessionId;
   const source = details?.source;
 
@@ -40,56 +28,32 @@ export function ParticipantChip({
   });
 
   const handleClick = useCallback(() => {
-    if (assignedHumanId) {
+    if (assignedHumanId && !isSelf) {
       useTabs.getState().openNew({
         type: "contacts",
         state: { selected: { type: "person", id: assignedHumanId } },
       });
     }
-  }, [assignedHumanId]);
+  }, [assignedHumanId, isSelf]);
 
   if (!details || source === "excluded" || isRemoving) {
     return null;
   }
 
   const { humanName, humanEmail } = details;
-  const displayName = humanName.trim() || humanEmail?.trim();
+  const displayName = isSelf ? t`You` : humanName.trim() || humanEmail?.trim();
 
   if (!displayName) {
     return null;
   }
 
-  const isEnhancing = enhancingHumanId === assignedHumanId;
-  const canEnhance = Boolean(onEnhanceContact && assignedHumanId);
-
   return (
     <Badge
       variant="secondary"
-      className={cn([
-        "bg-foreground/10 hover:bg-foreground/15 relative flex cursor-pointer items-center gap-1 overflow-hidden px-2 py-0.5 text-xs",
-        isEnhancing && "ring-ring/20 ring-1",
-      ])}
+      className="bg-foreground/10 hover:bg-foreground/15 relative flex cursor-pointer items-center gap-1 overflow-hidden px-2 py-0.5 text-xs"
       onClick={handleClick}
     >
-      {isEnhancing && (
-        <span
-          aria-hidden="true"
-          className="animate-shimmer pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/60 to-transparent"
-        />
-      )}
       <span className="relative">{displayName}</span>
-      {canEnhance && (
-        <EnhanceContactButton
-          isEnhancing={isEnhancing}
-          isDisabled={Boolean(enhancingHumanId)}
-          label={displayName}
-          onClick={() => {
-            if (assignedHumanId) {
-              onEnhanceContact?.(assignedHumanId);
-            }
-          }}
-        />
-      )}
       <Button
         type="button"
         variant="ghost"
@@ -103,47 +67,6 @@ export function ParticipantChip({
         <X className="h-2.5 w-2.5" />
       </Button>
     </Badge>
-  );
-}
-
-function EnhanceContactButton({
-  isEnhancing,
-  isDisabled,
-  label,
-  onClick,
-}: {
-  isEnhancing: boolean;
-  isDisabled: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  const { t } = useLingui();
-  return (
-    <Tooltip delayDuration={0}>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label={t`Enhance contact ${label}`}
-          className="text-muted-foreground hover:text-foreground relative ml-0.5 h-3.5 w-3.5 p-0 hover:bg-transparent"
-          disabled={isDisabled}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick();
-          }}
-        >
-          {isEnhancing ? (
-            <CircleNotch className="h-2.5 w-2.5 animate-spin" />
-          ) : (
-            <Sparkle className="h-2.5 w-2.5" />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="bottom">
-        <Trans>Enhance contact</Trans>
-      </TooltipContent>
-    </Tooltip>
   );
 }
 
@@ -165,6 +88,7 @@ function useParticipantDetails(mappingId: string) {
     orgName: participant.organizationName || undefined,
     sessionId: participant.sessionId,
     source: participant.source,
+    isSelf: participant.isSelf,
   };
 }
 

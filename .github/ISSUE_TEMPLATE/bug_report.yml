@@ -1,0 +1,82 @@
+name: Bug report
+description: Something in Librelog does not work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing Librelog. Choose **Help → Report Bug** in the app and the first three fields are filled in for you.
+
+        Report security problems [privately](https://github.com/Arturgrr/librelog/security/advisories/new), not here.
+  - type: input
+    id: version
+    attributes:
+      label: Librelog version
+      description: Settings → General → About, or the menu bar icon.
+      placeholder: 0.1.0-beta.1
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description: Apple menu → About This Mac.
+      placeholder: macOS 15.5 Sequoia
+    validations:
+      required: true
+  - type: input
+    id: chip
+    attributes:
+      label: Mac chip
+      description: Apple menu → About This Mac shows a Chip (Apple silicon) or a Processor (Intel). Correct it if the app guessed wrong.
+      placeholder: Apple silicon (arm64 build)
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Install or first launch
+        - Updates
+        - Permissions (microphone, screen and system audio, accessibility)
+        - Recording
+        - Transcription
+        - Summaries, chat, or AI providers
+        - Notes and editor
+        - Dictation
+        - CLI or MCP server
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Settings → General → **Show log files** opens `~/Library/Logs/com.arturgrr.librelog`. Paste the lines from `app.log` around the time of the problem. Logs can contain meeting titles, file paths, and provider error messages, so read them before you paste.
+      render: text
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I removed meeting content, names, and API keys from everything I pasted.
+          required: true

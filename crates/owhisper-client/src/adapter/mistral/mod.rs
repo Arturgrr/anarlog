@@ -81,25 +81,18 @@ mod tests {
 
     #[test]
     fn test_build_ws_url_from_base() {
-        for (input, expected_url, expected_params) in [
-            (
-                "",
-                "wss://api.mistral.ai/v1/audio/transcriptions/realtime",
-                vec![],
-            ),
-            (
-                "https://api.anarlog.so?provider=mistral",
-                "wss://api.anarlog.so/listen",
-                vec![("provider", "mistral")],
-            ),
-        ] {
+        for (input, expected_url, expected_params) in [(
+            "",
+            "wss://api.mistral.ai/v1/audio/transcriptions/realtime",
+            vec![],
+        )] {
             let (url, params) = MistralAdapter::build_ws_url_from_base(input);
             assert_eq!(url.as_str(), expected_url, "input: {input}");
             assert_eq!(
                 params,
                 expected_params
                     .into_iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .map(|(k, v): (&str, &str)| (k.to_string(), v.to_string()))
                     .collect::<Vec<_>>(),
                 "input: {input}"
             );

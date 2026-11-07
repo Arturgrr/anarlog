@@ -1,4 +1,3 @@
-import { ANARLOG_PRO_LLM_MODELS } from "./anarlog-pro-models";
 import { getCloudflareWorkersAIModelMetadata } from "./list-cloudflare-workers-ai";
 
 const TEXT_ONLY_MODEL_RE =
@@ -24,13 +23,6 @@ export function modelSupportsImageInput(
 
   if (TEXT_ONLY_MODEL_RE.test(modelId)) {
     return false;
-  }
-
-  if (providerId === "anarlog") {
-    const model = ANARLOG_PRO_LLM_MODELS.find(({ id }) => id === modelId);
-    if (model) {
-      return model.inputModalities.some((modality) => modality === "image");
-    }
   }
 
   if (IMAGE_INPUT_MODEL_RE.test(modelId)) {

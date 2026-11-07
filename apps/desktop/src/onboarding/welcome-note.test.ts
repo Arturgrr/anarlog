@@ -3,14 +3,6 @@ import { beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createSession: vi.fn(),
   execute: vi.fn(),
-  listenerState: {
-    live: {
-      sessionId: null as string | null,
-      status: "inactive",
-      captureGenerationBySession: {} as Record<string, number>,
-    },
-    stop: vi.fn(),
-  },
 }));
 
 vi.mock("~/db", () => ({
@@ -21,19 +13,11 @@ vi.mock("~/session/queries", () => ({
   createSession: mocks.createSession,
 }));
 
-vi.mock("~/store/zustand/listener/instance", () => ({
-  listenerStore: {
-    getState: () => mocks.listenerState,
-  },
-}));
-
 import {
   getOrCreateWelcomeSession,
   setPendingWelcomeSession,
-  stopActiveWelcomeDemo,
   takePendingWelcomeSession,
 } from "./welcome-note";
-import { buildWelcomeNoteDemoUrl } from "./welcome-note.constants";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -43,11 +27,6 @@ beforeEach(() => {
     removeItem: (key: string) => values.delete(key),
     setItem: (key: string, value: string) => values.set(key, value),
   });
-  mocks.listenerState.live = {
-    sessionId: null,
-    status: "inactive",
-    captureGenerationBySession: {},
-  };
 });
 
 it("reuses an existing onboarding welcome note", async () => {
@@ -56,11 +35,11 @@ it("reuses an existing onboarding welcome note", async () => {
   await expect(getOrCreateWelcomeSession()).resolves.toBe("welcome-session");
   expect(mocks.createSession).not.toHaveBeenCalled();
   expect(mocks.execute).toHaveBeenCalledWith(expect.any(String), [
-    "anarlog-onboarding-demo-v1",
+    "librelog-onboarding-demo-v1",
   ]);
 });
 
-it("creates a prerecorded demo note with normal meeting metadata", async () => {
+it("creates a local welcome note without a hosted demo link", async () => {
   mocks.execute.mockResolvedValueOnce([]);
   mocks.createSession.mockResolvedValueOnce("welcome-session");
 
@@ -68,9 +47,9 @@ it("creates a prerecorded demo note with normal meeting metadata", async () => {
 
   const [title, , initial] = mocks.createSession.mock.calls[0];
   const event = JSON.parse(initial.event_json);
-  expect(title).toBe("Welcome to Anarlog");
-  expect(event.meeting_link).toBe("https://anarlog.so/onboarding-demo/");
-  expect(event.tracking_id).toBe("anarlog-onboarding-demo-v1");
+  expect(title).toBe("Welcome to Librelog");
+  expect(event.meeting_link).toBeUndefined();
+  expect(event.tracking_id).toBe("librelog-onboarding-demo-v1");
   expect(() => JSON.parse(initial.raw_md)).not.toThrow();
 });
 
@@ -79,83 +58,4 @@ it("carries the welcome note across a one-time onboarding relaunch", () => {
 
   expect(takePendingWelcomeSession()).toBe("welcome-session");
   expect(takePendingWelcomeSession()).toBeNull();
-});
-
-it("stops an active welcome demo after its browser callback", async () => {
-  mocks.listenerState.live = {
-    sessionId: "welcome-session",
-    status: "active",
-    captureGenerationBySession: { "welcome-session": 1 },
-  };
-  mocks.execute.mockResolvedValueOnce([{ id: "welcome-session" }]);
-
-  await stopActiveWelcomeDemo();
-
-  expect(mocks.execute).toHaveBeenCalledWith(expect.any(String), [
-    "welcome-session",
-    "anarlog-onboarding-demo-v1",
-  ]);
-  expect(mocks.listenerState.stop).toHaveBeenCalledOnce();
-});
-
-it("ignores a demo callback while another session is active", async () => {
-  mocks.listenerState.live = {
-    sessionId: "regular-session",
-    status: "active",
-    captureGenerationBySession: { "regular-session": 1 },
-  };
-  mocks.execute.mockResolvedValueOnce([]);
-
-  await stopActiveWelcomeDemo();
-
-  expect(mocks.listenerState.stop).not.toHaveBeenCalled();
-});
-
-it("does not stop a newer capture of the welcome session", async () => {
-  mocks.listenerState.live = {
-    sessionId: "welcome-session",
-    status: "active",
-    captureGenerationBySession: { "welcome-session": 1 },
-  };
-  let finishQuery!: (rows: { id: string }[]) => void;
-  mocks.execute.mockReturnValueOnce(
-    new Promise((resolve) => {
-      finishQuery = resolve;
-    }),
-  );
-
-  const completion = stopActiveWelcomeDemo();
-  mocks.listenerState.live = {
-    sessionId: "welcome-session",
-    status: "active",
-    captureGenerationBySession: { "welcome-session": 2 },
-  };
-  finishQuery([{ id: "welcome-session" }]);
-  await completion;
-
-  expect(mocks.listenerState.stop).not.toHaveBeenCalled();
-});
-
-it("ignores a demo callback when listening already stopped", async () => {
-  mocks.listenerState.live = {
-    sessionId: "welcome-session",
-    status: "inactive",
-    captureGenerationBySession: {},
-  };
-
-  await stopActiveWelcomeDemo();
-
-  expect(mocks.execute).not.toHaveBeenCalled();
-  expect(mocks.listenerState.stop).not.toHaveBeenCalled();
-});
-
-it("auto-joins the hosted demo and optionally attaches a completion callback", () => {
-  expect(buildWelcomeNoteDemoUrl("https://anarlog.so/onboarding-demo/")).toBe(
-    "https://anarlog.so/onboarding-demo/?autojoin=1",
-  );
-  expect(
-    buildWelcomeNoteDemoUrl("https://anarlog.so/onboarding-demo/", 43210),
-  ).toBe(
-    "https://anarlog.so/onboarding-demo/?autojoin=1&completion_url=http%3A%2F%2F127.0.0.1%3A43210%2Fonboarding-demo%2Fcomplete",
-  );
 });

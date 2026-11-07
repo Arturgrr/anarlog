@@ -1,4 +1,3 @@
-import type { AccountInfo } from "@anlg/plugin-auth";
 import type { DeviceInfo } from "@anlg/plugin-misc";
 
 import type { AnlgUIMessage } from "../types";
@@ -45,12 +44,6 @@ export type ContextRef =
   | OrganizationContextRef
   | FolderContextRef;
 
-type CalendarEventContextRef = BaseContextRef & {
-  kind: "calendar_event";
-  eventId: string;
-  linkedSessionId?: string | null;
-};
-
 export type ContextEntity =
   | (SessionContextRef & {
       title?: string | null;
@@ -71,15 +64,6 @@ export type ContextEntity =
       title?: string | null;
       removable?: boolean;
     })
-  | (CalendarEventContextRef & {
-      title?: string | null;
-      removable?: boolean;
-    })
-  | ({
-      kind: "account";
-      key: string;
-      source?: ContextEntitySource;
-    } & Partial<AccountInfo>)
   | ({
       kind: "device";
       key: string;
@@ -184,29 +168,6 @@ function parseSearchContactsOutput(output: unknown): ContextEntity[] {
   });
 }
 
-function parseSearchCalendarEventsOutput(output: unknown): ContextEntity[] {
-  return resultItems(output).flatMap((item): ContextEntity[] => {
-    if (typeof item.id !== "string" && typeof item.id !== "number") {
-      return [];
-    }
-
-    const eventId = String(item.id);
-    const linkedSessionId =
-      typeof item.linkedSessionId === "string" ? item.linkedSessionId : null;
-
-    return [
-      {
-        kind: "calendar_event",
-        key: `calendar_event:search:${eventId}`,
-        source: "tool",
-        eventId,
-        linkedSessionId,
-        title: typeof item.title === "string" ? item.title : null,
-      },
-    ];
-  });
-}
-
 const toolEntityExtractors: Record<
   string,
   (output: unknown) => ContextEntity[]
@@ -217,7 +178,6 @@ const toolEntityExtractors: Record<
   search_meeting_content: parseSearchMeetingsOutput,
   find_related_meetings: parseSearchMeetingsOutput,
   search_contacts: parseSearchContactsOutput,
-  search_calendar_events: parseSearchCalendarEventsOutput,
 };
 
 export function extractToolContextEntities(

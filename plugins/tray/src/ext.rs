@@ -11,15 +11,12 @@ use tauri::tray::{MouseButtonState, TrayIconEvent};
 use tauri::{
     AppHandle, Result,
     image::Image,
-    menu::{Menu, MenuItem, PredefinedMenuItem},
+    menu::{Menu, PredefinedMenuItem},
     tray::TrayIconBuilder,
 };
 
 use crate::{
-    schedule::{
-        TrayAgendaSection, TrayScheduleEvent, agenda_sections, menu_bar_title,
-        next_schedule_refresh_ms,
-    },
+    title::menu_bar_title,
     tray_icon::{RECORDING_FRAMES, TrayIconState},
 };
 
@@ -27,46 +24,49 @@ use crate::{
 use crate::menu_items::{AppInfo, AppNew, HelpReportBug, HelpSuggestFeature, TrayQuit};
 use crate::menu_items::{
     MenuItemHandler, TrayCheckUpdate, TrayHide, TrayOpen, TrayQuitCompletely, TraySettings,
-    TrayShowEvents, TrayStart, TrayVersion, build_agenda_item,
+    TrayStart, TrayVersion,
 };
-use tauri_plugin_store2::Store2PluginExt;
 
 const TRAY_ID: &str = "anlg-tray";
 
 static IS_RECORDING: AtomicBool = AtomicBool::new(false);
 static IS_DEGRADED: AtomicBool = AtomicBool::new(false);
 static IS_UPDATE_AVAILABLE: AtomicBool = AtomicBool::new(false);
-static SHOW_EVENTS: AtomicBool = AtomicBool::new(true);
 static START_DISABLED: AtomicBool = AtomicBool::new(false);
 static ANIMATION_TASK: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
-static SCHEDULE: Mutex<Vec<TrayScheduleEvent>> = Mutex::new(Vec::new());
-static SCHEDULE_TASK: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
 static MENU_BAR_TITLE: Mutex<Option<String>> = Mutex::new(None);
 static RECORDING_TITLE: Mutex<Option<String>> = Mutex::new(None);
-static AGENDA_SECTIONS: Mutex<Vec<TrayAgendaSection>> = Mutex::new(Vec::new());
 // muda 0.17 stores a raw MenuChild pointer on each NSMenuItem. Replacing the
 // tray menu while it is still visible frees those items and crashes on click
-// (HYPRNOTE2-2MTS). Defer set_menu until the next tray mouse-down instead.
+// Defer set_menu until the next tray mouse-down instead.
 #[cfg(target_os = "macos")]
 static MENU_DIRTY: AtomicBool = AtomicBool::new(false);
 
 #[cfg(target_os = "macos")]
 pub fn build_app_menu(app: &AppHandle<tauri::Wry>) -> Result<Menu<tauri::Wry>> {
+    let labels = crate::labels::labels();
+    let app_name = app.package_info().name.clone();
+    let hide_app = crate::labels::fill(&labels.hide_app, &[("app", app_name.as_str())]);
+
+    let services = PredefinedMenuItem::services(app, Some(&labels.services))?;
+    let hide = PredefinedMenuItem::hide(app, Some(&hide_app))?;
+    let hide_others = PredefinedMenuItem::hide_others(app, Some(&labels.hide_others))?;
+    let show_all = PredefinedMenuItem::show_all(app, Some(&labels.show_all))?;
     let app_submenu = if crate::updates_enabled() {
         Submenu::with_items(
             app,
-            app.package_info().name.clone(),
+            app_name,
             true,
             &[
                 &AppInfo::build(app)?,
                 &TrayCheckUpdate::build(app)?,
                 &TraySettings::build(app)?,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::services(app, None)?,
+                &services,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::hide(app, None)?,
-                &PredefinedMenuItem::hide_others(app, None)?,
-                &PredefinedMenuItem::show_all(app, None)?,
+                &hide,
+                &hide_others,
+                &show_all,
                 &PredefinedMenuItem::separator(app)?,
                 &TrayQuit::build(app)?,
             ],
@@ -74,17 +74,17 @@ pub fn build_app_menu(app: &AppHandle<tauri::Wry>) -> Result<Menu<tauri::Wry>> {
     } else {
         Submenu::with_items(
             app,
-            app.package_info().name.clone(),
+            app_name,
             true,
             &[
                 &AppInfo::build(app)?,
                 &TraySettings::build(app)?,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::services(app, None)?,
+                &services,
                 &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::hide(app, None)?,
-                &PredefinedMenuItem::hide_others(app, None)?,
-                &PredefinedMenuItem::show_all(app, None)?,
+                &hide,
+                &hide_others,
+                &show_all,
                 &PredefinedMenuItem::separator(app)?,
                 &TrayQuit::build(app)?,
             ],
@@ -92,49 +92,52 @@ pub fn build_app_menu(app: &AppHandle<tauri::Wry>) -> Result<Menu<tauri::Wry>> {
     };
     let file_submenu = Submenu::with_items(
         app,
-        "File",
+        &labels.file_menu,
         true,
         &[
             &AppNew::build(app)?,
-            &PredefinedMenuItem::close_window(app, None)?,
+            &PredefinedMenuItem::close_window(app, Some(&labels.close_window))?,
         ],
     )?;
     let edit_submenu = Submenu::with_items(
         app,
-        "Edit",
+        &labels.edit_menu,
         true,
         &[
-            &PredefinedMenuItem::undo(app, None)?,
-            &PredefinedMenuItem::redo(app, None)?,
+            &PredefinedMenuItem::undo(app, Some(&labels.undo))?,
+            &PredefinedMenuItem::redo(app, Some(&labels.redo))?,
             &PredefinedMenuItem::separator(app)?,
-            &PredefinedMenuItem::cut(app, None)?,
-            &PredefinedMenuItem::copy(app, None)?,
-            &PredefinedMenuItem::paste(app, None)?,
-            &PredefinedMenuItem::select_all(app, None)?,
+            &PredefinedMenuItem::cut(app, Some(&labels.cut))?,
+            &PredefinedMenuItem::copy(app, Some(&labels.copy))?,
+            &PredefinedMenuItem::paste(app, Some(&labels.paste))?,
+            &PredefinedMenuItem::select_all(app, Some(&labels.select_all))?,
         ],
     )?;
     let view_submenu = Submenu::with_items(
         app,
-        "View",
+        &labels.view_menu,
         true,
-        &[&PredefinedMenuItem::fullscreen(app, None)?],
+        &[&PredefinedMenuItem::fullscreen(
+            app,
+            Some(&labels.fullscreen),
+        )?],
     )?;
     let window_submenu = Submenu::with_id_and_items(
         app,
         WINDOW_SUBMENU_ID,
-        "Window",
+        &labels.window_menu,
         true,
         &[
-            &PredefinedMenuItem::minimize(app, None)?,
-            &PredefinedMenuItem::maximize(app, None)?,
+            &PredefinedMenuItem::minimize(app, Some(&labels.minimize))?,
+            &PredefinedMenuItem::maximize(app, Some(&labels.zoom))?,
             &PredefinedMenuItem::separator(app)?,
-            &PredefinedMenuItem::close_window(app, None)?,
+            &PredefinedMenuItem::close_window(app, Some(&labels.close_window))?,
         ],
     )?;
     let help_submenu = Submenu::with_id_and_items(
         app,
         HELP_SUBMENU_ID,
-        "Help",
+        &labels.help_menu,
         true,
         &[
             &HelpReportBug::build(app)?,
@@ -195,11 +198,7 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
             return Ok(());
         }
 
-        SHOW_EVENTS.store(Self::load_show_events(app), Ordering::SeqCst);
-
-        let agenda = Self::current_agenda_sections();
-        let menu = Self::build_tray_menu(app, &agenda)?;
-        *AGENDA_SECTIONS.lock().unwrap() = agenda;
+        let menu = Self::build_tray_menu(app)?;
 
         let builder = TrayIconBuilder::with_id(TRAY_ID)
             .icon(TrayIconState::Default.to_image()?)
@@ -275,65 +274,6 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
         })
     }
 
-    pub fn set_schedule(&self, mut events: Vec<TrayScheduleEvent>) -> Result<()> {
-        events.retain(|event| event.starts_at_ms.is_finite());
-        events.sort_by(|left, right| {
-            left.starts_at_ms
-                .partial_cmp(&right.starts_at_ms)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-        *SCHEDULE.lock().unwrap() = events;
-
-        let app = self.manager.app_handle();
-        Self::refresh_menu_bar_title(app)?;
-        Self::refresh_menu_if_agenda_changed(app)?;
-
-        Self::restart_schedule_task(app);
-
-        Ok(())
-    }
-
-    pub fn shows_events(&self) -> bool {
-        SHOW_EVENTS.load(Ordering::SeqCst)
-    }
-
-    pub fn set_show_events(&self, show: bool) -> Result<()> {
-        SHOW_EVENTS.store(show, Ordering::SeqCst);
-
-        let app = self.manager.app_handle();
-        Self::persist_show_events(app, show);
-        Self::refresh_menu_bar_title(app)?;
-        Self::rebuild_menu(app)?;
-        Self::restart_schedule_task(app);
-        Ok(())
-    }
-
-    fn load_show_events(app: &AppHandle<tauri::Wry>) -> bool {
-        let result = app
-            .store2()
-            .scoped_store::<String>(crate::PLUGIN_NAME)
-            .and_then(|store| store.get("show_events_in_menu_bar".to_string()));
-
-        match result {
-            Ok(value) => value.unwrap_or(true),
-            Err(error) => {
-                tracing::warn!(%error, "failed to load tray event visibility");
-                true
-            }
-        }
-    }
-
-    fn persist_show_events(app: &AppHandle<tauri::Wry>, show: bool) {
-        let result = app
-            .store2()
-            .scoped_store::<String>(crate::PLUGIN_NAME)
-            .and_then(|store| store.set("show_events_in_menu_bar".to_string(), show));
-
-        if let Err(error) = result {
-            tracing::warn!(%error, "failed to persist tray event visibility");
-        }
-    }
-
     fn refresh_menu_bar_title(app: &AppHandle<tauri::Wry>) -> Result<()> {
         on_main_thread(app, |app| Self::refresh_menu_bar_title_on_main_thread(app))
     }
@@ -343,15 +283,8 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
             return Ok(());
         };
 
-        let now_ms = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis() as f64;
         let recording_title = RECORDING_TITLE.lock().unwrap().clone();
         let title = menu_bar_title(
-            &SCHEDULE.lock().unwrap(),
-            now_ms,
-            SHOW_EVENTS.load(Ordering::SeqCst),
             IS_RECORDING.load(Ordering::SeqCst),
             recording_title.as_deref(),
         );
@@ -366,42 +299,8 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
         Ok(())
     }
 
-    fn current_agenda_sections() -> Vec<TrayAgendaSection> {
-        let now_ms = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis() as f64;
-        agenda_sections(
-            &SCHEDULE.lock().unwrap(),
-            now_ms,
-            SHOW_EVENTS.load(Ordering::SeqCst),
-        )
-    }
-
-    fn build_tray_menu(
-        app: &AppHandle<tauri::Wry>,
-        agenda: &[TrayAgendaSection],
-    ) -> Result<Menu<tauri::Wry>> {
+    fn build_tray_menu(app: &AppHandle<tauri::Wry>) -> Result<Menu<tauri::Wry>> {
         let menu = Menu::new(app)?;
-
-        for (section_index, section) in agenda.iter().enumerate() {
-            let heading = MenuItem::with_id(
-                app,
-                format!("anlg_tray_agenda_section_{section_index}"),
-                &section.label,
-                false,
-                None::<&str>,
-            )?;
-            menu.append(&heading)?;
-
-            for event in &section.events {
-                let item = build_agenda_item(app, &event.id, &event.label)?;
-                menu.append(&item)?;
-            }
-        }
-
-        menu.append(&TrayShowEvents::build(app)?)?;
-        menu.append(&PredefinedMenuItem::separator(app)?)?;
 
         menu.append(&TrayOpen::build(app)?)?;
         menu.append(&TrayStart::build_with_disabled(
@@ -428,6 +327,7 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
     fn rebuild_menu(app: &AppHandle<tauri::Wry>) -> Result<()> {
         #[cfg(target_os = "macos")]
         {
+            let _ = app;
             MENU_DIRTY.store(true, Ordering::SeqCst);
             Ok(())
         }
@@ -440,11 +340,9 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
     }
 
     fn install_menu_on_main_thread(app: &AppHandle<tauri::Wry>) -> Result<()> {
-        let agenda = Self::current_agenda_sections();
         if let Some(tray) = app.tray_by_id(TRAY_ID) {
-            tray.set_menu(Some(Self::build_tray_menu(app, &agenda)?))?;
+            tray.set_menu(Some(Self::build_tray_menu(app)?))?;
         }
-        *AGENDA_SECTIONS.lock().unwrap() = agenda;
         #[cfg(target_os = "macos")]
         MENU_DIRTY.store(false, Ordering::SeqCst);
         Ok(())
@@ -458,64 +356,6 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
         Ok(())
     }
 
-    fn refresh_menu_if_agenda_changed(app: &AppHandle<tauri::Wry>) -> Result<()> {
-        let agenda = Self::current_agenda_sections();
-        if *AGENDA_SECTIONS.lock().unwrap() == agenda {
-            return Ok(());
-        }
-
-        #[cfg(target_os = "macos")]
-        {
-            *AGENDA_SECTIONS.lock().unwrap() = agenda;
-            MENU_DIRTY.store(true, Ordering::SeqCst);
-            return Ok(());
-        }
-
-        #[cfg(not(target_os = "macos"))]
-        Self::install_menu(app)
-    }
-
-    fn restart_schedule_task(app: &AppHandle<tauri::Wry>) {
-        let mut task = SCHEDULE_TASK.lock().unwrap();
-        if let Some(handle) = task.take() {
-            handle.abort();
-        }
-
-        let next_delay = || {
-            let now_ms = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_millis() as f64;
-            next_schedule_refresh_ms(
-                &SCHEDULE.lock().unwrap(),
-                now_ms,
-                SHOW_EVENTS.load(Ordering::SeqCst),
-                IS_RECORDING.load(Ordering::SeqCst),
-            )
-        };
-        let Some(initial_delay_ms) = next_delay() else {
-            return;
-        };
-
-        let app = app.clone();
-        *task = Some(tauri::async_runtime::spawn(async move {
-            let mut delay_ms = initial_delay_ms;
-            loop {
-                tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
-                if let Err(error) = Self::refresh_menu_bar_title(&app) {
-                    tracing::warn!(%error, "failed to refresh menu bar title");
-                }
-                if let Err(error) = Self::refresh_menu_if_agenda_changed(&app) {
-                    tracing::warn!(%error, "failed to refresh tray agenda");
-                }
-                let Some(next_delay_ms) = next_delay() else {
-                    return;
-                };
-                delay_ms = next_delay_ms;
-            }
-        }));
-    }
-
     pub fn set_recording(&self, recording: bool) -> Result<()> {
         IS_RECORDING.store(recording, Ordering::SeqCst);
         if !recording {
@@ -524,9 +364,7 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
 
         let app = self.manager.app_handle();
         Self::refresh_menu_bar_title(app)?;
-        Self::refresh_icon(app)?;
-        Self::restart_schedule_task(app);
-        Ok(())
+        Self::refresh_icon(app)
     }
 
     pub fn set_recording_title(&self, title: Option<String>) -> Result<()> {
@@ -535,6 +373,18 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
             (!title.is_empty()).then(|| title.to_string())
         });
         Self::refresh_menu_bar_title(self.manager.app_handle())
+    }
+
+    pub fn set_labels(&self, labels: crate::labels::TrayLabels) -> Result<()> {
+        if !crate::labels::set_labels(labels) {
+            return Ok(());
+        }
+
+        #[cfg(target_os = "macos")]
+        on_main_thread(self.manager.app_handle(), |app| {
+            app.set_menu(build_app_menu(app)?).map(|_| ())
+        })?;
+        self.refresh_menu()
     }
 
     pub fn set_degraded(&self, degraded: bool) -> Result<()> {
@@ -625,15 +475,6 @@ fn dispatch_and_wait(
     }))?;
     rx.recv()
         .map_err(|_| tauri::Error::FailedToReceiveMessage)?
-}
-
-pub(crate) fn scheduled_event(event_id: &str) -> Option<TrayScheduleEvent> {
-    SCHEDULE
-        .lock()
-        .unwrap()
-        .iter()
-        .find(|event| event.id == event_id)
-        .cloned()
 }
 
 pub trait TrayPluginExt<R: tauri::Runtime> {

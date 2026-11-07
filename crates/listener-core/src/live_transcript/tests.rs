@@ -614,7 +614,7 @@ fn apple_speech_engine_drops_unfinalized_hypothesis_on_flush() {
 }
 
 #[test]
-fn preserves_provider_speakers_beyond_calendar_attendance() {
+fn preserves_provider_speakers_beyond_participant_count() {
     let mut engine = LiveTranscriptEngine::new("deepgram", &["remote".into()], Some("self"));
     let mut first = word("first", 0.0, 0.5);
     first.speaker = Some(0);

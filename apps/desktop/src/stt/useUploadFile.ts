@@ -1,10 +1,10 @@
+import { t } from "@lingui/core/macro";
 import { useQueryClient } from "@tanstack/react-query";
 import { downloadDir } from "@tauri-apps/api/path";
 import { open as selectFile } from "@tauri-apps/plugin-dialog";
 import { Effect, pipe } from "effect";
 import { useCallback } from "react";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import {
   commands as fsSyncCommands,
   events as fsSyncEvents,
@@ -17,7 +17,6 @@ import { fromResult } from "./fromResult";
 import { ChannelProfile } from "./segment";
 import { isStoppedTranscriptionError, useRunBatch } from "./useRunBatch";
 
-import { withCloudsyncActivity } from "~/db/cloudsync-activity";
 import { getEnhancerService } from "~/services/enhancer";
 import { catalogLocalSessionAudio } from "~/session/attachments";
 import { enqueueSessionAudioOperation } from "~/session/audio-operations";
@@ -102,10 +101,6 @@ export function useUploadFile(sessionId: string) {
   const applyEstimatedAudioNoteDate = useCallback(
     async (filePath: string) => {
       try {
-        if (session?.event_json.trim()) {
-          return;
-        }
-
         const result = await fsSyncCommands.audioSourceMetadata(filePath);
         if (result.status === "error") {
           return;
@@ -123,16 +118,12 @@ export function useUploadFile(sessionId: string) {
         console.error("[upload] audio metadata inspection failed:", error);
       }
     },
-    [session?.event_json, updateSession],
+    [updateSession],
   );
 
   const applyDroppedAudioNoteDate = useCallback(
     async (file: File) => {
       try {
-        if (session?.event_json.trim()) {
-          return;
-        }
-
         if (!Number.isFinite(file.lastModified) || file.lastModified <= 0) {
           return;
         }
@@ -144,7 +135,7 @@ export function useUploadFile(sessionId: string) {
         console.error("[upload] dropped audio date inspection failed:", error);
       }
     },
-    [session?.event_json, updateSession],
+    [updateSession],
   );
 
   const importWithProgress = useCallback(
@@ -206,10 +197,6 @@ export function useUploadFile(sessionId: string) {
         ),
         Effect.tap(() =>
           Effect.sync(() => {
-            void analyticsCommands.event({
-              event: "file_uploaded",
-              file_type: "audio",
-            });
             void queryClient.invalidateQueries({
               queryKey: ["audio", sessionId, "exist"],
             });
@@ -241,10 +228,7 @@ export function useUploadFile(sessionId: string) {
         ),
       );
 
-      const cloudsyncLeaseKey = `${sessionId}:audio-import:${crypto.randomUUID()}`;
-      void withCloudsyncActivity("transcription", cloudsyncLeaseKey, () =>
-        Effect.runPromise(program),
-      ).catch((error) => {
+      void Effect.runPromise(program).catch((error) => {
         console.error("[upload] audio failed:", error);
       });
     },
@@ -306,25 +290,11 @@ export function useUploadFile(sessionId: string) {
                 }),
               catch: (error) =>
                 error instanceof Error ? error : new Error(String(error)),
-            }).pipe(
-              Effect.tap(() =>
-                Effect.sync(() => {
-                  void analyticsCommands.event({
-                    event: "file_uploaded",
-                    file_type: "transcript",
-                    token_count: subtitle.tokens.length,
-                  });
-                }),
-              ),
-              Effect.tap(() => Effect.promise(triggerEnhance)),
-            );
+            }).pipe(Effect.tap(() => Effect.promise(triggerEnhance)));
           }),
         );
 
-        const cloudsyncLeaseKey = `${sessionId}:subtitle-import:${crypto.randomUUID()}`;
-        void withCloudsyncActivity("transcription", cloudsyncLeaseKey, () =>
-          Effect.runPromise(program),
-        ).catch((error) => {
+        void Effect.runPromise(program).catch((error) => {
           console.error("[upload] transcript failed:", error);
         });
         return;
@@ -390,15 +360,15 @@ export function useUploadFile(sessionId: string) {
     (kind: "audio" | "transcript") => {
       const filters =
         kind === "audio"
-          ? [{ name: "Audio", extensions: AUDIO_EXTENSIONS }]
-          : [{ name: "Transcript", extensions: TRANSCRIPT_EXTENSIONS }];
+          ? [{ name: t`Audio`, extensions: AUDIO_EXTENSIONS }]
+          : [{ name: t`Transcript`, extensions: TRANSCRIPT_EXTENSIONS }];
 
       const program = pipe(
         Effect.promise(() => downloadDir()),
         Effect.flatMap((defaultPath) =>
           Effect.promise(() =>
             selectFile({
-              title: kind === "audio" ? "Upload Audio" : "Upload Transcript",
+              title: kind === "audio" ? t`Upload Audio` : t`Upload Transcript`,
               multiple: false,
               directory: false,
               defaultPath,
@@ -442,7 +412,7 @@ function audioUploadFilePath(file: File) {
 function assertIpcAudioSize(size: number) {
   if (size > MAX_IPC_AUDIO_BYTES) {
     throw new Error(
-      "Audio files without a native path must be smaller than 4 MB",
+      t`Audio files without a native path must be smaller than 4 MB`,
     );
   }
 }

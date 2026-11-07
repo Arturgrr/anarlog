@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback } from "react";
 
 import { toast } from "@anlg/ui/components/ui/toast";
@@ -18,7 +19,7 @@ import {
 import { useLanguageModel } from "~/ai/hooks";
 import type { ContextRef } from "~/chat/context/entities";
 import type { ChatMessageSender, ChatScope, AnlgUIMessage } from "~/chat/types";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { useLocalUserId } from "~/shared/owner-user";
 import { id } from "~/shared/utils";
 
 // Local writes normally land in milliseconds; retries cover transient
@@ -53,8 +54,8 @@ export function useChatActions({
   onGroupCreated: (newGroupId: string) => void;
   onGroupCreateFailed?: (failedGroupId: string) => void;
 }) {
-  const ownerUserId = useOwnerUserId();
-  const titleModel = useLanguageModel("title");
+  const ownerUserId = useLocalUserId();
+  const titleModel = useLanguageModel();
 
   const queueChatTitleGeneration = useCallback(
     (params: {
@@ -139,7 +140,7 @@ export function useChatActions({
 
       sendMessage(uiMessage, {
         chatGroupId: currentGroupId,
-        beforeSend: async (trackCompletion) => {
+        beforeSend: async () => {
           const persist = persistWithRetry(runPersist);
           trackPendingChatPersist(currentGroupId, persist);
           try {
@@ -147,18 +148,15 @@ export function useChatActions({
             if (fallbackTitle) {
               clearFailedChatGroupCreate(currentGroupId);
               onGroupCreated(currentGroupId);
-              const titleCompletion = queueChatTitleGeneration({
+              void queueChatTitleGeneration({
                 groupId: currentGroupId,
                 fallbackTitle,
                 initialRequest: content,
               });
-              if (titleCompletion) {
-                trackCompletion(titleCompletion);
-              }
             }
           } catch (error) {
             console.error("Failed to persist outgoing chat message", error);
-            toast.error("Could not save this chat message.");
+            toast.error(t`Could not save this chat message.`);
             if (fallbackTitle) {
               markFailedChatGroupCreate(currentGroupId);
               onGroupCreateFailed?.(currentGroupId);

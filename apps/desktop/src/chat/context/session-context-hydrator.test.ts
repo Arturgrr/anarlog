@@ -57,8 +57,6 @@ describe("session chat context hydration", () => {
       sessionId: "session-1",
       title: "Planning",
       createdAt: "2026-07-10T09:00:00.000Z",
-      event: { title: "Weekly planning" },
-      eventId: "event-1",
       rawMarkdown: "Raw note",
       enhancedNotes: [
         {
@@ -124,7 +122,7 @@ describe("session chat context hydration", () => {
           nowMs: null,
         },
         participants: [{ name: "SQLite Person", jobTitle: "Engineer" }],
-        event: { name: "Weekly planning" },
+        event: null,
       },
     );
   });

@@ -1,44 +1,31 @@
 import type { ComponentProps } from "react";
 
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
-import { panelSquircle } from "@anlg/ui/lib/squircle";
 import { cn } from "@anlg/utils";
 
-// Nested radii stay concentric: outer = inner + padding.
-export const APP_FLOATING_CHROME_RADIUS_PX = 22;
-export const APP_FLOATING_CHROME_PADDING_PX = 2;
-export const APP_FLOATING_PANEL_RADIUS_PX =
-  APP_FLOATING_CHROME_RADIUS_PX - APP_FLOATING_CHROME_PADDING_PX;
-export const APP_FLOATING_PANEL_PADDING_PX = 6;
-export const APP_FLOATING_ITEM_RADIUS_PX =
-  APP_FLOATING_PANEL_RADIUS_PX - APP_FLOATING_PANEL_PADDING_PX;
-export const FLOATING_MENU_RADIUS_PX = 18;
-export const FLOATING_MENU_PADDING_PX = 4;
-export const FLOATING_MENU_ITEM_RADIUS_PX =
-  FLOATING_MENU_RADIUS_PX - FLOATING_MENU_PADDING_PX;
+export const floatingMenuSurfaceClassName =
+  "bg-layer-1 text-popover-foreground shadow-floating overflow-hidden rounded-md p-0.5";
 
-export const appFloatingContentClassName =
-  "bg-app-floating-chrome text-popover-foreground border-app-floating-border overflow-hidden rounded-[22px] border p-0.5 shadow-lg";
+export const floatingMenuItemClassName = cn([
+  "text-ui relative flex min-h-7 cursor-default items-center gap-2 rounded-sm py-1 pr-1.5 pl-3 outline-hidden select-none",
+  "focus:bg-hover data-highlighted:bg-hover",
+  "data-disabled:pointer-events-none data-disabled:opacity-50",
+  "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+]);
 
-export const appFloatingMenuPanelClassName = "overflow-hidden p-1.5";
-export const appFloatingItemClassName = "rounded-[14px]";
+export const appFloatingContentClassName = floatingMenuSurfaceClassName;
+export const appFloatingMenuPanelClassName = "overflow-hidden";
+export const appFloatingItemClassName = "rounded-sm";
 
 export type FloatingContentVariant = "default" | "app";
 
 export function AppFloatingPanel({
   className,
-  ref,
   ...props
 }: ComponentProps<"div">) {
-  const squircleRef = useSquircleRef<HTMLDivElement>(ref, panelSquircle);
   return (
     <div
-      className={cn([
-        "bg-app-floating-panel text-popover-foreground border-app-floating-border rounded-[20px] border",
-        className,
-      ])}
+      className={cn(["text-popover-foreground rounded-sm", className])}
       {...props}
-      ref={squircleRef}
     />
   );
 }

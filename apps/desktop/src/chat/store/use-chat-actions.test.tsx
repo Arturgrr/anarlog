@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -35,7 +35,7 @@ vi.mock("~/shared/utils", () => ({
 }));
 
 vi.mock("~/shared/owner-user", () => ({
-  useOwnerUserId: () => "user-1",
+  useLocalUserId: () => "user-1",
 }));
 
 import {
@@ -92,7 +92,7 @@ describe("useChatActions", () => {
     expect(onGroupCreated).not.toHaveBeenCalled();
 
     const options = sendMessage.mock.calls[0]?.[1] as ChatSendOptions;
-    await options.beforeSend?.(vi.fn());
+    await options.beforeSend?.();
 
     expect(mocks.createChatGroupWithMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -132,7 +132,7 @@ describe("useChatActions", () => {
     expect(mocks.upsertChatMessage).not.toHaveBeenCalled();
 
     const options = sendMessage.mock.calls[0]?.[1] as ChatSendOptions;
-    await options.beforeSend?.(vi.fn());
+    await options.beforeSend?.();
 
     expect(mocks.upsertChatMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -172,7 +172,7 @@ describe("useChatActions", () => {
 
     expect(sendMessage).toHaveBeenCalledOnce();
     const options = sendMessage.mock.calls[0]?.[1] as ChatSendOptions;
-    await expect(options.beforeSend?.(vi.fn())).rejects.toBe(error);
+    await expect(options.beforeSend?.()).rejects.toBe(error);
     expect(consoleError).toHaveBeenCalledWith(
       "Failed to persist outgoing chat message",
       error,
@@ -185,7 +185,7 @@ describe("useChatActions", () => {
     expect(isFailedChatGroupCreate("group-1")).toBe(true);
 
     mocks.createChatGroupWithMessage.mockResolvedValue(undefined);
-    await options.beforeSend?.(vi.fn());
+    await options.beforeSend?.();
 
     expect(mocks.createChatGroupWithMessage).toHaveBeenCalledTimes(4);
     expect(isFailedChatGroupCreate("group-1")).toBe(false);
@@ -221,7 +221,7 @@ describe("useChatActions", () => {
     });
 
     const options = sendMessage.mock.calls[0]?.[1] as ChatSendOptions;
-    await options.beforeSend?.(vi.fn());
+    await options.beforeSend?.();
 
     expect(mocks.createChatGroupWithMessage).toHaveBeenCalledTimes(2);
     expect(mocks.toastError).not.toHaveBeenCalled();
@@ -229,7 +229,7 @@ describe("useChatActions", () => {
     consoleError.mockRestore();
   });
 
-  it("tracks generated title persistence as part of the chat attempt", async () => {
+  it("persists the generated title after the outgoing message", async () => {
     let finishTitle: ((title: string) => void) | undefined;
     mocks.titleModel = {};
     mocks.generateChatTitle.mockReturnValueOnce(
@@ -238,7 +238,6 @@ describe("useChatActions", () => {
       }),
     );
     const sendMessage = vi.fn();
-    const trackCompletion = vi.fn();
     const { result } = renderHook(() =>
       useChatActions({
         chatScope: "general",
@@ -256,17 +255,17 @@ describe("useChatActions", () => {
     });
 
     const options = sendMessage.mock.calls[0]?.[1] as ChatSendOptions;
-    await options.beforeSend?.(trackCompletion);
-    expect(trackCompletion).toHaveBeenCalledOnce();
+    await options.beforeSend?.();
     expect(mocks.setChatGroupTitleIfCurrent).not.toHaveBeenCalled();
 
     finishTitle?.("Generated title");
-    await trackCompletion.mock.calls[0]?.[0];
-    expect(mocks.setChatGroupTitleIfCurrent).toHaveBeenCalledWith({
-      groupId: "group-1",
-      expectedTitle: "Hello",
-      title: "Generated title",
-    });
+    await waitFor(() =>
+      expect(mocks.setChatGroupTitleIfCurrent).toHaveBeenCalledWith({
+        groupId: "group-1",
+        expectedTitle: "Hello",
+        title: "Generated title",
+      }),
+    );
   });
 
   it("persists automation messages with their own scope", async () => {
@@ -291,7 +290,7 @@ describe("useChatActions", () => {
     expect(message.metadata?.chatScope).toBe("automations");
 
     const options = sendMessage.mock.calls[0]?.[1] as ChatSendOptions;
-    await options.beforeSend?.(vi.fn());
+    await options.beforeSend?.();
 
     expect(mocks.createChatGroupWithMessage).toHaveBeenCalledWith(
       expect.objectContaining({

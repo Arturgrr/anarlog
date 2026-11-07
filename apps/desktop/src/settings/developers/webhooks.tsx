@@ -97,8 +97,8 @@ export function WebhooksSection() {
           <form.Field name="url">
             {(field) => (
               <Input
-                className="h-8 max-w-md text-sm"
-                placeholder="https://example.com/webhooks/anarlog"
+                className="h-7 max-w-md"
+                placeholder="https://example.com/webhooks/librelog"
                 value={field.state.value}
                 onChange={(event) => field.handleChange(event.target.value)}
               />

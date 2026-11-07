@@ -1,7 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 
 import { Button } from "@anlg/ui/components/ui/button";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
 export function DateRangeFilter({
@@ -12,7 +11,6 @@ export function DateRangeFilter({
   onChange: (value: "all" | "30d" | "7d") => void;
 }) {
   const { t } = useLingui();
-  const ref = useSquircleRef<HTMLDivElement>();
   const ranges = [
     { id: "all", label: t`All time` },
     { id: "30d", label: t`30 days` },
@@ -21,8 +19,7 @@ export function DateRangeFilter({
 
   return (
     <div
-      ref={ref}
-      className="bg-muted flex gap-1 rounded-lg p-1"
+      className="bg-layer-1 ring-border flex h-7 gap-0.5 rounded-md p-0.5 ring-[0.5px]"
       role="group"
       aria-label={t`Date range`}
     >
@@ -35,10 +32,10 @@ export function DateRangeFilter({
           aria-pressed={value === option.id}
           onClick={() => onChange(option.id)}
           className={cn([
-            "px-3 py-1.5 text-xs",
+            "h-6 rounded-sm px-3 py-0 text-sm font-normal shadow-none transition-[background-color,color,box-shadow] duration-200 ease-out",
             value === option.id
-              ? "bg-background text-foreground shadow-xs"
-              : "text-muted-foreground hover:text-foreground",
+              ? "bg-card text-foreground ring-border-strong hover:bg-card active:bg-card ring-[0.5px]"
+              : "text-muted-foreground hover:text-foreground hover:bg-transparent active:bg-transparent",
           ])}
         >
           {option.label}

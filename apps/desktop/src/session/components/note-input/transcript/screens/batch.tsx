@@ -1,3 +1,5 @@
+import { Trans } from "@lingui/react/macro";
+
 import { DancingSticks } from "@anlg/ui/components/ui/dancing-sticks";
 
 import { LiveTranscriptInterruptedNotice } from "./interrupted";
@@ -27,7 +29,7 @@ export function BatchState({
       <div className="mb-5">
         <DancingSticks
           amplitude={Math.min(Math.hypot(amplitude.mic, amplitude.speaker), 1)}
-          color="#a3a3a3"
+          color="var(--icon-faint)"
           height={36}
           width={80}
           stickWidth={3}
@@ -35,9 +37,14 @@ export function BatchState({
         />
       </div>
       <div className="flex max-w-md flex-col gap-2">
-        <p className="text-base font-medium">Batch transcription mode</p>
+        <p className="text-base font-medium">
+          <Trans>Batch transcription mode</Trans>
+        </p>
         <p className="text-muted-foreground text-sm leading-relaxed">
-          Recording continues. Your transcript will be generated after you stop.
+          <Trans>
+            Recording continues. Your transcript will be generated after you
+            stop.
+          </Trans>
         </p>
       </div>
     </div>

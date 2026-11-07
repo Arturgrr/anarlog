@@ -1,7 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useMemo, useRef, useState } from "react";
 
-import type { EventParticipant } from "@anlg/store";
 import { MagnifyingGlass, Plus } from "@anlg/ui/components/icons";
 import { Checkbox } from "@anlg/ui/components/ui/checkbox";
 import {
@@ -14,8 +13,6 @@ import { cn } from "@anlg/utils";
 
 import { preserveScrollPosition } from "./viewport-hooks";
 
-import { trackAnalyticsEvent } from "~/analytics";
-import { useSessionEventParticipants } from "~/calendar/queries";
 import { ContactImage } from "~/contacts/contact-avatar";
 import { createHuman, useHumans } from "~/contacts/queries";
 import { ContactFacehash } from "~/contacts/shared";
@@ -85,10 +82,6 @@ export function SpeakerAssignPopover({
             });
       void preserveScrollPosition(scrollContainer, assign)
         .then(() => {
-          trackAnalyticsEvent("participant_assigned", {
-            assignment_scope: assignmentMode,
-            word_count: segment.words.length,
-          });
           onAssigned?.(humanId);
           handleOpenChange(false);
         })
@@ -107,7 +100,7 @@ export function SpeakerAssignPopover({
           type="button"
           data-transcript-speaker-assign
           className={cn([
-            "-my-0.5 cursor-pointer rounded-full py-0.5 pr-2",
+            "-my-0.5 cursor-pointer rounded-sm py-0.5 pr-2",
             "underline-offset-2 hover:underline focus-visible:underline",
             open ? "underline" : null,
             className,
@@ -166,12 +159,10 @@ export type SpeakerParticipantOption = {
 
 export function buildSpeakerParticipantGroups({
   sessionParticipants,
-  eventParticipants = [],
   contacts,
   query,
 }: {
   sessionParticipants: SpeakerParticipantOption[];
-  eventParticipants?: SpeakerParticipantOption[];
   contacts: SpeakerParticipantOption[];
   query: string;
 }) {
@@ -189,7 +180,7 @@ export function buildSpeakerParticipantGroups({
   };
 
   const participantKeys = new Set<string>();
-  const participantOptions = [...sessionParticipants, ...eventParticipants]
+  const participantOptions = sessionParticipants
     .filter((option) => {
       const keys = getSpeakerParticipantDedupeKeys(option);
       if (keys.some((key) => participantKeys.has(key))) {
@@ -259,60 +250,6 @@ export function buildCreateSpeakerParticipantOption({
   };
 }
 
-export function buildEventSpeakerParticipantOptions({
-  eventParticipants,
-  contacts,
-}: {
-  eventParticipants: EventParticipant[];
-  contacts: SpeakerParticipantOption[];
-}): SpeakerParticipantOption[] {
-  const contactByEmail = new Map(
-    contacts.flatMap((contact) =>
-      [contact.email, ...(contact.additionalEmails ?? [])]
-        .filter((email): email is string => Boolean(email))
-        .map((email) => [email.toLowerCase(), contact] as const),
-    ),
-  );
-  const contactByName = new Map(
-    contacts.map((contact) => [contact.name.toLowerCase(), contact]),
-  );
-
-  return eventParticipants
-    .map((participant, index): SpeakerParticipantOption | null => {
-      const name = (participant.name ?? "").trim();
-      const email = (participant.email ?? "").trim();
-      if (!name && !email) {
-        return null;
-      }
-
-      const contact = email
-        ? contactByEmail.get(email.toLowerCase())
-        : name
-          ? contactByName.get(name.toLowerCase())
-          : undefined;
-
-      if (contact) {
-        return {
-          ...contact,
-          name: name || contact.name,
-          email: email || contact.email,
-          isSessionParticipant: true,
-        };
-      }
-
-      const pendingId = email ? `event:${email}` : `event:${name}:${index}`;
-
-      return {
-        id: pendingId,
-        name: name || email,
-        email: email || undefined,
-        isSessionParticipant: true,
-        isNew: true,
-      };
-    })
-    .filter((option): option is SpeakerParticipantOption => option !== null);
-}
-
 export function SpeakerParticipantPicker({
   sessionId,
   onSelect,
@@ -326,9 +263,6 @@ export function SpeakerParticipantPicker({
   const session = useSession(sessionId ?? "");
   const participantRecords = useSessionParticipants(sessionId ?? "");
   const humanRecords = useHumans();
-  const attachedEventParticipants = useSessionEventParticipants(
-    sessionId ?? "",
-  );
 
   const [query, setQuery] = useState("");
   const [selectedOption, setSelectedOption] =
@@ -353,7 +287,7 @@ export function SpeakerParticipantPicker({
           const email = participant.email.trim();
           return {
             id: participant.humanId,
-            name: name || email || t`Unknown`,
+            name: participant.isSelf ? t`You` : name || email || t`Unknown`,
             email: email || undefined,
             avatarDataUrl:
               avatarByHumanId.get(participant.humanId) ?? undefined,
@@ -389,15 +323,6 @@ export function SpeakerParticipantPicker({
     [humanRecords],
   );
 
-  const eventParticipants = useMemo(
-    () =>
-      buildEventSpeakerParticipantOptions({
-        eventParticipants: attachedEventParticipants,
-        contacts,
-      }),
-    [attachedEventParticipants, contacts],
-  );
-
   const participantIds = useMemo(
     () => new Set(participants.map((participant) => participant.id)),
     [participants],
@@ -407,20 +332,19 @@ export function SpeakerParticipantPicker({
     () =>
       buildSpeakerParticipantGroups({
         sessionParticipants: participants,
-        eventParticipants,
         contacts,
         query,
       }),
-    [contacts, eventParticipants, participants, query],
+    [contacts, participants, query],
   );
 
   const createOption = useMemo(
     () =>
       buildCreateSpeakerParticipantOption({
         query,
-        existingOptions: [...participants, ...eventParticipants, ...contacts],
+        existingOptions: [...participants, ...contacts],
       }),
-    [contacts, eventParticipants, participants, query],
+    [contacts, participants, query],
   );
   const hasPeopleGroup = groups.some((group) => group.title === "People");
 
@@ -464,7 +388,6 @@ export function SpeakerParticipantPicker({
         ownerUserId: session.user_id,
         name: option.name,
         email: option.email,
-        entryPoint: "speaker_assignment",
       });
     },
     [contacts, session?.user_id],
@@ -596,7 +519,7 @@ export function SpeakerParticipantPicker({
         <button
           type="button"
           className={cn([
-            "bg-primary text-primary-foreground h-8 rounded-full px-3 text-xs font-medium",
+            "bg-primary text-primary-foreground shadow-button-contrast h-7 rounded-md px-3 text-xs font-medium",
             "hover:bg-primary/90",
             "disabled:pointer-events-none disabled:opacity-50",
           ])}
@@ -635,7 +558,7 @@ function ParticipantOptionButton({
       aria-pressed={selected}
       className={cn([
         "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm",
-        selected ? "bg-accent text-accent-foreground" : "hover:bg-accent",
+        selected ? "bg-layer-2 text-foreground" : "hover:bg-hover",
       ])}
       onClick={() => onSelect(option)}
     >

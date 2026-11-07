@@ -17,7 +17,7 @@ import { chatFloatingPanelClassNames } from "~/chat/surface";
 import type { ChatScope } from "~/chat/types";
 import { useShell } from "~/contexts/shell";
 import { useSessionHasTranscript } from "~/session/queries";
-import { useOwnerUserId } from "~/shared/owner-user";
+import { useLocalUserId } from "~/shared/owner-user";
 import { folderIdForNewNote, useSidebarNotes } from "~/sidebar/note-filter";
 import { isBatchTranscriptionPending } from "~/store/zustand/listener/general-shared";
 import { useListener } from "~/stt/contexts";
@@ -59,7 +59,7 @@ function ScopedChatSession({
     scope === "automations"
       ? undefined
       : folderIdForNewNote(noteFilter, folderFilter);
-  const ownerUserId = useOwnerUserId();
+  const ownerUserId = useLocalUserId();
   const hasAvailableTranscript = useSessionHasTranscript(
     contextSessionId ?? "",
   );
@@ -110,7 +110,7 @@ export function ChatPanelFrame({
   const { groupId, setGroupId, rollbackFailedGroup } = chat;
   const { panelClassName, toolbarSurface } = useChatAppearance();
   const isFloating = layout === "floating";
-  const model = useLanguageModel("chat");
+  const model = useLanguageModel();
   const { currentSessionId, currentNoteView } = useSessionTab();
   const hasSummary = useHasEditableSummary(
     chat.scope === "automations" ? undefined : currentSessionId,

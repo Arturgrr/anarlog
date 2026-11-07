@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("./badge-collection", () => ({ BadgeCollection: () => null }));
 vi.mock("./queries", () => ({ useActivity: () => mocks.activity }));
-vi.mock("~/calendar/hooks", () => ({
+vi.mock("~/shared/hooks/useNow", () => ({
   useNow: () => new Date("2026-09-05T12:00:00Z"),
   useTimezone: () => "UTC",
   useWeekStartsOn: () => 1,

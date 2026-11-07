@@ -21,7 +21,7 @@ const hoisted = vi.hoisted(() => ({
   unminimizeWindow: vi.fn(),
   focusWindow: vi.fn(),
   meetingChatRecords: [] as unknown[],
-  eventParticipants: [] as Array<Record<string, unknown>>,
+  sessionParticipants: [] as Array<Record<string, unknown>>,
   userTemplates: [] as Array<Record<string, unknown>>,
   replacementContent: null as unknown,
   replaceContent: vi.fn(),
@@ -90,12 +90,6 @@ vi.mock("@anlg/editor/note", async () => {
   };
 });
 
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: {
-    event: vi.fn(),
-  },
-}));
-
 vi.mock("@anlg/plugin-opener2", () => ({
   commands: { openUrl: vi.fn() },
 }));
@@ -109,10 +103,6 @@ vi.mock("~/audio-player", () => ({
 
 vi.mock("~/editor-bridge/app-link-view", () => ({
   AppLinkView: () => null,
-}));
-
-vi.mock("~/calendar/queries", () => ({
-  useSessionEventParticipants: () => hoisted.eventParticipants,
 }));
 
 vi.mock("~/editor-bridge/mention-config", () => ({
@@ -131,18 +121,12 @@ vi.mock("~/editor-bridge/session-view", () => ({
   SessionNodeView: () => null,
 }));
 
-vi.mock("~/session-sharing/comment-anchors", () => ({
-  useSessionCommentAnchors: () => ({
-    onViewReady: vi.fn(),
-    onViewDisposed: vi.fn(),
-  }),
-}));
-
 vi.mock("~/session/components/shared", () => ({
   useCanShowTranscript: () => hoisted.canShowTranscript,
 }));
 
 vi.mock("~/session/queries", () => ({
+  useSessionParticipants: () => hoisted.sessionParticipants,
   useUpdateSession: () => hoisted.persistChange,
 }));
 
@@ -172,13 +156,9 @@ vi.mock("~/session/hooks/useCreatePreMeetingBrief", () => ({
 function RawEditor({
   sessionId,
   className,
-  eventTitle,
-  eventDescription,
 }: {
   sessionId: string;
   className?: string;
-  eventTitle?: string;
-  eventDescription?: string;
 }) {
   return (
     <SessionRawEditor
@@ -186,8 +166,6 @@ function RawEditor({
       rawMd={hoisted.rawMd}
       sessionTitle={hoisted.sessionTitle}
       className={className}
-      eventTitle={eventTitle}
-      eventDescription={eventDescription}
     />
   );
 }
@@ -237,7 +215,7 @@ describe("RawEditor", () => {
     hoisted.fileUpload = vi.fn();
     hoisted.processAudioFile = vi.fn();
     hoisted.meetingChatRecords = [];
-    hoisted.eventParticipants = [];
+    hoisted.sessionParticipants = [];
     hoisted.userTemplates = [];
     hoisted.canShowTranscript = false;
     hoisted.replacementContent = null;
@@ -532,10 +510,12 @@ describe("RawEditor", () => {
     ).not.toBeNull();
   });
 
-  it("prioritizes event-aware template suggestions", () => {
-    hoisted.eventParticipants = [
-      { name: "John", is_current_user: true },
-      { name: "Ada", is_current_user: false },
+  it("prioritizes template suggestions from the note title and participants", () => {
+    hoisted.sessionTitle = "Acme product demo";
+    hoisted.sessionParticipants = [
+      { name: "John", source: "auto" },
+      { name: "Ada", source: "manual" },
+      { name: "Excluded", source: "excluded" },
     ];
     hoisted.userTemplates = [
       {
@@ -564,13 +544,7 @@ describe("RawEditor", () => {
       },
     ];
 
-    render(
-      <RawEditor
-        sessionId="session-1"
-        eventTitle="Acme product demo"
-        eventDescription="Qualify the prospect and understand their budget"
-      />,
-    );
+    render(<RawEditor sessionId="session-1" />);
 
     expect(
       screen.getAllByRole("button").map((button) => button.textContent),
@@ -678,8 +652,6 @@ describe("RawEditor", () => {
     );
     expect(hoisted.openTemplatesTab).toHaveBeenCalledWith({
       selectedMineId: "new-template",
-      selectedWebIndex: null,
-      isWebMode: false,
       showHomepage: false,
     });
   });

@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { type CSSProperties, useEffect, useRef } from "react";
 
 import { ArrowElbowDownLeft } from "@anlg/ui/components/icons";
@@ -69,7 +70,9 @@ export function ParticipantDropdown({
             <span className="flex w-full items-center justify-between">
               {option.isNew ? (
                 <span>
-                  Add "<span className="font-medium">{option.name}</span>"
+                  <Trans>
+                    Add "<span className="font-medium">{option.name}</span>"
+                  </Trans>
                 </span>
               ) : (
                 <span className="flex items-center gap-2">

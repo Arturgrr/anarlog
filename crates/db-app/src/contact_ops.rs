@@ -14,24 +14,8 @@ pub struct MergeHumanRow {
     pub metadata_json: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AvatarChange {
-    Set(String),
-    Remove,
-    Keep,
-}
-
-const WORKSPACE_BINDING_SQL: &str = "NULLIF((
-              SELECT json_extract(value_json, '$.workspace_id')
-              FROM app_settings
-              WHERE id = 'cloudsync_workspace_binding'
-            ), '')";
-
 const VALID_METADATA_SQL: &str =
     "CASE WHEN json_valid(metadata_json) THEN metadata_json ELSE '{}' END";
-
-const VALID_HUMANS_METADATA_SQL: &str =
-    "CASE WHEN json_valid(humans.metadata_json) THEN humans.metadata_json ELSE '{}' END";
 
 // The json_valid / json_type guards keep one malformed synced metadata
 // row from breaking the whole query.
@@ -175,71 +159,6 @@ pub async fn create_organization(
     .bind(now)
     .execute(&mut *conn)
     .await?;
-    Ok(result.rows_affected())
-}
-
-#[allow(clippy::too_many_arguments)]
-pub async fn upsert_personal_contact(
-    conn: &mut SqliteConnection,
-    human_id: &str,
-    name: &str,
-    email: &str,
-    phone: &str,
-    job_title: &str,
-    linkedin_username: &str,
-    memo: &str,
-    organization_id: &str,
-    avatar: &AvatarChange,
-    now: &str,
-) -> Result<u64, sqlx::Error> {
-    let insert_metadata = match avatar {
-        AvatarChange::Set(_) => "json_object('avatarDataUrl', ?)",
-        AvatarChange::Remove | AvatarChange::Keep => "'{}'",
-    };
-    let update_metadata = match avatar {
-        AvatarChange::Set(_) => {
-            format!("json_set({VALID_HUMANS_METADATA_SQL}, '$.avatarDataUrl', ?)")
-        }
-        AvatarChange::Remove => {
-            format!("json_remove({VALID_HUMANS_METADATA_SQL}, '$.avatarDataUrl')")
-        }
-        AvatarChange::Keep => VALID_HUMANS_METADATA_SQL.to_string(),
-    };
-    let sql = format!(
-        "INSERT INTO humans (
-          id, workspace_id, owner_user_id, name, email, phone, job_title,
-          linkedin_username, memo, organization_id, metadata_json, created_at, updated_at, deleted_at
-        ) VALUES (
-          ?, {WORKSPACE_BINDING_SQL},
-          COALESCE((SELECT library_workspace_id FROM local_library_connections WHERE active = 1), ?),
-          ?, ?, ?, ?, ?, ?, ?, {insert_metadata}, ?, ?, NULL
-        )
-        ON CONFLICT(id) DO UPDATE SET
-          name = excluded.name, email = excluded.email, phone = excluded.phone,
-          job_title = excluded.job_title, linkedin_username = excluded.linkedin_username,
-          memo = excluded.memo, organization_id = excluded.organization_id,
-          metadata_json = {update_metadata},
-          updated_at = excluded.updated_at, deleted_at = NULL"
-    );
-    let mut query = sqlx::query(sqlx::AssertSqlSafe(sql));
-    query = query
-        .bind(human_id)
-        .bind(human_id)
-        .bind(name)
-        .bind(email)
-        .bind(phone)
-        .bind(job_title)
-        .bind(linkedin_username)
-        .bind(memo)
-        .bind(organization_id);
-    if let AvatarChange::Set(value) = avatar {
-        query = query.bind(value);
-    }
-    query = query.bind(now).bind(now);
-    if let AvatarChange::Set(value) = avatar {
-        query = query.bind(value);
-    }
-    let result = query.execute(&mut *conn).await?;
     Ok(result.rows_affected())
 }
 
@@ -531,85 +450,5 @@ pub async fn update_human_additional_emails(
         query = query.bind(json);
     }
     let result = query.bind(now).bind(human_id).execute(&mut *conn).await?;
-    Ok(result.rows_affected())
-}
-
-pub async fn upsert_revived_human(
-    conn: &mut SqliteConnection,
-    id: &str,
-    owner_user_id: &str,
-    name: &str,
-    email: &str,
-    now: &str,
-) -> Result<u64, sqlx::Error> {
-    let result = sqlx::query(concat!(
-        "INSERT INTO humans (
-            id, workspace_id, owner_user_id, organization_id, name, email,
-            phone, job_title, linkedin_username, memo, pinned, pin_order,
-            metadata_json, created_at, updated_at, deleted_at
-          ) VALUES (
-            ?, NULLIF((
-              SELECT json_extract(value_json, '$.workspace_id')
-              FROM app_settings
-              WHERE id = 'cloudsync_workspace_binding'
-            ), ''), COALESCE(
-              (SELECT library_workspace_id FROM local_library_connections WHERE active = 1),
-              NULLIF(NULLIF(?, ''), '",
-        "00000000-0000-0000-0000-000000000000",
-        "'),
-              NULLIF((
-                SELECT json_extract(value_json, '$.workspace_id')
-                FROM app_settings
-                WHERE id = 'cloudsync_workspace_binding'
-              ), ''),
-              '",
-        "00000000-0000-0000-0000-000000000000",
-        "'
-            ), '', ?, ?, '', '', '', '', 0, NULL, '{}', ?, ?, NULL
-          )
-          ON CONFLICT(id) DO UPDATE SET
-            deleted_at = NULL,
-            updated_at = excluded.updated_at
-          WHERE humans.deleted_at IS NOT NULL"
-    ))
-    .bind(id)
-    .bind(owner_user_id)
-    .bind(name)
-    .bind(email)
-    .bind(now)
-    .bind(now)
-    .execute(&mut *conn)
-    .await?;
-    Ok(result.rows_affected())
-}
-
-pub async fn insert_organization_by_name_if_missing(
-    conn: &mut SqliteConnection,
-    id: &str,
-    owner_user_id: &str,
-    name: &str,
-    now: &str,
-) -> Result<u64, sqlx::Error> {
-    let sql = format!(
-        "INSERT INTO organizations (
-            id, workspace_id, owner_user_id, name, memo, pinned, pin_order,
-            metadata_json, created_at, updated_at, deleted_at
-          )
-          SELECT ?, {WORKSPACE_BINDING_SQL}, COALESCE((SELECT library_workspace_id FROM local_library_connections WHERE active = 1), ?), ?, '', 0, NULL, '{{}}', ?, ?, NULL
-          WHERE NOT EXISTS (
-            SELECT 1
-            FROM organizations
-            WHERE lower(name) = lower(?) AND deleted_at IS NULL
-          )"
-    );
-    let result = sqlx::query(sqlx::AssertSqlSafe(sql))
-        .bind(id)
-        .bind(owner_user_id)
-        .bind(name)
-        .bind(now)
-        .bind(now)
-        .bind(name)
-        .execute(&mut *conn)
-        .await?;
     Ok(result.rows_affected())
 }

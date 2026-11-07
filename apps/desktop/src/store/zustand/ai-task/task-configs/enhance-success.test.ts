@@ -7,19 +7,11 @@ import { enhanceSuccess, runEnhanceSuccess } from "./enhance-success";
 import { useLiveTitle } from "~/store/zustand/live-title";
 
 const mocks = vi.hoisted(() => ({
-  beginCloudsyncActivity: vi.fn().mockResolvedValue(undefined),
-  endCloudsyncActivity: vi.fn().mockResolvedValue(undefined),
   loadSessionContentSnapshot: vi.fn(),
   playCompletionSound: vi.fn(),
   persistGeneratedEnhancedNote: vi.fn().mockResolvedValue(undefined),
   prepareGeneratedSummary: vi.fn(),
   composeGeneratedSummary: vi.fn(),
-}));
-
-vi.mock("@anlg/plugin-db", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@anlg/plugin-db")>()),
-  beginCloudsyncActivity: mocks.beginCloudsyncActivity,
-  endCloudsyncActivity: mocks.endCloudsyncActivity,
 }));
 
 vi.mock("@anlg/plugin-template", () => ({
@@ -41,10 +33,6 @@ vi.mock("~/shared/notification-policy", () => ({
   shouldShowNotification: vi.fn().mockResolvedValue(true),
 }));
 
-vi.mock("~/cloud-api/client", () => ({
-  syncCloudApiSnapshotBestEffort: vi.fn(),
-}));
-
 vi.mock("~/session/content-mutations", () => ({
   persistGeneratedEnhancedNote: mocks.persistGeneratedEnhancedNote,
 }));
@@ -59,8 +47,6 @@ function createSnapshot(title = "") {
     ownerUserId: "user-1",
     title,
     createdAt: "2026-07-10T00:00:00.000Z",
-    event: null,
-    eventId: null,
     rawNoteId: "session-1",
     rawTemplateId: "",
     rawContent: "",
@@ -126,8 +112,6 @@ function createParams(
 describe("enhanceSuccess.onSuccess", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.beginCloudsyncActivity.mockReset().mockResolvedValue(undefined);
-    mocks.endCloudsyncActivity.mockReset().mockResolvedValue(undefined);
     useLiveTitle.setState({ titles: {} });
     mocks.loadSessionContentSnapshot.mockResolvedValue(createSnapshot());
     mocks.persistGeneratedEnhancedNote.mockResolvedValue(undefined);
@@ -202,54 +186,6 @@ describe("enhanceSuccess.onSuccess", () => {
         }),
       }),
     );
-    const cloudsyncLeaseKey = mocks.beginCloudsyncActivity.mock.calls[0]?.[1];
-    expect(cloudsyncLeaseKey).toMatch(/^note-1-enhance:/);
-    expect(mocks.beginCloudsyncActivity).toHaveBeenCalledWith(
-      "enhance",
-      cloudsyncLeaseKey,
-    );
-    expect(mocks.beginCloudsyncActivity).toHaveBeenCalledBefore(
-      mocks.persistGeneratedEnhancedNote,
-    );
-    expect(
-      mocks.beginCloudsyncActivity.mock.invocationCallOrder[0],
-    ).toBeLessThan(
-      mocks.loadSessionContentSnapshot.mock.invocationCallOrder[1],
-    );
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledBefore(
-      mocks.endCloudsyncActivity,
-    );
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledWith(
-      "enhance",
-      cloudsyncLeaseKey,
-    );
-  });
-
-  it("reports persistence only after generated content is saved", async () => {
-    const onPersisted = vi.fn();
-
-    await runEnhanceSuccess({
-      ...createParams(),
-      onPersisted,
-    });
-
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-    expect(onPersisted).toHaveBeenCalledOnce();
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledBefore(
-      onPersisted,
-    );
-  });
-
-  it("does not report persistence for empty generated content", async () => {
-    const onPersisted = vi.fn();
-
-    await runEnhanceSuccess({
-      ...createParams({ text: "" }),
-      onPersisted,
-    });
-
-    expect(mocks.persistGeneratedEnhancedNote).not.toHaveBeenCalled();
-    expect(onPersisted).not.toHaveBeenCalled();
   });
 
   it("uses the durable auto-enhance baseline instead of a later user edit", async () => {
@@ -301,10 +237,6 @@ describe("enhanceSuccess.onSuccess", () => {
         taskType: "title",
         args: expect.objectContaining({ skipPersist: true }),
       }),
-    );
-    expect(startTask).toHaveBeenCalledBefore(mocks.beginCloudsyncActivity);
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledBefore(
-      mocks.endCloudsyncActivity,
     );
     expect(startTask).toHaveBeenCalledWith(
       "session-1-title",
@@ -386,88 +318,6 @@ describe("enhanceSuccess.onSuccess", () => {
         }),
       ),
     ).rejects.toThrow("stale summary");
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledWith(
-      "enhance",
-      mocks.beginCloudsyncActivity.mock.calls[0]?.[1],
-    );
-  });
-
-  it("does not persist until the enhance activity lease is acquired", async () => {
-    let acquireActivity: (() => void) | undefined;
-    mocks.beginCloudsyncActivity.mockReturnValueOnce(
-      new Promise<void>((resolve) => {
-        acquireActivity = resolve;
-      }),
-    );
-
-    const persistence = enhanceSuccess.onSuccess?.(createParams());
-    await vi.waitFor(() =>
-      expect(mocks.beginCloudsyncActivity).toHaveBeenCalledOnce(),
-    );
-    expect(mocks.loadSessionContentSnapshot).toHaveBeenCalledOnce();
-    expect(mocks.persistGeneratedEnhancedNote).not.toHaveBeenCalled();
-
-    acquireActivity?.();
-    await persistence;
-
-    expect(mocks.loadSessionContentSnapshot).toHaveBeenCalledTimes(2);
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledOnce();
-  });
-
-  it("keeps the retryable summary untouched when activity acquisition fails", async () => {
-    const acquisitionError = new Error("cloudsync busy");
-    mocks.beginCloudsyncActivity.mockRejectedValueOnce(acquisitionError);
-
-    await expect(
-      enhanceSuccess.onSuccess?.(
-        createParams({
-          args: {
-            sessionId: "session-1",
-            enhancedNoteId: "note-1",
-            templateId: undefined,
-            pendingAutoEnhance: {
-              generation: "generation-1",
-              expectedBody: "old content",
-              expectedContentFormat: "markdown",
-            },
-          },
-        }),
-      ),
-    ).rejects.toBe(acquisitionError);
-
-    expect(mocks.persistGeneratedEnhancedNote).not.toHaveBeenCalled();
-    expect(mocks.loadSessionContentSnapshot).toHaveBeenCalledOnce();
-    expect(mocks.endCloudsyncActivity).not.toHaveBeenCalled();
-  });
-
-  it("keeps a persisted summary successful while release retries in the background", async () => {
-    vi.useFakeTimers();
-    mocks.endCloudsyncActivity
-      .mockRejectedValueOnce(new Error("failure 1"))
-      .mockRejectedValueOnce(new Error("failure 2"))
-      .mockRejectedValueOnce(new Error("failure 3"))
-      .mockRejectedValueOnce(new Error("failure 4"))
-      .mockResolvedValueOnce(undefined);
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-
-    const success = enhanceSuccess.onSuccess?.(createParams());
-    await vi.advanceTimersByTimeAsync(400);
-    await expect(success).resolves.toBeUndefined();
-
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledTimes(3);
-
-    await vi.advanceTimersByTimeAsync(5_000);
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledTimes(4);
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-
-    await vi.advanceTimersByTimeAsync(5_000);
-    expect(mocks.endCloudsyncActivity).toHaveBeenCalledTimes(5);
-    expect(mocks.persistGeneratedEnhancedNote).toHaveBeenCalledOnce();
-    consoleError.mockRestore();
   });
 
   it("retries a transient database lock while saving generated content", async () => {
@@ -502,19 +352,16 @@ describe("enhanceSuccess.onSuccess", () => {
 
   it("does not save after cancellation during title generation", async () => {
     const abortController = new AbortController();
-    const onPersisted = vi.fn();
     const startTask = vi.fn().mockImplementation(async (_taskId, config) => {
       abortController.abort();
       config.onComplete?.("Generated title");
     });
 
-    await runEnhanceSuccess({
-      ...createParams({ signal: abortController.signal, startTask }),
-      onPersisted,
-    });
+    await runEnhanceSuccess(
+      createParams({ signal: abortController.signal, startTask }),
+    );
 
     expect(mocks.persistGeneratedEnhancedNote).not.toHaveBeenCalled();
-    expect(onPersisted).not.toHaveBeenCalled();
   });
 
   it("rejects persistence when the target summary disappeared", async () => {

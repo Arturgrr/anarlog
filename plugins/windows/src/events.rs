@@ -4,7 +4,7 @@ use tauri::Manager;
 
 use crate::{AppWindow, WindowsPluginExt, commands};
 
-// TODO: https://github.com/fastrepl/anarlog/commit/150c8a1 this not worked. webview_window not found.
+// TODO: handling this on the webview window did not work (webview_window not found).
 pub fn on_window_event(window: &tauri::Window<tauri::Wry>, event: &tauri::WindowEvent) {
     let app = window.app_handle();
 
@@ -212,12 +212,12 @@ mod test {
     fn navigate_from_str() {
         let test_cases = vec![
             (
-                "anarlog://anarlog.so/app/new?calendarEventId=123&record=true",
+                "librelog://example.com/app/new?sessionId=123&record=true",
                 "/app/new",
-                Some(serde_json::json!({ "calendarEventId": "123", "record": "true" })),
+                Some(serde_json::json!({ "sessionId": "123", "record": "true" })),
             ),
             (
-                "hyprnote://hyprnote.com/app/new?record=true",
+                "librelog-dev://example.org/app/new?record=true",
                 "/app/new",
                 Some(serde_json::json!({ "record": "true" })),
             ),
@@ -240,19 +240,4 @@ mod test {
             }
         }
     }
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, specta::Type, tauri_specta::Event)]
-#[serde(rename_all = "camelCase")]
-pub struct FloatingBarDictationAction {
-    pub session_id: String,
-    pub action: DictationPanelAction,
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub enum DictationPanelAction {
-    Finish,
-    Cancel,
-    TogglePreview,
 }

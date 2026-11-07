@@ -6,6 +6,7 @@ import { toast } from "@anlg/ui/components/ui/toast";
 import { setSettingValues } from "~/settings/queries";
 
 export function useProviderSelectionPrompt({
+  enabled,
   providerType,
   providerId,
   providerName,
@@ -13,6 +14,7 @@ export function useProviderSelectionPrompt({
   providerStateReady,
   storedApiKey,
 }: {
+  enabled: boolean;
   providerType: "llm" | "stt";
   providerId: string;
   providerName: string;
@@ -35,7 +37,12 @@ export function useProviderSelectionPrompt({
       hadApiKeyRef.current = hasApiKey;
     }
 
-    if (hadApiKey !== false || !hasApiKey || currentProvider === providerId) {
+    if (
+      !enabled ||
+      hadApiKey !== false ||
+      !hasApiKey ||
+      currentProvider === providerId
+    ) {
       return;
     }
 

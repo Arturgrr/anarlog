@@ -13,15 +13,14 @@ import {
 } from "@anlg/plugin-local-stt";
 import { toast } from "@anlg/ui/components/ui/toast";
 
-import { useBillingAccess } from "~/auth/billing-context";
+import { useNotifications } from "~/contexts/notifications";
+import { setSettingValues } from "~/settings/queries";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 
 type SttSettingsContextType = {
-  accordionValue: string;
-  setAccordionValue: (value: string) => void;
   startDownload: (model: LocalModel, provider: string) => void;
+  cancelDownload: (model: LocalModel) => Promise<void>;
   queuedDownloads: LocalModel[];
-  startTrial: () => void;
 };
 
 const SttSettingsContext = createContext<SttSettingsContextType | null>(null);
@@ -29,85 +28,112 @@ const SttSettingsContext = createContext<SttSettingsContextType | null>(null);
 const DOWNLOAD_PROGRESS_GRACE_MS = 10_000;
 
 export function SttSettingsProvider({
+  selectOnDownload = false,
   children,
 }: {
+  selectOnDownload?: boolean;
   children: React.ReactNode;
 }) {
-  const [accordionValue, setAccordionValue] = useState<string>("");
-  const { upgradeToPro } = useBillingAccess();
-
+  const { dismissDownload } = useNotifications();
   const [queuedDownloads, setQueuedDownloads] = useState<LocalModel[]>([]);
   const queuedDownloadsRef = useRef<Set<LocalModel>>(new Set());
 
-  const startDownload = useCallback((model: LocalModel, provider: string) => {
-    if (queuedDownloadsRef.current.has(model)) {
-      return;
-    }
-
-    const dequeue = () => {
-      queuedDownloadsRef.current.delete(model);
-      setQueuedDownloads([...queuedDownloadsRef.current]);
-    };
-
-    queuedDownloadsRef.current.add(model);
+  const dequeue = useCallback((model: LocalModel) => {
+    queuedDownloadsRef.current.delete(model);
     setQueuedDownloads([...queuedDownloadsRef.current]);
-    const selection = { provider, model };
+  }, []);
+
+  const clearPendingDownload = useCallback((model: LocalModel) => {
     usePendingSttSelection.setState((state) => ({
-      selection,
-      queuedDownloads: [
-        ...state.queuedDownloads.filter((queued) => queued !== model),
-        model,
-      ],
+      queuedDownloads: state.queuedDownloads.filter(
+        (queued) => queued !== model,
+      ),
+      selection: state.selection?.model === model ? null : state.selection,
     }));
-    const clearPendingSelection = () => {
-      usePendingSttSelection.setState((state) => ({
-        queuedDownloads: state.queuedDownloads.filter(
-          (queued) => queued !== model,
-        ),
-      }));
-      if (usePendingSttSelection.getState().selection === selection) {
-        usePendingSttSelection.setState({ selection: null });
+  }, []);
+
+  const startDownload = useCallback(
+    (model: LocalModel, provider: string) => {
+      if (queuedDownloadsRef.current.has(model)) {
+        return;
       }
-    };
-    void localSttCommands.downloadModel(model).then(
-      (result) => {
-        if (result.status === "error") {
-          toast.error(t`Model download couldn’t start`, {
-            description: result.error,
-          });
-          dequeue();
-          clearPendingSelection();
+
+      queuedDownloadsRef.current.add(model);
+      setQueuedDownloads([...queuedDownloadsRef.current]);
+      // Selecting first: saving a transcription choice drops the pending one,
+      // so it has to happen before the pending selection below is set.
+      if (selectOnDownload) {
+        void setSettingValues({
+          current_stt_provider: provider,
+          current_stt_model: model,
+        }).catch((error) => {
+          console.error(
+            "[settings] failed to select the downloading model",
+            error,
+          );
+        });
+      }
+      const selection = { provider, model };
+      usePendingSttSelection.setState((state) => {
+        const { [model]: _, ...failedDownloads } = state.failedDownloads;
+        return {
+          selection,
+          queuedDownloads: [
+            ...state.queuedDownloads.filter((queued) => queued !== model),
+            model,
+          ],
+          failedDownloads,
+        };
+      });
+      const failToStart = (description: string) => {
+        toast.error(t`Model download couldn’t start`, { description });
+        dequeue(model);
+        usePendingSttSelection.setState((state) => ({
+          queuedDownloads: state.queuedDownloads.filter(
+            (queued) => queued !== model,
+          ),
+          selection: state.selection === selection ? null : state.selection,
+          failedDownloads: { ...state.failedDownloads, [model]: description },
+        }));
+      };
+      void (async () => {
+        try {
+          const result = await localSttCommands.downloadModel(model);
+          if (result.status === "error") {
+            failToStart(result.error);
+            return;
+          }
+        } catch (error) {
+          failToStart(error instanceof Error ? error.message : String(error));
           return;
         }
 
         // The command resolves when the download starts, not when it finishes.
         // Keep the queue entry until progress events take over the row state,
         // so the gap cannot accept another click.
-        setTimeout(dequeue, DOWNLOAD_PROGRESS_GRACE_MS);
-      },
-      (error) => {
-        toast.error(t`Model download couldn’t start`, {
-          description: error instanceof Error ? error.message : String(error),
-        });
-        dequeue();
-        clearPendingSelection();
-      },
-    );
-  }, []);
+        setTimeout(() => dequeue(model), DOWNLOAD_PROGRESS_GRACE_MS);
+      })();
+    },
+    [dequeue, selectOnDownload],
+  );
 
-  const startTrial = useCallback(() => {
-    upgradeToPro();
-  }, [upgradeToPro]);
+  const cancelDownload = useCallback(
+    async (model: LocalModel) => {
+      const result = await localSttCommands.cancelDownload(model);
+      if (result.status === "error") {
+        throw new Error(result.error);
+      }
+
+      dequeue(model);
+      clearPendingDownload(model);
+      dismissDownload(model);
+    },
+    [clearPendingDownload, dequeue, dismissDownload],
+  );
 
   return (
     <SttSettingsContext.Provider
-      value={{
-        accordionValue,
-        setAccordionValue,
-        startDownload,
-        queuedDownloads,
-        startTrial,
-      }}
+      value={{ startDownload, cancelDownload, queuedDownloads }}
     >
       {children}
     </SttSettingsContext.Provider>

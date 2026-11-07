@@ -4,15 +4,6 @@ import type {
   GetMeetingInput,
   GetMeetingTranscriptInput as GeneratedGetMeetingTranscriptInput,
   GetRecurringMeetingHistoryInput as GeneratedGetRecurringMeetingHistoryInput,
-  CloudsyncE2eeWitness,
-  CloudsyncTokenConfigurationResult,
-  CloudsyncWorkspaceProjection,
-  CloudsyncWorkspaceKeyGrant,
-  E2eeIdentityStatus,
-  E2eeDeviceEnrollmentPackage,
-  E2eeDeviceIdentity,
-  E2eeRecoveryKeyIdentity,
-  SealedWorkspaceE2eeKey,
   LegacyCleanupResult,
   LegacyCleanupStatus,
   LegacyImportReport,
@@ -23,19 +14,9 @@ import type {
   StartupStatus,
   SubscriptionRegistration,
   TranscriptPage,
-  WorkspaceE2eeKeyRecipient,
 } from "./bindings.gen";
 
 export type {
-  CloudsyncE2eeWitness,
-  CloudsyncTokenConfigurationResult,
-  CloudsyncWorkspaceProjection,
-  CloudsyncWorkspaceKeyGrant,
-  E2eeIdentityStatus,
-  E2eeDeviceEnrollmentPackage,
-  E2eeDeviceIdentity,
-  E2eeRecoveryKeyIdentity,
-  SealedWorkspaceE2eeKey,
   GetMeetingInput,
   LegacyCleanupResult,
   LegacyCleanupStatus,
@@ -45,7 +26,6 @@ export type {
   SessionIngestApplyResult,
   StartupStatus,
   TranscriptPage,
-  WorkspaceE2eeKeyRecipient,
 } from "./bindings.gen";
 
 export type ListMeetingsInput = Partial<GeneratedListMeetingsInput>;
@@ -64,79 +44,6 @@ export type TransactionStatement = {
   sql: string;
   params: unknown[];
   expectedRowsAffected?: number;
-};
-
-export type CloudsyncAuth =
-  | { type: "none" }
-  | { type: "api_key"; api_key: string }
-  | { type: "token"; token: string };
-
-export type CloudsyncTableSpec = {
-  table_name: string;
-  crdt_algo?: string;
-  init_flags?: number;
-  enabled: boolean;
-};
-
-export type CloudsyncRuntimeConfig = {
-  connection_string: string;
-  auth: CloudsyncAuth;
-  tables: CloudsyncTableSpec[];
-  sync_interval_ms: number;
-  wait_ms?: number;
-  max_retries?: number;
-};
-
-export const CLOUDSYNC_ACTIVITY_DEFERRED_ERROR =
-  "cloudsync_activity_deferred" as const;
-
-export function isCloudsyncActivityDeferredError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-  return message === CLOUDSYNC_ACTIVITY_DEFERRED_ERROR;
-}
-
-export type CloudsyncNetworkResult = {
-  send?: {
-    status: string;
-    localVersion: number;
-    serverVersion: number;
-    lastFailure?: unknown;
-  };
-  receive?: {
-    rows: number;
-    tables: string[];
-    error?: string;
-    lastFailure?: unknown;
-  };
-};
-
-export type CloudsyncStatus = {
-  cloudsync_enabled: boolean;
-  extension_loaded: boolean;
-  configured: boolean;
-  running: boolean;
-  network_initialized: boolean;
-  activity_paused: boolean;
-  deferred_for_capture: boolean;
-  last_sync: CloudsyncNetworkResult | null;
-  last_sync_at_ms: number | null;
-  has_unsent_changes: boolean | null;
-  last_error: string | null;
-  last_error_kind: "transient" | "auth" | "fatal" | null;
-  consecutive_failures: number;
-  recovery_pending?: boolean;
-  recovery_delayed?: boolean;
-  recovery_phase?:
-    | "need_first_logout"
-    | "need_barrier_insert"
-    | "need_barrier_confirm"
-    | "need_clean_receive"
-    | "need_witness_repair"
-    | "need_barrier_cleanup"
-    | "need_transport_resume"
-    | null;
-  recovery_error?: string | null;
-  configuration_error?: string | null;
 };
 
 export type QueryEvent<T = Record<string, unknown>> =
@@ -217,186 +124,12 @@ export async function applySessionIngest(
   return invoke("plugin:db|apply_session_ingest", { workspaceId, envelope });
 }
 
-export async function getE2eeIdentityStatus(
-  accountUserId: string,
-): Promise<E2eeIdentityStatus> {
-  return invoke("plugin:db|get_e2ee_identity_status", { accountUserId });
-}
-
-export async function inspectE2eeRecoveryKey(
-  recoveryKey: string,
-): Promise<E2eeRecoveryKeyIdentity> {
-  return invoke("plugin:db|inspect_e2ee_recovery_key", { recoveryKey });
-}
-
-export async function createE2eeIdentity(
-  accountUserId: string,
-): Promise<string> {
-  return invoke("plugin:db|create_e2ee_identity", { accountUserId });
-}
-
-export async function importE2eeIdentity(
-  accountUserId: string,
-  recoveryKey: string,
-): Promise<void> {
-  return invoke("plugin:db|import_e2ee_identity", {
-    accountUserId,
-    recoveryKey,
-  });
-}
-
-export async function getOrCreateE2eeDeviceIdentity(
-  accountUserId: string,
-): Promise<E2eeDeviceIdentity> {
-  return invoke("plugin:db|get_or_create_e2ee_device_identity", {
-    accountUserId,
-  });
-}
-
-export async function sealE2eeRecoveryKeyForDevice(
-  accountUserId: string,
-  requestId: string,
-  recipientPublicKey: string,
-): Promise<E2eeDeviceEnrollmentPackage> {
-  return invoke("plugin:db|seal_e2ee_recovery_key_for_device", {
-    accountUserId,
-    requestId,
-    recipientPublicKey,
-  });
-}
-
-export async function sealWorkspaceE2eeKeyForRecipients(
-  accountUserId: string,
-  workspaceId: string,
-  recipients: WorkspaceE2eeKeyRecipient[],
-  rotate: boolean,
-  sourceGrant: CloudsyncWorkspaceKeyGrant | null = null,
-): Promise<SealedWorkspaceE2eeKey> {
-  return invoke("plugin:db|seal_workspace_e2ee_key_for_recipients", {
-    accountUserId,
-    workspaceId,
-    recipients,
-    rotate,
-    sourceGrant,
-  });
-}
-
-export async function importE2eeDeviceEnrollment(
-  accountUserId: string,
-  requestId: string,
-  packageValue: E2eeDeviceEnrollmentPackage,
-): Promise<E2eeRecoveryKeyIdentity> {
-  return invoke("plugin:db|import_e2ee_device_enrollment", {
-    accountUserId,
-    requestId,
-    package: packageValue,
-  });
-}
-
-export async function configureCloudsync(
-  config: CloudsyncRuntimeConfig,
-): Promise<void> {
-  return invoke("plugin:db|configure_cloudsync", {
-    configJson: JSON.stringify(config),
-  });
-}
-
-export async function configureCloudsyncToken(
-  databaseId: string,
-  token: string,
-  workspaceId: string,
-  e2eeWitness: CloudsyncE2eeWitness,
-  workspaceProjection?: CloudsyncWorkspaceProjection,
-  workspaceKeyGrants: CloudsyncWorkspaceKeyGrant[] = [],
-): Promise<CloudsyncTokenConfigurationResult> {
-  return invoke("plugin:db|configure_cloudsync_token", {
-    databaseId,
-    token,
-    workspaceId,
-    e2eeWitness,
-    workspaceProjection: workspaceProjection ?? null,
-    workspaceKeyGrants,
-  });
-}
-
-export async function configureE2eeReplica(
-  workspaceId: string,
-  e2eeWitness: CloudsyncE2eeWitness,
-  workspaceProjection?: CloudsyncWorkspaceProjection,
-  workspaceKeyGrants: CloudsyncWorkspaceKeyGrant[] = [],
-): Promise<CloudsyncTokenConfigurationResult> {
-  return invoke("plugin:db|configure_e2ee_replica", {
-    workspaceId,
-    e2eeWitness,
-    workspaceProjection: workspaceProjection ?? null,
-    workspaceKeyGrants,
-  });
-}
-
-export async function bindCloudsyncAccount(
-  accountUserId: string,
-): Promise<boolean> {
-  return invoke("plugin:db|bind_cloudsync_account", { accountUserId });
-}
-
-export async function startCloudsync(): Promise<void> {
-  return invoke("plugin:db|start_cloudsync");
-}
-
-export async function connectLocalLibrary(
-  accountUserId: string,
-  expectedLibraryWorkspaceId: string,
-): Promise<void> {
-  return invoke("plugin:db|connect_local_library", {
-    accountUserId,
-    expectedLibraryWorkspaceId,
-  });
-}
-
-export async function stopCloudsync(): Promise<void> {
-  return invoke("plugin:db|stop_cloudsync");
-}
-
-export async function suspendCloudsync(): Promise<void> {
-  return invoke("plugin:db|suspend_cloudsync");
-}
-
-export async function suspendCloudsyncForSignOut(): Promise<void> {
-  return invoke("plugin:db|suspend_cloudsync_for_sign_out");
-}
-
-export async function suspendCloudsyncAfterAuthLoss(): Promise<void> {
-  return invoke("plugin:db|suspend_cloudsync_after_auth_loss");
-}
-
-export async function getCloudsyncStatus(): Promise<CloudsyncStatus> {
-  return invoke("plugin:db|get_cloudsync_status");
-}
-
 export async function waitUntilReady(): Promise<void> {
   return invoke("plugin:db|wait_until_ready");
 }
 
 export async function getStartupStatus(): Promise<StartupStatus> {
   return invoke("plugin:db|get_startup_status");
-}
-
-export async function beginCloudsyncActivity(
-  activity: string,
-  key: string,
-): Promise<void> {
-  return invoke("plugin:db|begin_cloudsync_activity", { activity, key });
-}
-
-export async function endCloudsyncActivity(
-  activity: string,
-  key: string,
-): Promise<void> {
-  return invoke("plugin:db|end_cloudsync_activity", { activity, key });
-}
-
-export async function syncCloudsyncNow(): Promise<CloudsyncNetworkResult> {
-  return invoke("plugin:db|sync_cloudsync_now");
 }
 
 export async function subscribe<T = Record<string, unknown>>(

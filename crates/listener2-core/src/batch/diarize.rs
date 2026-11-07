@@ -758,7 +758,7 @@ mod tests {
 
     #[test]
     fn downmixed_stereo_transcript_is_scored_on_the_mix() {
-        // Whisper/Argmax collapse a stereo capture into one transcript
+        // Whisper collapses a stereo capture into one transcript
         // channel; its words come from mic and system audio together, so the
         // direct mic file alone would miss every remote turn.
         let (audio, bounds) =
@@ -914,12 +914,12 @@ mod tests {
         params.provider = BatchProvider::WhisperLocal;
         assert!(is_local_batch(&params));
 
-        params.provider = BatchProvider::Am;
-        params.base_url = "http://localhost:50060/v1".to_string();
+        params.provider = BatchProvider::OpenAI;
+        params.base_url = "http://localhost:9000/v1".to_string();
         assert!(is_local_batch(&params));
-        params.base_url = "http://127.0.0.1:50060".to_string();
+        params.base_url = "http://127.0.0.1:9000".to_string();
         assert!(is_local_batch(&params));
-        params.base_url = "https://api.anarlog.so/stt".to_string();
+        params.base_url = "https://api.openai.com/v1".to_string();
         assert!(!is_local_batch(&params));
     }
 
@@ -938,7 +938,7 @@ mod tests {
             assert!(is_loopback_url(url), "{url}");
         }
         for url in [
-            "https://api.anarlog.so/stt",
+            "https://api.deepgram.com/v1",
             "http://10.0.0.1:8080",
             "http://127.0.0.2",
         ] {

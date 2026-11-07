@@ -19,10 +19,6 @@ import { useListener } from "./contexts";
 import { persistTranscriptWrite } from "./persist-retry";
 import { useSTTConnection } from "./useSTTConnection";
 
-import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
-import { withCloudsyncActivity } from "~/db/cloudsync-activity";
-import { env } from "~/env";
 import {
   deleteProcessedAudioForRetention,
   normalizeAudioRetention,
@@ -191,12 +187,6 @@ export function getBatchProvider(
     return "whispercpp";
   }
 
-  if (provider === "anarlog") {
-    if (model.startsWith("soniqo-")) return "soniqo";
-    if (model === "apple-speech") return "applespeech";
-    if (model.startsWith("am-")) return "am";
-    return "anarlog";
-  }
   if (provider === "soniqo") return "soniqo";
   if (provider === "apple_speech" || provider === "apple-speech") {
     return "applespeech";
@@ -215,28 +205,12 @@ export function canRunBatchTranscription(
 }
 
 export function getBatchFallbackTarget({
-  isPaid,
-  accessToken,
-  apiBaseUrl,
   currentPlatform = platform(),
   currentArch = arch(),
 }: {
-  isPaid: boolean;
-  accessToken?: string | null;
-  apiBaseUrl: string;
   currentPlatform?: ReturnType<typeof platform>;
   currentArch?: ReturnType<typeof arch>;
-}): BatchTarget | null {
-  if (isPaid && accessToken) {
-    return {
-      provider: "anarlog",
-      model: "cloud",
-      baseUrl: new URL("/stt", apiBaseUrl).toString(),
-      apiKey: accessToken,
-      label: "Pro cloud transcription",
-    };
-  }
-
+} = {}): BatchTarget | null {
   return isDesktopLocalSttAvailable(currentPlatform, currentArch)
     ? LOCAL_SONIQO_BATCH_TARGET
     : null;
@@ -255,7 +229,7 @@ function selectedProviderLabel(
   modelOverride?: string,
 ) {
   if (!conn) {
-    return "the selected speech-to-text provider";
+    return t`the selected speech-to-text provider`;
   }
 
   return modelOverride ?? conn.model ?? conn.provider;
@@ -318,8 +292,6 @@ export const useRunBatch = (sessionId: string) => {
   const startTranscription = useListener((state) => state.startTranscription);
   const stopTranscription = useListener((state) => state.stopTranscription);
   const { conn } = useSTTConnection();
-  const auth = useAuth();
-  const billing = useBillingAccess();
   const aiLanguage = useConfigValue("ai_language");
   const spokenLanguages = useConfigValue("spoken_languages");
   const dictionaryTerms = useConfigValue("personalization_dictionary_terms");
@@ -333,7 +305,7 @@ export const useRunBatch = (sessionId: string) => {
       options?.signal?.throwIfAborted();
       if (!startTranscription) {
         throw new Error(
-          "STT connection is not available. Please configure your speech-to-text provider.",
+          t`STT connection is not available. Please configure your speech-to-text provider.`,
         );
       }
 
@@ -373,27 +345,14 @@ export const useRunBatch = (sessionId: string) => {
             )
           : false;
       options?.signal?.throwIfAborted();
-      const requiresCloudSession =
-        billing.isPaid ||
-        (selectedTarget?.provider === "anarlog" &&
-          selectedTarget.model === "cloud");
-      const requestSession = requiresCloudSession
-        ? await auth.getSessionForRequest().catch(() => null)
-        : null;
-      options?.signal?.throwIfAborted();
-      const cloudAccessToken =
-        requestSession?.access_token ?? auth.session?.access_token;
       const fallbackTarget = getBatchFallbackTarget({
-        isPaid: billing.isPaid,
-        accessToken: cloudAccessToken,
-        apiBaseUrl: env.VITE_AI_API_URL ?? env.VITE_API_URL,
         currentPlatform,
         currentArch,
       });
       const shouldUseSelectedTarget =
         selectedTargetSupported ||
         (fallbackTarget && sameBatchTarget(selectedTarget, fallbackTarget));
-      let target = options?.resume
+      const target = options?.resume
         ? {
             provider: options.resume.provider,
             model: options.resume.model,
@@ -406,27 +365,21 @@ export const useRunBatch = (sessionId: string) => {
           : fallbackTarget;
 
       if (!target) {
+        const providerLabel = selectedProviderLabel(conn, selectedModel);
         throw new Error(
           selectedTarget && !selectedOnDeviceUnsupported
-            ? `${selectedProviderLabel(conn, selectedModel)} is not available for batch transcription with the selected languages. Choose languages it supports, or configure another speech-to-text provider.`
-            : `${selectedProviderLabel(conn, selectedModel)} is not available for batch transcription on this platform. Configure a batch-capable speech-to-text provider.`,
+            ? t`${providerLabel} is not available for batch transcription with the selected languages. Choose languages it supports, or configure another speech-to-text provider.`
+            : t`${providerLabel} is not available for batch transcription on this platform. Configure a batch-capable speech-to-text provider.`,
         );
       }
 
-      if (target.provider === "anarlog" && target.model === "cloud") {
-        if (!cloudAccessToken) {
-          throw new Error(t`Transcription failed`);
-        }
-        target = { ...target, apiKey: cloudAccessToken };
-      }
-
       if (!shouldUseSelectedTarget && !options?.recovery && !options?.resume) {
-        toast.warning("Using a batch transcription provider", {
-          description: `${
-            selectedTarget
-              ? selectedProviderLabel(conn, selectedModel)
-              : selectedProviderLabel(conn)
-          } is not available for batch transcription. Using ${target.label} instead.`,
+        const unavailableLabel = selectedTarget
+          ? selectedProviderLabel(conn, selectedModel)
+          : selectedProviderLabel(conn);
+        const fallbackLabel = target.label;
+        toast.warning(t`Using a batch transcription provider`, {
+          description: t`${unavailableLabel} is not available for batch transcription. Using ${fallbackLabel} instead.`,
         });
       }
 
@@ -459,11 +412,6 @@ export const useRunBatch = (sessionId: string) => {
         options?.handlePersist;
       let stagedWords: WordWithId[] = [];
       let stagedHints: SpeakerHintWithId[] = [];
-      const resetStagedTranscript = () => {
-        transcriptId = null;
-        stagedWords = [];
-        stagedHints = [];
-      };
 
       const persist =
         handlePersist ??
@@ -527,177 +475,150 @@ export const useRunBatch = (sessionId: string) => {
           stagedHints.push(...newHints);
         });
 
-      const cloudsyncLeaseKey = `${sessionId}:${id()}`;
-      return withCloudsyncActivity(
-        "transcription",
-        cloudsyncLeaseKey,
-        async () => {
-          const jobId = options?.recovery ? `${sessionId}:recovery` : sessionId;
-          const params: TranscriptionParams = {
-            session_id: jobId,
-            provider: target.provider,
-            file_path: filePath,
-            model: target.model,
-            base_url: target.baseUrl,
-            api_key: target.apiKey,
-            keywords,
-            languages,
-            num_speakers: options?.numSpeakers ?? inferredNumSpeakers,
-            min_speakers: options?.minSpeakers,
-            max_speakers: options?.maxSpeakers,
-            resume_context:
-              !handlePersist &&
-              !options?.recovery &&
-              !options?.deferAudioFinalization &&
-              options?.promotion?.scope === "whole_session"
-                ? serializeBatchResumeContext({ promotion: "whole_session" })
-                : null,
-          };
+      const jobId = options?.recovery ? `${sessionId}:recovery` : sessionId;
+      const params: TranscriptionParams = {
+        session_id: jobId,
+        provider: target.provider,
+        file_path: filePath,
+        model: target.model,
+        base_url: target.baseUrl,
+        api_key: target.apiKey,
+        keywords,
+        languages,
+        num_speakers: options?.numSpeakers ?? inferredNumSpeakers,
+        min_speakers: options?.minSpeakers,
+        max_speakers: options?.maxSpeakers,
+        resume_context:
+          !handlePersist &&
+          !options?.recovery &&
+          !options?.deferAudioFinalization &&
+          options?.promotion?.scope === "whole_session"
+            ? serializeBatchResumeContext({ promotion: "whole_session" })
+            : null,
+      };
 
-          const run = async (params: TranscriptionParams) => {
-            options?.signal?.throwIfAborted();
-            try {
-              await startTranscription(params, {
-                signal: options?.signal,
-                handlePersist: (...args) => {
-                  if (options?.signal?.aborted) return;
-                  return persist(...args);
-                },
-                notifyOnCompletion: false,
-                recovery: Boolean(options?.recovery),
-              });
-              options?.signal?.throwIfAborted();
-            } finally {
-              if (options?.signal?.aborted) {
-                await stopTranscription(jobId).catch(() => {});
-              }
-            }
-          };
-          try {
-            await run(params);
-          } catch (error) {
-            options?.signal?.throwIfAborted();
-            if (
-              !(
-                options?.recovery &&
-                error instanceof Error &&
-                error.message === "No speech was detected in the audio."
-              )
-            ) {
-              if (
-                target.provider !== "anarlog" ||
-                target.model !== "cloud" ||
-                !isTranscriptionAuthenticationError(error)
-              ) {
-                throw error;
-              }
-
-              const refreshedSession = await auth.refreshSession();
-              if (!refreshedSession?.access_token) {
-                throw error;
-              }
-
-              if (!handlePersist) {
-                resetStagedTranscript();
-              }
-              await run({ ...params, api_key: refreshedSession.access_token });
-            }
+      const run = async (params: TranscriptionParams) => {
+        options?.signal?.throwIfAborted();
+        try {
+          await startTranscription(params, {
+            signal: options?.signal,
+            handlePersist: (...args) => {
+              if (options?.signal?.aborted) return;
+              return persist(...args);
+            },
+            notifyOnCompletion: false,
+            recovery: Boolean(options?.recovery),
+          });
+          options?.signal?.throwIfAborted();
+        } finally {
+          if (options?.signal?.aborted) {
+            await stopTranscription(jobId).catch(() => {});
           }
+        }
+      };
+      try {
+        await run(params);
+      } catch (error) {
+        options?.signal?.throwIfAborted();
+        if (
+          !(
+            options?.recovery &&
+            error instanceof Error &&
+            error.message === "No speech was detected in the audio."
+          )
+        ) {
+          throw error;
+        }
+      }
 
-          if (options?.recovery) {
-            options.signal?.throwIfAborted();
-            await options.recovery.persist(stagedWords, stagedHints);
-            await acknowledgeCompletedBatch(jobId);
-            return;
+      if (options?.recovery) {
+        options.signal?.throwIfAborted();
+        await options.recovery.persist(stagedWords, stagedHints);
+        await acknowledgeCompletedBatch(jobId);
+        return;
+      }
+
+      try {
+        if (!handlePersist) {
+          const promotion = options?.promotion ?? {
+            scope: "preserve_existing",
+          };
+          const refinementPromotion: BatchTranscriptPromotion =
+            promotion.scope === "current_capture"
+              ? {
+                  scope: "current_capture",
+                  audio_offset_ms: promotion.audioOffsetMs,
+                  replace_transcript_id: promotion.replaceTranscriptId,
+                  started_at: promotion.startedAt,
+                }
+              : { scope: promotion.scope };
+          const saved = await persistTranscriptWrite(async () => {
+            const result = await transcriptionCommands.saveBatchTranscript({
+              session_id: sessionId,
+              transcript_id: transcriptId,
+              owner_user_id: session?.user_id ?? "",
+              created_at: createdAt,
+              started_at: startedAt,
+              memo: memoMd,
+              provider: target.provider,
+              model: target.model,
+              words: stagedWords.map(toStoredTranscriptWord),
+              hints: stagedHints.map(toStoredSpeakerHint),
+              promotion: refinementPromotion,
+              mark_audio_complete: !options?.deferAudioFinalization,
+            });
+            if (result.status === "error") {
+              throw new Error(result.error);
+            }
+            return result.data;
+          });
+          if (saved.status === "empty_current_capture") {
+            throw new Error(EMPTY_CURRENT_CAPTURE_TRANSCRIPT_ERROR_MESSAGE);
           }
-
-          try {
-            if (!handlePersist) {
-              const promotion = options?.promotion ?? {
-                scope: "preserve_existing",
-              };
-              const refinementPromotion: BatchTranscriptPromotion =
-                promotion.scope === "current_capture"
-                  ? {
-                      scope: "current_capture",
-                      audio_offset_ms: promotion.audioOffsetMs,
-                      replace_transcript_id: promotion.replaceTranscriptId,
-                      started_at: promotion.startedAt,
-                    }
-                  : { scope: promotion.scope };
-              const saved = await persistTranscriptWrite(async () => {
-                const result = await transcriptionCommands.saveBatchTranscript({
-                  session_id: sessionId,
-                  transcript_id: transcriptId,
-                  owner_user_id: session?.user_id ?? "",
-                  created_at: createdAt,
-                  started_at: startedAt,
-                  memo: memoMd,
-                  provider: target.provider,
-                  model: target.model,
-                  words: stagedWords.map(toStoredTranscriptWord),
-                  hints: stagedHints.map(toStoredSpeakerHint),
-                  promotion: refinementPromotion,
-                  mark_audio_complete: !options?.deferAudioFinalization,
-                });
-                if (result.status === "error") {
-                  throw new Error(result.error);
-                }
-                return result.data;
-              });
-              if (saved.status === "empty_current_capture") {
-                throw new Error(EMPTY_CURRENT_CAPTURE_TRANSCRIPT_ERROR_MESSAGE);
-              }
-              if (saved.status === "truncated") {
-                throw new Error(INCOMPLETE_BATCH_TRANSCRIPT_ERROR_MESSAGE);
-              }
-              if (saved.status === "saved" && saved.transcript_id) {
-                if (options?.captureInterval) {
-                  await persistTranscriptWrite(() =>
-                    completeCaptureTranscript(
-                      sessionId,
-                      saved.transcript_id!,
-                      options.captureInterval!.stoppedAtMs,
-                    ),
-                  );
-                }
-                await maybeExtractVoiceprintCandidates({
-                  enabled: rememberSpeakers,
+          if (saved.status === "truncated") {
+            throw new Error(INCOMPLETE_BATCH_TRANSCRIPT_ERROR_MESSAGE);
+          }
+          if (saved.status === "saved" && saved.transcript_id) {
+            if (options?.captureInterval) {
+              await persistTranscriptWrite(() =>
+                completeCaptureTranscript(
                   sessionId,
-                  transcriptId: saved.transcript_id,
-                  audioPath: filePath,
-                });
-              }
+                  saved.transcript_id!,
+                  options.captureInterval!.stoppedAtMs,
+                ),
+              );
             }
-            if (!options?.deferAudioFinalization) {
-              await deleteProcessedAudioForRetention(audioRetention, sessionId);
-            }
-          } catch (error) {
-            if (
-              error instanceof BatchResponseProcessingError ||
-              (error instanceof Error &&
-                (error.message ===
-                  EMPTY_CURRENT_CAPTURE_TRANSCRIPT_ERROR_MESSAGE ||
-                  error.message === INCOMPLETE_BATCH_TRANSCRIPT_ERROR_MESSAGE))
-            ) {
-              throw error;
-            }
-            throw new BatchResponseProcessingError(error);
+            await maybeExtractVoiceprintCandidates({
+              enabled: rememberSpeakers,
+              sessionId,
+              transcriptId: saved.transcript_id,
+              audioPath: filePath,
+            });
           }
-          await acknowledgeCompletedBatch(jobId);
-          if (options?.notifyOnCompletion !== false) {
-            await notifyBatchCompleted();
-          }
-        },
-      );
+        }
+        if (!options?.deferAudioFinalization) {
+          await deleteProcessedAudioForRetention(audioRetention, sessionId);
+        }
+      } catch (error) {
+        if (
+          error instanceof BatchResponseProcessingError ||
+          (error instanceof Error &&
+            (error.message === EMPTY_CURRENT_CAPTURE_TRANSCRIPT_ERROR_MESSAGE ||
+              error.message === INCOMPLETE_BATCH_TRANSCRIPT_ERROR_MESSAGE))
+        ) {
+          throw error;
+        }
+        throw new BatchResponseProcessingError(error);
+      }
+      await acknowledgeCompletedBatch(jobId);
+      if (options?.notifyOnCompletion !== false) {
+        await notifyBatchCompleted();
+      }
     },
     [
       conn,
-      auth,
-      auth.session?.access_token,
       aiLanguage,
       audioRetention,
-      billing.isPaid,
       dictionaryTerms,
       rememberSpeakers,
       session,

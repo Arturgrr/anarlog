@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
+use crate::label::SELF_SPEAKER_LABEL;
 use crate::{ChannelProfile, RenderTranscriptHuman, RenderedTranscriptSegment};
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, specta::Type)]
@@ -100,7 +101,6 @@ impl SpeakerContext {
         segments: Vec<RenderedTranscriptSegment>,
         started_at: i64,
         self_human_id: Option<&str>,
-        humans: &[RenderTranscriptHuman],
     ) -> Vec<RenderedTranscriptSegment> {
         // Mic words per diarization voice per interval. Remote voices are not counted: diarization
         // indices restart with every stream refresh, so their number says nothing about how
@@ -178,7 +178,6 @@ impl SpeakerContext {
                         part.key.channel,
                         is_owner_voice(&local_voices[index], part.key.speaker_index),
                         self_human_id,
-                        humans,
                     );
                 }
                 if let Some(label) = &part.provisional_speaker {
@@ -226,7 +225,6 @@ fn resolve_speaker(
     source: ChannelProfile,
     owner_voice: bool,
     self_id: Option<&str>,
-    humans: &[RenderTranscriptHuman],
 ) -> Option<ProvisionalSpeakerLabel> {
     let self_id = self_id.filter(|id| !id.trim().is_empty())?;
     let virtual_call = context.active_call || context.calendar_call;
@@ -238,14 +236,8 @@ fn resolve_speaker(
             if !context.shared_microphone
                 && (personal_microphone || (virtual_call && owner_voice)) =>
         {
-            let name = humans
-                .iter()
-                .find(|human| human.human_id == self_id)
-                .map(|human| human.name.trim())
-                .filter(|name| !name.is_empty())
-                .unwrap_or("You");
             Some(ProvisionalSpeakerLabel {
-                name: name.to_owned(),
+                name: SELF_SPEAKER_LABEL.to_owned(),
                 human_id: Some(self_id.to_owned()),
                 reason: if personal_microphone {
                     SpeakerResolutionReason::PersonalMicrophone

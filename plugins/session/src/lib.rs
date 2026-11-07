@@ -24,7 +24,6 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
         .plugin_name(PLUGIN_NAME)
         .commands(tauri_specta::collect_commands![
             commands::create_session::<Wry>,
-            commands::create_session_for_event::<Wry>,
             commands::soft_delete_session::<Wry>,
             commands::restore_deleted_session::<Wry>,
             commands::add_session_participant::<Wry>,
@@ -37,7 +36,6 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::catalog_note_attachment::<Wry>,
             commands::catalog_session_audio::<Wry>,
             commands::mark_session_audio_transcription_complete::<Wry>,
-            commands::set_attachment_cloud_sync_enabled::<Wry>,
             commands::tombstone_session_audio::<Wry>,
             commands::mark_session_audio_absent::<Wry>,
             commands::catalog_folder_material::<Wry>,

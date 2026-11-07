@@ -16,13 +16,6 @@ export const sessionEventSchema = z.object({
   recurrence_series_id: z.string().optional(),
 });
 
-export const eventParticipantSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().optional(),
-  is_organizer: z.boolean().optional(),
-  is_current_user: z.boolean().optional(),
-});
-
 export const templateSectionSchema = z.object({
   title: z.string(),
   description: z.string(),
@@ -70,7 +63,6 @@ export const aiProviderSchema = z
   );
 
 export type SessionEvent = z.infer<typeof sessionEventSchema>;
-export type EventParticipant = z.infer<typeof eventParticipantSchema>;
 export type TemplateSection = z.infer<typeof templateSectionSchema>;
 export type ChatMessageStatus = z.infer<typeof chatMessageStatusSchema>;
 export type TaskStatus = z.infer<typeof taskStatusSchema>;

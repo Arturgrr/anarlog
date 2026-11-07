@@ -1,6 +1,7 @@
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import * as React from "react";
 
+import { focusRingClassName } from "@anlg/ui/lib/focus-ring";
 import { cn } from "@anlg/utils";
 
 import { Check } from "../icons";
@@ -12,7 +13,10 @@ const Checkbox = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn([
-      "peer border-primary focus-visible:ring-ring data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground h-4 w-4 shrink-0 rounded-xs border shadow-xs focus-visible:ring-1 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+      focusRingClassName,
+      "peer bg-button-neutral shadow-button-neutral size-3.5 shrink-0 rounded-sm",
+      "data-[state=checked]:bg-contrast data-[state=checked]:text-primary-foreground data-[state=checked]:shadow-button-contrast",
+      "disabled:cursor-not-allowed disabled:opacity-50",
       className,
     ])}
     {...props}
@@ -20,7 +24,7 @@ const Checkbox = React.forwardRef<
     <CheckboxPrimitive.Indicator
       className={cn(["flex items-center justify-center text-current"])}
     >
-      <Check className="h-4 w-4" />
+      <Check className="size-3" />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ));

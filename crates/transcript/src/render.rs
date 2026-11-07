@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::label::SELF_SPEAKER_LABEL;
 use crate::{
     FinalizedWord, IdentityAssignment, SegmentKey, SegmentWord, SpeakerLabelContext,
     SpeakerLabeler, WordState, build_segments, render_speaker_label,
@@ -84,27 +85,22 @@ pub(crate) fn render_transcript_segments_ungrouped(
     if let Some(mut segments) = preview {
         for segment in &mut segments {
             if let Some(id) = &segment.key.speaker_human_id {
-                // Unnamed humans are not in `humans` (name <> '' filter) — a
-                // raw UUID is never a good label, so fall back the way
-                // `resolve_speaker` does for the local user.
-                segment.speaker_label = humans
-                    .iter()
-                    .find(|human| &human.human_id == id)
-                    .map(|human| human.name.trim())
-                    .filter(|name| !name.is_empty())
-                    .map(str::to_owned)
-                    .unwrap_or_else(|| {
-                        if self_human_id.as_deref() == Some(id.as_str()) {
-                            "You".to_string()
-                        } else {
-                            id.clone()
-                        }
-                    });
+                segment.speaker_label = if self_human_id.as_deref() == Some(id.as_str()) {
+                    SELF_SPEAKER_LABEL.to_string()
+                } else {
+                    humans
+                        .iter()
+                        .find(|human| &human.human_id == id)
+                        .map(|human| human.name.trim())
+                        .filter(|name| !name.is_empty())
+                        .map(str::to_owned)
+                        .unwrap_or_else(|| id.clone())
+                };
             }
         }
         return match speaker_context {
             Some(context) => {
-                context.label_segments(segments, base_started_at, self_human_id.as_deref(), &humans)
+                context.label_segments(segments, base_started_at, self_human_id.as_deref())
             }
             None => segments,
         };
@@ -172,13 +168,19 @@ pub(crate) fn render_transcript_segments_ungrouped(
 
     all_segments.sort_by_key(|seg| seg.words.first().map(|w| w.start_ms).unwrap_or(i64::MAX));
 
+    let mut human_name_by_id = humans
+        .iter()
+        .cloned()
+        .map(|human| (human.human_id, human.name))
+        .collect::<HashMap<_, _>>();
+    // A channel alone does not identify the local user here, but an explicit
+    // assignment to them does.
+    if let Some(self_id) = self_human_id.as_deref().filter(|id| !id.is_empty()) {
+        human_name_by_id.insert(self_id.to_owned(), SELF_SPEAKER_LABEL.to_owned());
+    }
     let ctx = SpeakerLabelContext {
         self_human_id: None,
-        human_name_by_id: humans
-            .iter()
-            .cloned()
-            .map(|human| (human.human_id, human.name))
-            .collect::<HashMap<_, _>>(),
+        human_name_by_id,
     };
     let mut labeler = SpeakerLabeler::from_segments(&all_segments, Some(&ctx), None);
 
@@ -212,7 +214,7 @@ pub(crate) fn render_transcript_segments_ungrouped(
         .collect();
     match speaker_context {
         Some(context) => {
-            context.label_segments(segments, base_started_at, self_human_id.as_deref(), &humans)
+            context.label_segments(segments, base_started_at, self_human_id.as_deref())
         }
         None => segments,
     }
@@ -373,7 +375,7 @@ mod tests {
     }
 
     #[test]
-    fn renders_segments_with_explicit_labels() {
+    fn renders_the_local_user_as_you_even_when_named() {
         let segments = render_transcript_segments(RenderTranscriptRequest {
             speaker_context: None,
             preview: None,
@@ -403,7 +405,7 @@ mod tests {
         });
 
         assert_eq!(segments.len(), 2);
-        assert_eq!(segments[0].speaker_label, "Alice");
+        assert_eq!(segments[0].speaker_label, "You");
         assert_eq!(segments[0].text, "hello");
         assert_eq!(segments[1].speaker_label, "Bob");
         assert_eq!(segments[1].text, "world");

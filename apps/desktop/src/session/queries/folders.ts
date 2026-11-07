@@ -130,12 +130,7 @@ type FolderSessionSqlRow = {
   id: string;
   title: string;
   created_at: string;
-  event_json: string;
   folder_path: string;
-};
-
-export type FolderSessionSummary = SessionSummaryRecord & {
-  event_json: string;
 };
 
 function folderSessionFilterSql(folderFilter: string): {
@@ -154,11 +149,11 @@ function folderSessionFilterSql(folderFilter: string): {
 
 export async function loadSessionSummariesByFolder(
   folderFilter: string,
-): Promise<FolderSessionSummary[]> {
+): Promise<SessionSummaryRecord[]> {
   const { sql, params } = folderSessionFilterSql(folderFilter);
   const rows = await liveQueryClient.execute<FolderSessionSqlRow>(
     `
-      SELECT id, title, created_at, event_json, folder_path
+      SELECT id, title, created_at, folder_path
       FROM sessions
       WHERE deleted_at IS NULL
         AND ${sql}
@@ -173,6 +168,5 @@ export async function loadSessionSummariesByFolder(
       id: row.id,
       title: row.title,
       created_at: row.created_at,
-      event_json: row.event_json,
     }));
 }

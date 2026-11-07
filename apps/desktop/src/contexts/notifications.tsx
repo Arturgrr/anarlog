@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useMemo,
   useState,
@@ -35,6 +36,7 @@ interface NotificationState {
   shouldShowBadge: boolean;
   localSttStatus: ServerStatus | null;
   isLocalSttModel: boolean;
+  dismissDownload: (model: LocalModel) => void;
 }
 
 const NotificationContext = createContext<NotificationState | null>(null);
@@ -43,9 +45,6 @@ const MODEL_DISPLAY_NAMES: Partial<Record<LocalModel, string>> = {
   "apple-speech": "Apple Speech",
   "soniqo-parakeet-streaming": "Soniqo Parakeet Streaming",
   "soniqo-parakeet-batch": "Soniqo Parakeet Batch",
-  "am-parakeet-v2": "Parakeet v2",
-  "am-parakeet-v3": "Parakeet v3",
-  "am-whisper-large-v3": "Whisper Large v3",
   QuantizedTinyEn: "Whisper Tiny (English)",
   QuantizedSmallEn: "Whisper Small (English)",
 };
@@ -102,16 +101,25 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const { model: eventModel, status } = event.payload;
       const isFailed = typeof status === "object" && "failed" in status;
       const modelName = MODEL_DISPLAY_NAMES[eventModel] ?? eventModel;
-      usePendingSttSelection.setState((state) => ({
-        queuedDownloads: state.queuedDownloads.filter(
-          (model) => model !== eventModel,
-        ),
-      }));
+      usePendingSttSelection.setState((state) => {
+        const { [eventModel]: _, ...failedDownloads } = state.failedDownloads;
+        return {
+          queuedDownloads: state.queuedDownloads.filter(
+            (model) => model !== eventModel,
+          ),
+          failedDownloads: isFailed
+            ? { ...failedDownloads, [eventModel]: status.failed }
+            : failedDownloads,
+        };
+      });
       if (status === "completed") {
         queryClient.setQueryData(
           localSttQueries.isDownloaded(eventModel).queryKey,
           { status: "ok", data: true },
         );
+        // A model that was already selected keeps its connection query key, so
+        // its cached "not downloaded" status would otherwise outlive the download.
+        void queryClient.invalidateQueries({ queryKey: ["stt-connection"] });
         toast.success(t`Model downloaded`, { description: modelName });
       }
       const pendingSelection = usePendingSttSelection.getState().selection;
@@ -140,7 +148,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }
 
       if (isFailed) {
-        toast.error(`Couldn’t download ${modelName}`, {
+        toast.error(t`Couldn’t download ${modelName}`, {
           description: status.failed,
         });
       }
@@ -160,6 +168,19 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       void unlisten.then((fn) => fn());
     };
   });
+
+  // Cancelling a poll-based download stops its progress events without a
+  // final one, so the cancelled entry has to be dropped here.
+  const dismissDownload = useCallback((model: LocalModel) => {
+    setActiveDownloads((prev) => {
+      if (!prev.has(model)) {
+        return prev;
+      }
+      const next = new Map(prev);
+      next.delete(model);
+      return next;
+    });
+  }, []);
 
   const hasActiveEnhancement = false;
 
@@ -213,6 +234,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       shouldShowBadge: notificationCount > 0,
       localSttStatus,
       isLocalSttModel,
+      dismissDownload,
     };
   }, [
     hasConfigBanner,
@@ -222,6 +244,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     isAiTab,
     localSttStatus,
     isLocalSttModel,
+    dismissDownload,
   ]);
 
   return (
@@ -241,6 +264,7 @@ const DEFAULT_NOTIFICATION_STATE: NotificationState = {
   shouldShowBadge: false,
   localSttStatus: null,
   isLocalSttModel: false,
+  dismissDownload: () => {},
 };
 
 export function useNotifications() {

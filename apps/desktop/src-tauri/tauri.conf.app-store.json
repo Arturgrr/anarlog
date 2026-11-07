@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "identifier": "com.hyprnote.desktop",
+  "identifier": "com.arturgrr.librelog.desktop",
   "app": {
     "macOSPrivateApi": false
   },

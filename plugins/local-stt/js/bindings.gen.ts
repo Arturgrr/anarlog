@@ -196,10 +196,6 @@ export const events = __makeEvents__<{
 
 /** user-defined types **/
 
-export type AmModel =
-  | "am-parakeet-v2"
-  | "am-parakeet-v3"
-  | "am-whisper-large-v3";
 /**
  * Apple's Speech framework exposes a single on-device transcriber whose behavior is
  * selected by locale rather than by model, so this carries one variant.
@@ -220,13 +216,7 @@ export type DownloadStatus =
   | { downloading: number }
   | "completed"
   | { failed: string };
-export type GgufLlmModel = "Llama3p2_3bQ4" | "Gemma3_4bQ4" | "AnarlogLLM";
-export type LocalModel =
-  | SoniqoModel
-  | AppleSpeechModel
-  | WhisperModel
-  | AmModel
-  | GgufLlmModel;
+export type LocalModel = SoniqoModel | AppleSpeechModel | WhisperModel;
 export type ServerInfo = {
   url: string | null;
   status: ServerStatus;
@@ -234,7 +224,7 @@ export type ServerInfo = {
   custom_model_path: string | null;
 };
 export type ServerStatus = "unreachable" | "loading" | "ready";
-export type ServerType = "internal" | "external";
+export type ServerType = "internal";
 export type SoniqoModel =
   | "soniqo-parakeet-streaming"
   | "soniqo-parakeet-batch"
@@ -250,7 +240,7 @@ export type SttModelInfo = {
   supports_realtime: boolean;
   recommended_memory_bytes: number;
 };
-export type SttModelType = "soniqo" | "appleSpeech" | "whispercpp" | "argmax";
+export type SttModelType = "soniqo" | "appleSpeech" | "whispercpp";
 export type WhisperModel =
   | "QuantizedTiny"
   | "QuantizedTinyEn"

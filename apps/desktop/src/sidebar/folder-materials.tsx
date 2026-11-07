@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { useRef, useState } from "react";
 
 import { PencilSimple, Plus, Trash, X } from "@anlg/ui/components/icons";
+import { focusRingClassName } from "@anlg/ui/lib/focus-ring";
 import { cn } from "@anlg/utils";
 
 import { FolderNameDialog } from "./folder-name-dialog";
@@ -35,7 +36,7 @@ export function FolderMaterialsPanel({ folderPath }: { folderPath: string }) {
     <>
       <div
         data-testid="folder-materials"
-        className="border-border/60 mx-2 mb-1 shrink-0 rounded-lg border px-2 py-1.5"
+        className="bg-card shadow-raised mx-2 mb-1 shrink-0 rounded-lg px-2 py-1.5"
       >
         <div className="flex items-center gap-1">
           <span
@@ -49,8 +50,8 @@ export function FolderMaterialsPanel({ folderPath }: { folderPath: string }) {
             aria-label={t`Rename folder`}
             disabled={busy}
             className={cn([
-              "text-muted-foreground hover:bg-accent hover:text-foreground flex size-6 items-center justify-center rounded-full",
-              "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+              "text-icon-muted hover:bg-hover active:bg-pressed hover:text-foreground flex size-6 items-center justify-center rounded-sm",
+              focusRingClassName,
               "disabled:opacity-50",
             ])}
             onClick={() => setRenaming(true)}
@@ -62,8 +63,8 @@ export function FolderMaterialsPanel({ folderPath }: { folderPath: string }) {
             aria-label={t`Delete folder`}
             disabled={busy}
             className={cn([
-              "text-muted-foreground hover:bg-accent hover:text-destructive flex size-6 items-center justify-center rounded-full",
-              "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+              "text-icon-muted hover:bg-hover active:bg-pressed hover:text-danger flex size-6 items-center justify-center rounded-sm",
+              focusRingClassName,
               "disabled:opacity-50",
             ])}
             onClick={() => setDeleting(true)}
@@ -83,8 +84,8 @@ export function FolderMaterialsPanel({ folderPath }: { folderPath: string }) {
             aria-label={t`Add material`}
             disabled={busy}
             className={cn([
-              "text-muted-foreground hover:bg-accent hover:text-foreground flex size-6 items-center justify-center rounded-full",
-              "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+              "text-icon-muted hover:bg-hover active:bg-pressed hover:text-foreground flex size-6 items-center justify-center rounded-sm",
+              focusRingClassName,
               "disabled:opacity-50",
             ])}
             onClick={() => inputRef.current?.click()}
@@ -111,7 +112,7 @@ export function FolderMaterialsPanel({ folderPath }: { folderPath: string }) {
           />
         </div>
         {materials.length === 0 ? (
-          <p className="text-muted-foreground/80 pt-1 text-[11px] leading-4">
+          <p className="text-faint pt-1 text-[11px] leading-4">
             <Trans>Add a syllabus or PDF for this folder</Trans>
           </p>
         ) : (
@@ -132,8 +133,8 @@ export function FolderMaterialsPanel({ folderPath }: { folderPath: string }) {
                   aria-label={t`Remove ${material.filename}`}
                   disabled={busy}
                   className={cn([
-                    "text-muted-foreground hover:bg-accent hover:text-foreground flex size-5 items-center justify-center rounded-full",
-                    "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-hidden",
+                    "text-icon-muted hover:bg-hover active:bg-pressed hover:text-foreground flex size-5 items-center justify-center rounded-sm",
+                    focusRingClassName,
                     "disabled:opacity-50",
                   ])}
                   onClick={async () => {

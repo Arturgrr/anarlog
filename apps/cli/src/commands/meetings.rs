@@ -1,121 +1,33 @@
-use std::sync::Arc;
-
-use crate::cli::{DocumentKind, ExportFormat, MeetingCommand, MeetingSource};
-use crate::{Args, Error, Result, cloud::CloudClient, db, output};
+use crate::cli::{DocumentKind, ExportFormat, MeetingCommand};
+use crate::{Error, Result, output};
 use anlg_agent_access::{
-    Document, Folder, FolderPage, GetMeetingInput, GetMeetingTranscriptInput,
-    GetRecurringMeetingHistoryInput, ListFoldersInput, ListMeetingsInput, Meeting, MeetingExport,
-    MeetingListItem, MeetingPage, TranscriptPage,
+    Document, Folder, GetMeetingInput, GetMeetingTranscriptInput, GetRecurringMeetingHistoryInput,
+    ListFoldersInput, ListMeetingsInput, MeetingListItem,
 };
+use anlg_db_core::Db;
 
-pub enum DataSource {
-    Local(Arc<anlg_db_core::Db>),
-    Cloud(CloudClient),
-}
-
-impl DataSource {
-    pub async fn open(args: &Args, source: MeetingSource) -> Result<Self> {
-        match source {
-            MeetingSource::Local => db::open(args).await.map(Arc::new).map(Self::Local),
-            MeetingSource::Cloud => CloudClient::current().map(Self::Cloud),
-            MeetingSource::Auto => match db::open(args).await {
-                Ok(db) => Ok(Self::Local(Arc::new(db))),
-                Err(Error::DatabaseNotFound(_)) => CloudClient::current().map(Self::Cloud),
-                Err(error) => Err(error),
-            },
-        }
-    }
-
-    async fn list_meetings(
-        &self,
-        input: anlg_agent_access::ListMeetingsInput,
-    ) -> Result<MeetingPage> {
-        match self {
-            Self::Local(db) => anlg_agent_access::list_meetings(db.pool(), input)
-                .await
-                .map_err(Into::into),
-            Self::Cloud(_) if input.folder_path.is_some() => Err(local_only("--folder")),
-            Self::Cloud(client) => client.list_meetings(input).await,
-        }
-    }
-
-    async fn list_folders(&self, input: ListFoldersInput) -> Result<FolderPage> {
-        match self {
-            Self::Local(db) => anlg_agent_access::list_folders(db.pool(), input)
-                .await
-                .map_err(Into::into),
-            Self::Cloud(_) => Err(local_only("meetings folders")),
-        }
-    }
-
-    async fn get_meeting(&self, input: GetMeetingInput) -> Result<Meeting> {
-        match self {
-            Self::Local(db) => anlg_agent_access::get_meeting(db.pool(), input)
-                .await
-                .map_err(Into::into),
-            Self::Cloud(client) => client.get_meeting(input).await,
-        }
-    }
-
-    async fn get_meeting_transcript(
-        &self,
-        input: GetMeetingTranscriptInput,
-    ) -> Result<TranscriptPage> {
-        match self {
-            Self::Local(db) => anlg_agent_access::get_meeting_transcript(db.pool(), input)
-                .await
-                .map_err(Into::into),
-            Self::Cloud(client) => client.get_meeting_transcript(input).await,
-        }
-    }
-
-    async fn get_recurring_meeting_history(
-        &self,
-        input: GetRecurringMeetingHistoryInput,
-    ) -> Result<MeetingPage> {
-        match self {
-            Self::Local(db) => anlg_agent_access::get_recurring_meeting_history(db.pool(), input)
-                .await
-                .map_err(Into::into),
-            Self::Cloud(client) => client.get_recurring_meeting_history(input).await,
-        }
-    }
-
-    async fn get_meeting_export(&self, meeting_id: String) -> Result<MeetingExport> {
-        match self {
-            Self::Local(db) => anlg_agent_access::get_meeting_export(db.pool(), meeting_id)
-                .await
-                .map_err(Into::into),
-            Self::Cloud(client) => client.get_meeting_export(meeting_id).await,
-        }
-    }
-}
-
-pub async fn run(source: &DataSource, command: MeetingCommand, json: bool) -> Result<()> {
+pub async fn run(db: &Db, command: MeetingCommand, json: bool) -> Result<()> {
+    let pool = db.pool();
     match command {
         MeetingCommand::Import { .. } | MeetingCommand::ImportStatus { .. } => {
             unreachable!("handled before opening read-only source")
         }
-        MeetingCommand::PilotUsage { from_ms, until_ms } => match source {
-            DataSource::Local(db) if json => super::meeting_pilot::run(db, from_ms, until_ms).await,
-            _ => Err(local_only("JSON meetings pilot-usage")),
-        },
+        MeetingCommand::PilotUsage { from_ms, until_ms } => {
+            require_json(json, "meetings pilot-usage")?;
+            super::meeting_pilot::run(db, from_ms, until_ms).await
+        }
         MeetingCommand::HoldList {
             after,
             limit,
             database_only,
-        } => match source {
-            DataSource::Local(db) if json => {
-                super::meeting_hold::list(db, &after, limit, database_only).await
-            }
-            _ => Err(local_only("JSON meetings hold-list")),
-        },
-        MeetingCommand::HoldExport { id, database_only } => match source {
-            DataSource::Local(db) if json => {
-                super::meeting_hold::export(db, &id, database_only).await
-            }
-            _ => Err(local_only("JSON meetings hold-export")),
-        },
+        } => {
+            require_json(json, "meetings hold-list")?;
+            super::meeting_hold::list(db, &after, limit, database_only).await
+        }
+        MeetingCommand::HoldExport { id, database_only } => {
+            require_json(json, "meetings hold-export")?;
+            super::meeting_hold::export(db, &id, database_only).await
+        }
         MeetingCommand::Delete { .. }
         | MeetingCommand::Capabilities
         | MeetingCommand::InitializeManaged => {
@@ -128,15 +40,17 @@ pub async fn run(source: &DataSource, command: MeetingCommand, json: bool) -> Re
             limit,
             offset,
         } => {
-            let page = source
-                .list_meetings(ListMeetingsInput {
+            let page = anlg_agent_access::list_meetings(
+                pool,
+                ListMeetingsInput {
                     query,
                     series_id,
                     folder_path: folder,
                     limit: Some(limit),
                     offset: Some(offset),
-                })
-                .await?;
+                },
+            )
+            .await?;
             let rendered = if json {
                 output::json("meetings.list", &page.meetings, Some(&page.pagination))?
             } else {
@@ -150,13 +64,15 @@ pub async fn run(source: &DataSource, command: MeetingCommand, json: bool) -> Re
             limit,
             offset,
         } => {
-            let page = source
-                .list_folders(ListFoldersInput {
+            let page = anlg_agent_access::list_folders(
+                pool,
+                ListFoldersInput {
                     query,
                     limit: Some(limit),
                     offset: Some(offset),
-                })
-                .await?;
+                },
+            )
+            .await?;
             let rendered = if json {
                 output::json("meetings.folders", &page.folders, Some(&page.pagination))?
             } else {
@@ -166,18 +82,14 @@ pub async fn run(source: &DataSource, command: MeetingCommand, json: bool) -> Re
             Ok(())
         }
         MeetingCommand::Get { id } => {
-            let meeting = source
-                .get_meeting(GetMeetingInput { meeting_id: id })
-                .await?;
+            let meeting =
+                anlg_agent_access::get_meeting(pool, GetMeetingInput { meeting_id: id }).await?;
             let rendered = if json {
-                match &source {
-                    DataSource::Local(db) => output::json(
-                        "meetings.get",
-                        &anlg_agent_access::local_meeting(db.pool(), meeting).await?,
-                        None,
-                    )?,
-                    DataSource::Cloud(_) => output::json("meetings.get", &meeting, None)?,
-                }
+                output::json(
+                    "meetings.get",
+                    &anlg_agent_access::local_meeting(pool, meeting).await?,
+                    None,
+                )?
             } else {
                 meeting.to_markdown()
             };
@@ -185,11 +97,13 @@ pub async fn run(source: &DataSource, command: MeetingCommand, json: bool) -> Re
             Ok(())
         }
         MeetingCommand::Note { id, kind } => {
-            let meeting = source
-                .get_meeting(GetMeetingInput {
+            let meeting = anlg_agent_access::get_meeting(
+                pool,
+                GetMeetingInput {
                     meeting_id: id.clone(),
-                })
-                .await?;
+                },
+            )
+            .await?;
             if json {
                 match kind {
                     DocumentKind::Note => {
@@ -226,13 +140,15 @@ pub async fn run(source: &DataSource, command: MeetingCommand, json: bool) -> Re
             Ok(())
         }
         MeetingCommand::Transcript { id, limit, offset } => {
-            let page = source
-                .get_meeting_transcript(GetMeetingTranscriptInput {
+            let page = anlg_agent_access::get_meeting_transcript(
+                pool,
+                GetMeetingTranscriptInput {
                     meeting_id: id,
                     offset: Some(offset),
                     limit: Some(limit),
-                })
-                .await?;
+                },
+            )
+            .await?;
             let rendered = if json {
                 let content = serde_json::json!({
                     "meeting_id": &page.meeting_id,
@@ -247,13 +163,15 @@ pub async fn run(source: &DataSource, command: MeetingCommand, json: bool) -> Re
             Ok(())
         }
         MeetingCommand::History { id, limit, offset } => {
-            let page = source
-                .get_recurring_meeting_history(GetRecurringMeetingHistoryInput {
+            let page = anlg_agent_access::get_recurring_meeting_history(
+                pool,
+                GetRecurringMeetingHistoryInput {
                     meeting_id: id,
                     limit: Some(limit),
                     offset: Some(offset),
-                })
-                .await?;
+                },
+            )
+            .await?;
             let rendered = if json {
                 output::json("meetings.history", &page.meetings, Some(&page.pagination))?
             } else {
@@ -268,10 +186,8 @@ pub async fn run(source: &DataSource, command: MeetingCommand, json: bool) -> Re
             output: path,
             force,
         } => {
-            if matches!(format, ExportFormat::Json)
-                && let DataSource::Local(db) = source
-            {
-                let meeting = anlg_agent_access::get_local_meeting_export(db.pool(), id).await?;
+            if matches!(format, ExportFormat::Json) {
+                let meeting = anlg_agent_access::get_local_meeting_export(pool, id).await?;
                 let content = if json {
                     output::json("meetings.export", &meeting, None)?
                 } else {
@@ -279,7 +195,7 @@ pub async fn run(source: &DataSource, command: MeetingCommand, json: bool) -> Re
                 };
                 return output::write_or_emit(&content, path.as_deref(), force);
             }
-            let meeting = source.get_meeting_export(id).await?;
+            let meeting = anlg_agent_access::get_meeting_export(pool, id).await?;
             let content = match (format, json) {
                 (ExportFormat::Markdown, false) => meeting.to_markdown(),
                 (ExportFormat::Json, false) => output::raw_json(&meeting)?,
@@ -361,11 +277,12 @@ fn render_folders(folders: &[Folder]) -> String {
         .join("\n")
 }
 
-fn local_only(feature: &str) -> Error {
-    Error::cloud(
-        "invalid_request",
-        format!("{feature} is only available for local meetings; use --source local"),
-    )
+fn require_json(json: bool, feature: &str) -> Result<()> {
+    if json {
+        Ok(())
+    } else {
+        Err(Error::InvalidRequest(format!("{feature} requires --json")))
+    }
 }
 
 fn render_documents(documents: &[Document]) -> String {

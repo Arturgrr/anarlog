@@ -20,6 +20,7 @@ export function DestructiveConfirmationDialog({
   confirmLabel,
   pendingLabel,
   isPending = false,
+  confirmVariant = "destructive",
   onConfirm,
 }: {
   open: boolean;
@@ -29,6 +30,7 @@ export function DestructiveConfirmationDialog({
   confirmLabel: ReactNode;
   pendingLabel?: ReactNode;
   isPending?: boolean;
+  confirmVariant?: "destructive" | "default";
   onConfirm: () => void;
 }) {
   return (
@@ -50,8 +52,8 @@ export function DestructiveConfirmationDialog({
             <Trans>Cancel</Trans>
           </GlassDialogCancelButton>
           <Button
-            variant="destructive"
-            className="h-8 rounded-full px-4 text-xs font-medium shadow-sm"
+            variant={confirmVariant}
+            className="h-7 px-3"
             disabled={isPending}
             onClick={onConfirm}
           >

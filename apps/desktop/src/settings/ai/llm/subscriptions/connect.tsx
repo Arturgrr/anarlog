@@ -1,9 +1,10 @@
+import { i18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useMutation } from "@tanstack/react-query";
 import { readText as readClipboardText } from "@tauri-apps/plugin-clipboard-manager";
 import { useEffect, useRef, useState } from "react";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import {
   commands as deeplink2Commands,
   events as deeplink2Events,
@@ -41,9 +42,11 @@ import { getScheme } from "~/shared/utils";
 
 export function ConnectSubscriptionDialog({
   provider,
+  promptToSelect,
   onOpenChange,
 }: {
   provider?: Provider;
+  promptToSelect: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useLingui();
@@ -52,6 +55,7 @@ export function ConnectSubscriptionDialog({
     provider && isSubscriptionProviderId(provider.id) ? provider.id : null;
   const saveProvider = useSetAiProvider("llm", providerId ?? "claude");
   const notifyProviderSelection = useProviderSelectionPrompt({
+    enabled: promptToSelect,
     providerType: "llm",
     providerId: providerId ?? "claude",
     providerName: provider?.displayName ?? "Claude",
@@ -80,22 +84,18 @@ export function ConnectSubscriptionDialog({
 
   const finishConnect = async (stored: string) => {
     notifyProviderSelection(stored);
-    void analyticsCommands.event({
-      event: "ai_provider_configured",
-      provider: "llm",
-    });
     onOpenChange(false);
   };
 
   const completeMutation = useMutation({
     mutationFn: async (rawCode?: string) => {
       if (!providerId || !provider) {
-        throw new Error("No provider selected.");
+        throw new Error(t`No provider selected.`);
       }
       if (providerId === "kimi_code") {
         const key = apiKey.trim();
         if (!key) {
-          throw new Error("Paste your Kimi Code API key.");
+          throw new Error(t`Paste your Kimi Code API key.`);
         }
         await saveProvider.mutateAsync({
           base_url: provider.baseUrl,
@@ -104,11 +104,11 @@ export function ConnectSubscriptionDialog({
         return key;
       }
       if (!session || session.kind === "api_key") {
-        throw new Error("Sign-in is not ready yet.");
+        throw new Error(t`Sign-in is not ready yet.`);
       }
       if (session.kind === "code") {
         if (providerId !== "claude" && providerId !== "chatgpt") {
-          throw new Error("This provider uses a different sign-in flow.");
+          throw new Error(t`This provider uses a different sign-in flow.`);
         }
         const stored = await completeCodeConnect(
           providerId,
@@ -121,7 +121,7 @@ export function ConnectSubscriptionDialog({
         });
         return stored;
       }
-      throw new Error("Waiting for authorization in the browser.");
+      throw new Error(t`Waiting for authorization in the browser.`);
     },
     onSuccess: (stored) => {
       void finishConnect(stored);
@@ -251,7 +251,7 @@ export function ConnectSubscriptionDialog({
         return;
       }
       if (parsed.state && parsed.state !== current.state) {
-        setError("This sign-in expired. Try connecting again.");
+        setError(i18n._(msg`This sign-in expired. Try connecting again.`));
         return;
       }
       completeFromAuthorizationRef.current(raw);
@@ -330,10 +330,6 @@ export function ConnectSubscriptionDialog({
           api_key: result,
         });
         notifyProviderSelectionRef.current(result);
-        void analyticsCommands.event({
-          event: "ai_provider_configured",
-          provider: "llm",
-        });
         onOpenChangeRef.current(false);
       } catch (caught) {
         if (!cancelled) {
@@ -373,7 +369,7 @@ export function ConnectSubscriptionDialog({
               ? t`Sign in with your Claude account. After you authorize, copy the code and we'll finish connecting.`
               : providerId === "chatgpt"
                 ? listeningForCallback
-                  ? t`Sign in with ChatGPT Plus or Pro. We'll open Anarlog and finish connecting.`
+                  ? t`Sign in with ChatGPT Plus or Pro. We'll open Librelog and finish connecting.`
                   : t`Sign in with ChatGPT Plus or Pro, then paste the redirect URL from your browser.`
                 : providerId === "github_copilot"
                   ? t`Sign in with GitHub Copilot and enter the code below.`

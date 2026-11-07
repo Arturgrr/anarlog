@@ -38,7 +38,7 @@ describe("badge collection persistence", () => {
   it("keeps the original collection date across duplicate awards and later empty activity", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-01T12:00:00Z"));
-    await collectBadges("alice", ["hello", "first-words", "first-words"]);
+    await collectBadges("alice", ["all-set", "first-words", "first-words"]);
     vi.setSystemTime(new Date("2026-09-08T12:00:00Z"));
     await collectBadges("alice", ["first-words"]);
     await collectBadges("alice", []);
@@ -47,19 +47,19 @@ describe("badge collection persistence", () => {
       value_json: string;
     }[];
     expect(parseCollectedBadges(rows)).toEqual({
-      hello: "2026-09-01T12:00:00.000Z",
+      "all-set": "2026-09-01T12:00:00.000Z",
       "first-words": "2026-09-01T12:00:00.000Z",
     });
   });
 
   it("keeps collections separate for accounts and guests", async () => {
-    await collectBadges("alice", ["hello"]);
+    await collectBadges("alice", ["all-set"]);
     await collectBadges("alice-other", ["memory-keeper"]);
     await collectBadges("guest-user", ["first-words"]);
     const prefix = "personal-badges.v1:alice:";
     const rows = db.prepare(COLLECTED_BADGES_SQL).all(prefix, prefix) as {
       value_json: string;
     }[];
-    expect(Object.keys(parseCollectedBadges(rows))).toEqual(["hello"]);
+    expect(Object.keys(parseCollectedBadges(rows))).toEqual(["all-set"]);
   });
 });

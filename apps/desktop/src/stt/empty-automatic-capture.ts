@@ -1,8 +1,8 @@
 import { commands as fsSyncCommands } from "@anlg/plugin-fs-sync";
 
 import { liveQueryClient } from "~/db";
-import { flushCanonicalSessionEditorChanges } from "~/session-sharing/editor-activity";
 import { enqueueSessionAudioOperation } from "~/session/audio-operations";
+import { flushCanonicalSessionEditorChanges } from "~/session/editor-activity";
 import { isSessionEmpty } from "~/session/queries";
 
 export async function discardEmptyAutomaticCapture({
@@ -57,8 +57,8 @@ export async function discardEmptyAutomaticCapture({
       ) {
         return false;
       }
-      // Only remove this device's un-catalogued audio. The calendar note and
-      // anything another device has contributed stay in the shared database.
+      // Only remove this device's un-catalogued audio. The note and anything
+      // another device has contributed stay in the shared database.
       const result = await fsSyncCommands.audioDelete(sessionId);
       return result.status === "ok" && result.data;
     });

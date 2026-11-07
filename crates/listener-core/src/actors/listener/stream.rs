@@ -641,7 +641,7 @@ mod tests {
     fn repeated_final_responses_do_not_hide_stalled_transcripts() {
         let now = Instant::now();
         let mut progress = StreamProgress::new(now);
-        let mut engine = crate::LiveTranscriptEngine::new("anarlog", &[], None);
+        let mut engine = crate::LiveTranscriptEngine::new("librelog", &[], None);
         let response = transcript_response(true);
         let initial = engine
             .process(&response)
@@ -664,7 +664,7 @@ mod tests {
     fn advancing_single_word_finals_keep_an_active_stream_healthy() {
         let now = Instant::now();
         let mut progress = StreamProgress::new(now);
-        let mut engine = crate::LiveTranscriptEngine::new("anarlog", &[], None);
+        let mut engine = crate::LiveTranscriptEngine::new("librelog", &[], None);
         let mut response = transcript_response(true);
         if let StreamResponse::TranscriptResponse { channel, .. } = &mut response {
             channel.alternatives[0].words.truncate(1);

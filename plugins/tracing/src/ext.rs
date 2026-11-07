@@ -19,68 +19,39 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Tracing<'a, R, M> {
 
     pub fn do_log(&self, level: Level, data: Vec<serde_json::Value>) -> Result<(), crate::Error> {
         let argument_count = data.len();
-        let diagnostic = diagnostic_message(&data);
         match level {
             Level::Trace => {
-                tracing::trace!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, diagnostic, "webview_console_event");
+                tracing::trace!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, "webview_console_event");
             }
             Level::Debug => {
-                tracing::debug!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, diagnostic, "webview_console_event");
+                tracing::debug!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, "webview_console_event");
             }
             Level::Info => {
-                tracing::info!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, diagnostic, "webview_console_event");
+                tracing::info!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, "webview_console_event");
             }
             Level::Warn => {
-                tracing::warn!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, diagnostic, "webview_console_event");
+                tracing::warn!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, "webview_console_event");
             }
             Level::Error => {
-                tracing::error!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, diagnostic, "webview_console_event");
+                tracing::error!(target: super::WEBVIEW_CONSOLE_TARGET, argument_count, "webview_console_event");
             }
         }
         Ok(())
     }
 }
 
-const DIAGNOSTIC_PREFIXES: &[&str] = &["[cloudsync]"];
-const DIAGNOSTIC_MAX_LEN: usize = 200;
-
-/// Console payloads are dropped from app.log for privacy. The only exception is
-/// a leading static diagnostic literal from an allowlisted subsystem; trailing
-/// arguments (error objects, ids) are never recorded.
-fn diagnostic_message(data: &[serde_json::Value]) -> Option<&str> {
-    let first = data.first()?.as_str()?;
-    if !DIAGNOSTIC_PREFIXES
-        .iter()
-        .any(|prefix| first.starts_with(prefix))
-    {
-        return None;
-    }
-    let end = first
-        .char_indices()
-        .nth(DIAGNOSTIC_MAX_LEN)
-        .map_or(first.len(), |(index, _)| index);
-    Some(&first[..end])
-}
-
 impl<R: tauri::Runtime, M: tauri::Manager<R>> Tracing<'_, R, M> {
     pub fn log_content(&self) -> Result<Option<String>, crate::Error> {
-        self.filtered_log_content(false)
-    }
-
-    pub fn filtered_log_content(
-        &self,
-        cloudsync_only: bool,
-    ) -> Result<Option<String>, crate::Error> {
         let logs_dir = self.logs_dir()?;
-        Ok(read_log_content(&logs_dir, cloudsync_only))
+        Ok(read_log_content(&logs_dir))
     }
 }
 
 const LOG_READ_CHUNK_BYTES: u64 = 64 * 1024;
 const MAX_CONTINUATION_LINES: usize = 50;
 
-fn read_log_content(logs_dir: &std::path::Path, cloudsync_only: bool) -> Option<String> {
-    let target_records = if cloudsync_only { 100 } else { 300 };
+fn read_log_content(logs_dir: &std::path::Path) -> Option<String> {
+    const TARGET_RECORDS: usize = 300;
     const MAX_ROTATED_FILES: usize = 5;
 
     let log_files = std::iter::once(logs_dir.join("app.log"))
@@ -104,17 +75,13 @@ fn read_log_content(logs_dir: &std::path::Path, cloudsync_only: bool) -> Option<
                 }
                 continue;
             }
-            if cloudsync_only && !is_cloudsync_line(&line) {
-                continuation.clear();
-                continue;
-            }
             let mut record = line;
             for continued in continuation.drain(..).rev() {
                 record.push('\n');
                 record.push_str(&continued);
             }
             records.push(record);
-            if records.len() >= target_records {
+            if records.len() >= TARGET_RECORDS {
                 break 'files;
             }
         }
@@ -195,24 +162,6 @@ fn decode_line(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
 }
 
-fn is_cloudsync_line(line: &str) -> bool {
-    let Some((header, message)) = line.split_once(": ") else {
-        return false;
-    };
-    let Some(target) = header.split_whitespace().last() else {
-        return false;
-    };
-    ["db_core::cloudsync", "cloudsync"].iter().any(|namespace| {
-        target == *namespace
-            || target
-                .strip_prefix(namespace)
-                .is_some_and(|suffix| suffix.starts_with("::"))
-    }) || ((target == "tauri_plugin_db" || target.starts_with("tauri_plugin_db::"))
-        && message.to_ascii_lowercase().contains("cloudsync"))
-        || (super::is_webview_console_target(target)
-            && message.contains("diagnostic=\"[cloudsync]"))
-}
-
 pub trait TracingPluginExt<R: tauri::Runtime> {
     fn tracing(&self) -> Tracing<'_, R, Self>
     where
@@ -278,73 +227,6 @@ pub const JS_INIT_SCRIPT: &str = r#"
 #[cfg(test)]
 mod tests {
     use rquickjs::{Context, Runtime};
-
-    #[test]
-    fn cloudsync_log_filters_before_limiting_and_reads_rotated_activity() {
-        let temp = tempfile::tempdir().unwrap();
-        let native =
-            "2026-10-01T00:00:00Z INFO db_core::cloudsync::runtime::background: sync completed";
-        let recovery = "2026-10-01T00:00:01Z WARN tauri_plugin_db::runtime::recovery: CloudSync recovery delayed";
-        let console = "2026-10-01T00:00:02Z WARN anarlog.webview.console: webview_console_event diagnostic=\"[cloudsync] local sync configuration failed\"";
-        let multiline = "2026-10-01T00:00:03Z WARN db_core::cloudsync::runtime: CloudSync failed\n  caused by: timed out";
-        std::fs::write(
-            temp.path().join("app.log.1"),
-            (0..110)
-                .map(|i| format!("{native} sequence={i}\n"))
-                .collect::<String>(),
-        )
-        .unwrap();
-        std::fs::write(
-            temp.path().join("app.log"),
-            format!(
-                "{recovery}\n{console}\n{multiline}\n{}",
-                "2026-10-01T00:00:04Z INFO unrelated: cloudsync mentioned in unrelated message\n  unrelated continuation\n"
-                    .repeat(2_000)
-            ),
-        )
-        .unwrap();
-        let filtered = super::read_log_content(temp.path(), true).unwrap();
-        let lines: Vec<_> = filtered.lines().collect();
-        assert_eq!(lines.len(), 101);
-        assert_eq!(lines[0], format!("{native} sequence=13"));
-        assert_eq!(
-            filtered.split_once(recovery).unwrap().1,
-            format!("\n{console}\n{multiline}")
-        );
-        assert!(lines.iter().all(|line| !line.contains("unrelated")));
-        let unfiltered = super::read_log_content(temp.path(), false).unwrap();
-        assert_eq!(unfiltered.lines().count(), 600);
-        assert!(unfiltered.lines().all(|line| line.contains("unrelated")));
-    }
-
-    #[test]
-    fn diagnostic_message_keeps_only_allowlisted_leading_literal() {
-        let data = vec![
-            serde_json::json!("[cloudsync] local sync configuration failed; retrying"),
-            serde_json::json!({ "message": "secret" }),
-        ];
-        assert_eq!(
-            super::diagnostic_message(&data),
-            Some("[cloudsync] local sync configuration failed; retrying")
-        );
-
-        assert_eq!(
-            super::diagnostic_message(&[serde_json::json!("user typed something")]),
-            None
-        );
-        assert_eq!(
-            super::diagnostic_message(&[serde_json::json!({ "message": "[cloudsync] x" })]),
-            None
-        );
-        assert_eq!(super::diagnostic_message(&[]), None);
-
-        let long = [serde_json::json!(format!(
-            "[cloudsync] {}",
-            "é".repeat(400)
-        ))];
-        let truncated = super::diagnostic_message(&long).unwrap();
-        assert_eq!(truncated.chars().count(), super::DIAGNOSTIC_MAX_LEN);
-    }
 
     fn setup_runtime() -> (Runtime, Context) {
         let runtime = Runtime::new().unwrap();

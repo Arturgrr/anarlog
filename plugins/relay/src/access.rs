@@ -30,7 +30,7 @@ impl RelayAccess {
     }
 
     fn cookie_name(&self) -> String {
-        format!("anarlog-relay-{}", self.port)
+        format!("librelog-relay-{}", self.port)
     }
 
     fn authenticated(&self, headers: &HeaderMap) -> bool {
@@ -176,7 +176,7 @@ mod tests {
             (
                 "localhost:1423",
                 "http://localhost:1423",
-                "anarlog-relay-1423=forged",
+                "librelog-relay-1423=forged",
                 StatusCode::FORBIDDEN,
             ),
             (

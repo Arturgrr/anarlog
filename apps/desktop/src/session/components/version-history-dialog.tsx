@@ -9,8 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@anlg/ui/components/ui/dialog";
-import { cn, formatDistanceToNow, safeParseDate } from "@anlg/utils";
+import { cn, safeParseDate } from "@anlg/utils";
 
+import { formatRelativeToNow } from "~/i18n/format";
 import {
   previewFromBody,
   restoreSessionDocumentBody,
@@ -27,7 +28,7 @@ export function VersionHistoryDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { t } = useLingui();
+  const { i18n, t } = useLingui();
   const conflicts = useSessionConflicts(sessionId);
   const versions = useSessionDocumentVersions(sessionId);
 
@@ -88,9 +89,7 @@ export function VersionHistoryDialog({
                     <p className="text-xs font-medium">{entry.label}</p>
                     <p className="text-muted-foreground mt-0.5 text-[11px]">
                       {entry.at > 0
-                        ? formatDistanceToNow(new Date(entry.at), {
-                            addSuffix: true,
-                          })
+                        ? formatRelativeToNow(new Date(entry.at), i18n.locale)
                         : null}
                     </p>
                     <p
@@ -123,9 +122,7 @@ export function VersionHistoryDialog({
         )}
 
         {restoreMutation.error && (
-          <p className="text-xs text-red-500">
-            {restoreMutation.error.message}
-          </p>
+          <p className="text-danger text-xs">{restoreMutation.error.message}</p>
         )}
       </DialogContent>
     </Dialog>

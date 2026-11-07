@@ -1,12 +1,14 @@
+import { t } from "@lingui/core/macro";
+
 import { cn } from "@anlg/utils";
 
-import { AnarlogMark } from "./anarlog-mark";
+import { LibrelogMark } from "./librelog-mark";
 
 export function BrandLoadingView({ detail }: { detail?: string }) {
   return (
     <div
       role="status"
-      aria-label="Loading"
+      aria-label={t`Loading`}
       data-tauri-drag-region
       className={cn([
         "bg-background flex h-screen w-screen items-center justify-center",
@@ -15,12 +17,12 @@ export function BrandLoadingView({ detail }: { detail?: string }) {
       <div className="flex flex-col items-center">
         <div
           className={cn([
-            "relative w-[4.5rem]",
+            "relative w-14",
             "drop-shadow-[0_10px_24px_rgba(0,0,0,0.10)]",
             "dark:drop-shadow-[0_12px_28px_rgba(0,0,0,0.45)]",
           ])}
         >
-          <AnarlogMark className="text-foreground/20 w-full" />
+          <LibrelogMark className="text-foreground/20 w-full" />
           <div
             aria-hidden="true"
             className={cn([
@@ -34,7 +36,7 @@ export function BrandLoadingView({ detail }: { detail?: string }) {
               "motion-reduce:animate-none motion-reduce:opacity-0",
             ])}
           >
-            <AnarlogMark className="w-full" />
+            <LibrelogMark className="w-full" />
           </div>
         </div>
         {detail ? (

@@ -37,7 +37,7 @@ export function AutoFormatExamplesDialog({
   onGenerated: (format: string) => void;
 }) {
   const { t } = useLingui();
-  const model = useLanguageModel("enhance");
+  const model = useLanguageModel();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [examples, setExamples] = useState([""]);
   const populatedExamples = examples
@@ -125,8 +125,8 @@ export function AutoFormatExamplesDialog({
           </DialogTitle>
           <DialogDescription>
             <Trans>
-              Attach up to three past summaries you like. Anarlog will learn how
-              you prefer meeting notes to be structured and written.
+              Attach up to three past summaries you like. Librelog will learn
+              how you prefer meeting notes to be structured and written.
             </Trans>
           </DialogDescription>
         </DialogHeader>

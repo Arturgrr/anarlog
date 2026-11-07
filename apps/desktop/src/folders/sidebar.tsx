@@ -2,67 +2,32 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { useMemo, useState } from "react";
 
 import {
-  Buildings,
   FolderSimple,
   MagnifyingGlass,
   Plus,
   X,
 } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
 import { useActiveFolderPath, useFolderSelection } from "./selection";
 
-import { useOptionalAuth } from "~/auth";
-import {
-  importSharedFolder,
-  parseSharedFolderPayload,
-  SharedResourceLibrarySection,
-} from "~/resource-sharing";
-import {
-  folderDefaultAccessRule,
-  useFolderDefaultAccessRules,
-} from "~/session-sharing/folder-default-access";
-import { useAvailableShareWorkspaces } from "~/session-sharing/source";
 import { createNamedFolder } from "~/session/folder-catalog";
 import { resolvedFolderIcon } from "~/session/folder-icon";
-import {
-  useFolderIcons,
-  useFolderPaths,
-  useFolderWorkspaces,
-} from "~/session/queries";
+import { useFolderIcons, useFolderPaths } from "~/session/queries";
 import { CustomSidebarHeader } from "~/sidebar/custom-sidebar-header";
 import { FolderNameDialog } from "~/sidebar/folder-name-dialog";
 import { TemplateIconGlyph } from "~/templates/template-icon";
 
 export function FoldersSidebar() {
   const { t } = useLingui();
-  const auth = useOptionalAuth();
   const folders = useFolderPaths();
   const persistedIcons = useFolderIcons();
-  const folderWorkspaces = useFolderWorkspaces();
-  const folderAccessRules = useFolderDefaultAccessRules();
-  const shareWorkspaces = useAvailableShareWorkspaces(
-    auth?.session?.user.id ?? null,
-  );
-  const folderShareLabel = (folder: string): string | null => {
-    const rule = folderDefaultAccessRule(folderAccessRules, folder);
-    if (rule?.access === "participants") return t`People in the meeting`;
-    const workspaceId =
-      rule?.workspace_id ?? folderWorkspaces[folder]?.workspaceId;
-    if (!workspaceId) return null;
-    const name =
-      shareWorkspaces.find((workspace) => workspace.id === workspaceId)?.name ??
-      folderWorkspaces[folder]?.name;
-    return name ? t`Everyone in ${name}` : "";
-  };
   const iconOverrides = useFolderSelection((state) => state.iconOverrides);
   const setSelectedPath = useFolderSelection((state) => state.setSelectedPath);
   const activeFolder = useActiveFolderPath(folders);
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState("");
-  const searchRef = useSquircleRef<HTMLDivElement>();
 
   const filteredFolders = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -92,13 +57,12 @@ export function FoldersSidebar() {
 
         <div className="pb-2">
           <div
-            ref={searchRef}
             className={cn([
-              "border-border bg-accent/50 flex h-8 w-full shrink-0 items-center gap-2 rounded-lg border px-3",
-              "focus-within:bg-accent transition-colors",
+              "bg-card shadow-button-neutral flex h-7 w-full shrink-0 items-center gap-2 rounded-md px-2",
+              "focus-within:outline-ring transition-[box-shadow,outline-color] duration-200 ease-out focus-within:shadow-none focus-within:outline-1",
             ])}
           >
-            <MagnifyingGlass className="text-muted-foreground h-4 w-4 shrink-0" />
+            <MagnifyingGlass className="text-icon-muted h-4 w-4 shrink-0" />
             <input
               type="text"
               value={search}
@@ -109,7 +73,7 @@ export function FoldersSidebar() {
                 }
               }}
               placeholder={t`Search folders...`}
-              className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm placeholder:text-sm focus:outline-hidden"
+              className="placeholder:text-faint text-ui-compact min-w-0 flex-1 bg-transparent focus:outline-hidden"
             />
             {search ? (
               <button
@@ -117,7 +81,7 @@ export function FoldersSidebar() {
                 onClick={() => setSearch("")}
                 className={cn([
                   "h-4 w-4 shrink-0",
-                  "text-muted-foreground hover:text-muted-foreground",
+                  "text-muted-foreground hover:text-foreground",
                   "transition-colors",
                 ])}
                 aria-label={t`Clear search`}
@@ -156,10 +120,10 @@ export function FoldersSidebar() {
                     aria-current={selected ? "page" : undefined}
                     onClick={() => setSelectedPath(folder)}
                     className={cn([
-                      "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
+                      "text-ui flex h-7 w-full items-center rounded-sm px-1.5 text-left select-none",
                       selected
-                        ? "bg-accent font-medium"
-                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                        ? "bg-layer-2 text-foreground"
+                        : "text-muted-foreground hover:bg-hover active:bg-pressed hover:text-foreground",
                     ])}
                   >
                     <span className="flex min-w-0 items-center gap-2">
@@ -169,17 +133,9 @@ export function FoldersSidebar() {
                           persistedIcons,
                           iconOverrides,
                         )}
-                        className="size-4 text-sm"
+                        className="text-icon-muted size-4 text-sm"
                       />
                       <span className="min-w-0 truncate">{folder}</span>
-                      {folderShareLabel(folder) !== null ? (
-                        <span
-                          className="text-muted-foreground shrink-0"
-                          title={folderShareLabel(folder) || undefined}
-                        >
-                          <Buildings className="size-3.5" aria-hidden="true" />
-                        </span>
-                      ) : null}
                     </span>
                   </button>
                 </li>
@@ -187,19 +143,6 @@ export function FoldersSidebar() {
             })}
           </ul>
         )}
-        <SharedResourceLibrarySection
-          resourceType="folder"
-          search={search}
-          onImport={async (resource) => {
-            const userId = auth?.session?.user.id;
-            if (!userId) throw new Error(t`Sign in to add this folder`);
-            const path = await importSharedFolder(
-              parseSharedFolderPayload(resource.payload),
-              userId,
-            );
-            setSelectedPath(path);
-          }}
-        />
       </div>
 
       <FolderNameDialog

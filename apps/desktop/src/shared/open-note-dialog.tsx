@@ -4,7 +4,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -13,9 +12,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import {
   FileText,
   Gear,
-  Lock,
   MagnifyingGlass,
-  Users,
   X,
   type Icon,
 } from "@anlg/ui/components/icons";
@@ -26,11 +23,7 @@ import {
 } from "@anlg/ui/components/ui/dialog";
 import { cn } from "@anlg/utils";
 
-import { trackAnalyticsEvent } from "~/analytics";
-import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing-context";
 import { useSessionSummaries } from "~/session/queries";
-import { useDurableSharedNotes } from "~/shared-notes/cache";
 import { useMainContentCenterOffset } from "~/shared/main/content-offset";
 import { useSettingsNavGroups } from "~/sidebar/settings-nav-groups";
 import { type TabInput, useTabs } from "~/store/zustand/tabs";
@@ -48,7 +41,7 @@ type OpenNoteDialogContextValue = {
 };
 
 type NoteResult = {
-  resourceType: "session" | "shared_session";
+  resourceType: "session";
   id: string;
   title: string;
   createdAt: string;
@@ -60,7 +53,6 @@ type PageResult = {
   hint: string | null;
   groupLabel: string;
   icon: Icon;
-  requiresPro: boolean;
   destination: TabInput;
 };
 
@@ -122,12 +114,9 @@ export function OpenNoteDialog({
   const recentlyOpenedSessionIds = useTabs(
     (state) => state.recentlyOpenedSessionIds,
   );
-  const { isPro } = useBillingAccess();
-  const { session } = useAuth();
   const settingsNavGroups = useSettingsNavGroups();
 
   const sessions = useSessionSummaries();
-  const sharedNotes = useDurableSharedNotes(session?.user.id);
 
   const pageResults = useMemo<PageResult[]>(
     () => [
@@ -141,7 +130,6 @@ export function OpenNoteDialog({
             hint: hasDestination ? null : t`Settings`,
             groupLabel: group.label,
             icon: item.icon,
-            requiresPro: Boolean(item.requiresPro),
             destination: hasDestination
               ? item.destination
               : { type: "settings", state: { tab: item.id } },
@@ -154,7 +142,6 @@ export function OpenNoteDialog({
         hint: null,
         groupLabel: t`Go to`,
         icon: Gear,
-        requiresPro: false,
         destination: { type: "settings", state: { tab: "app" } },
       },
     ],
@@ -193,25 +180,11 @@ export function OpenNoteDialog({
   }, [sessions, t]);
 
   const allNotesSortedByDate = useMemo(() => {
-    return [
-      ...sessionsMap.values(),
-      ...sharedNotes
-        .filter(
-          (note) => !(note.manageAccess && sessionsMap.has(note.sessionId)),
-        )
-        .map(
-          (note): NoteResult => ({
-            resourceType: "shared_session",
-            id: note.shareId,
-            title: note.title || t`Untitled`,
-            createdAt: note.publishedAt,
-          }),
-        ),
-    ].sort((a, b) => {
+    return [...sessionsMap.values()].sort((a, b) => {
       if (!a.createdAt || !b.createdAt) return 0;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [sessionsMap, sharedNotes, t]);
+  }, [sessionsMap]);
 
   const recentSessions = useMemo(() => {
     return recentlyOpenedSessionIds
@@ -226,9 +199,7 @@ export function OpenNoteDialog({
 
   const otherNotes = useMemo(() => {
     return allNotesSortedByDate.filter(
-      (note) =>
-        note.resourceType === "shared_session" ||
-        !recentSessionIdSet.has(note.id),
+      (note) => !recentSessionIdSet.has(note.id),
     );
   }, [allNotesSortedByDate, recentSessionIdSet]);
 
@@ -253,34 +224,6 @@ export function OpenNoteDialog({
     filteredRecentSessions.length > 0 ||
     filteredOtherNotes.length > 0;
 
-  useEffect(() => {
-    if (!open || !query.trim()) return;
-    const timeout = setTimeout(() => {
-      trackAnalyticsEvent("search_performed", {
-        entry_point: "open_note_dialog",
-        result_count:
-          filteredPages.length +
-          filteredRecentSessions.length +
-          filteredOtherNotes.length,
-        entity_types: [
-          ...new Set([
-            ...[...filteredRecentSessions, ...filteredOtherNotes].map(
-              (note) => note.resourceType,
-            ),
-            ...(filteredPages.length > 0 ? ["page"] : []),
-          ]),
-        ].sort(),
-      });
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [
-    filteredOtherNotes.length,
-    filteredPages.length,
-    filteredRecentSessions.length,
-    open,
-    query,
-  ]);
-
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
@@ -297,29 +240,14 @@ export function OpenNoteDialog({
 
   const handleSelect = useCallback(
     (note: NoteResult) => {
-      trackAnalyticsEvent("search_result_opened", {
-        entry_point: "open_note_dialog",
-        result_type: note.resourceType,
-        had_query: Boolean(query.trim()),
-      });
       handleOpenChange(false);
-      openCurrent(
-        note.resourceType === "shared_session"
-          ? { type: "shared_sessions", id: note.id }
-          : { type: "sessions", id: note.id },
-      );
+      openCurrent({ type: "sessions", id: note.id });
     },
     [handleOpenChange, openCurrent, query],
   );
 
   const handleSelectPage = useCallback(
     (page: PageResult) => {
-      trackAnalyticsEvent("search_result_opened", {
-        entry_point: "open_note_dialog",
-        result_type: "page",
-        page_id: page.id,
-        had_query: Boolean(query.trim()),
-      });
       handleOpenChange(false);
       openNew(page.destination);
     },
@@ -341,9 +269,9 @@ export function OpenNoteDialog({
       heading={
         <div className="flex flex-col gap-3">
           {isQueryEmpty && filteredRecentSessions.length > 0 && (
-            <div className="bg-accent mx-2 h-px" />
+            <div className="bg-border-muted mx-2 h-px" />
           )}
-          <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium tracking-wider uppercase">
+          <div className="text-faint text-small font-ui-medium px-3 py-1.5">
             <Trans>Go to</Trans>
           </div>
         </div>
@@ -355,24 +283,17 @@ export function OpenNoteDialog({
           value={`page-${page.id}`}
           onSelect={() => handleSelectPage(page)}
           className={cn([
-            "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5",
-            "text-muted-foreground text-sm",
-            "data-[selected=true]:bg-accent/60",
-            "transition-colors",
+            "flex h-7 cursor-pointer items-center gap-2 rounded-sm pr-1.5 pl-3",
+            "text-foreground text-sm",
+            "data-[selected=true]:bg-hover",
           ])}
         >
-          <page.icon className="text-muted-foreground h-4 w-4 shrink-0" />
+          <page.icon className="text-icon-muted h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{page.label}</span>
           {page.hint ? (
-            <span className="text-muted-foreground ml-auto shrink-0 text-xs">
+            <span className="text-faint text-small font-ui-medium ml-auto shrink-0">
               {page.hint}
             </span>
-          ) : null}
-          {page.requiresPro && !isPro ? (
-            <Lock
-              aria-label={t`Requires Anarlog Pro`}
-              className="h-3.5 w-3.5 shrink-0"
-            />
           ) : null}
         </CommandPrimitive.Item>
       ))}
@@ -385,7 +306,7 @@ export function OpenNoteDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         aria-describedby={undefined}
-        overlayClassName="bg-black/20 backdrop-blur-xs"
+        overlayClassName="bg-scrim"
         overlayChildren={
           <div
             data-open-note-dialog-drag-region
@@ -415,14 +336,14 @@ export function OpenNoteDialog({
         </DialogTitle>
         <div
           className={cn([
-            "border-border/80 bg-background rounded-2xl border",
-            "shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]",
+            "bg-layer-1 rounded-md",
+            "shadow-overlay",
             "overflow-hidden",
           ])}
         >
           <CommandPrimitive shouldFilter={false} className="flex flex-col">
-            <div className="border-border/60 flex items-center gap-3 border-b px-4 py-3">
-              <MagnifyingGlass className="text-muted-foreground h-4 w-4 shrink-0" />
+            <div className="border-border-muted flex items-center gap-3 border-b px-4 py-3">
+              <MagnifyingGlass className="text-icon-muted h-4 w-4 shrink-0" />
               <CommandPrimitive.Input
                 ref={focusInput}
                 value={query}
@@ -430,25 +351,24 @@ export function OpenNoteDialog({
                 placeholder={t`Search notes and pages...`}
                 className={cn([
                   "flex-1 bg-transparent text-sm",
-                  "placeholder:text-muted-foreground outline-hidden",
+                  "placeholder:text-faint outline-hidden",
                 ])}
               />
               <button
                 aria-label={t`Close`}
                 onClick={() => handleOpenChange(false)}
                 className={cn([
-                  "h-5 w-5 rounded-full",
+                  "h-5 w-5 rounded-sm",
                   "flex items-center justify-center",
-                  "bg-accent/80 hover:bg-accent/80",
-                  "text-muted-foreground text-xs",
-                  "transition-colors",
+                  "hover:bg-hover active:bg-pressed",
+                  "text-icon-muted text-xs",
                 ])}
               >
                 <X className="h-3 w-3" />
               </button>
             </div>
 
-            <CommandPrimitive.List className="max-h-80 overflow-y-auto p-2">
+            <CommandPrimitive.List className="max-h-80 overflow-y-auto p-0.5">
               {!hasAnyResults ? (
                 <CommandPrimitive.Empty className="text-muted-foreground py-6 text-center text-sm">
                   <Trans>No results found.</Trans>
@@ -468,9 +388,9 @@ export function OpenNoteDialog({
                       heading={
                         <div className="flex flex-col gap-3">
                           {!isQueryEmpty && filteredPages.length > 0 && (
-                            <div className="bg-accent mx-2 h-px" />
+                            <div className="bg-border-muted mx-2 h-px" />
                           )}
-                          <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium tracking-wider uppercase">
+                          <div className="text-faint text-small font-ui-medium px-3 py-1.5">
                             <Trans>Recent</Trans>
                           </div>
                         </div>
@@ -482,13 +402,12 @@ export function OpenNoteDialog({
                           value={`recent-${session.id}`}
                           onSelect={() => handleSelect(session)}
                           className={cn([
-                            "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5",
-                            "text-muted-foreground text-sm",
-                            "data-[selected=true]:bg-accent/60",
-                            "transition-colors",
+                            "flex h-7 cursor-pointer items-center gap-2 rounded-sm pr-1.5 pl-3",
+                            "text-foreground text-sm",
+                            "data-[selected=true]:bg-hover",
                           ])}
                         >
-                          <FileText className="text-muted-foreground h-4 w-4 shrink-0" />
+                          <FileText className="text-icon-muted h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{session.title}</span>
                         </CommandPrimitive.Item>
                       ))}
@@ -503,9 +422,9 @@ export function OpenNoteDialog({
                         <div className="flex flex-col gap-3">
                           {(filteredPages.length > 0 ||
                             filteredRecentSessions.length > 0) && (
-                            <div className="bg-accent mx-2 h-px" />
+                            <div className="bg-border-muted mx-2 h-px" />
                           )}
-                          <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium tracking-wider uppercase">
+                          <div className="text-faint text-small font-ui-medium px-3 py-1.5">
                             <Trans>All Notes</Trans>
                           </div>
                         </div>
@@ -517,20 +436,12 @@ export function OpenNoteDialog({
                           value={`${note.resourceType}-${note.id}`}
                           onSelect={() => handleSelect(note)}
                           className={cn([
-                            "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5",
-                            "text-muted-foreground text-sm",
-                            "data-[selected=true]:bg-accent/60",
-                            "transition-colors",
+                            "flex h-7 cursor-pointer items-center gap-2 rounded-sm pr-1.5 pl-3",
+                            "text-foreground text-sm",
+                            "data-[selected=true]:bg-hover",
                           ])}
                         >
-                          {note.resourceType === "shared_session" ? (
-                            <Users
-                              className="text-muted-foreground h-4 w-4 shrink-0"
-                              data-testid="shared-note-icon"
-                            />
-                          ) : (
-                            <FileText className="text-muted-foreground h-4 w-4 shrink-0" />
-                          )}
+                          <FileText className="text-icon-muted h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{note.title}</span>
                         </CommandPrimitive.Item>
                       ))}

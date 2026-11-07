@@ -6,16 +6,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const mocks = vi.hoisted(() => ({
-  billing: {
-    isPro: true,
-    isUpgradingToPro: false,
-    upgradeToPro: vi.fn(),
-  },
-  toastWarning: vi.fn(),
-}));
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@lingui/react/macro", () => ({
   Trans: ({ children }: { children?: ReactNode }) => <>{children}</>,
@@ -41,53 +32,18 @@ vi.mock("~/settings/queries", () => ({
   useSetSettingValue: () => vi.fn(),
 }));
 
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => mocks.billing,
-}));
-
-vi.mock("@anlg/ui/components/ui/toast", () => ({
-  toast: { warning: mocks.toastWarning },
-}));
-
 vi.mock("~/shared/config", () => ({
   useConfigValue: () => [],
 }));
 
-import { DictionarySettings, SettingsDictionary } from "./index";
+import { DictionarySettings } from "./index";
 
 describe("DictionarySettings", () => {
-  beforeEach(() => {
-    mocks.billing.isPro = true;
-    mocks.billing.isUpgradingToPro = false;
-    mocks.billing.upgradeToPro.mockClear();
-    mocks.toastWarning.mockClear();
-  });
-
   afterEach(cleanup);
-
-  it("shows the dictionary editor and toasts on the free plan", () => {
-    mocks.billing.isPro = false;
-
-    render(<SettingsDictionary />);
-
-    expect(screen.getByRole("textbox")).toBeTruthy();
-    fireEvent.click(screen.getByRole("textbox"));
-
-    expect(mocks.toastWarning).toHaveBeenCalledWith(
-      "This requires Anarlog Pro",
-      {
-        action: {
-          label: "Upgrade",
-          onClick: expect.any(Function),
-        },
-      },
-    );
-    expect(mocks.billing.upgradeToPro).not.toHaveBeenCalled();
-  });
 
   it("adds entered terms and keeps them normalized", async () => {
     const onSave = vi.fn();
-    render(<DictionarySettings terms={["Anarlog"]} onSave={onSave} />);
+    render(<DictionarySettings terms={["Librelog"]} onSave={onSave} />);
 
     fireEvent.change(screen.getByRole("textbox"), {
       target: { value: " FastConformer, Parakeet TDT " },
@@ -100,7 +56,7 @@ describe("DictionarySettings", () => {
 
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(
-        JSON.stringify(["Anarlog", "FastConformer", "Parakeet TDT"]),
+        JSON.stringify(["Librelog", "FastConformer", "Parakeet TDT"]),
       ),
     );
   });
@@ -109,12 +65,12 @@ describe("DictionarySettings", () => {
     const onSave = vi.fn();
     render(
       <DictionarySettings
-        terms={["Anarlog", "Parakeet TDT"]}
+        terms={["Librelog", "Parakeet TDT"]}
         onSave={onSave}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove Anarlog" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove Librelog" }));
 
     expect(onSave).toHaveBeenCalledWith(JSON.stringify(["Parakeet TDT"]));
   });
@@ -123,18 +79,18 @@ describe("DictionarySettings", () => {
     const onSave = vi.fn();
     render(
       <DictionarySettings
-        terms={["Anarlog", "Parakeet TDT"]}
+        terms={["Librelog", "Parakeet TDT"]}
         onSave={onSave}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Edit: Anarlog" }));
-    const input = screen.getByRole("textbox", { name: "Edit: Anarlog" });
-    fireEvent.change(input, { target: { value: " Anarlog AI " } });
+    fireEvent.click(screen.getByRole("button", { name: "Edit: Librelog" }));
+    const input = screen.getByRole("textbox", { name: "Edit: Librelog" });
+    fireEvent.change(input, { target: { value: " Librelog AI " } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     expect(onSave).toHaveBeenCalledWith(
-      JSON.stringify(["Anarlog AI", "Parakeet TDT"]),
+      JSON.stringify(["Librelog AI", "Parakeet TDT"]),
     );
   });
 
@@ -142,13 +98,13 @@ describe("DictionarySettings", () => {
     const onSave = vi.fn();
     render(
       <DictionarySettings
-        terms={["Anarlog", "Parakeet TDT"]}
+        terms={["Librelog", "Parakeet TDT"]}
         onSave={onSave}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Edit: Anarlog" }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Edit: Anarlog" }), {
+    fireEvent.click(screen.getByRole("button", { name: "Edit: Librelog" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Edit: Librelog" }), {
       target: { value: "parakeet tdt" },
     });
 
@@ -161,23 +117,23 @@ describe("DictionarySettings", () => {
 
   it("cancels inline edits with Escape", () => {
     const onSave = vi.fn();
-    render(<DictionarySettings terms={["Anarlog"]} onSave={onSave} />);
+    render(<DictionarySettings terms={["Librelog"]} onSave={onSave} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Edit: Anarlog" }));
-    const input = screen.getByRole("textbox", { name: "Edit: Anarlog" });
-    fireEvent.change(input, { target: { value: "Anarlog AI" } });
+    fireEvent.click(screen.getByRole("button", { name: "Edit: Librelog" }));
+    const input = screen.getByRole("textbox", { name: "Edit: Librelog" });
+    fireEvent.change(input, { target: { value: "Librelog AI" } });
     fireEvent.keyDown(input, { key: "Escape" });
 
-    expect(screen.getByText("Anarlog")).toBeTruthy();
+    expect(screen.getByText("Librelog")).toBeTruthy();
     expect(onSave).not.toHaveBeenCalled();
   });
 
   it("does not enable adding duplicate terms", async () => {
     const onSave = vi.fn();
-    render(<DictionarySettings terms={["Anarlog"]} onSave={onSave} />);
+    render(<DictionarySettings terms={["Librelog"]} onSave={onSave} />);
 
     fireEvent.change(screen.getByRole("textbox"), {
-      target: { value: "anarlog" },
+      target: { value: "librelog" },
     });
 
     const addButton = screen.getByRole("button", {
@@ -191,7 +147,7 @@ describe("DictionarySettings", () => {
   it("filters saved terms while typing", async () => {
     render(
       <DictionarySettings
-        terms={["Anarlog", "FastConformer", "Parakeet TDT"]}
+        terms={["Librelog", "FastConformer", "Parakeet TDT"]}
         onSave={vi.fn()}
       />,
     );
@@ -201,7 +157,7 @@ describe("DictionarySettings", () => {
     });
 
     await waitFor(() => expect(screen.getByText("FastConformer")).toBeTruthy());
-    expect(screen.queryByText("Anarlog")).toBeNull();
+    expect(screen.queryByText("Librelog")).toBeNull();
     expect(screen.queryByText("Parakeet TDT")).toBeNull();
   });
 });

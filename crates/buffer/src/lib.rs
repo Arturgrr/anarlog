@@ -285,7 +285,7 @@ mod tests {
     fn test_md_to_md_3() {
         let input = r#"
 # Enhanced Meeting Notes
-## What Anarlog Does
+## What Librelog Does
 - A smart notepad for people with back-to-back meetings.
 - Listens to the meeting so you don't have to write everything down.
 - Merges your notes and the transcript into a clean, context-aware summary.
@@ -301,20 +301,20 @@ mod tests {
 - Offers powerful extensions—like real-time transcripts and CRM uploads (e.g. Twenty).
 
 ## Stay Connected
-- Follow updates on [X](https://anarlog.so/x).
-- Join the community and chat on [Discord](https://anarlog.so/discord). 
+- Follow updates on [GitHub](https://github.com/Arturgrr/librelog).
+- Report issues on [GitHub Issues](https://github.com/Arturgrr/librelog/issues). 
 
 # Participants:
 
-* [John Jeong](mailto:john@hyprnote.com)
-* [Yujong Lee](mailto:yujonglee@hyprnote.com)
+* [John Jeong](mailto:john@example.com)
+* [Yujong Lee](mailto:yujong@example.com)
 
 # Meeting Transcript
 (No raw excerpt provided, utilized to generate the enhanced note)
 "#;
 
         insta::assert_snapshot!(md_to_md(input).unwrap().to_string(), @"
-        # What Anarlog Does
+        # What Librelog Does
 
         - A smart notepad for people with back-to-back meetings.
         - Listens to the meeting so you don't have to write everything down.
@@ -340,15 +340,15 @@ mod tests {
 
         # Stay Connected
 
-        - Follow updates on [X](https://anarlog.so/x).
-        - Join the community and chat on [Discord](https://anarlog.so/discord).
+        - Follow updates on [GitHub](https://github.com/Arturgrr/librelog).
+        - Report issues on [GitHub Issues](https://github.com/Arturgrr/librelog/issues).
 
          
 
         # Participants:
 
-        - [John Jeong](mailto:john@hyprnote.com)
-        - [Yujong Lee](mailto:yujonglee@hyprnote.com)
+        - [John Jeong](mailto:john@example.com)
+        - [Yujong Lee](mailto:yujong@example.com)
 
          
 
@@ -362,7 +362,7 @@ mod tests {
     fn test_opinionated_md_to_html() {
         let input = r#"
 # Enhanced Meeting Notes
-## What Anarlog Does
+## What Librelog Does
 - A smart notepad for people with back-to-back meetings.
 - Listens to the meeting so you don't have to write everything down.
 - Merges your notes and the transcript into a clean, context-aware summary.
@@ -378,12 +378,12 @@ mod tests {
 - Offers powerful extensions—like real-time transcripts and CRM uploads (e.g. Twenty).
 
 ## Stay Connected
-- Follow updates on [X](https://anarlog.so/x).
-- Join the community and chat on [Discord](https://anarlog.so/discord).
+- Follow updates on [GitHub](https://github.com/Arturgrr/librelog).
+- Report issues on [GitHub Issues](https://github.com/Arturgrr/librelog/issues).
 "#;
 
         insta::assert_snapshot!(opinionated_md_to_html(input).unwrap().to_string(), @r#"
-        <h1>What Anarlog Does</h1>
+        <h1>What Librelog Does</h1>
         <ul>
         <li>A smart notepad for people with back-to-back meetings.</li>
         <li>Listens to the meeting so you don't have to write everything down.</li>
@@ -406,8 +406,8 @@ mod tests {
         <p> </p>
         <h1>Stay Connected</h1>
         <ul>
-        <li>Follow updates on <a href="https://anarlog.so/x">X</a>.</li>
-        <li>Join the community and chat on <a href="https://anarlog.so/discord">Discord</a>.</li>
+        <li>Follow updates on <a href="https://github.com/Arturgrr/librelog">GitHub</a>.</li>
+        <li>Report issues on <a href="https://github.com/Arturgrr/librelog/issues">GitHub Issues</a>.</li>
         </ul>
         "#);
     }

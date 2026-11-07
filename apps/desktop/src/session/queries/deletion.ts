@@ -9,7 +9,6 @@ import type { DeletedSessionData } from "~/store/zustand/undo-delete";
 type SessionIdentitySqlRow = { id: string };
 type SessionEmptySqlRow = {
   title: string;
-  event_json: string;
   note_body: string;
   note_body_format: string;
   transcript_count: number;
@@ -51,7 +50,6 @@ export async function isSessionEmpty(sessionId: string): Promise<boolean> {
     `
       SELECT
         sessions.title,
-        sessions.event_json,
         COALESCE(note.body, '') AS note_body,
         COALESCE(note.body_format, '') AS note_body_format,
         (
@@ -98,7 +96,7 @@ export async function isSessionEmpty(sessionId: string): Promise<boolean> {
   );
 
   if (!row) return true;
-  if (row.title.trim() && !row.event_json) return false;
+  if (row.title.trim()) return false;
   if (hasNoteContent(row.note_body, row.note_body_format)) return false;
 
   return (

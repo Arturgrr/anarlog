@@ -43,7 +43,7 @@ fn default_state_path() -> io::Result<PathBuf> {
     let data_dir = dirs::data_dir()
         .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "data directory not found"))?;
 
-    Ok(data_dir.join("char").join("chrome_state.json"))
+    Ok(data_dir.join("librelog").join("chrome_state.json"))
 }
 
 fn read_message(reader: &mut impl Read) -> io::Result<Option<Vec<u8>>> {

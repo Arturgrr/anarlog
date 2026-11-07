@@ -4,7 +4,6 @@
 #[cfg_attr(not(test), allow(dead_code))]
 pub(crate) const COMMANDS: &[&str] = &[
     "list_installed_applications",
-    "get_installed_application_icons",
     "list_mic_using_applications",
     "set_respect_do_not_disturb",
     "set_ignored_bundle_ids",

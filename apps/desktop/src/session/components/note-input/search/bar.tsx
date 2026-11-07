@@ -40,10 +40,10 @@ function ToggleButton({
         <button
           onClick={onClick}
           className={cn([
-            "rounded-sm p-0.5 transition-colors",
+            "rounded-sm p-0.5",
             active
-              ? "bg-accent text-muted-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-muted-foreground",
+              ? "bg-pressed text-foreground"
+              : "text-muted-foreground hover:bg-hover hover:text-foreground",
           ])}
         >
           {children}
@@ -207,7 +207,7 @@ export function SearchBar({
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="bg-muted flex h-7 items-center gap-1.5 rounded-lg px-2">
+      <div className="bg-card shadow-button-neutral focus-within:outline-ring flex h-7 items-center gap-1.5 rounded-md px-2 focus-within:outline focus-within:outline-1">
         <input
           ref={searchInputRef}
           type="text"
@@ -298,7 +298,7 @@ export function SearchBar({
       </div>
 
       {allowReplace && showReplace && (
-        <div className="bg-muted flex h-7 items-center gap-1.5 rounded-lg px-2">
+        <div className="bg-card shadow-button-neutral focus-within:outline-ring flex h-7 items-center gap-1.5 rounded-md px-2 focus-within:outline focus-within:outline-1">
           <input
             ref={replaceInputRef}
             type="text"

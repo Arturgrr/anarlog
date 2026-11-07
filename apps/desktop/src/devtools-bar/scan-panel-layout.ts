@@ -6,7 +6,7 @@ import {
 
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
-const STORAGE_KEY = "anarlog:devtools-scan-layout";
+const STORAGE_KEY = "librelog:devtools-scan-layout";
 export type PanelRect = { x: number; y: number; width: number; height: number };
 type Edge = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 const viewport = () => ({

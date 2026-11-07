@@ -3,8 +3,6 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { beginCloudsyncActivity, endCloudsyncActivity } from "@anlg/plugin-db";
-
 import { isAudioUploadFile, useUploadFile } from "./useUploadFile";
 
 const {
@@ -288,47 +286,6 @@ describe("useUploadFile", () => {
     });
     expect(audioImportDataMock).not.toHaveBeenCalled();
     consoleError.mockRestore();
-  });
-
-  test("keeps CloudSync deferred until imported-audio summary scheduling settles", async () => {
-    let finishSummaryScheduling: (() => void) | undefined;
-    queueAutoEnhanceIfSummaryEmptyMock.mockReturnValueOnce(
-      new Promise<void>((resolve) => {
-        finishSummaryScheduling = resolve;
-      }),
-    );
-    const { result } = renderHook(() => useUploadFile("session-1"), {
-      wrapper: createWrapper(),
-    });
-    const file = new File([new Uint8Array([1, 2, 3])], "drop.wav", {
-      type: "audio/wav",
-    });
-    Object.defineProperty(file, "arrayBuffer", {
-      value: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]).buffer),
-    });
-
-    act(() => {
-      result.current.processAudioFile(file);
-    });
-
-    await waitFor(() => {
-      expect(queueAutoEnhanceIfSummaryEmptyMock).toHaveBeenCalledWith(
-        "session-1",
-      );
-    });
-    expect(beginCloudsyncActivity).toHaveBeenCalledWith(
-      "transcription",
-      expect.stringMatching(/^session-1:audio-import:/),
-    );
-    expect(endCloudsyncActivity).not.toHaveBeenCalled();
-
-    finishSummaryScheduling?.();
-    await waitFor(() => {
-      expect(endCloudsyncActivity).toHaveBeenCalledWith(
-        "transcription",
-        vi.mocked(beginCloudsyncActivity).mock.calls[0]?.[1],
-      );
-    });
   });
 
   test.each([

@@ -6,7 +6,6 @@ import {
 } from "./markdown-export";
 import {
   createEmptyWorkflow,
-  createGoogleDriveWorkflow,
   createWorkflowStep,
   isWorkflowReady,
   parseAutomationWorkflows,
@@ -14,7 +13,7 @@ import {
 } from "./workflows";
 
 describe("automation workflows", () => {
-  it("parses persisted workflows and drops malformed entries", () => {
+  it("parses persisted workflows and drops malformed or removed steps", () => {
     const workflows = parseAutomationWorkflows(
       JSON.stringify([
         {
@@ -29,6 +28,28 @@ describe("automation workflows", () => {
               directory: "/exports",
             },
             { id: "bad" },
+            {
+              id: "slack",
+              type: "slack_recap",
+              target: { id: "C1", name: "general" },
+            },
+            {
+              id: "drive",
+              type: "google_drive_export",
+              connectionId: "connection",
+              target: { id: "folder", name: "Notes" },
+            },
+          ],
+          driveExports: [
+            {
+              sessionId: "session-1",
+              stepId: "drive",
+              connectionId: "connection",
+              folderId: "folder",
+              status: "success",
+              detail: "https://drive.example/file",
+              at: "2026-08-07T12:00:00.000Z",
+            },
           ],
           lastRun: {
             at: "2026-08-07T12:00:00.000Z",
@@ -67,19 +88,17 @@ describe("automation workflows", () => {
   });
 
   it("treats a workflow as ready only when every action is configured", () => {
+    const configured = {
+      ...createWorkflowStep("markdown_export"),
+      directory: "/exports",
+    };
     const workflow = createEmptyWorkflow({
-      steps: [createWorkflowStep("slack_recap")],
+      steps: [configured, createWorkflowStep("markdown_export")],
     });
 
     expect(isWorkflowReady(workflow)).toBe(false);
 
-    workflow.steps = [
-      {
-        id: "step-1",
-        type: "slack_recap",
-        target: { id: "C1", name: "general" },
-      },
-    ];
+    workflow.steps = [configured];
     expect(isWorkflowReady(workflow)).toBe(true);
   });
 });
@@ -182,48 +201,4 @@ describe("Markdown workflow options", () => {
     ];
     expect(isWorkflowReady(workflow)).toBe(true);
   });
-});
-
-describe("Google Drive workflows", () => {
-  it("requires a connected folder and the summary-ready trigger", () => {
-    const step = createWorkflowStep("google_drive_export");
-    const workflow = createEmptyWorkflow({ steps: [step] });
-    expect(isWorkflowReady(workflow)).toBe(false);
-    const configured = {
-      ...workflow,
-      steps: [
-        {
-          id: "drive",
-          type: "google_drive_export" as const,
-          connectionId: "connection",
-          target: { id: "folder", name: "Meeting notes" },
-        },
-      ],
-    };
-    expect(isWorkflowReady(configured)).toBe(true);
-    expect(
-      isWorkflowReady({ ...configured, trigger: "meeting_completed" }),
-    ).toBe(false);
-    expect(
-      parseAutomationWorkflows(serializeAutomationWorkflows([configured]))[0],
-    ).toEqual(configured);
-  });
-});
-
-it("creates a disabled Drive starter and preserves Google Docs on reload", () => {
-  const workflow = createGoogleDriveWorkflow("Save meetings to Google Drive");
-  expect(workflow.enabled).toBe(false);
-  expect(workflow.trigger).toBe("note_enhanced");
-  expect(isWorkflowReady(workflow)).toBe(false);
-  const step = workflow.steps[0];
-  if (step.type !== "google_drive_export")
-    throw new Error("Unexpected starter");
-  step.format = "google_docs";
-  step.connectionId = "connection";
-  step.target = { id: "folder", name: "Notes" };
-  const [restored] = parseAutomationWorkflows(
-    serializeAutomationWorkflows([workflow]),
-  );
-  expect(restored.steps[0]).toMatchObject({ format: "google_docs" });
-  expect(isWorkflowReady(restored)).toBe(true);
 });

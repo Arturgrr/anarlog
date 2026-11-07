@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import React, { useCallback } from "react";
 
 import { Buildings, PushPin } from "@anlg/ui/components/icons";
@@ -20,6 +21,7 @@ export function OrganizationItem({
   onClick: () => void;
   onDelete?: (id: string) => void;
 }) {
+  const { t } = useLingui();
   const isPinned = readOnly || Boolean(organization.pinned);
 
   const togglePin = useCallback(() => {
@@ -31,12 +33,12 @@ export function OrganizationItem({
   const showContextMenu = useNativeContextMenu([
     {
       id: "toggle-pin-org",
-      text: isPinned ? "Unpin Organization" : "Pin Organization",
+      text: isPinned ? t`Unpin Organization` : t`Pin Organization`,
       action: togglePin,
     },
     {
       id: "delete-org",
-      text: "Delete Organization",
+      text: t`Delete Organization`,
       action: () => onDelete?.(organization.id),
     },
   ]);
@@ -62,8 +64,8 @@ export function OrganizationItem({
         }
       }}
       className={cn([
-        "group flex w-full items-center gap-2 overflow-hidden rounded-lg px-3 py-2 text-left text-sm transition-colors select-none",
-        active ? "bg-accent" : "hover:bg-accent/50",
+        "group flex w-full items-center gap-2 overflow-hidden rounded-md px-2.5 py-2 text-left text-sm select-none",
+        active ? "bg-layer-2" : "hover:bg-hover active:bg-pressed",
       ])}
     >
       {organization.avatarDataUrl ? (
@@ -74,13 +76,13 @@ export function OrganizationItem({
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <div className="truncate font-medium">{organization.name}</div>
+        <div className="font-ui-medium truncate">{organization.name}</div>
       </div>
       {readOnly ? (
         <span
           role="img"
-          aria-label="Pinned organization"
-          className="shrink-0 p-1 text-blue-600"
+          aria-label={t`Pinned organization`}
+          className="text-icon shrink-0 p-1"
         >
           <PushPin className="size-3.5" weight="bold" />
         </span>
@@ -90,10 +92,10 @@ export function OrganizationItem({
           className={cn([
             "shrink-0 rounded-xs p-1 transition-colors",
             isPinned
-              ? "text-blue-600 hover:text-blue-700"
-              : "text-muted-foreground/70 hover:text-muted-foreground opacity-0 group-hover:opacity-100",
+              ? "text-icon hover:text-foreground"
+              : "text-icon-faint hover:text-icon-muted opacity-0 group-hover:opacity-100",
           ])}
-          aria-label={isPinned ? "Unpin organization" : "Pin organization"}
+          aria-label={isPinned ? t`Unpin organization` : t`Pin organization`}
         >
           <PushPin
             className="size-3.5"

@@ -4,6 +4,7 @@ mod events;
 mod ext;
 mod global;
 mod handler;
+mod press;
 
 pub use error::*;
 pub use events::*;
@@ -38,6 +39,7 @@ pub fn init() -> tauri::plugin::TauriPlugin<tauri::Wry> {
             let handler = Handler::new();
             app.manage(handler);
             app.manage(global::GlobalState::default());
+            app.manage(press::Presses::default());
             Ok(())
         })
         .build()

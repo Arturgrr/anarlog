@@ -4,27 +4,16 @@ const mocks = vi.hoisted(() => ({
   execute: vi.fn(),
   getPreferredLanguages: vi.fn(),
   getTemplateSource: vi.fn(),
-  setDisabled: vi.fn(async () => ({ status: "ok", data: null })),
-  setErrorReportingEnabled: vi.fn(async () => undefined),
-  setSessionReplayAnalyticsEnabled: vi.fn(),
   setAutomaticUpdatesEnabled: vi.fn(async () => undefined),
-  setProperties: vi.fn(async () => undefined),
   executeTransaction: vi.fn(
     (_statements: Array<{ sql: string; params: unknown[] }>) =>
       Promise.resolve([1]),
   ),
 }));
 
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: {
-    setDisabled: mocks.setDisabled,
-    setProperties: mocks.setProperties,
-  },
-}));
-
-vi.mock("~/error-reporting", () => ({
-  setErrorReportingEnabled: mocks.setErrorReportingEnabled,
-  setSessionReplayAnalyticsEnabled: mocks.setSessionReplayAnalyticsEnabled,
+vi.mock("@tauri-apps/plugin-os", () => ({
+  platform: () => "macos",
+  arch: () => "aarch64",
 }));
 
 vi.mock("@anlg/plugin-detect", () => ({
@@ -69,7 +58,6 @@ describe("SQLite settings", () => {
     vi.clearAllMocks();
     usePendingSttSelection.setState({ selection: null, queuedDownloads: [] });
     mocks.executeTransaction.mockResolvedValue([1]);
-    mocks.setDisabled.mockResolvedValue({ status: "ok", data: null });
     mocks.execute.mockResolvedValue([]);
     mocks.getPreferredLanguages.mockResolvedValue({
       status: "error",
@@ -160,13 +148,13 @@ describe("SQLite settings", () => {
 
   it.each([
     {
-      key: "primary_recording_device",
-      value: "work-device",
+      key: "theme",
+      value: "dark",
       table: "synced_preferences",
     },
     {
-      key: "primary_recording_device",
-      value: "",
+      key: "theme",
+      value: "light",
       table: "synced_preferences",
     },
     {
@@ -292,7 +280,7 @@ describe("SQLite settings", () => {
   it("writes multiple independent values in one transaction", async () => {
     await setSettingValues({
       theme: "dark",
-      notification_event: false,
+      notification_detect: false,
     });
 
     const statements = mocks.executeTransaction.mock.calls[0][0];
@@ -306,7 +294,7 @@ describe("SQLite settings", () => {
     ]);
     expect(statements[1].sql).toContain("INSERT INTO app_settings");
     expect(statements[1].params.slice(0, 2)).toEqual([
-      "notification_event",
+      "notification_detect",
       JSON.stringify(false),
     ]);
   });
@@ -326,48 +314,25 @@ describe("SQLite settings", () => {
     expect(mocks.setAutomaticUpdatesEnabled).toHaveBeenCalledWith(false);
   });
 
-  it("disables PostHog after persisting the analytics opt-out", async () => {
-    let resolveDisabled!: (value: { status: "ok"; data: null }) => void;
-    mocks.setDisabled.mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolveDisabled = resolve;
-      }),
-    );
-
-    await setSettingValues({ telemetry_consent: false });
-
-    expect(mocks.setDisabled).toHaveBeenCalledWith(true);
-
-    resolveDisabled({ status: "ok", data: null });
-  });
-
-  it("updates Sentry independently from PostHog", async () => {
-    await setSettingValues({ crash_reporting_consent: false });
-
-    expect(mocks.setErrorReportingEnabled).toHaveBeenCalledWith(false);
-    expect(mocks.setDisabled).not.toHaveBeenCalled();
-  });
-
-  it("preserves the legacy telemetry choice when splitting crash reporting", async () => {
+  it("ignores telemetry consent saved by older versions", async () => {
     mocks.execute.mockResolvedValue([
-      {
-        id: "telemetry_consent",
-        value_json: JSON.stringify(false),
-      },
+      { id: "telemetry_consent", value_json: JSON.stringify(false) },
+      { id: "crash_reporting_consent", value_json: JSON.stringify(true) },
     ]);
 
+    const result = await getStoredSettingValues();
     await initializeApplicationSettings();
 
-    const statements = mocks.executeTransaction.mock.calls[0][0];
-    expect(statements).toContainEqual(
-      expect.objectContaining({
-        params: [
-          "crash_reporting_consent",
-          JSON.stringify(false),
-          expect.any(String),
-        ],
-      }),
-    );
+    expect(result.hasValues.has("telemetry_consent" as never)).toBe(false);
+    expect(
+      mocks.executeTransaction.mock.calls
+        .flatMap(([statements]) => statements)
+        .some((statement) =>
+          ["telemetry_consent", "crash_reporting_consent"].includes(
+            String(statement.params[0]),
+          ),
+        ),
+    ).toBe(false);
   });
 
   it("initializes languages from OS preferences", async () => {
@@ -459,43 +424,6 @@ describe("SQLite settings", () => {
       [["current_stt_model", JSON.stringify("nova-3-general")]],
     );
   });
-
-  it.each([
-    ["soniqo-parakeet-streaming", "soniqo"],
-    ["apple-speech", "apple_speech"],
-  ])(
-    "moves the legacy Anarlog %s selection to its on-device provider",
-    async (model, provider) => {
-      let rows = [
-        {
-          id: "current_stt_provider",
-          value_json: JSON.stringify("anarlog"),
-        },
-        { id: "current_stt_model", value_json: JSON.stringify(model) },
-      ];
-      mocks.execute.mockImplementation(async () => rows);
-      mocks.executeTransaction.mockImplementation(async (statements) => {
-        for (const statement of statements) {
-          const id = String(statement.params[0]);
-          const next = {
-            id,
-            value_json: String(statement.params[1]),
-          };
-          const index = rows.findIndex((row) => row.id === id);
-          if (index === -1) rows.push(next);
-          else rows[index] = next;
-        }
-        return statements.map(() => 1);
-      });
-
-      await initializeApplicationSettings();
-
-      const statements = mocks.executeTransaction.mock.calls[0][0];
-      expect(
-        statements.map((statement) => statement.params.slice(0, 2)),
-      ).toEqual([["current_stt_provider", JSON.stringify(provider)]]);
-    },
-  );
 
   it("migrates legacy summary instructions into the editable Auto format", async () => {
     let rows = [

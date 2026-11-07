@@ -91,9 +91,11 @@ pub async fn load_render_humans(
         return Ok(Vec::new());
     }
 
+    // The local user's row (id = owner_user_id) is labeled generically by the
+    // renderer, so its name is never loaded.
     let mut query = QueryBuilder::<Sqlite>::new(
         "SELECT id, name FROM humans
-         WHERE name <> '' AND id IN (",
+         WHERE name <> '' AND id <> owner_user_id AND id IN (",
     );
     let mut separated = query.separated(", ");
     for human_id in human_ids {
@@ -185,17 +187,24 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn historical_transcript_names_survive_contact_deletion() {
+    async fn render_names_survive_contact_deletion_but_skip_the_local_user() {
         let db = test_db().await;
         sqlx::query("UPDATE humans SET deleted_at = '2026-10-01' WHERE id = 'participant-human'")
             .execute(db.pool())
             .await
             .unwrap();
+        sqlx::query("UPDATE humans SET owner_user_id = id WHERE id = 'owner-human'")
+            .execute(db.pool())
+            .await
+            .unwrap();
         let mut conn = db.pool().acquire().await.unwrap();
         assert_eq!(
-            load_render_humans(&mut conn, &["participant-human".to_owned()])
-                .await
-                .unwrap(),
+            load_render_humans(
+                &mut conn,
+                &["owner-human".to_owned(), "participant-human".to_owned()]
+            )
+            .await
+            .unwrap(),
             vec![("participant-human".to_owned(), "Participant".to_owned())]
         );
     }

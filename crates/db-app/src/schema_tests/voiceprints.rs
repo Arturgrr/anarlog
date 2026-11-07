@@ -75,12 +75,6 @@ async fn confirmed_voiceprints_store_only_local_keyring_coordinates() {
     assert_eq!(inserted.model_version, "precision-2");
     assert_eq!(inserted.source_speaker_label, "Ada Lovelace");
     assert_eq!(inserted.quality_score, 0.94);
-    assert!(
-        !cloudsync_table_registry()
-            .iter()
-            .any(|table| table.table_name == "voiceprint_exemplars")
-    );
-    assert!(!E2EE_DOMAIN_TABLES.contains(&"voiceprint_exemplars"));
 
     let columns: Vec<String> = sqlx::query_scalar(
         "SELECT name FROM pragma_table_info('voiceprint_exemplars') ORDER BY cid",
@@ -202,7 +196,6 @@ async fn widening_confirmation_sources_keeps_existing_exemplars() {
         &db,
         anlg_db_migrate::DbSchema {
             steps: &APP_MIGRATION_STEPS[..rebuild_index],
-            validate_cloudsync_table: cloudsync_alter_guard_required,
         },
     )
     .await
@@ -454,12 +447,6 @@ async fn expired_candidates_tombstone_and_purge_with_secret_refs() {
             .unwrap();
     assert_eq!(remaining, 1);
 
-    assert!(
-        !cloudsync_table_registry()
-            .iter()
-            .any(|table| table.table_name == "voiceprint_candidates")
-    );
-    assert!(!E2EE_DOMAIN_TABLES.contains(&"voiceprint_candidates"));
     let columns: Vec<String> = sqlx::query_scalar(
         "SELECT name FROM pragma_table_info('voiceprint_candidates') ORDER BY cid",
     )

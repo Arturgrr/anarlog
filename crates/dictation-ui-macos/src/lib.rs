@@ -1,9 +1,8 @@
-use serde::Serialize;
 use swift_rs::{Bool, SRString, swift};
 
-swift!(fn _show_dictation_overlay() -> Bool);
-swift!(fn _hide_dictation_overlay() -> Bool);
-swift!(fn _update_dictation_state(json: &SRString) -> Bool);
+swift!(fn _dictation_hud_prewarm());
+swift!(fn _dictation_hud_event(json: &SRString) -> Bool);
+swift!(fn _dictation_hud_meter(rms: f64));
 swift!(fn _capture_dictation_target() -> SRString);
 swift!(fn _insert_dictation_text(target: &SRString, text: &SRString) -> SRString);
 
@@ -18,36 +17,22 @@ pub fn insert_text(target: &str, text: &str) -> Result<(), String> {
     if value.is_empty() { Ok(()) } else { Err(value) }
 }
 
-#[derive(Serialize, Clone, Copy, Debug)]
-#[serde(rename_all = "camelCase")]
-pub enum Phase {
-    Recording,
-    Processing,
+/// Builds the HUD's panel and compiles its shader ahead of the first
+/// dictation.
+pub fn prewarm_hud() {
+    unsafe { _dictation_hud_prewarm() }
 }
 
-#[derive(Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct DictationState {
-    pub phase: Phase,
-    pub amplitude: f32,
+/// Hands the HUD one event as JSON (`{"type": "started"}`, …). Returns
+/// whether the HUD could take it; a `started` it can't show returns false.
+pub fn hud_event(json: &str) -> bool {
+    swift_rs::autoreleasepool!({
+        let json = SRString::from(json);
+        unsafe { _dictation_hud_event(&json) }
+    })
 }
 
-pub fn show() {
-    unsafe {
-        _show_dictation_overlay();
-    }
-}
-
-pub fn hide() {
-    unsafe {
-        _hide_dictation_overlay();
-    }
-}
-
-pub fn update_state(state: &DictationState) {
-    let json = serde_json::to_string(state).unwrap();
-    let json_str = SRString::from(json.as_str());
-    unsafe {
-        _update_dictation_state(&json_str);
-    }
+/// The microphone's RMS for one captured buffer.
+pub fn hud_meter(rms: f32) {
+    unsafe { _dictation_hud_meter(f64::from(rms)) }
 }

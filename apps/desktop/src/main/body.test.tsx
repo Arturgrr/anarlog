@@ -117,10 +117,6 @@ vi.mock("~/shared/useNewNote", () => ({
   useNewNote: () => vi.fn(),
 }));
 
-vi.mock("~/sidebar/timeline/upcoming-meeting", () => ({
-  useSidebarUpcomingMeetingStatus: () => null,
-}));
-
 import { ClassicMainBody } from "./body";
 
 describe("ClassicMainBody", () => {

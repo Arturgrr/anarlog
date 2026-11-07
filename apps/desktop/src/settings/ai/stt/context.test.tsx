@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   downloadModel: vi.fn(),
   toastError: vi.fn(),
-  upgradeToPro: vi.fn(),
 }));
 
 vi.mock("@anlg/plugin-local-stt", () => ({
@@ -13,10 +12,6 @@ vi.mock("@anlg/plugin-local-stt", () => ({
 
 vi.mock("@anlg/ui/components/ui/toast", () => ({
   toast: { error: mocks.toastError },
-}));
-
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ upgradeToPro: mocks.upgradeToPro }),
 }));
 
 import { SttSettingsProvider, useSttSettings } from "./context";
@@ -39,7 +34,11 @@ function Probe() {
 describe("SttSettingsProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    usePendingSttSelection.setState({ selection: null, queuedDownloads: [] });
+    usePendingSttSelection.setState({
+      selection: null,
+      queuedDownloads: [],
+      failedDownloads: {},
+    });
   });
 
   it("shows the command error and makes a failed model retryable", async () => {
@@ -67,5 +66,10 @@ describe("SttSettingsProvider", () => {
     });
     expect(screen.getByTestId("queued").textContent).toBe("");
     expect(usePendingSttSelection.getState().selection).toBeNull();
+    expect(
+      usePendingSttSelection.getState().failedDownloads[
+        "soniqo-parakeet-batch"
+      ],
+    ).toBe("batch model is unavailable");
   });
 });

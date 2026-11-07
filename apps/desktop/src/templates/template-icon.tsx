@@ -89,7 +89,7 @@ export type TemplateIcon =
 export const DEFAULT_TEMPLATE_ICON = {
   type: "icon",
   value: "notebook-tabs",
-  color: "#9ca3af",
+  color: "#808080",
 } as const satisfies TemplateIcon;
 
 const TEMPLATE_ICON_COMPONENTS: Record<string, Icon> = {

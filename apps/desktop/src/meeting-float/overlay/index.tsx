@@ -74,31 +74,17 @@ export function FloatingBarOverlayScreen() {
       <FloatingBarOverlay
         state={state}
         onStop={() => {
-          if (state.dictation) {
-            void windowsEvents.floatingBarDictationAction.emit({
-              sessionId: state.dictation.sessionId,
-              action: "finish",
-            });
-          } else {
-            void windowsEvents.floatingBarStop.emit({});
-          }
+          void windowsEvents.floatingBarStop.emit({});
         }}
         onToggleExpanded={(expanded) => {
-          if (state.dictation) {
-            void windowsEvents.floatingBarDictationAction.emit({
-              sessionId: state.dictation.sessionId,
-              action: "togglePreview",
-            });
-          } else {
-            void windowsEvents.floatingBarSettingsChange.emit({
-              floatingBarOpacity: null,
-              liveCaptionOpacity: null,
-              liveCaptionWidth: null,
-              liveCaptionLineCount: null,
-              liveCaptionPosition: null,
-              liveCaptionMinimized: !expanded,
-            });
-          }
+          void windowsEvents.floatingBarSettingsChange.emit({
+            floatingBarOpacity: null,
+            liveCaptionOpacity: null,
+            liveCaptionWidth: null,
+            liveCaptionLineCount: null,
+            liveCaptionPosition: null,
+            liveCaptionMinimized: !expanded,
+          });
         }}
       />
     </div>

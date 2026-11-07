@@ -1,50 +1,49 @@
 ---
 title: "Agent overview"
-description: "Give an agent useful Anarlog context without exposing storage internals or unbounded transcripts."
+description: "Give an agent useful Librelog context without exposing storage internals or unbounded transcripts."
 ---
 
-Anarlog gives agents three ways to access meeting context. The Anarlog plugin prefers the local CLI or local MCP when the agent can access your database. Remote agents use Cloud MCP through OAuth. Local CLI and MCP reads are bounded; both can also stage proposals for human review. Hosted Cloud API and remote MCP are read-only.
+Librelog gives agents local access to meeting context through the `librelog` CLI and the local MCP server. Both read the database on your computer, keep reads bounded, and can stage proposals for human review. Nothing is uploaded to an Librelog server.
 
 | Transport | Choose it when | Output |
 | --- | --- | --- |
-| CLI | The agent has shell access on your computer | Local reads by default; authenticated Cloud reads are optional; JSON with `--json` |
-| Local MCP | The agent supports a local MCP server | Structured tool results and contextual resources from your database |
-| Cloud MCP | The agent runs remotely or cannot access your local database | Hosted snapshots through OAuth; requires personal or paid-Team Pro access and explicit opt-in |
+| CLI | The agent has shell access on your computer | JSON with `--json` |
+| Local MCP | The agent supports a local MCP server over stdio | Structured tool results and contextual resources from your database |
+
+Both transports come from the same `librelog` executable. See [CLI installation](/installation).
 
 ## Recommended agent flow
 
-1. Honor an explicit source request. Otherwise, use local MCP or check local CLI readiness with `anarlog --json doctor`; use Cloud when local access is unavailable.
-2. List recent meetings or search by a short title fragment. If a meeting is missing, check an already-connected alternate source unless the user restricted access.
+1. Use local MCP, or check local CLI readiness with `librelog --json doctor`.
+2. List recent meetings or search by a short title fragment.
 3. Use a returned meeting ID. Never infer or invent one.
 4. Fetch the meeting detail before requesting transcript text.
 5. Fetch recurring history only when earlier meetings are relevant.
 6. Read transcript pages only until the task has enough evidence.
 
-Keep each meeting's reads on the source where it was found and label the source in the answer. Report database errors instead of silently falling back to Cloud.
+Report database errors instead of hiding them.
 
 ## Freshness
 
-Local reads work offline and include unsynced changes. They do not require Cloud Sync to finish. Cloud Sync is encrypted; Cloud API & Connectors uploads a separate readable snapshot after opt-in. Sync completion does not establish snapshot freshness.
-
-Report freshness only when an interface provides it. A meeting's `updated_at` records a content change, not a completed sync or snapshot upload. If freshness matters and cannot be verified, say it is unknown.
+Local reads work offline and reflect the database on your computer. Report freshness only when an interface provides it. A meeting's `updated_at` records a content change. If freshness matters and cannot be verified, say it is unknown.
 
 ## Safety boundary
 
-Agents should use an Anarlog interface, not SQLite. The supported interfaces apply Anarlog's rules for canonical notes, generated summaries, excluded participants, recurring meetings, and transcript text.
+Agents should use an Librelog interface, not SQLite. The supported interfaces apply Librelog's rules for canonical notes, generated summaries, excluded participants, recurring meetings, and transcript text.
 
-Meeting reads stay bounded. An agent cannot apply a note or summary change. It can stage a proposal with CLI `proposals` commands or the local MCP `propose_*` tools. A human reviews the unified diff in the desktop app and applies or declines it. Hosted Cloud API and Cloud MCP stay read-only. CLI export can create a separate file; replacing a file requires `--force`.
+Meeting reads stay bounded. An agent cannot apply a note or summary change. It can stage a proposal with CLI `proposals` commands or the local MCP `propose_*` tools. A human reviews the unified diff in the desktop app and applies or declines it. CLI export can create a separate file; replacing a file requires `--force`.
 
-Local CLI and MCP access stays on your computer. Cloud access uploads a separate server-readable copy of your meeting data. Review the [Cloud API disclosure](/reference/api-cloud) before enabling it.
+An agent can also import a recording with CLI `meetings import` or the MCP `import_recording` tool. The desktop app must be open, and it transcribes the audio with your configured Transcription provider.
 
 <CardGroup cols={2}>
   <Card title="CLI for agents" icon="terminal" href="/agents/cli">
     Use JSON output and resolve meeting IDs deliberately.
   </Card>
   <Card title="MCP for agents" icon="plug" href="/agents/mcp">
-    Run local stdio or connect a remote agent through OAuth.
+    Run the local MCP server over stdio.
   </Card>
-  <Card title="Cloud API and remote MCP" icon="cloud" href="/reference/api-cloud">
-    Enable hosted access and connect with OAuth or a connector key.
+  <Card title="Librelog skill" icon="book" href="/agents/skills">
+    Teach a compatible agent the Librelog workflow.
   </Card>
   <Card title="Webhooks" icon="webhook" href="/reference/webhooks">
     Receive signed meeting events at your endpoint.

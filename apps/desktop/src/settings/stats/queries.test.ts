@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("~/auth", () => ({ useAuth: vi.fn() }));
+vi.mock("~/shared/owner-user", () => ({ useLocalUserId: vi.fn() }));
 vi.mock("~/db", () => ({ useLiveQuery: vi.fn() }));
 
 import { ACTIVITY_SQL } from "./queries";
@@ -52,7 +52,7 @@ describe("personal activity query", () => {
         expect.objectContaining({ session_id: "guest", duration_ms: 800 }),
       ]);
       db.exec(
-        `UPDATE sessions SET event_json = '{"tracking_id":"anarlog-onboarding-demo-v1"}' WHERE id = 'mine'`,
+        `UPDATE sessions SET event_json = '{"tracking_id":"librelog-onboarding-demo-v1"}' WHERE id = 'mine'`,
       );
       db.exec(`UPDATE sessions SET event_json = 'invalid' WHERE id = 'guest'`);
       expect(db.prepare(ACTIVITY_SQL).all("user")).toEqual(

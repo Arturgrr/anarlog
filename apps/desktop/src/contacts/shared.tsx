@@ -18,7 +18,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
-import { useSquircleRef } from "@anlg/ui/hooks/use-squircle";
 import { cn } from "@anlg/utils";
 
 import { usesWindowsStyleTitleBar } from "~/shared/hooks/useWindowControlsGutter";
@@ -115,7 +114,6 @@ export function ColumnHeader({
   searchInputRef?: RefObject<HTMLInputElement | null>;
 }) {
   const { t } = useLingui();
-  const searchRef = useSquircleRef<HTMLDivElement>();
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
       onSearchChange?.("");
@@ -151,11 +149,8 @@ export function ColumnHeader({
       </CustomSidebarHeader>
       {onSearchChange && (
         <div className="pb-2">
-          <div
-            ref={searchRef}
-            className="border-border bg-muted focus-within:bg-accent flex h-8 w-full items-center gap-2 rounded-lg border px-3 transition-colors"
-          >
-            <MagnifyingGlass className="text-muted-foreground h-4 w-4 shrink-0" />
+          <div className="bg-card shadow-button-neutral focus-within:outline-ring flex h-7 w-full items-center gap-2 rounded-md px-2 transition-[box-shadow,outline-color] duration-200 ease-out focus-within:shadow-none focus-within:outline-1">
+            <MagnifyingGlass className="text-icon-muted h-4 w-4 shrink-0" />
             <input
               ref={searchInputRef}
               type="text"
@@ -163,7 +158,7 @@ export function ColumnHeader({
               onChange={(e) => onSearchChange(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               placeholder={t`Search contacts...`}
-              className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm placeholder:text-sm focus:outline-hidden"
+              className="placeholder:text-faint text-ui-compact min-w-0 flex-1 bg-transparent focus:outline-hidden"
             />
             {searchValue && (
               <button

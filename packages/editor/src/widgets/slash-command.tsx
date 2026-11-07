@@ -34,6 +34,7 @@ import {
 } from "@anlg/ui/components/icons";
 import { cn } from "@anlg/utils";
 
+import { useEditorLabels } from "../labels";
 import { schema } from "../note/schema";
 import { createTaskItemAttrs } from "../tasks";
 
@@ -242,10 +243,18 @@ function findSlashCommand(state: EditorState): SlashCommandState | null {
   return { query, from, to };
 }
 
-function filterCommands(query: string): SlashCommandItem[] {
-  if (!query) return SLASH_COMMANDS;
+function filterCommands(
+  query: string,
+  labels: Readonly<Record<string, string>>,
+): SlashCommandItem[] {
+  const commands = SLASH_COMMANDS.map((cmd) => ({
+    ...cmd,
+    label: labels[cmd.id] ?? cmd.label,
+    keywords: [...cmd.keywords, cmd.label.toLowerCase()],
+  }));
+  if (!query) return commands;
   const q = query.toLowerCase();
-  return SLASH_COMMANDS.filter(
+  return commands.filter(
     (cmd) =>
       cmd.label.toLowerCase().includes(q) ||
       cmd.keywords.some((kw) => kw.includes(q)),
@@ -256,6 +265,7 @@ function filterCommands(query: string): SlashCommandItem[] {
 // React component
 // ---------------------------------------------------------------------------
 export function SlashCommandMenu() {
+  const labels = useEditorLabels();
   const popupRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -266,7 +276,9 @@ export function SlashCommandMenu() {
 
   const dismissed = slashState !== null && dismissedFrom === slashState.from;
   const active = slashState !== null && !dismissed;
-  const items = active ? filterCommands(slashState.query) : [];
+  const items = active
+    ? filterCommands(slashState.query, labels.slashCommands)
+    : [];
 
   if (!active && selectedIndex !== 0) {
     setSelectedIndex(0);
@@ -358,30 +370,30 @@ export function SlashCommandMenu() {
       data-editor-escape-consumer
       className={cn([
         "absolute z-50 max-h-64 w-[224px]",
-        "bg-popover text-popover-foreground ring-border overflow-y-auto rounded-[1rem] p-1 ring-1",
-        "text-sm shadow-lg",
+        "bg-layer-1 text-foreground overflow-y-auto rounded-md p-0.5",
+        "shadow-floating text-sm",
       ])}
       style={{ top: 0, left: 0 }}
     >
-      <div className="text-muted-foreground px-2 pb-0.5 text-[10px] font-semibold tracking-wide uppercase select-none">
-        Commands
+      <div className="text-faint text-small font-ui-medium px-3 pt-1.5 pb-1 select-none">
+        {labels.commands}
       </div>
-      <div className="space-y-0.5">
+      <div>
         {items.map((item, index) => (
           <button
             key={item.id}
             className={cn([
-              "flex h-8 w-full items-center gap-1.5 rounded-xl px-2 text-left",
-              "cursor-pointer border-none bg-transparent transition-colors outline-none",
-              index === selectedIndex && "bg-muted",
+              "flex h-7 w-full items-center gap-2 rounded-sm pr-1.5 pl-3 text-left",
+              "cursor-pointer border-none bg-transparent outline-none",
+              index === selectedIndex && "bg-hover",
             ])}
             onClick={() => executeCommand(item)}
             onMouseEnter={() => setSelectedIndex(index)}
           >
-            <span className="text-muted-foreground flex size-4 shrink-0 items-center justify-center">
-              <item.icon className="size-4" />
+            <span className="text-icon-muted flex size-3.5 shrink-0 items-center justify-center">
+              <item.icon className="size-3.5" />
             </span>
-            <span className="text-popover-foreground min-w-0 flex-1 truncate text-sm leading-4">
+            <span className="text-foreground min-w-0 flex-1 truncate text-sm leading-4">
               {item.label}
             </span>
           </button>

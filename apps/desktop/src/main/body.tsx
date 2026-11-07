@@ -29,7 +29,7 @@ import {
 } from "./left-sidebar-panel";
 import { useMainAreaTopWindowDrag } from "./main-area-window-drag";
 import { ClassicMainSidebar } from "./shell-sidebar";
-import { SidebarTimelineChromeWithUpcomingMeeting } from "./sidebar-timeline-chrome";
+import { SidebarTimelineChrome } from "./sidebar-timeline-chrome";
 import { ClassicMainTabContent } from "./tab-content";
 import { useClassicMainShortcuts } from "./useShortcuts";
 
@@ -80,9 +80,6 @@ export function ClassicMainBody() {
   const leftSidebarDefaultSizeTrackingRef = useRef(true);
   const pendingLeftSidebarDefaultSizeRef = useRef<number | null>(null);
   const syncDefaultLeftSidebarPanelSizeRef = useRef<() => void>(() => {});
-  const [showIgnoredTimelineEvents, setShowIgnoredTimelineEvents] =
-    useState(false);
-  const noteFilter = useSidebarNotes((state) => state.noteFilter);
   const folderFilter = useSidebarNotes((state) => state.folderFilter);
   const showWindowControlsGutter = useWindowControlsGutter();
   const showSidebarToggleInBody = !usesWindowsStyleTitleBar();
@@ -104,8 +101,6 @@ export function ClassicMainBody() {
   const enableMainAreaTopDrag =
     showSidebarTimelineChrome || hasLeftSurfaceCustomSidebar;
   const mainAreaTopDrag = useMainAreaTopWindowDrag(enableMainAreaTopDrag);
-  const currentSessionId =
-    currentTab?.type === "sessions" ? currentTab.id : undefined;
   const createNewNote = useNewNote();
   const openNoteDialog = useOpenNoteDialog();
   const handleOpenNoteDialog = useCallback(() => {
@@ -418,11 +413,9 @@ export function ClassicMainBody() {
         onWheelCapture={handleSidebarTimelineHeaderWheel}
       >
         {showSidebarTimeline ? (
-          <SidebarTimelineChromeWithUpcomingMeeting
-            currentSessionId={currentSessionId}
+          <SidebarTimelineChrome
             sidebarExpanded
             showSidebarToggle={showSidebarToggleInBody}
-            showIgnoredTimelineEvents={showIgnoredTimelineEvents}
             onNewNote={createNewNote}
             onSearch={handleOpenNoteDialog}
             onToggleSidebar={handleToggleLeftSidebar}
@@ -460,11 +453,9 @@ export function ClassicMainBody() {
                 : "pt-[9px] pl-2",
             ])}
           >
-            <SidebarTimelineChromeWithUpcomingMeeting
-              currentSessionId={currentSessionId}
+            <SidebarTimelineChrome
               sidebarExpanded={false}
               showSidebarToggle={showSidebarToggleInBody}
-              showIgnoredTimelineEvents={showIgnoredTimelineEvents}
               onNewNote={createNewNote}
               onSearch={handleOpenNoteDialog}
               onToggleSidebar={handleToggleLeftSidebar}
@@ -534,12 +525,7 @@ export function ClassicMainBody() {
               >
                 <ClassicMainSidebar
                   folderFilter={folderFilter}
-                  noteFilter={noteFilter}
                   timelineHeader={timelineHeader}
-                  showIgnoredTimelineEvents={showIgnoredTimelineEvents}
-                  onShowIgnoredTimelineEventsChange={
-                    setShowIgnoredTimelineEvents
-                  }
                 />
               </div>
             </ResizablePanel>

@@ -1,7 +1,5 @@
 import type { StoreApi } from "zustand";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
-
 import type { ChatModeState } from "./chat-mode";
 import type { LifecycleState } from "./lifecycle";
 import type { NavigationState, TabHistory } from "./navigation";
@@ -23,7 +21,6 @@ import { listenerStore } from "~/store/zustand/listener/instance";
 
 export const RETURN_ORIGIN_TAB_TYPES: Tab["type"][] = [
   "automations",
-  "calendar",
   "contacts",
   "folders",
   "settings",
@@ -97,11 +94,6 @@ export const createBasicSlice = <
     if (tab.type === "sessions") {
       addRecentlyOpened(tab.id);
     }
-
-    void analyticsCommands.event({
-      event: "tab_opened",
-      view: tab.type,
-    });
   },
   openNew: (tab, options) => {
     const { tabs, history, addRecentlyOpened, chatMode } = get();
@@ -122,11 +114,6 @@ export const createBasicSlice = <
     if (tab.type === "sessions") {
       addRecentlyOpened(tab.id);
     }
-
-    void analyticsCommands.event({
-      event: "tab_opened",
-      view: tab.type,
-    });
   },
   select: (tab) => {
     const { tabs, addRecentlyOpened, chatMode } = get();
@@ -295,10 +282,6 @@ export const createBasicSlice = <
     } as unknown as Partial<T>);
   },
   pin: (tab) => {
-    if (tab.type === "shared_sessions" || tab.type === "shared_note_preview") {
-      return;
-    }
-
     const { tabs } = get();
     const tabIndex = tabs.findIndex((t) => isSameTab(t, tab));
     if (tabIndex === -1) return;
@@ -508,7 +491,6 @@ const reuseExistingTab = (
       state: {
         ...nextTab.state,
         autoStart: true,
-        scheduledAutoStart: requestedTab.state.scheduledAutoStart ?? null,
       },
     };
   }
@@ -566,13 +548,6 @@ const getChatModeForNavigation = (
   }
 
   if (targetTab.type === "settings") {
-    return "FloatingClosed";
-  }
-
-  if (
-    targetTab.type === "shared_sessions" ||
-    targetTab.type === "shared_note_preview"
-  ) {
     return "FloatingClosed";
   }
 

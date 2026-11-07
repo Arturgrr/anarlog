@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ execute: vi.fn() }));
@@ -13,6 +14,10 @@ import {
   resolveHeadingsUpdatedAt,
 } from "./content-queries";
 
+const { DatabaseSync } = createRequire(import.meta.url)(
+  "node:sqlite",
+) as typeof import("node:sqlite");
+
 describe("session content SQLite snapshots", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -23,11 +28,8 @@ describe("session content SQLite snapshots", () => {
       {
         id: "session-1",
         owner_user_id: "user-1",
-        owner_email: "user@example.com",
         title: "Planning",
         created_at: "2026-07-10T09:00:00.000Z",
-        event_json: JSON.stringify({ title: "Weekly planning" }),
-        event_id: "event-1",
         raw_note_id: "session-1",
         raw_template_id: "template-1",
         raw_metadata_json: JSON.stringify({
@@ -102,11 +104,8 @@ describe("session content SQLite snapshots", () => {
     expect(snapshot).toMatchObject({
       sessionId: "session-1",
       ownerUserId: "user-1",
-      ownerEmail: "user@example.com",
       title: "Planning",
       createdAt: "2026-07-10T09:00:00.000Z",
-      event: { title: "Weekly planning" },
-      eventId: "event-1",
       rawNoteId: "session-1",
       rawTemplateId: "template-1",
       rawHeadingsUpdatedAt: "",
@@ -149,17 +148,70 @@ describe("session content SQLite snapshots", () => {
     );
   });
 
+  it("keeps the local user's profile out of AI participant context", async () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec(`
+        CREATE TABLE sessions (
+          id TEXT, owner_user_id TEXT, title TEXT, created_at TEXT,
+          event_json TEXT, source_apps_json TEXT, event_id TEXT,
+          external_event_id TEXT, deleted_at TEXT
+        );
+        CREATE TABLE session_documents (
+          id TEXT, session_id TEXT, kind TEXT, title TEXT, body TEXT,
+          body_format TEXT, template_id TEXT, sort_order INTEGER,
+          generation_metadata_json TEXT, created_at TEXT, updated_at TEXT,
+          deleted_at TEXT
+        );
+        CREATE TABLE transcripts (
+          id TEXT, session_id TEXT, started_at_ms INTEGER, ended_at_ms INTEGER,
+          memo TEXT, words_json TEXT, speaker_hints_json TEXT, deleted_at TEXT
+        );
+        CREATE TABLE session_participants (
+          session_id TEXT, human_id TEXT, display_name TEXT, email TEXT,
+          source TEXT, deleted_at TEXT
+        );
+        CREATE TABLE humans (
+          id TEXT, name TEXT, email TEXT, job_title TEXT, metadata_json TEXT,
+          deleted_at TEXT
+        );
+        INSERT INTO sessions VALUES
+          ('session-1', 'owner-1', 'Planning', '', '{}', '[]', '', '', NULL);
+        INSERT INTO humans VALUES
+          ('owner-1', 'Ada Owner', 'ada@example.com', 'CEO', '{}', NULL),
+          ('human-1', 'Alice', 'alice@example.com', 'Engineer', '{}', NULL);
+        INSERT INTO session_participants VALUES
+          ('session-1', 'owner-1', 'Ada Owner', 'ada@example.com', 'manual', NULL),
+          ('session-1', 'human-1', '', '', 'manual', NULL);
+      `);
+      mocks.execute.mockImplementationOnce((sql: string, params: unknown[]) =>
+        Promise.resolve(db.prepare(sql).all(...(params as string[]))),
+      );
+
+      const snapshot = await loadSessionContentSnapshot("session-1");
+
+      expect(snapshot?.participants).toEqual([
+        { humanId: "owner-1", name: "", email: "", jobTitle: "" },
+        {
+          humanId: "human-1",
+          name: "Alice",
+          email: "alice@example.com",
+          jobTitle: "Engineer",
+        },
+      ]);
+    } finally {
+      db.close();
+    }
+  });
+
   it("keeps transcript metadata without loading transcript words", async () => {
     mocks.execute.mockResolvedValueOnce([
       {
         id: "session-1",
         owner_user_id: "user-1",
-        owner_email: null,
         title: "Planning",
         created_at: "2026-07-10T09:00:00.000Z",
-        event_json: "null",
         source_apps_json: "[]",
-        event_id: "",
         raw_note_id: "",
         raw_template_id: "",
         raw_body: "",

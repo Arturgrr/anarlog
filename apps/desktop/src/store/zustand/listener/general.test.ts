@@ -105,10 +105,6 @@ vi.mock("@anlg/plugin-transcription", () => ({
   },
 }));
 
-vi.mock("~/cloud-api/client", () => ({
-  syncCloudApiSnapshotBestEffort: vi.fn(),
-}));
-
 import { createListenerStore } from ".";
 import {
   getLiveCaptureUiMode,
@@ -126,7 +122,7 @@ describe("General Listener Slice", () => {
   beforeEach(() => {
     store = createListenerStore();
     vi.clearAllMocks();
-    getIdentifierMock.mockResolvedValue("com.anarlog.stable");
+    getIdentifierMock.mockResolvedValue("com.arturgrr.librelog");
     getCaptureSnapshotMock.mockResolvedValue({
       status: "ok",
       data: {
@@ -151,7 +147,7 @@ describe("General Listener Slice", () => {
     stopCaptureMock.mockResolvedValue({ status: "ok", data: null });
     stopTranscriptionMock.mockResolvedValue({ status: "ok", data: null });
     dispatchEventMock.mockResolvedValue({ status: "ok", data: 1 });
-    vaultBaseMock.mockResolvedValue({ status: "ok", data: "/tmp/anarlog" });
+    vaultBaseMock.mockResolvedValue({ status: "ok", data: "/tmp/librelog" });
   });
 
   test("keeps the next live transcript after the previous meeting finishes batch and summary work", async () => {
@@ -2813,7 +2809,7 @@ describe("General Listener Slice", () => {
       await expect(
         store.getState().startTranscription({
           session_id: sessionId,
-          provider: "anarlog",
+          provider: "deepgram",
           file_path: "/tmp/session.wav",
           base_url: "",
           api_key: "",

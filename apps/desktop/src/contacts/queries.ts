@@ -1,8 +1,7 @@
 import { useRef } from "react";
 
-import { commands as calendarCommands } from "@anlg/plugin-calendar";
+import { commands as contactsCommands } from "@anlg/plugin-contacts";
 
-import { trackAnalyticsEvent } from "~/analytics";
 import { liveQueryClient, useLiveQuery } from "~/db";
 import { enqueueDatabaseWrite } from "~/db/write-queue";
 import { DEFAULT_USER_ID, id } from "~/shared/utils";
@@ -128,6 +127,11 @@ const TEAM_WORKSPACE_SQL = `CASE
   ELSE 0
 END AS team_workspace`;
 
+// Sessions anchor the local user to a humans row whose id is its own owner.
+// That row only identifies "you" as a participant and speaker; it is never a
+// contact, so its personal columns are not read.
+const NOT_LOCAL_USER_SQL = "humans.id <> humans.owner_user_id";
+
 type HumanSessionSqlRow = {
   id: string;
   title: string;
@@ -188,7 +192,7 @@ export function useHumans(): HumanRecord[] {
         ${CONTACT_SUMMARY_SQL},
         ${ADDITIONAL_EMAILS_SQL}
       FROM humans
-      WHERE deleted_at IS NULL
+      WHERE deleted_at IS NULL AND ${NOT_LOCAL_USER_SQL}
       ORDER BY name, email, id
     `,
     mapRows: (rows) => rows.map(mapHumanRow),
@@ -226,6 +230,7 @@ export function useHumanDisplayRecordsByIds(
       FROM humans
       WHERE id IN (${placeholders || "NULL"})
         AND deleted_at IS NULL
+        AND ${NOT_LOCAL_USER_SQL}
       ORDER BY id
     `,
     params: uniqueIds,
@@ -301,6 +306,7 @@ export async function loadHumansByIds(
       FROM humans
       WHERE id IN (${uniqueIds.map(() => "?").join(", ")})
         AND deleted_at IS NULL
+        AND ${NOT_LOCAL_USER_SQL}
       ORDER BY id
     `,
     uniqueIds,
@@ -404,6 +410,7 @@ export async function searchContacts(
         ON organizations.id = humans.organization_id
         AND organizations.deleted_at IS NULL
       WHERE humans.deleted_at IS NULL
+        AND ${NOT_LOCAL_USER_SQL}
         AND (
           ? = '' OR lower(
             humans.name || char(10) ||
@@ -438,17 +445,15 @@ export function createHuman({
   ownerUserId = DEFAULT_USER_ID,
   name,
   email = "",
-  entryPoint = "contacts",
 }: {
   ownerUserId?: string;
   name: string;
   email?: string;
-  entryPoint?: "contacts" | "session_participants" | "speaker_assignment";
 }): Promise<string> {
   const humanId = id();
 
   return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    const result = await calendarCommands.createHuman({
+    const result = await contactsCommands.createHuman({
       id: humanId,
       owner_user_id: ownerUserId,
       name,
@@ -457,10 +462,6 @@ export function createHuman({
     if (result.status === "error") {
       throw new Error(result.error);
     }
-    trackAnalyticsEvent("contact_created", {
-      entry_point: entryPoint,
-      has_email: Boolean(email),
-    });
     return humanId;
   });
 }
@@ -475,7 +476,7 @@ export function createOrganization({
   const organizationId = id();
 
   return enqueueDatabaseWrite(`organization:${organizationId}`, async () => {
-    const result = await calendarCommands.createOrganization({
+    const result = await contactsCommands.createOrganization({
       id: organizationId,
       owner_user_id: ownerUserId,
       name,
@@ -484,49 +485,6 @@ export function createOrganization({
       throw new Error(result.error);
     }
     return organizationId;
-  });
-}
-
-export function usePersonalContact(humanId: string) {
-  return useLiveQuery<HumanSqlRow, HumanRecord | null>({
-    sql: `SELECT *, ${AVATAR_SQL}, ${CONTACT_SUMMARY_SQL},
-        ${ADDITIONAL_EMAILS_SQL}
-      FROM humans WHERE id = ? AND deleted_at IS NULL`,
-    params: [humanId],
-    mapRows: (rows) => (rows[0] ? mapHumanRow(rows[0]) : null),
-  });
-}
-
-export function savePersonalContact(
-  humanId: string,
-  values: Pick<
-    HumanRecord,
-    | "name"
-    | "email"
-    | "phone"
-    | "jobTitle"
-    | "linkedinUsername"
-    | "memo"
-    | "organizationId"
-  > & { avatarDataUrl?: string | null },
-): Promise<void> {
-  return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    const result = await calendarCommands.savePersonalContact({
-      human_id: humanId,
-      name: values.name,
-      email: values.email,
-      phone: values.phone,
-      job_title: values.jobTitle,
-      linkedin_username: values.linkedinUsername,
-      memo: values.memo,
-      organization_id: values.organizationId,
-      avatar_data_url:
-        typeof values.avatarDataUrl === "string" ? values.avatarDataUrl : null,
-      remove_avatar: values.avatarDataUrl === null,
-    });
-    if (result.status === "error") {
-      throw new Error(result.error);
-    }
   });
 }
 
@@ -549,7 +507,7 @@ export function updateHuman(
   if (Object.keys(changes).length === 0) return Promise.resolve();
 
   return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    const result = await calendarCommands.updateHuman({
+    const result = await contactsCommands.updateHuman({
       human_id: humanId,
       name: changes.name ?? null,
       email: changes.email ?? null,
@@ -575,7 +533,7 @@ export function updateOrganization(
   }
 
   return enqueueDatabaseWrite(`organization:${organizationId}`, async () => {
-    const result = await calendarCommands.updateOrganization({
+    const result = await contactsCommands.updateOrganization({
       organization_id: organizationId,
       name: changes.name ?? null,
       memo: changes.memo ?? null,
@@ -601,7 +559,7 @@ export function updateContactAvatar(
 ): Promise<void> {
   const table = type === "human" ? "humans" : "organizations";
   return enqueueDatabaseWrite(`${table}:${contactId}`, async () => {
-    const result = await calendarCommands.updateContactAvatar({
+    const result = await contactsCommands.updateContactAvatar({
       kind: type,
       contact_id: contactId,
       avatar_data_url: avatarDataUrl,
@@ -617,7 +575,7 @@ export function updateHumanContactSummary(
   summary: ContactSummaryRecord,
 ): Promise<void> {
   return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    const result = await calendarCommands.updateHumanContactSummary({
+    const result = await contactsCommands.updateHumanContactSummary({
       human_id: humanId,
       summary_json: JSON.stringify(summary),
     });
@@ -632,7 +590,7 @@ export function toggleContactPin(
   contactId: string,
 ): Promise<void> {
   return enqueueDatabaseWrite("contacts:pin-order", async () => {
-    const result = await calendarCommands.toggleContactPin({
+    const result = await contactsCommands.toggleContactPin({
       kind: type,
       contact_id: contactId,
     });
@@ -646,7 +604,7 @@ export function reorderPinnedContacts(
   contacts: Array<{ type: "human" | "organization"; id: string }>,
 ): Promise<void> {
   return enqueueDatabaseWrite("contacts:pin-order", async () => {
-    const result = await calendarCommands.reorderPinnedContacts({
+    const result = await contactsCommands.reorderPinnedContacts({
       contacts: contacts.map(({ type, id }) => ({ kind: type, id })),
     });
     if (result.status === "error") {
@@ -660,54 +618,9 @@ export function mergeHumans(
   duplicateHumanId: string,
 ): Promise<void> {
   return enqueueDatabaseWrite("contacts:merge", async () => {
-    const result = await calendarCommands.mergeHumans({
+    const result = await contactsCommands.mergeHumans({
       selected_human_id: selectedHumanId,
       duplicate_human_id: duplicateHumanId,
-    });
-    if (result.status === "error") {
-      throw new Error(result.error);
-    }
-    trackAnalyticsEvent("contact_merged", {
-      entry_point: "contact_details",
-    });
-  });
-}
-
-export function applyContactEnhancement({
-  humanId,
-  ownerUserId,
-  changes,
-  createIfMissing = false,
-}: {
-  humanId: string;
-  ownerUserId: string;
-  changes: {
-    name?: string;
-    email?: string;
-    companyName?: string;
-    jobTitle?: string;
-    phone?: string;
-    linkedinUsername?: string;
-  };
-  createIfMissing?: boolean;
-}): Promise<void> {
-  return enqueueDatabaseWrite(`human:${humanId}`, async () => {
-    if (createIfMissing) {
-      trackAnalyticsEvent("contact_created", {
-        entry_point: "session_participants",
-        has_email: Boolean(changes.email),
-      });
-    }
-    const result = await calendarCommands.applyContactEnhancement({
-      human_id: humanId,
-      owner_user_id: ownerUserId,
-      create_if_missing: createIfMissing,
-      name: changes.name ?? null,
-      email: changes.email ?? null,
-      company_name: changes.companyName ?? null,
-      job_title: changes.jobTitle ?? null,
-      phone: changes.phone ?? null,
-      linkedin_username: changes.linkedinUsername ?? null,
     });
     if (result.status === "error") {
       throw new Error(result.error);
@@ -823,7 +736,7 @@ function softDeleteContact(
 ): Promise<void> {
   const table = type === "human" ? "humans" : "organizations";
   return enqueueDatabaseWrite(`${table}:${contactId}`, async () => {
-    const result = await calendarCommands.softDeleteContact({
+    const result = await contactsCommands.softDeleteContact({
       kind: type,
       contact_id: contactId,
     });

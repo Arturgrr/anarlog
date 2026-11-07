@@ -3,11 +3,10 @@ import { Trans } from "@lingui/react/macro";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import { commands as listenerCommands } from "@anlg/plugin-transcription";
 import { CircleNotch } from "@anlg/ui/components/icons";
 
-export { SettingsAccount } from "./account";
+import { AboutSettingsView } from "./about";
 import { AppSettingsView } from "./app-settings";
 import { AudioSettingsView } from "./audio-settings";
 import {
@@ -36,8 +35,6 @@ import { resolveConfigValue, resolveConfigValues } from "~/shared/config";
 const SETTINGS_FORM_KEYS = [
   "autostart",
   "automatic_updates",
-  "auto_join_scheduled_meetings",
-  "auto_start_scheduled_meetings",
   "auto_stop_meetings",
   "floating_bar_enabled",
   "show_app_in_dock",
@@ -61,9 +58,6 @@ function useSettingsForm(storedSettings: StoredSettingValues) {
     defaultValues: {
       autostart: settingsValue.autostart,
       automatic_updates: settingsValue.automatic_updates,
-      auto_join_scheduled_meetings: settingsValue.auto_join_scheduled_meetings,
-      auto_start_scheduled_meetings:
-        settingsValue.auto_start_scheduled_meetings,
       auto_stop_meetings: settingsValue.auto_stop_meetings,
       floating_bar_enabled: settingsValue.floating_bar_enabled,
       show_app_in_dock: settingsValue.show_app_in_dock,
@@ -102,10 +96,6 @@ function useSettingsForm(storedSettings: StoredSettingValues) {
       setSettingValues({
         autostart: normalizedValue.autostart,
         automatic_updates: normalizedValue.automatic_updates,
-        auto_join_scheduled_meetings:
-          normalizedValue.auto_join_scheduled_meetings,
-        auto_start_scheduled_meetings:
-          normalizedValue.auto_start_scheduled_meetings,
         auto_stop_meetings: normalizedValue.auto_stop_meetings,
         floating_bar_enabled: normalizedValue.floating_bar_enabled,
         show_app_in_dock: normalizedValue.show_app_in_dock,
@@ -117,24 +107,6 @@ function useSettingsForm(storedSettings: StoredSettingValues) {
         ai_language: normalizedValue.ai_language,
         summary_use_main_language: normalizedValue.summary_use_main_language,
         spoken_languages: JSON.stringify(normalizedValue.spoken_languages),
-      });
-
-      void analyticsCommands.event({
-        event: "settings_changed",
-        autostart: normalizedValue.autostart,
-        automatic_updates: normalizedValue.automatic_updates,
-        auto_join_scheduled_meetings:
-          normalizedValue.auto_join_scheduled_meetings,
-        auto_start_scheduled_meetings:
-          normalizedValue.auto_start_scheduled_meetings,
-        auto_stop_meetings: normalizedValue.auto_stop_meetings,
-        floating_bar_enabled: normalizedValue.floating_bar_enabled,
-        show_app_in_dock: normalizedValue.show_app_in_dock,
-        show_tray_icon: normalizedValue.show_tray_icon,
-        notification_detect: normalizedValue.notification_detect,
-        consent_auto_send_chat: normalizedValue.consent_auto_send_chat,
-        capture_meeting_chat: normalizedValue.capture_meeting_chat,
-        capture_shared_screens: normalizedValue.capture_shared_screens,
       });
     },
   });
@@ -310,6 +282,8 @@ function SettingsSectionContent({
           </div>
 
           <StorageSettingsView />
+
+          <AboutSettingsView />
         </>
       )}
 
@@ -318,16 +292,6 @@ function SettingsSectionContent({
           <form.Subscribe selector={(state) => state.values}>
             {(values) => (
               <MeetingSettingsView
-                autoJoinScheduledMeetings={{
-                  value: values.auto_join_scheduled_meetings,
-                  onChange: (value) =>
-                    submitFieldValue("auto_join_scheduled_meetings", value),
-                }}
-                autoStartScheduledMeetings={{
-                  value: values.auto_start_scheduled_meetings,
-                  onChange: (value) =>
-                    submitFieldValue("auto_start_scheduled_meetings", value),
-                }}
                 autoStopMeetings={{
                   value: values.auto_stop_meetings,
                   onChange: (value) =>

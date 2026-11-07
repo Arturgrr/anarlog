@@ -1,6 +1,10 @@
 // Must be the first import: React only reports commits to a devtools hook that
 // exists before react-dom evaluates.
 import "./devtools-bar/render-hook";
+import "@fontsource-variable/inter/wght.css";
+import "@fontsource-variable/inter/wght-italic.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "./styles/globals.css";
 import "./styles/cursor.css";
 
@@ -9,7 +13,6 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode, useMemo } from "react";
 import ReactDOM from "react-dom/client";
 
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import {
   getCurrentWebviewWindowLabel,
   init as initWindowsPlugin,
@@ -18,25 +21,14 @@ import { Toaster } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { AITaskWindowSyncBridge } from "./ai/task-window-sync";
-import { trackAnalyticsEvent } from "./analytics";
 import { createToolRegistry } from "./contexts/tool-registry/core";
-import {
-  captureOperationalError,
-  initializeErrorReporting,
-  reportCaughtReactError,
-} from "./error-reporting";
 import { AppI18nProvider } from "./i18n/provider";
 import { AppLockGate } from "./lock/gate";
 import { FloatingMeetingWindowHost } from "./meeting-float/host";
 import { routeTree } from "./routeTree.gen";
 import { EventListeners } from "./services/event-listeners";
 import { TaskManager } from "./services/task-manager";
-import {
-  createTaskScheduler,
-  TaskSchedulerProvider,
-} from "./services/task-scheduler";
 import { TrayRecordingSync } from "./services/tray-recording";
-import { TrayScheduleSync } from "./services/tray-schedule";
 import { UpdaterMeetingSync } from "./services/updater-meeting";
 import { useRemoteSessionDeletionUndoListener } from "./session/hooks/useDeleteSession";
 import { refreshLegacySettingsSnapshots } from "./settings/legacy-snapshots";
@@ -95,8 +87,6 @@ function App() {
   );
 }
 
-initializeErrorReporting();
-
 function AppRoot() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -108,7 +98,6 @@ function AppRoot() {
 }
 
 function ReadyApp() {
-  const scheduler = useMemo(() => createTaskScheduler().start(), []);
   const theme = useConfigValue("theme") as ThemePreference;
   useRemoteSessionDeletionUndoListener(isMainWindow);
 
@@ -119,18 +108,15 @@ function ReadyApp() {
   return (
     <AppThemeProvider>
       <AppI18nProvider>
-        <TaskSchedulerProvider scheduler={scheduler}>
-          <AppLockGate>
-            <App />
-            {isMainWindow ? <TaskManager /> : null}
-            {isMainWindow ? <FloatingMeetingWindowHost /> : null}
-            {isMainWindow ? <EventListeners /> : null}
-            {isMainWindow ? <TrayScheduleSync /> : null}
-            {isMainWindow ? <TrayRecordingSync /> : null}
-            {isMainWindow && !isAppStoreBuild() ? <UpdaterMeetingSync /> : null}
-            <Toaster position="bottom-right" theme={theme} />
-          </AppLockGate>
-        </TaskSchedulerProvider>
+        <AppLockGate>
+          <App />
+          {isMainWindow ? <TaskManager /> : null}
+          {isMainWindow ? <FloatingMeetingWindowHost /> : null}
+          {isMainWindow ? <EventListeners /> : null}
+          {isMainWindow ? <TrayRecordingSync /> : null}
+          {isMainWindow && !isAppStoreBuild() ? <UpdaterMeetingSync /> : null}
+          <Toaster position="bottom-right" theme={theme} />
+        </AppLockGate>
       </AppI18nProvider>
     </AppThemeProvider>
   );
@@ -141,20 +127,8 @@ initWindowsPlugin();
 const isMainWindow = getCurrentWebviewWindowLabel() === "main";
 
 if (isMainWindow) {
-  void analyticsCommands.eventFireAndForget({ event: "app_started" });
-  try {
-    const firstOpenKey = "anarlog:analytics:first-opened";
-    if (localStorage.getItem(firstOpenKey) === null) {
-      localStorage.setItem(firstOpenKey, "1");
-      trackAnalyticsEvent("app_first_opened", {
-        first_open_marker: "local_install",
-      });
-    }
-  } catch {}
   void initializeAppExitFlush().catch((error) => {
-    captureOperationalError(error, {
-      operation: "app_exit_flush_initialize",
-    });
+    console.error("[app-exit] failed to initialize exit flush", error);
   });
 }
 
@@ -166,9 +140,7 @@ async function renderApp() {
   }
 
   await Promise.all([bootstrapThemeFromSettings(), initializeAppStoreBuild()]);
-  const root = ReactDOM.createRoot(rootElement, {
-    onCaughtError: reportCaughtReactError,
-  });
+  const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
       <AppRoot />
@@ -213,7 +185,7 @@ async function runStartupTask(
     void task().then(resolve, reject);
   })
     .catch((error) => {
-      captureOperationalError(error, { operation });
+      console.error(`[startup] ${operation} failed`, error);
     })
     .finally(() => {
       if (timeoutHandle) {

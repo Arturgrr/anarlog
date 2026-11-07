@@ -13,33 +13,11 @@ describe("getLiveTranscriptPausedMessage", () => {
     ).toMatch(/because Deepgram is having an outage\./);
   });
 
-  it("separates an upstream outage from Anarlog server issues on cloud", () => {
-    const upstream = getLiveTranscriptPausedMessage({
-      degraded: {
-        type: "stream_error",
-        message: "RemoteClosed(code=Some(4500), reason=provider error)",
-      },
-      sttProvider: "anarlog",
-      online: true,
-    });
-    const server = getLiveTranscriptPausedMessage({
-      degraded: {
-        type: "stream_error",
-        message: "RemoteClosed(code=Some(1011), reason=)",
-      },
-      sttProvider: "anarlog",
-      online: true,
-    });
-
-    expect(upstream).toMatch(/our speech-to-text provider is having an outage/);
-    expect(server).toMatch(/Anarlog's transcription server is having issues/);
-  });
-
   it("blames the connection when offline", () => {
     expect(
       getLiveTranscriptPausedMessage({
         degraded: { type: "connection_timeout" },
-        sttProvider: "anarlog",
+        sttProvider: "deepgram",
         online: false,
       }),
     ).toMatch(/because you're offline\./);
@@ -52,7 +30,7 @@ describe("getLiveTranscriptPausedMessage", () => {
         sttProvider: "deepgram",
         online: true,
       }),
-    ).toMatch(/Anarlog can't reach Deepgram/);
+    ).toMatch(/Librelog can't reach Deepgram/);
   });
 
   it("does not blame the network for on-device models", () => {

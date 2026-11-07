@@ -4,9 +4,7 @@ mod url_builder;
 
 mod alebex;
 mod amazon_bedrock;
-mod anarlog;
 pub(crate) mod aquavoice;
-mod argmax;
 pub(crate) mod assemblyai;
 mod aws_transcribe;
 mod azure_speech;
@@ -48,9 +46,7 @@ mod zai;
 
 pub use alebex::*;
 pub use amazon_bedrock::*;
-pub use anarlog::*;
 pub use aquavoice::*;
-pub use argmax::*;
 pub use assemblyai::*;
 pub use aws_transcribe::*;
 pub use azure_speech::*;
@@ -146,7 +142,11 @@ pub fn documented_language_codes_live() -> Vec<String> {
     codes.extend(gladia::documented_language_codes().iter().copied());
     codes.extend(assemblyai::documented_language_codes_live().iter().copied());
     codes.extend(elevenlabs::documented_language_codes());
-    codes.extend(argmax::PARAKEET_V3_LANGS.iter().copied());
+    codes.extend(
+        anlg_language::PARAKEET_TDT_V3_LANGUAGE_CODES
+            .iter()
+            .copied(),
+    );
     codes.extend(google_generative_ai::GoogleGenerativeAiAdapter::documented_language_codes());
     codes.extend(smallestai::documented_language_codes_live().iter().copied());
 
@@ -166,7 +166,11 @@ pub fn documented_language_codes_batch() -> Vec<String> {
             .copied(),
     );
     codes.extend(elevenlabs::documented_language_codes());
-    codes.extend(argmax::PARAKEET_V3_LANGS.iter().copied());
+    codes.extend(
+        anlg_language::PARAKEET_TDT_V3_LANGUAGE_CODES
+            .iter()
+            .copied(),
+    );
     codes.extend(pyannote::documented_language_codes());
     codes.extend(cohere::documented_language_codes().iter().copied());
     codes.extend(google_generative_ai::GoogleGenerativeAiAdapter::documented_language_codes());
@@ -355,27 +359,6 @@ pub(crate) fn host_matches(base_url: &str, predicate: impl Fn(&str) -> bool) -> 
         .unwrap_or(false)
 }
 
-const ANARLOG_PROXY_HOST: &str = "api.anarlog.so";
-
-fn is_anarlog_cloud_host(host: &str) -> bool {
-    host == ANARLOG_PROXY_HOST
-}
-
-fn is_anarlog_cloud(base_url: &str) -> bool {
-    host_matches(base_url, is_anarlog_cloud_host)
-}
-
-fn is_anarlog_local_proxy(base_url: &str) -> bool {
-    url::Url::parse(base_url)
-        .ok()
-        .map(|u| is_local_host(u.host_str().unwrap_or("")) && u.path().contains("/stt"))
-        .unwrap_or(false)
-}
-
-pub fn is_anarlog_proxy(base_url: &str) -> bool {
-    is_anarlog_cloud(base_url) || is_anarlog_local_proxy(base_url)
-}
-
 pub fn normalize_languages(languages: &[anlg_language::Language]) -> Vec<anlg_language::Language> {
     let mut seen = HashSet::new();
     let mut result = Vec::with_capacity(languages.len());
@@ -392,17 +375,6 @@ pub fn normalize_languages(languages: &[anlg_language::Language]) -> Vec<anlg_la
     }
 
     result
-}
-
-fn is_local_argmax(base_url: &str) -> bool {
-    url::Url::parse(base_url)
-        .ok()
-        .map(|url| {
-            is_local_host(url.host_str().unwrap_or(""))
-                && url.port() == Some(50060)
-                && !is_anarlog_local_proxy(base_url)
-        })
-        .unwrap_or(false)
 }
 
 pub(crate) fn build_ws_url_from_base_with(
@@ -424,37 +396,12 @@ pub(crate) fn build_ws_url_from_base_with(
         return default_url();
     }
 
-    if let Some(proxy_result) = build_proxy_ws_url(api_base) {
-        return proxy_result;
-    }
-
     let parsed: url::Url = match api_base.parse() {
         Ok(u) => u,
         Err(_) => return default_url(),
     };
     let existing_params = extract_query_params(&parsed);
     (make_url(&parsed), existing_params)
-}
-
-pub fn build_proxy_ws_url(api_base: &str) -> Option<(url::Url, Vec<(String, String)>)> {
-    if api_base.is_empty() {
-        return None;
-    }
-
-    let parsed: url::Url = api_base.parse().ok()?;
-    let host = parsed.host_str()?;
-
-    if !is_anarlog_cloud_host(host) && !is_local_host(host) {
-        return None;
-    }
-
-    let existing_params = extract_query_params(&parsed);
-    let mut url = parsed;
-    url.set_query(None);
-    append_path_if_missing(&mut url, "listen");
-    set_scheme_from_host(&mut url);
-
-    Some((url, existing_params))
 }
 
 pub fn append_provider_param(base_url: &str, provider: &str) -> String {
@@ -510,8 +457,6 @@ pub enum AdapterKind {
     AquaVoice,
     #[strum(serialize = "cartesia")]
     Cartesia,
-    #[strum(serialize = "argmax")]
-    Argmax,
     #[strum(serialize = "soniox")]
     Soniox,
     #[strum(serialize = "fireworks")]
@@ -564,8 +509,6 @@ pub enum AdapterKind {
     Nari,
     #[strum(serialize = "smallestai")]
     SmallestAI,
-    #[strum(serialize = "anarlog")]
-    Anarlog,
 }
 
 impl AdapterKind {
@@ -576,8 +519,7 @@ impl AdapterKind {
     ) -> Self {
         use crate::providers::Provider;
 
-        if !is_anarlog_proxy(base_url)
-            && let Ok(url) = url::Url::parse(base_url)
+        if let Ok(url) = url::Url::parse(base_url)
             && let Some(kind) = url
                 .query_pairs()
                 .find(|(key, _)| key == "provider")
@@ -619,14 +561,6 @@ impl AdapterKind {
         if host_matches(base_url, |host| host == "platform-api.wisprflow.ai") {
             return Self::WisprFlow;
         }
-        if is_anarlog_proxy(base_url) {
-            return Self::Anarlog;
-        }
-
-        if is_local_argmax(base_url) {
-            return Self::Argmax;
-        }
-
         if host_matches(base_url, |host| {
             host == "openrouter.ai" || host.ends_with(".openrouter.ai")
         }) {
@@ -701,7 +635,6 @@ impl AdapterKind {
         match self {
             Self::AmazonBedrock
             | Self::AquaVoice
-            | Self::Argmax
             | Self::Pyannote
             | Self::Cohere
             | Self::AwsTranscribe
@@ -734,8 +667,7 @@ impl AdapterKind {
             | Self::Nari
             | Self::SmallestAI
             | Self::WisprFlow
-            | Self::GoogleGenerativeAi
-            | Self::Anarlog => true,
+            | Self::GoogleGenerativeAi => true,
         }
     }
 
@@ -767,7 +699,6 @@ impl AdapterKind {
             Self::Fireworks => FireworksAdapter::language_support_live(languages),
             Self::ElevenLabs => ElevenLabsAdapter::language_support_live(languages),
             Self::DashScope => DashScopeAdapter::language_support_live(languages),
-            Self::Argmax => ArgmaxAdapter::language_support_live(languages, model),
             Self::Mistral => MistralAdapter::language_support_live(languages),
             Self::Meta => MetaAdapter::language_support_live(languages),
             Self::Pyannote => LanguageSupport::NotSupported,
@@ -783,7 +714,6 @@ impl AdapterKind {
             Self::Nari => NariAdapter::language_support_live(languages, model),
             Self::SmallestAI => SmallestAIAdapter::language_support_live(languages, model),
             Self::GoogleGenerativeAi => GoogleGenerativeAiAdapter::language_support_live(languages),
-            Self::Anarlog => AnarlogAdapter::language_support_live(languages, model),
         }
     }
 
@@ -814,7 +744,6 @@ impl AdapterKind {
             Self::Fireworks => FireworksAdapter::language_support_batch(languages),
             Self::ElevenLabs => ElevenLabsAdapter::language_support_batch(languages),
             Self::DashScope => DashScopeAdapter::language_support_batch(languages),
-            Self::Argmax => ArgmaxAdapter::language_support_batch(languages, model),
             Self::Mistral => MistralAdapter::language_support_batch(languages),
             Self::Meta => MetaAdapter::language_support_batch(languages),
             Self::Pyannote => PyannoteAdapter::language_support_batch(languages, model),
@@ -832,7 +761,6 @@ impl AdapterKind {
             Self::GoogleGenerativeAi => {
                 GoogleGenerativeAiAdapter::language_support_batch(languages)
             }
-            Self::Anarlog => AnarlogAdapter::language_support_batch(languages, model),
         }
     }
 

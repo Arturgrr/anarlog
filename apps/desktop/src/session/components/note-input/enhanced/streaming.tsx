@@ -89,7 +89,7 @@ export function StreamingView({
                 appears.
               </Trans>
             ) : (
-              <Trans>Tip: The Anarlog team loves our users!</Trans>
+              <Trans>Tip: The Librelog team loves our users!</Trans>
             )}
           </span>
         </p>

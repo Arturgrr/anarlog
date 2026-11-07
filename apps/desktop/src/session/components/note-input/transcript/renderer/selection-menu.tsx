@@ -165,7 +165,7 @@ export function MultiSelectionBar({
   const bar = (
     <div
       className={cn([
-        "border-border bg-card flex items-center gap-2 rounded-full border p-1 pl-3 shadow-lg",
+        "bg-layer-1 shadow-floating flex items-center gap-1 rounded-lg p-1 pl-3",
         "text-xs",
         fabSelectionHost
           ? null
@@ -183,7 +183,7 @@ export function MultiSelectionBar({
           <button
             type="button"
             disabled={deleteMutation.isPending}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-7 shrink-0 items-center rounded-full px-3 font-medium whitespace-nowrap"
+            className="bg-primary text-primary-foreground shadow-button-contrast hover:bg-primary/90 flex h-7 shrink-0 items-center rounded-md px-3 font-medium whitespace-nowrap"
           >
             <Trans>Change speaker</Trans>
           </button>
@@ -208,7 +208,7 @@ export function MultiSelectionBar({
           type="button"
           disabled={!canMerge || deleteMutation.isPending}
           className={cn([
-            "hover:bg-accent flex h-7 items-center gap-1.5 rounded-full px-2 font-medium",
+            "hover:bg-hover active:bg-pressed flex h-7 items-center gap-1.5 rounded-md px-2 font-medium",
             "disabled:pointer-events-none disabled:opacity-50",
           ])}
           onClick={() => void handleMerge()}
@@ -222,7 +222,7 @@ export function MultiSelectionBar({
           type="button"
           disabled={deleteMutation.isPending}
           className={cn([
-            "text-destructive hover:bg-destructive/10 flex h-7 items-center gap-1.5 rounded-full px-2 font-medium",
+            "text-danger hover:bg-danger-bg flex h-7 items-center gap-1.5 rounded-md px-2 font-medium",
             "disabled:pointer-events-none disabled:opacity-50",
           ])}
           onClick={() => deleteMutation.mutate()}
@@ -235,7 +235,7 @@ export function MultiSelectionBar({
         type="button"
         aria-label={t`Clear selection`}
         disabled={deleteMutation.isPending}
-        className="hover:bg-accent flex size-7 items-center justify-center rounded-full"
+        className="hover:bg-hover active:bg-pressed flex size-7 items-center justify-center rounded-md"
         onClick={onClear}
       >
         <X className="size-3.5" />
@@ -529,7 +529,7 @@ function SelectionHighlight({
             top: rect.top,
             width: rect.width,
             height: rect.height,
-            backgroundColor: "var(--selection-overlay)",
+            backgroundColor: "var(--selection)",
             pointerEvents: "none",
             zIndex: 40,
           }}

@@ -3,7 +3,7 @@ title: "Chat with your meetings"
 description: "Ask questions, find related context, and review proposed note changes."
 ---
 
-Anarlog Chat can answer questions about the open meeting, search your other meetings, and help turn a conversation into follow-up work. Chat uses the Intelligence model selected under **Settings → Intelligence**.
+Librelog Chat can answer questions about the open meeting, search your other meetings, and help turn a conversation into follow-up work. Chat uses the Intelligence model selected under **Settings → Intelligence**.
 
 ## Ask about the open meeting
 
@@ -19,7 +19,7 @@ Useful requests include:
 - “Compare this meeting with the previous project review.”
 - “Find meetings where we discussed the launch date.”
 
-Chat can search meeting titles and content, recurring meeting history, contacts, and connected calendar events when the request needs them.
+Chat can search meeting titles and content, recurring meeting history, and contacts when the request needs them.
 
 While a meeting is recording, suggested prompts can recap the last five minutes, suggest what to ask next, or list action items so far. After generating a summary, choose **Make shorter** or **Make longer** to adjust it.
 
@@ -29,7 +29,7 @@ Reasoning and tool steps appear in a single **Activity** row. Expand it to inspe
 
 Ask Chat to list folders, create a folder, or move meetings into an existing folder. For example: “Move my launch review meetings into Projects/Launch.” Folder moves change where meetings appear; they do not merge or rewrite their contents. Chat reports meetings it moved, left unchanged, or could not move.
 
-Folder management is available in desktop Chat. Local CLI/MCP writes remain limited to reviewed note proposals, and hosted MCP remains read-only.
+Folder management is available in desktop Chat. CLI and local MCP writes remain limited to reviewed note proposals and recording imports.
 
 Conversation dates appear above the messages. Hover over a message to see its time.
 
@@ -45,10 +45,6 @@ Chat can propose a summary edit or transcript correction. Review the proposed ch
 
 For direct transcript editing, speaker reassignment, and re-transcription, see [Notes, summaries, and transcripts](/notes#correct-a-transcript).
 
-## Privacy and external search
+## Privacy
 
-Chat sends the prompt and required context to your selected Intelligence provider. A local provider keeps that model request on your computer. A hosted provider receives the text needed to answer.
-
-<Warning>
-  Chat can also search the public web when a request needs current external information. The search query leaves your device even if your Transcription and Intelligence models are local. See [Data, privacy, and retention](/data-and-privacy) before using sensitive context with hosted models or web search.
-</Warning>
+Chat sends the prompt and required context to your selected Intelligence provider. A local provider keeps that model request on your computer. A hosted provider receives the text needed to answer. See [Data, privacy, and retention](/data-and-privacy) before using sensitive context with hosted models.

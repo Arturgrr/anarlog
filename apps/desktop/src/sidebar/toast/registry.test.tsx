@@ -5,12 +5,8 @@ import { createToastRegistry, getToastToShow } from "./registry";
 type RegistryParams = Parameters<typeof createToastRegistry>[0];
 
 const baseParams: RegistryParams = {
-  isAuthenticated: true,
-  isAuthLoading: false,
   hasLLMConfigured: true,
   hasSttConfigured: true,
-  hasProSttConfigured: false,
-  hasProLlmConfigured: false,
   isAiTranscriptionTabActive: false,
   isAiIntelligenceTabActive: false,
   isBatchTranscribingInActiveTranscriptTab: false,
@@ -30,7 +26,6 @@ const baseParams: RegistryParams = {
     downloadUpdate: vi.fn(),
     installUpdate: vi.fn(),
   },
-  onSignIn: vi.fn(),
   onOpenLLMSettings: vi.fn(),
   onOpenSTTSettings: vi.fn(),
 };
@@ -64,55 +59,6 @@ describe("sidebar toast registry", () => {
       expect(toast?.lifecycle).toEqual({ type: "condition-bound" });
     },
   );
-
-  it("suggests signing in before provider setup", () => {
-    const onSignIn = vi.fn();
-    const toast = showToast({
-      isAuthenticated: false,
-      hasLLMConfigured: false,
-      hasSttConfigured: false,
-      onSignIn,
-    });
-
-    expect(toast?.id).toBe("sign-in-benefits");
-    toast?.primaryAction?.onClick();
-    expect(onSignIn).toHaveBeenCalledOnce();
-  });
-
-  it("asks for a usable transcription provider after sign-in is dismissed", () => {
-    const toast = showToast(
-      { isAuthenticated: false, hasProSttConfigured: true },
-      (toast) => toast.id === "sign-in-benefits",
-    );
-
-    expect(toast?.id).toBe("missing-stt");
-  });
-
-  it("promotes Pro after sign-in is dismissed, sharing one permanent dismissal", () => {
-    expect(
-      showToast(
-        { isAuthenticated: false },
-        (toast) => toast.id === "sign-in-benefits",
-      )?.id,
-    ).toBe("upgrade-to-pro");
-    expect(
-      showToast(
-        { isAuthenticated: false },
-        (toast) =>
-          toast.lifecycle.type === "persistent" &&
-          toast.lifecycle.dismissalId === "auth-promotion",
-      ),
-    ).toBeNull();
-  });
-
-  it.each([
-    ["STT", { hasProSttConfigured: true }],
-    ["LLM", { hasProLlmConfigured: true }],
-  ])("keeps Pro %s usable while authentication is loading", (_, overrides) => {
-    expect(
-      showToast({ isAuthenticated: false, isAuthLoading: true, ...overrides }),
-    ).toBeNull();
-  });
 
   it("shows local STT loading unless the transcript tab shows batch progress", () => {
     const loading = {
@@ -173,7 +119,7 @@ describe("sidebar toast registry", () => {
 
     expect(toast).toMatchObject({
       id: "desktop-update:1.0.34:downloading",
-      description: "Downloading Anarlog 1.0.34 (58%)",
+      description: "Downloading Librelog 1.0.34 (58%)",
       lifecycle: { type: "persistent", dismissal: "session" },
       loading: true,
     });

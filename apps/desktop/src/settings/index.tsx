@@ -1,7 +1,6 @@
 import { cn } from "@anlg/utils";
 
 import {
-  SettingsAccount,
   SettingsApp,
   SettingsMeetings,
   SettingsNotifications,
@@ -9,21 +8,15 @@ import {
 } from "./general";
 import { SettingsTodo } from "./todo";
 
-import { LLM } from "~/settings/ai/llm";
-import { STT } from "~/settings/ai/stt";
+import { LlmModelPicker } from "~/settings/ai/llm";
+import { SttModelPicker } from "~/settings/ai/stt";
 import { SettingsAppearance } from "~/settings/appearance";
-import { SettingsCrm } from "~/settings/crm";
 import { SettingsDevelopers } from "~/settings/developers";
 import { SettingsDictation } from "~/settings/dictation";
 import { SettingsDictionary } from "~/settings/dictionary";
-import { SettingsBilling } from "~/settings/general/billing";
 import { SettingsHydrationBoundary } from "~/settings/hydration-boundary";
-import { SettingsImports } from "~/settings/imports";
 import { SettingsPrivacy } from "~/settings/privacy";
-import { SettingsReferrals } from "~/settings/referrals";
 import { SettingsInsights } from "~/settings/stats";
-import { SettingsSync } from "~/settings/sync";
-import { SettingsTeam } from "~/settings/team";
 import { StandardContentWrapper } from "~/shared/main";
 import { type Tab } from "~/store/zustand/tabs";
 
@@ -44,22 +37,14 @@ export function TabContentSettings({
 function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
   const requestedTab = tab.state.tab as string | undefined;
   const activeTab =
-    requestedTab === "data"
-      ? "imports"
-      : requestedTab === "personalization"
-        ? "dictionary"
-        : requestedTab === "audio"
-          ? "meetings"
-          : (tab.state.tab ?? "app");
+    requestedTab === "personalization"
+      ? "dictionary"
+      : requestedTab === "audio"
+        ? "meetings"
+        : (tab.state.tab ?? "app");
 
   const renderContent = () => {
     switch (activeTab) {
-      case "account":
-        return <SettingsAccount />;
-      case "billing":
-        return <SettingsBilling />;
-      case "referrals":
-        return <SettingsReferrals />;
       case "stats":
       case "insights":
         return <SettingsInsights />;
@@ -71,14 +56,6 @@ function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
         return <SettingsAppearance />;
       case "notifications":
         return <SettingsNotifications />;
-      case "sync":
-        return <SettingsSync />;
-      case "team":
-        return <SettingsTeam />;
-      case "imports":
-        return <SettingsImports />;
-      case "crm":
-        return <SettingsCrm />;
       case "permissions":
         return <SettingsPermissions />;
       case "privacy":
@@ -90,9 +67,9 @@ function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
       case "dictation":
         return <SettingsDictation />;
       case "transcription":
-        return <STT />;
+        return <SttModelPicker variant="page" />;
       case "intelligence":
-        return <LLM />;
+        return <LlmModelPicker variant="page" />;
       case "todo":
         return <SettingsTodo />;
       default:

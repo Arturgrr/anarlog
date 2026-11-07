@@ -10,7 +10,7 @@ describe("normalizeFolderIcon", () => {
 
   it("keeps a stored folder icon", () => {
     expect(
-      normalizeFolderIcon('{"type":"icon","value":"folder","color":"#9ca3af"}'),
+      normalizeFolderIcon('{"type":"icon","value":"folder","color":"#808080"}'),
     ).toEqual(DEFAULT_FOLDER_ICON);
   });
 

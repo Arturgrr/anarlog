@@ -4,23 +4,15 @@ import { latestContent, latestVersion } from "virtual:changelog";
 
 import { processContent } from "@anlg/changelog";
 
-import { changelogUrl } from "./source";
+import { loadBundledChangelog } from "./source";
 
 export function useChangelogContent(version: string) {
   const query = useQuery({
     queryKey: ["changelog", version],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       if (version === latestVersion && latestContent)
         return latestContent as string;
-      const url = changelogUrl(version);
-      if (!url) return null;
-      const response = await fetch(url, { signal });
-      if (!response.ok) return null;
-      if (version.includes("-nightly.")) {
-        const release = await response.json();
-        return typeof release.body === "string" ? release.body : null;
-      }
-      return response.text();
+      return loadBundledChangelog(version);
     },
     staleTime: Infinity,
   });

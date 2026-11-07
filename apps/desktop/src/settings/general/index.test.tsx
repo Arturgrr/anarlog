@@ -10,13 +10,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   useStoredSettingValuesQuery: vi.fn(),
-  mutateCloudSync: vi.fn(),
   setSettingValues: vi.fn(),
   meetingSettingsProps: vi.fn(),
-}));
-
-vi.mock("@anlg/plugin-analytics", () => ({
-  commands: { event: vi.fn() },
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -27,20 +22,8 @@ vi.mock("@tanstack/react-query", () => ({
   useMutation: () => ({
     isPending: false,
     variables: undefined,
-    mutate: mocks.mutateCloudSync,
+    mutate: vi.fn(),
   }),
-}));
-
-vi.mock("~/auth", () => ({
-  useAuth: () => ({ session: null, signOut: vi.fn() }),
-}));
-
-vi.mock("~/auth/billing-context", () => ({
-  useBillingAccess: () => ({ isPro: true }),
-}));
-
-vi.mock("~/auth/cloudsync", () => ({
-  applyCloudsyncPreference: vi.fn(),
 }));
 
 vi.mock("~/settings/queries", () => ({
@@ -49,7 +32,7 @@ vi.mock("~/settings/queries", () => ({
   useStoredSettingValuesQuery: mocks.useStoredSettingValuesQuery,
 }));
 
-vi.mock("./account", () => ({ SettingsAccount: () => null }));
+vi.mock("./about", () => ({ AboutSettingsView: () => null }));
 vi.mock("./app-settings", () => ({ AppSettingsView: () => null }));
 vi.mock("./audio-settings", () => ({
   AudioSettingsView: () => <span>Audio settings</span>,
@@ -123,18 +106,18 @@ describe("SettingsApp", () => {
     render(<SettingsMeetings />);
 
     const props = mocks.meetingSettingsProps.mock.lastCall?.[0] as {
-      autoStartScheduledMeetings: {
+      autoStopMeetings: {
         value: boolean;
         onChange: (value: boolean) => void;
       };
     };
-    expect(props.autoStartScheduledMeetings.value).toBe(true);
+    expect(props.autoStopMeetings.value).toBe(true);
 
-    act(() => props.autoStartScheduledMeetings.onChange(false));
+    act(() => props.autoStopMeetings.onChange(false));
 
     await waitFor(() => {
       expect(mocks.setSettingValues).toHaveBeenCalledWith(
-        expect.objectContaining({ auto_start_scheduled_meetings: false }),
+        expect.objectContaining({ auto_stop_meetings: false }),
       );
     });
   });

@@ -937,7 +937,7 @@ async fn maybe_assign_speakers_from_voiceprints<R: tauri::Runtime>(
         &owner_emails,
     );
     // 1:1 meetings are named from the participant list. Voiceprints only
-    // identify people when the calendar cannot uniquely name the remotes.
+    // identify people when the participant list cannot uniquely name the remotes.
     if remote_human_ids.len() < 2 {
         return Ok(());
     }

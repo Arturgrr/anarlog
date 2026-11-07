@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { generateText, type LanguageModel, Output } from "ai";
 import { z } from "zod";
 
@@ -38,14 +39,14 @@ export async function inferSummaryFormat({
     normalizedExamples.length === 0 ||
     normalizedExamples.length > MAX_FORMAT_EXAMPLES
   ) {
-    throw new Error("Provide between one and three examples");
+    throw new Error(t`Provide between one and three examples`);
   }
   if (
     normalizedExamples.some(
       (example) => example.length > MAX_FORMAT_EXAMPLE_LENGTH,
     )
   ) {
-    throw new Error("Example is too long");
+    throw new Error(t`Example is too long`);
   }
 
   const result = await generateText({
@@ -64,7 +65,7 @@ export async function inferSummaryFormat({
     .replace(/^#\s+Format Requirements\s*\n+/i, "")
     .trim();
   if (!formatRequirements) {
-    throw new Error("No format requirements were generated");
+    throw new Error(t`No format requirements were generated`);
   }
 
   return formatRequirements;

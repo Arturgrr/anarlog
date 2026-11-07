@@ -5,7 +5,6 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { useMemo, useState } from "react";
 
 import { json2md } from "@anlg/editor/markdown";
-import { commands as analyticsCommands } from "@anlg/plugin-analytics";
 import {
   commands as exportCommands,
   type ExportMetadata,
@@ -23,20 +22,17 @@ import { cn } from "@anlg/utils";
 
 import { formatDate, formatDuration } from "./export-utils";
 
-import { useAuth } from "~/auth";
 import { useTranscriptExportSegments } from "~/session/components/note-input/transcript/export-data";
 import {
   useEnhancedNote,
   useSession,
   useSessionParticipants,
 } from "~/session/queries";
-import { getSessionEvent } from "~/session/utils";
 import {
   getStoredSettingValues,
   useSetSettingValues,
   useStoredSettingValuesQuery,
 } from "~/settings/queries";
-import { useDurableSharedNote } from "~/shared-notes/cache";
 import { isAppStoreBuild } from "~/shared/app-store";
 import type { EditorView } from "~/store/zustand/tabs/schema";
 import { useSessionTranscriptMetadata } from "~/stt/queries";
@@ -127,7 +123,7 @@ function ExportModalContent({
   onOpenChange,
   initialConfig,
 }: ExportModalProps & { initialConfig: ExportConfig }) {
-  const { t } = useLingui();
+  const { i18n, t } = useLingui();
   const persistExportConfig = useSetSettingValues();
   const [format, setFormat] = useState<FileFormat>(initialConfig.format);
   const [includeMemo, setIncludeMemo] = useState(initialConfig.includeMemo);
@@ -141,22 +137,10 @@ function ExportModalContent({
   const session = useSession(sessionId);
   const sessionTitle = session?.title;
   const sessionCreatedAt = session?.created_at;
-  const event = session ? getSessionEvent(session) : null;
-  const eventTitle = event?.title;
   const rawMd = session?.raw_md;
 
   const enhancedNoteId = currentView.type === "enhanced" ? currentView.id : "";
-  const enhancedNoteContent = useEnhancedNote(enhancedNoteId)?.content;
-  const { session: authSession } = useAuth();
-  const sharedNoteId = currentView.type === "shared" ? currentView.id : "";
-  const sharedNote = useDurableSharedNote(
-    sharedNoteId ? authSession?.user.id : null,
-    sharedNoteId,
-  ).data;
-  const summaryContent =
-    currentView.type === "shared"
-      ? sharedNote && JSON.stringify(sharedNote.body)
-      : enhancedNoteContent;
+  const summaryContent = useEnhancedNote(enhancedNoteId)?.content;
   const participants = useSessionParticipants(sessionId);
 
   const participantNames = useMemo(
@@ -231,7 +215,9 @@ function ExportModalContent({
     sections.push(`# ${title}`);
 
     if (sessionCreatedAt) {
-      sections.push(`- ${t`Created`}: ${formatDate(sessionCreatedAt)}`);
+      sections.push(
+        `- ${t`Created`}: ${formatDate(sessionCreatedAt, i18n.locale)}`,
+      );
     }
 
     if (participantNames.length > 0) {
@@ -280,7 +266,7 @@ function ExportModalContent({
     sections.push("=".repeat(title.length));
 
     if (sessionCreatedAt) {
-      sections.push(formatDate(sessionCreatedAt));
+      sections.push(formatDate(sessionCreatedAt, i18n.locale));
     }
 
     if (participantNames.length > 0) {
@@ -331,14 +317,16 @@ function ExportModalContent({
     sections.push(`#+TITLE: ${title}`);
 
     if (sessionCreatedAt) {
-      sections.push(`#+DATE: ${formatDate(sessionCreatedAt)}`);
+      sections.push(`#+DATE: ${formatDate(sessionCreatedAt, i18n.locale)}`);
     }
 
     sections.push("");
     sections.push(`* ${t`Metadata`}`);
 
     if (sessionCreatedAt) {
-      sections.push(`- ${t`Created`} :: ${formatDate(sessionCreatedAt)}`);
+      sections.push(
+        `- ${t`Created`} :: ${formatDate(sessionCreatedAt, i18n.locale)}`,
+      );
     }
 
     if (participantNames.length > 0) {
@@ -390,9 +378,11 @@ function ExportModalContent({
     const { includeMemo, includeSummary, includeTranscript } = config;
     const metadata: ExportMetadata = {
       title: sessionTitle || t`Untitled`,
-      createdAt: sessionCreatedAt ? formatDate(sessionCreatedAt) : "",
+      createdAt: sessionCreatedAt
+        ? formatDate(sessionCreatedAt, i18n.locale)
+        : "",
       participants: participantNames,
-      eventTitle: eventTitle || null,
+      eventTitle: null,
       duration: transcriptDuration,
     };
 
@@ -477,12 +467,6 @@ function ExportModalContent({
         export_include_summary: submitted.includeSummary,
         export_include_transcript: submitted.includeTranscript,
       });
-      void analyticsCommands.event({
-        event: "session_exported",
-        format: submitted.format,
-        include_summary: submitted.includeSummary,
-        include_transcript: submitted.includeTranscript,
-      });
       void openerCommands.revealItemInDir(path);
       onOpenChange(false);
     },
@@ -499,7 +483,7 @@ function ExportModalContent({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        overlayClassName="bg-black/20 backdrop-blur-xs"
+        overlayClassName="bg-scrim"
         className={cn([
           "w-full max-w-xs gap-0 border-0 bg-transparent p-4 shadow-none sm:rounded-none",
           "[&>button:last-child]:hidden",
@@ -507,8 +491,7 @@ function ExportModalContent({
       >
         <div
           className={cn([
-            "border-border/80 bg-background rounded-xl border",
-            "shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]",
+            "bg-layer-1 shadow-overlay rounded-md",
             "flex flex-col gap-4 p-5 text-center",
           ])}
         >
@@ -589,7 +572,7 @@ function ExportModalContent({
           </div>
 
           {error && (
-            <p role="alert" className="text-xs text-red-500">
+            <p role="alert" className="text-danger text-xs">
               <Trans>
                 Could not export. Check the export location in Settings and try
                 again.
@@ -603,7 +586,7 @@ function ExportModalContent({
             disabled={
               isPending || isTranscriptPending || !hasAnyContentSelected
             }
-            className="border-primary bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-full rounded-full border-2 text-sm font-medium shadow-[0_4px_14px_rgba(87,83,78,0.4)] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-primary text-primary-foreground shadow-button-contrast hover:bg-primary/90 h-9 w-full rounded-xl text-sm font-medium transition-[background-color,opacity] duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isPending
               ? t`Exporting...`

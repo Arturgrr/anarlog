@@ -1,3 +1,9 @@
+// Double-tapping one modifier key needs the native macOS event tap.
+const DEFAULT_DICTATION_SHORTCUT =
+  typeof navigator !== "undefined" && navigator.userAgent.includes("Macintosh")
+    ? "DoubleTap+AltLeft"
+    : "Control+Alt+Space";
+
 export const SETTING_DEFINITIONS = {
   intelligence_disabled: {
     type: "boolean",
@@ -14,15 +20,22 @@ export const SETTING_DEFINITIONS = {
     path: ["dictation", "enabled"],
     default: false as boolean,
   },
+  // The first dictation shortcut, kept for builds that read a single one and
+  // for migrating to `dictation_shortcuts`.
   dictation_shortcut: {
     type: "string",
     path: ["dictation", "shortcut"],
-    default: "Control+Alt+Space" as string,
+    default: DEFAULT_DICTATION_SHORTCUT as string,
+  },
+  dictation_shortcuts: {
+    type: "string",
+    path: ["dictation", "shortcuts"],
+    default: JSON.stringify([DEFAULT_DICTATION_SHORTCUT]) as string,
   },
   dictation_hands_free: {
     type: "boolean",
     path: ["dictation", "hands_free"],
-    default: false as boolean,
+    default: true as boolean,
   },
   export_directory: {
     type: "string",
@@ -63,22 +76,6 @@ export const SETTING_DEFINITIONS = {
     type: "boolean",
     path: ["general", "auto_stop_meetings"],
     default: true as boolean,
-  },
-  primary_recording_device: {
-    type: "string",
-    path: ["general", "primary_recording_device"],
-    synced: true,
-    default: "" as string,
-  },
-  auto_start_scheduled_meetings: {
-    type: "boolean",
-    path: ["general", "auto_start_scheduled_meetings"],
-    default: true as boolean,
-  },
-  auto_join_scheduled_meetings: {
-    type: "boolean",
-    path: ["general", "auto_join_scheduled_meetings"],
-    default: false as boolean,
   },
   floating_bar_enabled: {
     type: "boolean",
@@ -180,11 +177,6 @@ export const SETTING_DEFINITIONS = {
     path: ["notification", "disabled"],
     default: false as boolean,
   },
-  notification_event: {
-    type: "boolean",
-    path: ["notification", "event"],
-    default: true as boolean,
-  },
   notification_detect: {
     type: "boolean",
     path: ["notification", "detect"],
@@ -193,11 +185,6 @@ export const SETTING_DEFINITIONS = {
   notification_summary_complete: {
     type: "boolean",
     path: ["notification", "summary_complete"],
-    default: true as boolean,
-  },
-  notification_cloudsync_complete: {
-    type: "boolean",
-    path: ["notification", "cloudsync_complete"],
     default: true as boolean,
   },
   notification_recording: {
@@ -236,16 +223,6 @@ export const SETTING_DEFINITIONS = {
     path: ["notification", "bounce_transcript"],
     default: true as boolean,
   },
-  telemetry_consent: {
-    type: "boolean",
-    path: ["general", "telemetry_consent"],
-    default: true as boolean,
-  },
-  crash_reporting_consent: {
-    type: "boolean",
-    path: ["general", "crash_reporting_consent"],
-    default: true as boolean,
-  },
   lock_app: {
     type: "boolean",
     path: ["general", "lock_app"],
@@ -265,11 +242,6 @@ export const SETTING_DEFINITIONS = {
     type: "boolean",
     path: ["general", "capture_shared_screens"],
     default: false as boolean,
-  },
-  cloud_sync_enabled: {
-    type: "boolean",
-    path: ["general", "cloud_sync_enabled"],
-    default: true as boolean,
   },
   ai_language: {
     type: "string",
@@ -360,22 +332,6 @@ export const SETTING_DEFINITIONS = {
     type: "string",
     path: ["general", "selected_template_id"],
   },
-  default_meeting_share_access: {
-    type: "string",
-    path: ["general", "default_meeting_share_access"],
-    default: "me" as string,
-    synced: true,
-  },
-  todo_linear_filter: {
-    type: "string",
-    path: ["todo", "linear_filter"],
-    default: "" as string,
-  },
-  todo_github_repository: {
-    type: "string",
-    path: ["todo", "github_repository"],
-    default: "" as string,
-  },
   automation_draft_template: {
     type: "string",
     path: ["automations", "draft_template"],
@@ -406,72 +362,12 @@ export const SETTING_DEFINITIONS = {
     path: ["automations", "markdown_export_files"],
     default: "" as string,
   },
-  automation_slack_recap_enabled: {
-    type: "boolean",
-    path: ["automations", "slack_recap_enabled"],
-    default: false as boolean,
-  },
-  automation_slack_recap_channel: {
-    type: "string",
-    path: ["automations", "slack_recap_channel"],
-    default: "" as string,
-  },
-  automation_slack_recap_last_run: {
-    type: "string",
-    path: ["automations", "slack_recap_last_run"],
-    default: "" as string,
-  },
-  automation_slack_recap_processed: {
-    type: "string",
-    path: ["automations", "slack_recap_processed"],
-    default: "" as string,
-  },
-  automation_linear_issues_enabled: {
-    type: "boolean",
-    path: ["automations", "linear_issues_enabled"],
-    default: false as boolean,
-  },
-  automation_linear_issues_team: {
-    type: "string",
-    path: ["automations", "linear_issues_team"],
-    default: "" as string,
-  },
-  automation_linear_issues_last_run: {
-    type: "string",
-    path: ["automations", "linear_issues_last_run"],
-    default: "" as string,
-  },
-  automation_linear_issues_processed: {
-    type: "string",
-    path: ["automations", "linear_issues_processed"],
-    default: "" as string,
-  },
-  automation_notion_update_enabled: {
-    type: "boolean",
-    path: ["automations", "notion_update_enabled"],
-    default: false as boolean,
-  },
-  automation_notion_update_page: {
-    type: "string",
-    path: ["automations", "notion_update_page"],
-    default: "" as string,
-  },
-  automation_notion_update_last_run: {
-    type: "string",
-    path: ["automations", "notion_update_last_run"],
-    default: "" as string,
-  },
-  automation_notion_update_processed: {
-    type: "string",
-    path: ["automations", "notion_update_processed"],
-    default: "" as string,
-  },
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFINITIONS;
 
-// Keys marked `synced` persist to the E2EE-replicated synced_preferences table
-// instead of the device-local app_settings table.
+// Keys marked `synced` persist to the synced_preferences table instead of the
+// app_settings table.
 export const SYNCED_SETTING_KEYS: ReadonlySet<SettingKey> = new Set(
   (Object.keys(SETTING_DEFINITIONS) as SettingKey[]).filter(
     (key) => "synced" in SETTING_DEFINITIONS[key],

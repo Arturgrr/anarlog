@@ -13,7 +13,7 @@ import { useConfigValues } from "~/shared/config";
 /**
  * Settings that change what is on screen, exposed as one-click toggles so a
  * build can be checked in both states without leaving the current view. This
- * is the closest thing Anarlog has to Linear's feature-flag tiles.
+ * is the closest thing Librelog has to Linear's feature-flag tiles.
  */
 const QUICK_TOGGLES = [
   {
@@ -40,11 +40,6 @@ const QUICK_TOGGLES = [
     key: "show_app_in_dock",
     label: "Dock icon",
     description: "Keep the app icon in the Dock while running (macOS).",
-  },
-  {
-    key: "notification_event",
-    label: "Event notifications",
-    description: "Notify before a calendar event starts.",
   },
   {
     key: "notification_detect",

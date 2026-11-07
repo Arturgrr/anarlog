@@ -6,8 +6,8 @@ use crate::Permission;
 /// or enable the app manually (Accessibility, Screen Recording, Input
 /// Monitoring, Screen & System Audio Recording). A drag-to-list overlay helps.
 ///
-/// **Native** permissions have normal system prompts (calendar, contacts,
-/// microphone, etc.) and should stay on native request flows unless the user
+/// **Native** permissions have normal system prompts (reminders, microphone,
+/// etc.) and should stay on native request flows unless the user
 /// already denied and needs a recovery deep link.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SettingsGuidance {
@@ -62,14 +62,8 @@ impl From<SettingsGuidance> for PermissionGuidance {
 impl Permission {
     pub const fn settings_guidance(self) -> SettingsGuidance {
         match self {
-            Self::Calendar => SettingsGuidance::Native {
-                anchor: "Privacy_Calendars",
-            },
             Self::Reminders => SettingsGuidance::Native {
                 anchor: "Privacy_Reminders",
-            },
-            Self::Contacts => SettingsGuidance::Native {
-                anchor: "Privacy_Contacts",
             },
             Self::Microphone => SettingsGuidance::Native {
                 anchor: "Privacy_Microphone",

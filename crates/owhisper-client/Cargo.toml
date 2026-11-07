@@ -8,7 +8,6 @@ default = []
 local = ["anlg-audio-utils", "anlg-transcribe-soniqo", "anlg-transcribe-speechanalyzer", "hound"]
 
 [dependencies]
-anlg-am = { workspace = true }
 anlg-audio-utils = { workspace = true, optional = true }
 anlg-language = { workspace = true }
 anlg-observability = { workspace = true }

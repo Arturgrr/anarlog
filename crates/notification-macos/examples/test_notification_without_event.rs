@@ -22,7 +22,6 @@ fn main() {
             .source(NotificationSource::MicDetected {
                 app_names: vec!["Slack".to_string()],
                 app_ids: vec!["com.tinyspeck.slackmacgap".to_string()],
-                event_ids: vec![],
             })
             .action_label("Open")
             .footer(NotificationFooter {

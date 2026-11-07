@@ -19,13 +19,14 @@ import {
   DropdownMenuTrigger,
 } from "@anlg/ui/components/ui/dropdown-menu";
 import { appFloatingItemClassName } from "@anlg/ui/components/ui/floating-content";
-import { cn, formatDistanceToNow } from "@anlg/utils";
+import { cn } from "@anlg/utils";
 
 import {
   type ChatGroupRecord,
   useRecentChatGroups,
 } from "~/chat/store/queries";
 import type { ChatScope } from "~/chat/types";
+import { formatRelativeToNow } from "~/i18n/format";
 
 export function ChatToolbarControls({
   chatScope,
@@ -141,7 +142,7 @@ function ChatActionButton({
       onClick={onClick}
       size="icon"
       variant="ghost"
-      className={cn(["text-muted-foreground rounded-full", className])}
+      className={cn(["text-icon-muted rounded-md", className])}
     >
       {icon}
     </Button>
@@ -176,11 +177,11 @@ function ChatGroups({
           variant="ghost"
           size="sm"
           className={cn([
-            "group -ml-2 h-8 w-auto shrink-0 gap-1.5 rounded-full px-2.5 py-0 transition-colors",
+            "group -ml-2 h-8 w-auto shrink-0 gap-1.5 rounded-md px-2.5 py-0",
             layout === "right-panel" && "h-7",
             isDark
               ? "text-primary-foreground/70 hover:bg-primary-foreground/14 hover:text-primary-foreground data-[state=open]:bg-primary-foreground/14 data-[state=open]:text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted/80 hover:text-foreground data-[state=open]:bg-muted/80 data-[state=open]:text-foreground",
+              : "text-muted-foreground hover:bg-hover hover:text-foreground data-[state=open]:bg-pressed data-[state=open]:text-foreground",
           ])}
         >
           <ClockCounterClockwise
@@ -210,7 +211,7 @@ function ChatGroups({
         <AppFloatingPanel className={appFloatingMenuPanelClassName}>
           <div className="px-2 py-1.5">
             <h4 className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-              Recent Chats
+              <Trans>Recent Chats</Trans>
             </h4>
           </div>
           {recentChatGroups.length > 0 ? (
@@ -250,10 +251,9 @@ function ChatGroupItem({
   isActive: boolean;
   onSelect: (groupId: string) => void;
 }) {
+  const { i18n } = useLingui();
   const formattedTime = chatGroup.createdAt
-    ? formatDistanceToNow(new Date(chatGroup.createdAt), {
-        addSuffix: true,
-      })
+    ? formatRelativeToNow(new Date(chatGroup.createdAt), i18n.locale)
     : "";
 
   return (

@@ -25,8 +25,6 @@ import { cn } from "@anlg/utils";
 
 import { AutoFormatExamplesDialog } from "./auto-format-examples-dialog";
 
-import { useBillingAccess } from "~/auth/billing-context";
-import { PlanGate, useNotifyPlanRequired } from "~/settings/plan-gate";
 import { setSettingValue } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
 
@@ -53,7 +51,9 @@ export function AutoTemplateDetails() {
   if (sourceQuery.error || !sourceQuery.data) {
     return (
       <div className="text-destructive flex h-full items-center justify-center px-6 text-center text-sm">
-        {sourceQuery.error?.message || "Auto format is unavailable."}
+        {sourceQuery.error?.message || (
+          <Trans>Auto format is unavailable.</Trans>
+        )}
       </div>
     );
   }
@@ -75,8 +75,6 @@ export function AutoFormatForm({
   formatOverride: string;
 }) {
   const { t } = useLingui();
-  const billing = useBillingAccess();
-  const notifyPlanRequired = useNotifyPlanRequired();
   const editorRef = useRef<PromptEditorHandle>(null);
   const [showExamplesDialog, setShowExamplesDialog] = useState(false);
   const selectedTemplateId = useConfigValue("selected_template_id");
@@ -113,11 +111,6 @@ export function AutoFormatForm({
   const form = useForm({
     defaultValues: { format: initialFormat },
     onSubmit: async ({ value }) => {
-      if (!billing.isPro) {
-        notifyPlanRequired("pro");
-        return;
-      }
-
       const stored = await saveMutation.mutateAsync(value.format);
       const nextFormat = stored || defaultFormat;
       form.reset({ format: nextFormat });
@@ -126,11 +119,6 @@ export function AutoFormatForm({
   });
 
   const resetToDefault = async () => {
-    if (!billing.isPro) {
-      notifyPlanRequired("pro");
-      return;
-    }
-
     await saveMutation.mutateAsync(defaultFormat);
     form.reset({ format: defaultFormat });
     editorRef.current?.setValue(defaultFormat);
@@ -147,8 +135,10 @@ export function AutoFormatForm({
     >
       <div className="flex h-12 shrink-0 items-center justify-between gap-3 pr-1 pl-3">
         <div className="flex min-w-0 items-center gap-2">
-          <Sparkle className="size-4 shrink-0 text-violet-500" />
-          <span className="truncate text-sm font-semibold">Auto</span>
+          <Sparkle className="text-icon size-4 shrink-0" />
+          <span className="truncate text-sm font-semibold">
+            <Trans>Auto</Trans>
+          </span>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Button
@@ -156,9 +146,9 @@ export function AutoFormatForm({
             size="sm"
             variant="ghost"
             className={cn([
-              "text-muted-foreground shrink-0 hover:text-black",
+              "text-muted-foreground hover:text-foreground shrink-0",
               isDefault
-                ? "text-emerald-600 hover:bg-transparent hover:text-emerald-700 disabled:opacity-100 dark:text-emerald-400 dark:hover:text-emerald-300"
+                ? "text-foreground hover:text-foreground hover:bg-transparent disabled:opacity-100"
                 : null,
             ])}
             onClick={() => {
@@ -191,7 +181,7 @@ export function AutoFormatForm({
                     size="icon"
                     variant="ghost"
                     aria-label={t`Template actions`}
-                    className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-full"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <DotsThree size={16} />
                   </Button>
@@ -237,58 +227,46 @@ export function AutoFormatForm({
               size="sm"
               variant="outline"
               className="shrink-0"
-              onClick={() => {
-                if (!billing.isPro) {
-                  notifyPlanRequired("pro");
-                  return;
-                }
-                setShowExamplesDialog(true);
-              }}
+              onClick={() => setShowExamplesDialog(true)}
             >
               <MagicWand className="size-4" />
               <Trans>Improve with examples</Trans>
             </Button>
           </div>
 
-          <PlanGate plan="pro" allowed={billing.isPro}>
-            <div className="flex flex-col gap-5">
-              <form.Field name="format">
-                {(field) => (
-                  <div className="border-border bg-card overflow-hidden rounded-2xl border">
-                    <PromptEditor
-                      ref={editorRef}
-                      ariaLabel={t`Auto summary format`}
-                      className="min-h-[28rem] px-4 py-3 font-mono text-sm leading-5"
-                      initialValue={field.state.value}
-                      maxLength={16000}
-                      onChange={field.handleChange}
-                      onBlur={field.handleBlur}
-                      tokens={AUTO_FORMAT_TOKENS}
-                    />
-                  </div>
-                )}
-              </form.Field>
+          <div className="flex flex-col gap-5">
+            <form.Field name="format">
+              {(field) => (
+                <div className="bg-card shadow-raised overflow-hidden rounded-lg">
+                  <PromptEditor
+                    ref={editorRef}
+                    ariaLabel={t`Auto summary format`}
+                    className="min-h-[28rem] px-4 py-3 font-mono text-sm leading-5"
+                    initialValue={field.state.value}
+                    maxLength={16000}
+                    onChange={field.handleChange}
+                    onBlur={field.handleBlur}
+                    tokens={AUTO_FORMAT_TOKENS}
+                  />
+                </div>
+              )}
+            </form.Field>
 
-              <div className="flex items-center justify-end gap-2">
-                <form.Subscribe
-                  selector={(state) =>
-                    [state.canSubmit, state.isDirty] as const
-                  }
-                >
-                  {([canSubmit, isDirty]) => (
-                    <Button
-                      type="submit"
-                      disabled={
-                        !canSubmit || !isDirty || saveMutation.isPending
-                      }
-                    >
-                      <Trans>Save</Trans>
-                    </Button>
-                  )}
-                </form.Subscribe>
-              </div>
+            <div className="flex items-center justify-end gap-2">
+              <form.Subscribe
+                selector={(state) => [state.canSubmit, state.isDirty] as const}
+              >
+                {([canSubmit, isDirty]) => (
+                  <Button
+                    type="submit"
+                    disabled={!canSubmit || !isDirty || saveMutation.isPending}
+                  >
+                    <Trans>Save</Trans>
+                  </Button>
+                )}
+              </form.Subscribe>
             </div>
-          </PlanGate>
+          </div>
         </div>
       </div>
 

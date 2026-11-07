@@ -19,7 +19,6 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { configureCenteredPlayback, shouldResumeBeforePlay } from "./playback";
 import { loadWaveform } from "./waveform";
 
-import { useBillingAccess } from "~/auth/billing-context";
 import {
   isSessionAudioIdle,
   subscribeToSessionAudioRetention,
@@ -139,7 +138,6 @@ export function AudioPlayerProvider({
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();
-  const { isPro } = useBillingAccess();
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [wavesurfer, setWavesurfer] = useState<WaveSurfer | null>(null);
   const [state, setState] = useState<AudioPlayerState>("stopped");
@@ -173,9 +171,9 @@ export function AudioPlayerProvider({
       container,
       media,
       height: 24,
-      waveColor: "#e5e5e5",
-      progressColor: "#a8a8a8",
-      cursorColor: "#737373",
+      waveColor: "#dbdbdb",
+      progressColor: "#808080",
+      cursorColor: "#5c5c5c",
       cursorWidth: 2,
       barWidth: 3,
       barGap: 2,
@@ -184,8 +182,8 @@ export function AudioPlayerProvider({
       dragToSeek: true,
       normalize: true,
       splitChannels: [
-        { waveColor: "#e8d5d5", progressColor: "#c9a3a3", overlay: true },
-        { waveColor: "#d5dde8", progressColor: "#a3b3c9", overlay: true },
+        { waveColor: "#dbdbdb", progressColor: "#aeaeae", overlay: true },
+        { waveColor: "#c1c1c1", progressColor: "#808080", overlay: true },
       ],
     });
     const audioContext = configureCenteredPlayback(media);
@@ -375,29 +373,17 @@ export function AudioPlayerProvider({
 
   const setPlaybackRate = useCallback(
     (rate: number) => {
-      if (!isPro && rate !== 1) {
-        return;
-      }
       if (wavesurfer) {
         wavesurfer.setPlaybackRate(rate, false);
       }
       setPlaybackRateState(rate);
     },
-    [isPro, wavesurfer],
+    [wavesurfer],
   );
 
   useEffect(() => {
-    if (!wavesurfer) {
-      return;
-    }
-
-    const nextRate = isPro ? playbackRate : 1;
-    wavesurfer.setPlaybackRate(nextRate, false);
-
-    if (nextRate !== playbackRate) {
-      setPlaybackRateState(1);
-    }
-  }, [isPro, playbackRate, wavesurfer]);
+    wavesurfer?.setPlaybackRate(playbackRate, false);
+  }, [playbackRate, wavesurfer]);
 
   const deleteRecordingMutation = useMutation({
     mutationFn: async () => {

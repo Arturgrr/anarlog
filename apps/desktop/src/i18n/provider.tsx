@@ -2,10 +2,13 @@ import { I18nProvider } from "@lingui/react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { type ReactNode } from "react";
 
+import { getCurrentWebviewWindowLabel } from "@anlg/plugin-windows";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { createI18n } from "./catalogs";
+import { ComponentLabelsProvider } from "./component-labels";
 import { resolveDisplayLocale } from "./locales";
+import { NativeLabelsSync } from "./native-labels";
 
 import { useConfigValue } from "~/shared/config";
 
@@ -25,10 +28,13 @@ export function AppI18nProvider({ children }: { children: ReactNode }) {
   return (
     <I18nProvider i18n={i18n}>
       <DocumentLanguage key={i18n.locale} locale={i18n.locale} />
-      {children}
+      {isMainWindow ? <NativeLabelsSync /> : null}
+      <ComponentLabelsProvider>{children}</ComponentLabelsProvider>
     </I18nProvider>
   );
 }
+
+const isMainWindow = getCurrentWebviewWindowLabel() === "main";
 
 function DocumentLanguage({ locale }: { locale: string }) {
   useMountEffect(() => {

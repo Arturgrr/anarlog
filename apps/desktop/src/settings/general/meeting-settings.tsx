@@ -1,9 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { platform } from "@tauri-apps/plugin-os";
 
-import { DefaultMeetingShareAccessSelector } from "./default-share-access";
-import { PrimaryRecordingDeviceSelector } from "./primary-recording-device";
-
 import { SettingSwitchRow } from "~/settings/setting-row";
 
 interface SettingItem {
@@ -12,16 +9,12 @@ interface SettingItem {
 }
 
 export function MeetingSettingsView({
-  autoJoinScheduledMeetings,
-  autoStartScheduledMeetings,
   autoStopMeetings,
   floatingBar,
   meetingDisclosureAutoPost,
   captureMeetingChat,
   captureSharedScreens,
 }: {
-  autoJoinScheduledMeetings: SettingItem;
-  autoStartScheduledMeetings: SettingItem;
   autoStopMeetings: SettingItem;
   floatingBar: SettingItem;
   meetingDisclosureAutoPost: SettingItem;
@@ -37,25 +30,6 @@ export function MeetingSettingsView({
 
   return (
     <div className="flex flex-col gap-4">
-      <DefaultMeetingShareAccessSelector />
-      <PrimaryRecordingDeviceSelector />
-      <SettingSwitchRow
-        title={<Trans>Start when meeting begins</Trans>}
-        description={
-          <Trans>Start listening when a scheduled meeting begins.</Trans>
-        }
-        checked={autoStartScheduledMeetings.value}
-        onChange={autoStartScheduledMeetings.onChange}
-      />
-      <SettingSwitchRow
-        title={<Trans>Join scheduled meetings</Trans>}
-        description={
-          <Trans>Open the meeting link when a scheduled meeting begins.</Trans>
-        }
-        checked={autoJoinScheduledMeetings.value}
-        onChange={autoJoinScheduledMeetings.onChange}
-        disabled={!autoStartScheduledMeetings.value}
-      />
       {supportsMicDetection && (
         <SettingSwitchRow
           title={<Trans>Stop when meeting ends</Trans>}
@@ -105,7 +79,7 @@ export function MeetingSettingsView({
       <SettingSwitchRow
         title={<Trans>Show floating bar</Trans>}
         description={
-          <Trans>Control listening without reopening Anarlog.</Trans>
+          <Trans>Control listening without reopening Librelog.</Trans>
         }
         checked={floatingBar.value}
         onChange={floatingBar.onChange}
