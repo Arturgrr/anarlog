@@ -18,17 +18,18 @@ const VERSION_PATTERN =
 
 export const TAG_PREFIX = "desktop_v";
 
+// A push to main releases whatever version apps/desktop/package.json holds;
+// a manual run must name that same version.
 export function resolveReleaseVersion({
   eventName,
   refName,
   inputVersion,
   packageVersion,
 }) {
-  if (eventName === "push" && !refName?.startsWith(TAG_PREFIX)) {
-    throw new Error(`Expected a tag that starts with ${TAG_PREFIX}.`);
+  if (eventName === "push" && refName !== "main") {
+    throw new Error(`Releases run from pushes to main, not ${refName}.`);
   }
-  const version =
-    eventName === "push" ? refName.slice(TAG_PREFIX.length) : inputVersion;
+  const version = eventName === "push" ? packageVersion : inputVersion;
   if (!VERSION_PATTERN.test(version ?? "")) {
     throw new Error(
       `Expected a version such as 0.1.0-beta.1 or 0.1.0, got ${JSON.stringify(version ?? "")}.`,

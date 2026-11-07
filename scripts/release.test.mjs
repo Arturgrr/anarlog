@@ -7,14 +7,21 @@ import {
   updaterManifest,
 } from "./release.mjs";
 
-test("release versions come from the tag or input and must match the app", () => {
+test("release versions come from the app on main or from the input", () => {
   assert.equal(
     resolveReleaseVersion({
       eventName: "push",
-      refName: "desktop_v0.1.0-beta.2",
+      refName: "main",
       packageVersion: "0.1.0-beta.2",
     }),
     "0.1.0-beta.2",
+  );
+  assert.throws(() =>
+    resolveReleaseVersion({
+      eventName: "push",
+      refName: "main",
+      packageVersion: "0.1.0-rc.1",
+    }),
   );
   assert.equal(
     resolveReleaseVersion({
@@ -47,10 +54,10 @@ test("release versions come from the tag or input and must match the app", () =>
     () =>
       resolveReleaseVersion({
         eventName: "push",
-        refName: "other_v0.1.0-beta.1",
+        refName: "integration/local-first",
         packageVersion: "0.1.0-beta.1",
       }),
-    /starts with desktop_v/,
+    /pushes to main/,
   );
   assert.throws(
     () =>

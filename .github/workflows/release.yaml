@@ -1,5 +1,7 @@
 name: Desktop release
 
+# Merging a version bump of apps/desktop/package.json into main releases it.
+# A manual run rebuilds the current version, for example after a failed build.
 on:
   workflow_dispatch:
     inputs:
@@ -8,8 +10,10 @@ on:
         required: true
         type: string
   push:
-    tags:
-      - "desktop_v*"
+    branches:
+      - main
+    paths:
+      - apps/desktop/package.json
 
 permissions: {}
 
@@ -48,6 +52,7 @@ jobs:
       # prereleases, and the updater reads latest.json from there.
       - id: release
         env:
+          EVENT_NAME: ${{ github.event_name }}
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
@@ -67,6 +72,10 @@ jobs:
           elif [[ "$draft" == "true" ]]; then
             gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
               -F "body=@$notes" > /dev/null
+          elif [[ "$EVENT_NAME" == "push" ]]; then
+            # package.json changed without a version bump.
+            echo "::notice::$TAG is already published; nothing to release."
+            exit 0
           else
             echo "::error::Release $TAG is already published."
             exit 1
@@ -76,6 +85,7 @@ jobs:
   build-macos:
     name: Build macOS (${{ matrix.target }})
     needs: draft
+    if: needs.draft.outputs.release_id != ''
     runs-on: macos-26
     timeout-minutes: 180
     # Signing secrets can live in this environment, behind its protection rules.
@@ -158,8 +168,9 @@ jobs:
         run: scripts/macos-signing-keychain.sh cleanup
 
   publish:
-    name: Upload updater manifest and checksums
+    name: Publish the release
     needs: [draft, build-macos]
+    if: needs.draft.outputs.release_id != ''
     runs-on: ubuntu-24.04
     permissions:
       contents: write # upload release assets
@@ -202,3 +213,8 @@ jobs:
               "https://uploads.github.com/$release/assets?name=$name" \
               --input "$assets/$name" > /dev/null
           done
+
+          # Publishing makes latest.json reachable at releases/latest, which
+          # is where installed apps look for updates.
+          gh api -X PATCH "$release" -F draft=false -F prerelease=false \
+            -f make_latest=true > /dev/null

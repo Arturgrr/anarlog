@@ -100,6 +100,16 @@ Check the affected workflow under `.github/workflows/` for stricter package-spec
 - Describe the problem and what the change does instead in a sentence or two. For UI changes, attach a screenshot or short recording.
 - List the commands and manual checks you used to verify the change.
 
+## Release a version
+
+Releases are cut by merging a version bump into `main`:
+
+1. Set `version` in `apps/desktop/package.json`, for example `0.1.0-beta.2`.
+2. Add the release notes at `packages/changelog/content/desktop/<version>.md`.
+3. Merge to `main`. `.github/workflows/release.yaml` builds the macOS apps, uploads the updater manifest and checksums, and publishes the release; installed apps pick it up on their next update check.
+
+Betas are published as regular releases, not prereleases, because the updater reads `releases/latest`. If a build fails, rerun the workflow from the Actions tab with the same version.
+
 ## License
 
 By submitting a contribution, you agree that it may be distributed under the repository's [MIT License](LICENSE). Only submit material you have the right to license this way, and record the upstream revision and license of any third-party code you reuse.
