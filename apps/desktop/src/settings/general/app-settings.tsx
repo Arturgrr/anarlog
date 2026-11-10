@@ -63,7 +63,10 @@ export function AppSettingsView({
             <SettingSwitchRow
               title={<Trans>Show app in Dock</Trans>}
               description={
-                <Trans>Show Librelog in the Dock and app switcher.</Trans>
+                <Trans>
+                  Show Librelog in the Dock and app switcher while its window is
+                  open.
+                </Trans>
               }
               checked={showAppInDock.value}
               onChange={showAppInDock.onChange}
@@ -73,7 +76,10 @@ export function AppSettingsView({
             title={<Trans>Show tray icon</Trans>}
             description={
               isMacos ? (
-                <Trans>Open Librelog from the menu bar.</Trans>
+                <Trans>
+                  Open Librelog from the menu bar, where it keeps running after
+                  you close the window.
+                </Trans>
               ) : undefined
             }
             checked={showTrayIcon.value}

@@ -28,10 +28,21 @@ fn initial_volume(sound: &AppSounds) -> f32 {
     }
 }
 
+// The recording cues open with silence (about 90 ms and 60 ms); skipping it
+// lets a cue sound as soon as it is asked for.
+fn lead_in(sound: &AppSounds) -> std::time::Duration {
+    match sound {
+        AppSounds::StartRecording => std::time::Duration::from_millis(90),
+        AppSounds::StopRecording => std::time::Duration::from_millis(60),
+        AppSounds::BGM => std::time::Duration::ZERO,
+    }
+}
+
 pub(crate) fn to_speaker(
     bytes: &'static [u8],
     looping: bool,
     volume: f32,
+    lead_in: std::time::Duration,
 ) -> std::sync::mpsc::Sender<SoundControl> {
     use anlg_audio_utils::open_default_playback_sink;
     use rodio::source::Source;
@@ -47,6 +58,7 @@ pub(crate) fn to_speaker(
         let Ok(source) = Decoder::try_from(file) else {
             return;
         };
+        let source = source.skip_duration(lead_in);
 
         let player = Player::connect_new(stream.mixer());
         player.set_volume(volume);
@@ -83,16 +95,12 @@ pub(crate) fn to_speaker(
 }
 
 impl AppSounds {
-    pub(crate) fn initial_volume(&self) -> f32 {
-        initial_volume(self)
-    }
-
     pub fn play(&self) {
         self.stop();
 
         let bytes = self.get_sound_bytes();
         let looping = matches!(self, AppSounds::BGM);
-        let control_tx = to_speaker(bytes, looping, initial_volume(self));
+        let control_tx = to_speaker(bytes, looping, initial_volume(self), lead_in(self));
 
         {
             let mut sounds = PLAYING_SOUNDS.lock().unwrap();

@@ -15,6 +15,8 @@ use tauri::{
     tray::TrayIconBuilder,
 };
 
+use tauri_plugin_windows::WindowsPluginExt;
+
 use crate::{
     title::menu_bar_title,
     tray_icon::{RECORDING_FRAMES, TrayIconState},
@@ -222,6 +224,7 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
         crate::macos_position::seed_default_position(TRAY_ID);
 
         builder.build(app)?;
+        app.windows().set_menu_bar_icon_visible(true);
         #[cfg(target_os = "macos")]
         crate::macos_position::apply_autosave_name(app, TRAY_ID);
         #[cfg(target_os = "macos")]
@@ -260,6 +263,8 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
                 tray.set_visible(false)?;
             }
         }
+        app.windows()
+            .set_menu_bar_icon_visible(visible && app.tray_by_id(TRAY_ID).is_some());
 
         Ok(())
     }

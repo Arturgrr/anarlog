@@ -28,6 +28,8 @@ export function SettingsDictation() {
   const setLivePreview = useSetSettingValue("dictation_live_preview");
   const setEnabled = useSetSettingValue("dictation_enabled");
   const setHandsFree = useSetSettingValue("dictation_hands_free");
+  const sounds = useConfigValue("dictation_sounds");
+  const setSounds = useSetSettingValue("dictation_sounds");
   const microphone = useConfigValue("microphone_device");
   const setMicrophone = useSetSettingValue("microphone_device");
   const microphones = useQuery({
@@ -138,6 +140,17 @@ export function SettingsDictation() {
           checked={handsFree}
           onChange={setHandsFree}
         />
+        <SettingSwitchRow
+          title={<Trans>Dictation sounds</Trans>}
+          description={
+            <Trans>
+              Play a short sound when dictation starts and when it stops. Muted
+              while Librelog records a meeting.
+            </Trans>
+          }
+          checked={sounds}
+          onChange={setSounds}
+        />
         <p className="text-muted-foreground text-xs">
           {platform() === "linux" ? (
             <Trans>
@@ -147,8 +160,7 @@ export function SettingsDictation() {
             </Trans>
           ) : (
             <Trans>
-              Press Escape to cancel. Dictation stops after five minutes and
-              pauses while Librelog records a meeting.
+              Press Escape to cancel. Dictation stops after five minutes.
             </Trans>
           )}
         </p>

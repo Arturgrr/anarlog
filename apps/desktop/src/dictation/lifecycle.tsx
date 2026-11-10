@@ -9,6 +9,7 @@ import {
   type RecordingUpdate,
 } from "@anlg/plugin-dictation";
 import { commands as permissions } from "@anlg/plugin-permissions";
+import { type AppSounds, commands as sfx } from "@anlg/plugin-sfx";
 import { commands as shortcuts, events } from "@anlg/plugin-shortcut";
 import { commands as transcription } from "@anlg/plugin-transcription";
 import { toast } from "@anlg/ui/components/ui/toast";
@@ -40,14 +41,11 @@ export function DictationLifecycle() {
     (state) => state.capturingShortcut,
   );
   const retry = useDictationStatus((state) => state.retry);
-  const meetingActive = useListener(
-    (state) => state.live.status !== "inactive" || state.live.loading,
-  );
 
   if (!settingsReady || !enabled) return null;
   return (
     <TranscriptRetention>
-      {!meetingActive && !capturingShortcut && (
+      {!capturingShortcut && (
         <ActiveDictation
           key={`${JSON.stringify(shortcuts)}:${handsFree}:${retry}`}
           shortcuts={shortcuts}
@@ -72,6 +70,30 @@ function unwrap<T>(
   return result.data;
 }
 
+// This computer or its network, where a self-hosted server may live; an
+// address that isn't a web URL is one of Librelog's own engines.
+function isLocalServer(baseUrl: string) {
+  let host: string;
+  try {
+    const url = new URL(baseUrl);
+    if (!/^(?:https?|wss?):$/u.test(url.protocol)) return true;
+    host = url.hostname.toLowerCase();
+  } catch {
+    return true;
+  }
+  if (host === "localhost" || /\.(?:localhost|local)$/u.test(host)) return true;
+  if (host.startsWith("[")) return /^\[(?:::1?\]|f[cd]|fe[89ab])/u.test(host);
+  const ipv4 = /^(\d+)\.(\d+)\.\d+\.\d+$/u.exec(host);
+  if (!ipv4) return false;
+  const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+  return (
+    [0, 10, 127].includes(a) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168)
+  );
+}
+
 function ActiveDictation({
   shortcuts: configured,
   handsFree,
@@ -86,6 +108,10 @@ function ActiveDictation({
   const livePreview = useConfigValue("dictation_live_preview");
   const dictionary = useConfigValue("personalization_dictionary_terms");
   const languages = useConfigValue("spoken_languages");
+  const sounds = useConfigValue("dictation_sounds");
+  const meetingActive = useListener(
+    (state) => state.live.status !== "inactive" || state.live.loading,
+  );
   const { conn } = useSTTConnection();
   const current = useRef({
     runBatch,
@@ -93,6 +119,8 @@ function ActiveDictation({
     livePreview,
     languages,
     dictionary,
+    sounds,
+    meetingActive,
     conn,
   });
   current.current = {
@@ -101,6 +129,8 @@ function ActiveDictation({
     livePreview,
     languages,
     dictionary,
+    sounds,
+    meetingActive,
     conn,
   };
 
@@ -132,6 +162,23 @@ function ActiveDictation({
       useDictationStatus.setState({ error: message });
       toast.error(message);
     };
+    // Through the speakers a cue would reach the microphone, so it never plays
+    // while a meeting records: it would leak into the call and its recording.
+    const cue = async (sound: AppSounds) => {
+      const { sounds, meetingActive } = current.current;
+      if (disposed || !sounds || meetingActive) return;
+      try {
+        const capture = unwrap(await transcription.getCaptureState());
+        if (capture === "inactive") await sfx.play(sound);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    const meetingRecording = async () => {
+      if (current.current.meetingActive) return true;
+      const capture = await transcription.getCaptureState();
+      return capture.status === "error" || capture.data !== "inactive";
+    };
     const controller = new DictationController({
       handsFree,
       start: async () => {
@@ -151,31 +198,33 @@ function ActiveDictation({
               t`Enable microphone permission in Settings > Permissions before dictating.`,
             );
         }
-        const capture = unwrap(await transcription.getCaptureState());
-        if (capture !== "inactive")
-          throw new Error(
-            t`Dictation is unavailable while Librelog is recording a meeting.`,
-          );
         abort.signal.throwIfAborted();
+        // Ahead of the microphone, so the cue answers the press and stays
+        // mostly out of the recording.
+        void cue("StartRecording");
         target = unwrap(await dictation.captureTarget());
-        const preview = conn
-          ? {
-              provider: conn.provider,
-              baseUrl: conn.baseUrl,
-              apiKey: conn.apiKey,
-              params: {
-                model: conn.model,
-                channels: 1,
-                sample_rate: 16000,
-                languages: languages || [],
-                keywords: dictionary || [],
-                num_speakers: 1,
-                min_speakers: null,
-                max_speakers: null,
-                custom_query: null,
-              },
-            }
-          : null;
+        // A self-hosted server may take one live connection at a time, and a
+        // second one would cut off the meeting's transcript. The dictation is
+        // then transcribed when you finish.
+        const preview =
+          conn && !(isLocalServer(conn.baseUrl) && (await meetingRecording()))
+            ? {
+                provider: conn.provider,
+                baseUrl: conn.baseUrl,
+                apiKey: conn.apiKey,
+                params: {
+                  model: conn.model,
+                  channels: 1,
+                  sample_rate: 16000,
+                  languages: languages || [],
+                  keywords: dictionary || [],
+                  num_speakers: 1,
+                  min_speakers: null,
+                  max_speakers: null,
+                  custom_query: null,
+                },
+              }
+            : null;
         abort.signal.throwIfAborted();
         // The HUD is on screen before the microphone opens.
         const shown = await dictation.hud({ type: "started" });
@@ -256,7 +305,10 @@ function ActiveDictation({
       onError,
       onPhase: (phase) => {
         if (!disposed) useDictationStatus.setState({ phase });
-        if (phase === "transcribing") hud({ type: "processing" });
+        if (phase === "transcribing") {
+          hud({ type: "processing" });
+          void cue("StopRecording");
+        }
         if (phase === "idle") {
           hud({ type: outcome ?? "failed" });
           hudShown = false;

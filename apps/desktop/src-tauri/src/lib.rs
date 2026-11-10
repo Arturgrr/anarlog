@@ -142,10 +142,8 @@ pub fn main() {
     // should always be the first plugin
     {
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.set_focus();
-                AppWindow::Main.request_webview_health_check(app, &window);
+            if let Err(error) = AppWindow::Main.show(app) {
+                tracing::warn!(%error, "failed to show main window for a second launch");
             }
         }));
     }

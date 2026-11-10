@@ -3,7 +3,6 @@ import { useCallback, useRef, useState } from "react";
 
 import type { ChatEditorHandle } from "@anlg/editor/chat";
 import { commands as dictationCommands } from "@anlg/plugin-dictation";
-import { commands as transcriptionCommands } from "@anlg/plugin-transcription";
 import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
@@ -79,20 +78,6 @@ export function useDictation({
     try {
       await cancellationRef.current;
       if (!mountedRef.current || generation !== generationRef.current) {
-        return;
-      }
-      const captureState = await transcriptionCommands.getCaptureState();
-      if (!mountedRef.current || generation !== generationRef.current) {
-        return;
-      }
-      if (captureState.status === "error") {
-        throw new Error(captureState.error);
-      }
-      if (captureState.data !== "inactive") {
-        toast.warning(
-          t`Voice input is unavailable while Librelog is recording a meeting.`,
-        );
-        setPhase("idle");
         return;
       }
 

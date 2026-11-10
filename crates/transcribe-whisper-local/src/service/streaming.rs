@@ -173,7 +173,12 @@ impl Service<Request<Body>> for TranscribeService {
                     })
                     .into_response())
             } else {
-                let permit = match batch::try_acquire_http_batch_permit(batch_admission) {
+                let permit = match batch::acquire_http_batch_permit(
+                    batch_admission,
+                    batch::HTTP_BATCH_ADMISSION_WAIT,
+                )
+                .await
+                {
                     Some(permit) => permit,
                     None => {
                         return Ok(

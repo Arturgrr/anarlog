@@ -152,6 +152,10 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
     Prebuilt releases support macOS 15 or later on Apple Silicon and Intel. On Linux and Windows, build Librelog from source; support there is in beta. See [Install the desktop app](/desktop-installation).
   </Accordion>
 
+  <Accordion title="Does Librelog keep running after I close the window?" id="does-librelog-keep-running-after-i-close-the-window">
+    Yes. Closing the window keeps Librelog running, so dictation shortcuts and meeting detection keep working. On macOS, Librelog leaves the Dock and app switcher and stays in the menu bar; choose **Open Librelog** from the menu bar icon, or open Librelog again from Applications or Spotlight, to bring the window back with its Dock icon. With **Show tray icon** off, the Dock icon stays after you close the window. To stop Librelog, choose **Quit Completely** from the menu bar icon or press ⌘Q twice.
+  </Accordion>
+
   <Accordion title="Can agents reach my meetings while Librelog is closed?" id="can-agents-reach-my-meetings-while-librelog-is-closed">
     The CLI and local MCP server read the local database, so they work while the app is closed. They can also stage a memo or summary proposal; review the **pending edit** banner in the desktop meeting note before applying it. Webhooks only deliver while the app is open. See [Agent overview](/agents/overview).
   </Accordion>

@@ -32,6 +32,15 @@ pub fn on_window_event(window: &tauri::Window<tauri::Wry>, event: &tauri::Window
 
     if matches!(event, tauri::WindowEvent::Destroyed) {
         crate::clear_window_state(app, window.label());
+        // A rebuild destroys and recreates the main window; the Dock icon stays.
+        if !crate::main_window_rebuilding()
+            && window
+                .label()
+                .parse::<AppWindow>()
+                .is_ok_and(|w| crate::ext::is_regular_window(&w))
+        {
+            crate::ext::sync_dock_icon(app, false);
+        }
         return;
     }
 

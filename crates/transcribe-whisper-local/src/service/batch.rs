@@ -32,6 +32,10 @@ use super::{TARGET_SAMPLE_RATE, build_metadata, build_model, transcribe_chunk};
 const MAX_BATCH_AUDIO_BODY_BYTES: usize = 100 * 1024 * 1024;
 const MAX_BATCH_CHANNELS: usize = 8;
 const MAX_CONCURRENT_HTTP_BATCH_JOBS: usize = 1;
+/// Long enough for a dictation to wait out a meeting's minute-long chunk, and
+/// for the meeting to wait out a dictation, but under the client's 60 s idle
+/// timeout. The waiting request's body stays unread, so this adds no memory.
+pub(super) const HTTP_BATCH_ADMISSION_WAIT: Duration = Duration::from_secs(30);
 const MAX_REJECTED_BATCH_DRAIN_BYTES: usize = 64 * 1024;
 const MAX_REJECTED_BATCH_DRAIN_CHUNKS: usize = 64;
 const REJECTED_BATCH_DRAIN_TIMEOUT: Duration = Duration::from_millis(100);
@@ -64,10 +68,16 @@ pub(super) fn http_batch_admission() -> Arc<Semaphore> {
     Arc::new(Semaphore::new(MAX_CONCURRENT_HTTP_BATCH_JOBS))
 }
 
-pub(super) fn try_acquire_http_batch_permit(
+/// One batch job runs at a time. A request that arrives during another one
+/// waits its turn for up to `wait` before it is turned away.
+pub(super) async fn acquire_http_batch_permit(
     admission: Arc<Semaphore>,
+    wait: Duration,
 ) -> Option<OwnedSemaphorePermit> {
-    admission.try_acquire_owned().ok()
+    tokio::time::timeout(wait, admission.acquire_owned())
+        .await
+        .ok()?
+        .ok()
 }
 
 pub(super) fn batch_busy_response() -> Response {
@@ -710,9 +720,9 @@ mod tests {
 
     use super::{
         BatchAudioWriteError, BatchCancellation, CancelBatchOnDrop, ChannelChunkIterator,
-        MAX_REJECTED_BATCH_DRAIN_BYTES, ResampledChannelFile, batch_busy_response,
-        drain_rejected_batch_audio, ensure_batch_active, resample_to_channel_files,
-        spawn_batch_job, spool_batch_audio_with_limit, try_acquire_http_batch_permit,
+        MAX_REJECTED_BATCH_DRAIN_BYTES, ResampledChannelFile, acquire_http_batch_permit,
+        batch_busy_response, drain_rejected_batch_audio, ensure_batch_active,
+        resample_to_channel_files, spawn_batch_job, spool_batch_audio_with_limit,
     };
 
     #[test]
@@ -737,25 +747,41 @@ mod tests {
         assert!(error.to_string().contains("batch request cancelled"));
     }
 
-    #[test]
-    fn batch_admission_rejects_work_instead_of_queueing_it() {
+    /// A dictation finishing during a meeting's chunk (or the reverse) waits for
+    /// it instead of failing; only a job that outlasts the wait is turned away.
+    #[tokio::test]
+    async fn a_second_batch_waits_its_turn_then_is_turned_away() {
         let admission = Arc::new(Semaphore::new(1));
-        let permit = try_acquire_http_batch_permit(Arc::clone(&admission)).unwrap();
+        let permit = acquire_http_batch_permit(Arc::clone(&admission), Duration::ZERO)
+            .await
+            .unwrap();
 
-        assert!(try_acquire_http_batch_permit(Arc::clone(&admission)).is_none());
+        let waiting = tokio::spawn(acquire_http_batch_permit(
+            Arc::clone(&admission),
+            Duration::from_secs(5),
+        ));
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        drop(permit);
+        let permit = waiting.await.unwrap().expect("waited for the first job");
+
+        assert!(
+            acquire_http_batch_permit(Arc::clone(&admission), Duration::from_millis(20))
+                .await
+                .is_none()
+        );
         assert_eq!(
             batch_busy_response().status(),
             StatusCode::TOO_MANY_REQUESTS
         );
-
         drop(permit);
-        assert!(try_acquire_http_batch_permit(admission).is_some());
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn detached_blocking_job_keeps_its_admission_permit() {
         let admission = Arc::new(Semaphore::new(1));
-        let permit = try_acquire_http_batch_permit(Arc::clone(&admission)).unwrap();
+        let permit = acquire_http_batch_permit(Arc::clone(&admission), Duration::ZERO)
+            .await
+            .unwrap();
         let (started_tx, started_rx) = std::sync::mpsc::channel();
         let (release_tx, release_rx) = std::sync::mpsc::channel();
 
@@ -766,7 +792,11 @@ mod tests {
         started_rx.recv_timeout(Duration::from_secs(1)).unwrap();
         drop(job);
 
-        assert!(try_acquire_http_batch_permit(Arc::clone(&admission)).is_none());
+        assert!(
+            acquire_http_batch_permit(Arc::clone(&admission), Duration::ZERO)
+                .await
+                .is_none()
+        );
 
         release_tx.send(()).unwrap();
         let permit = tokio::time::timeout(Duration::from_secs(1), admission.acquire_owned())

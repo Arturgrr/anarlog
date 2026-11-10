@@ -101,6 +101,105 @@ fn restore_window_state(
     let _ = run_on_main_thread(app, move || window.restore_state(flags));
 }
 
+/// Windows the Dock icon follows; the composer and the overlays are panels.
+pub(crate) fn is_regular_window(window: &AppWindow) -> bool {
+    matches!(window, AppWindow::Main | AppWindow::Note(_))
+}
+
+/// Runs after any hide or show already queued for the main thread, so it sees
+/// the windows as they end up.
+pub(crate) fn sync_dock_icon(app: &AppHandle<tauri::Wry>, opening_regular_window: bool) {
+    #[cfg(target_os = "macos")]
+    {
+        let handle = app.clone();
+        if let Err(error) =
+            app.run_on_main_thread(move || apply_dock_icon(&handle, opening_regular_window))
+        {
+            tracing::warn!(%error, "failed to update the dock icon");
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    let _ = (app, opening_regular_window);
+}
+
+#[cfg(target_os = "macos")]
+fn apply_dock_icon(app: &AppHandle<tauri::Wry>, opening_regular_window: bool) {
+    use objc2::MainThreadMarker;
+    use objc2_app_kit::{NSApplication, NSApplicationActivationPolicy};
+
+    let (Some(state), Some(mtm)) = (
+        app.try_state::<crate::DockVisibilityState>(),
+        MainThreadMarker::new(),
+    ) else {
+        return;
+    };
+    let ns_app = NSApplication::sharedApplication(mtm);
+    // Hide (⌘H) keeps windows open; the Dock icon is how the user unhides them.
+    let regular_window_open =
+        opening_regular_window || ns_app.isHidden() || has_open_regular_window(app);
+    let policy = if state.shows_dock_icon(regular_window_open) {
+        NSApplicationActivationPolicy::Regular
+    } else {
+        NSApplicationActivationPolicy::Accessory
+    };
+
+    if ns_app.activationPolicy() != policy && !ns_app.setActivationPolicy(policy) {
+        tracing::warn!("failed to change the activation policy");
+    }
+    if policy == NSApplicationActivationPolicy::Accessory && !regular_window_open {
+        yield_activation_to_window_below(&ns_app);
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn has_open_regular_window(app: &AppHandle<tauri::Wry>) -> bool {
+    app.webview_windows().iter().any(|(label, window)| {
+        label
+            .parse::<AppWindow>()
+            .is_ok_and(|window| is_regular_window(&window))
+            && (window.is_visible().unwrap_or(false) || window.is_minimized().unwrap_or(false))
+    })
+}
+
+/// An app without windows or a Dock icon would otherwise stay active, holding
+/// the menu bar and keyboard focus. Hand both to the app now in front, as
+/// macOS does when an app hides.
+#[cfg(target_os = "macos")]
+fn yield_activation_to_window_below(ns_app: &objc2_app_kit::NSApplication) {
+    use objc2_app_kit::{
+        NSApplicationActivationOptions, NSApplicationActivationPolicy, NSRunningApplication,
+    };
+    use objc2_foundation::NSString;
+
+    if !ns_app.isActive() {
+        return;
+    }
+
+    let target = on_screen_window_owner_pids(i64::from(std::process::id()))
+        .into_iter()
+        .filter_map(|pid| i32::try_from(pid).ok())
+        .filter_map(NSRunningApplication::runningApplicationWithProcessIdentifier)
+        .find(|app| app.activationPolicy() == NSApplicationActivationPolicy::Regular)
+        .or_else(|| {
+            NSRunningApplication::runningApplicationsWithBundleIdentifier(&NSString::from_str(
+                "com.apple.finder",
+            ))
+            .firstObject()
+        });
+    let Some(target) = target else {
+        return;
+    };
+
+    ns_app.yieldActivationToApplication(&target);
+    if !target.activateFromApplication_options(
+        &NSRunningApplication::currentApplication(),
+        NSApplicationActivationOptions::empty(),
+    ) {
+        tracing::warn!("macOS refused to hand activation to the app in front");
+    }
+}
+
 impl AppWindow {
     #[cfg(target_os = "macos")]
     fn reload_main_webview(app: &AppHandle<tauri::Wry>) -> Result<(), crate::Error> {
@@ -580,6 +679,9 @@ impl AppWindow {
 
         if let Some(window) = self.get(app) {
             window.hide()?;
+            if is_regular_window(self) {
+                sync_dock_icon(app, false);
+            }
             let _ = events::VisibilityEvent {
                 window: self.clone(),
                 visible: false,
@@ -609,22 +711,9 @@ impl AppWindow {
     }
 
     fn prepare_show(&self, app: &AppHandle<tauri::Wry>) {
-        #[cfg(target_os = "macos")]
-        if matches!(self, Self::Main) {
-            let show_app_in_dock = app
-                .try_state::<crate::DockVisibilityState>()
-                .map(|state| state.show_app_in_dock())
-                .unwrap_or(true);
-            let policy = if show_app_in_dock {
-                tauri::ActivationPolicy::Regular
-            } else {
-                tauri::ActivationPolicy::Accessory
-            };
-            let _ = app.set_activation_policy(policy);
+        if is_regular_window(self) {
+            sync_dock_icon(app, true);
         }
-
-        #[cfg(not(target_os = "macos"))]
-        let _ = app;
     }
 
     fn try_show_existing(
@@ -953,6 +1042,39 @@ fn cg_window_bounds(window_id: u32) -> Option<WindowRect> {
 }
 
 #[cfg(target_os = "macos")]
+const MIN_ACTIVATION_TARGET_SIDE: f64 = 40.0;
+
+/// Owners of the on-screen document windows, front to back, skipping the
+/// transparent and tiny helper windows some apps keep around.
+#[cfg(target_os = "macos")]
+fn on_screen_window_owner_pids(excluded_pid: i64) -> Vec<i64> {
+    use objc2_core_graphics::{
+        CGWindowListCopyWindowInfo, CGWindowListOption, kCGWindowAlpha, kCGWindowBounds,
+        kCGWindowLayer, kCGWindowOwnerPID,
+    };
+
+    let Some(window_list) = CGWindowListCopyWindowInfo(
+        CGWindowListOption::OptionOnScreenOnly | CGWindowListOption::ExcludeDesktopElements,
+        0,
+    ) else {
+        return Vec::new();
+    };
+
+    (0..window_list.count())
+        .filter_map(|index| cf_array_dictionary_at(&window_list, index))
+        .filter(|info| cf_dictionary_i64(info, unsafe { kCGWindowLayer }).unwrap_or(0) == 0)
+        .filter(|info| cf_dictionary_f64(info, unsafe { kCGWindowAlpha }).unwrap_or(1.0) > 0.05)
+        .filter(|info| {
+            cf_dictionary_rect(info, unsafe { kCGWindowBounds }).is_some_and(|bounds| {
+                bounds.w >= MIN_ACTIVATION_TARGET_SIDE && bounds.h >= MIN_ACTIVATION_TARGET_SIDE
+            })
+        })
+        .filter_map(|info| cf_dictionary_i64(info, unsafe { kCGWindowOwnerPID }))
+        .filter(|pid| *pid != excluded_pid)
+        .collect()
+}
+
+#[cfg(target_os = "macos")]
 fn cf_array_dictionary_at(
     array: &objc2_core_foundation::CFArray,
     index: objc2_core_foundation::CFIndex,
@@ -1064,23 +1186,20 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Windows<'a, tauri::Wry, M> {
         if let Some(state) = app.try_state::<crate::DockVisibilityState>() {
             state.set_show_app_in_dock(show);
         }
-
-        #[cfg(target_os = "macos")]
-        {
-            let policy = if show {
-                tauri::ActivationPolicy::Regular
-            } else {
-                tauri::ActivationPolicy::Accessory
-            };
-            app.set_activation_policy(policy)?;
-        }
-
-        #[cfg(not(target_os = "macos"))]
-        {
-            let _ = app;
-        }
+        sync_dock_icon(app, false);
 
         Ok(())
+    }
+
+    /// Called by the tray, so closing the last window only leaves the Dock
+    /// while a menu-bar icon can bring the app back.
+    pub fn set_menu_bar_icon_visible(&self, visible: bool) {
+        let app = self.manager.app_handle();
+
+        if let Some(state) = app.try_state::<crate::DockVisibilityState>() {
+            state.set_menu_bar_icon_visible(visible);
+        }
+        sync_dock_icon(app, false);
     }
 
     pub fn is_focused(&self, window: AppWindow) -> Result<bool, crate::Error> {
