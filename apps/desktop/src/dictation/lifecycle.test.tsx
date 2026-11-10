@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   checkPermission: vi.fn(),
   getCaptureState: vi.fn(),
   runBatch: vi.fn(),
+  play: vi.fn(),
   stopTranscription: vi.fn(),
   unlisten: vi.fn(),
   listener: null as ((event: { payload: { type: string } }) => void) | null,
@@ -80,6 +81,7 @@ vi.mock("@anlg/plugin-permissions", () => ({
 vi.mock("@anlg/plugin-transcription", () => ({
   commands: { getCaptureState: mocks.getCaptureState },
 }));
+vi.mock("@anlg/plugin-sfx", () => ({ commands: { play: mocks.play } }));
 vi.mock("@anlg/ui/components/ui/toast", () => ({
   toast: { error: vi.fn() },
 }));
@@ -134,6 +136,7 @@ describe("dictation access and lifecycle", () => {
     mocks.platform = "macos";
     mocks.connection = null;
     mocks.settings.dictation_live_preview = false;
+    mocks.settings.dictation_sounds = true;
     mocks.settings.dictation_enabled = true;
     mocks.settings.dictation_shortcuts = ["Control+Alt+Space"];
     mocks.settings.microphone_device = "";
@@ -176,15 +179,74 @@ describe("dictation access and lifecycle", () => {
     });
   });
 
-  it.each(["disabled", "meeting"])(
-    "does not register shortcuts when %s",
-    async (condition) => {
-      if (condition === "disabled") mocks.settings.dictation_enabled = false;
-      if (condition === "meeting") mocks.meeting.status = "active";
+  it("does not register shortcuts when disabled", async () => {
+    mocks.settings.dictation_enabled = false;
+    render(<DictationLifecycle />);
+    await act(async () => {});
+    expect(mocks.configure).not.toHaveBeenCalled();
+    expect(mocks.startSystemRecording).not.toHaveBeenCalled();
+  });
+
+  it("dictates into other apps while a meeting records, without playing cues into it", async () => {
+    mocks.meeting.status = "active";
+    mocks.getCaptureState.mockResolvedValue({ status: "ok", data: "active" });
+    render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "pressed" } });
+    });
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "released" } });
+    });
+    await waitFor(() =>
+      expect(mocks.insertText).toHaveBeenCalledWith("focused-field", "Hello"),
+    );
+    expect(mocks.play).not.toHaveBeenCalled();
+  });
+
+  it("keeps a dictation going when a meeting starts during it", async () => {
+    const view = render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "pressed" } });
+    });
+    await waitFor(() =>
+      expect(useDictationStatus.getState().phase).toBe("recording"),
+    );
+    mocks.meeting = { status: "active", loading: false };
+    view.rerender(<DictationLifecycle />);
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "released" } });
+    });
+    await waitFor(() =>
+      expect(mocks.insertText).toHaveBeenCalledWith("focused-field", "Hello"),
+    );
+    expect(mocks.cancelRecording).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["a self-hosted server", "http://127.0.0.1:50060", false],
+    ["a cloud provider", "https://api.deepgram.com", true],
+  ])(
+    "during a meeting, opens a live connection to %s only if it can take a second one",
+    async (_target, baseUrl, streams) => {
+      mocks.meeting.status = "active";
+      mocks.connection = {
+        provider: "deepgram",
+        model: "nova-3",
+        apiKey: "test",
+        baseUrl,
+      };
       render(<DictationLifecycle />);
-      await act(async () => {});
-      expect(mocks.configure).not.toHaveBeenCalled();
-      expect(mocks.startSystemRecording).not.toHaveBeenCalled();
+      await waitFor(() =>
+        expect(useDictationStatus.getState().ready).toBe(true),
+      );
+      await act(async () => {
+        mocks.listener?.({ payload: { type: "pressed" } });
+      });
+      expect(mocks.startSystemRecording.mock.calls[0]![2]).toEqual(
+        streams ? expect.objectContaining({ baseUrl }) : null,
+      );
     },
   );
 
@@ -252,6 +314,36 @@ describe("dictation access and lifecycle", () => {
     await waitFor(() =>
       expect(mocks.hud).toHaveBeenLastCalledWith({ type: "cancelled" }),
     );
+  });
+
+  it("silences the next dictation's cues as soon as sounds are turned off, without restarting dictation", async () => {
+    const view = render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    const dictate = async (count: number) => {
+      await act(async () => {
+        mocks.listener?.({ payload: { type: "pressed" } });
+      });
+      await act(async () => {
+        mocks.listener?.({ payload: { type: "released" } });
+      });
+      await waitFor(() =>
+        expect(mocks.insertText).toHaveBeenCalledTimes(count),
+      );
+      await waitFor(() =>
+        expect(useDictationStatus.getState().phase).toBe("idle"),
+      );
+    };
+    await dictate(1);
+    expect(mocks.play.mock.calls).toEqual([
+      ["StartRecording"],
+      ["StopRecording"],
+    ]);
+
+    mocks.play.mockClear();
+    mocks.settings.dictation_sounds = false;
+    view.rerender(<DictationLifecycle />);
+    await dictate(2);
+    expect(mocks.play).not.toHaveBeenCalled();
   });
 
   it("does not record when the HUD cannot show", async () => {

@@ -1922,16 +1922,24 @@ msgid "Dictation"
 msgstr "Dictation"
 
 #: src/i18n/external-messages.ts
+msgid "Dictation is unavailable in password fields and while Secure Keyboard Entry is on."
+msgstr "Dictation is unavailable in password fields and while Secure Keyboard Entry is on."
+
+#: src/i18n/external-messages.ts
+msgid "Dictation is unavailable in password fields and while Secure Keyboard Entry is on. Copy your last dictation from Settings > Dictation."
+msgstr "Dictation is unavailable in password fields and while Secure Keyboard Entry is on. Copy your last dictation from Settings > Dictation."
+
+#: src/i18n/external-messages.ts
 msgid "Dictation is unavailable in password fields."
 msgstr "Dictation is unavailable in password fields."
-
-#: src/dictation/lifecycle.tsx
-msgid "Dictation is unavailable while Librelog is recording a meeting."
-msgstr "Dictation is unavailable while Librelog is recording a meeting."
 
 #: src/settings/dictation-shortcut.tsx
 msgid "Dictation shortcuts"
 msgstr "Dictation shortcuts"
+
+#: src/settings/dictation.tsx
+msgid "Dictation sounds"
+msgstr "Dictation sounds"
 
 #: src/settings/dictation.tsx
 msgid "Dictation uses your microphone, transcription provider, languages, and dictionary. Temporary audio is deleted after transcription. Your last transcript stays in memory until dictation is disabled or Librelog closes."
@@ -2158,6 +2166,10 @@ msgstr "Enable {0}"
 #: src/settings/dictation.tsx
 msgid "Enable dictation"
 msgstr "Enable dictation"
+
+#: src/i18n/external-messages.ts
+msgid "Enable Librelog in System Settings > Privacy & Security > Accessibility to insert dictation into other apps."
+msgstr "Enable Librelog in System Settings > Privacy & Security > Accessibility to insert dictation into other apps."
 
 #: src/dictation/lifecycle.tsx
 msgid "Enable microphone permission in Settings > Permissions before dictating."
@@ -2406,10 +2418,6 @@ msgstr "Floating bar"
 #: src/settings/dictation-shortcut.tsx
 msgid "Fn / Globe"
 msgstr "Fn / Globe"
-
-#: src/i18n/external-messages.ts
-msgid "Focus an editable text field and enable Librelog in System Settings > Privacy & Security > Accessibility. Password fields are excluded."
-msgstr "Focus an editable text field and enable Librelog in System Settings > Privacy & Security > Accessibility. Password fields are excluded."
 
 #: src/i18n/external-messages.ts
 msgid "Focus an editable text field before dictating."
@@ -3241,6 +3249,10 @@ msgstr "Loading..."
 msgid "Local STT server is starting up…"
 msgstr "Local STT server is starting up…"
 
+#: src/i18n/external-messages.ts
+msgid "Local transcription is busy with another recording. Try again when it finishes."
+msgstr "Local transcription is busy with another recording. Try again when it finishes."
+
 #: src/settings/privacy/index.tsx
 msgid "Lock app"
 msgstr "Lock app"
@@ -3990,8 +4002,8 @@ msgid "Open Librelog"
 msgstr "Open Librelog"
 
 #: src/settings/general/app-settings.tsx
-msgid "Open Librelog from the menu bar."
-msgstr "Open Librelog from the menu bar."
+msgid "Open Librelog from the menu bar, where it keeps running after you close the window."
+msgstr "Open Librelog from the menu bar, where it keeps running after you close the window."
 
 #: src/stt/start-failure.ts
 msgid "Open permissions"
@@ -4174,6 +4186,10 @@ msgstr "Pinned organization"
 msgid "Play"
 msgstr "Play"
 
+#: src/settings/dictation.tsx
+msgid "Play a short sound when dictation starts and when it stops. Muted while Librelog records a meeting."
+msgstr "Play a short sound when dictation starts and when it stops. Muted while Librelog records a meeting."
+
 #: src/settings/general/notification.tsx
 msgid "Play a sound when transcription, summaries, or cloud sync finish."
 msgstr "Play a sound when transcription, summaries, or cloud sync finish."
@@ -4232,8 +4248,8 @@ msgid "Press Enter to use this model ID."
 msgstr "Press Enter to use this model ID."
 
 #: src/settings/dictation.tsx
-msgid "Press Escape to cancel. Dictation stops after five minutes and pauses while Librelog records a meeting."
-msgstr "Press Escape to cancel. Dictation stops after five minutes and pauses while Librelog records a meeting."
+msgid "Press Escape to cancel. Dictation stops after five minutes."
+msgstr "Press Escape to cancel. Dictation stops after five minutes."
 
 #: src/settings/dictation-shortcut.tsx
 msgid "Press the keys you want, or press one modifier key twice quickly, then press Enter to save. Enter can't be part of a shortcut. Press Backspace to clear or Escape to cancel."
@@ -5074,8 +5090,8 @@ msgid "Show in folder"
 msgstr "Show in folder"
 
 #: src/settings/general/app-settings.tsx
-msgid "Show Librelog in the Dock and app switcher."
-msgstr "Show Librelog in the Dock and app switcher."
+msgid "Show Librelog in the Dock and app switcher while its window is open."
+msgstr "Show Librelog in the Dock and app switcher while its window is open."
 
 #: src/settings/general/about.tsx
 msgid "Show log files"
@@ -6278,10 +6294,6 @@ msgstr "View Note"
 #: src/settings/ai/llm/provider-context.ts
 msgid "Visit [AI Studio](https://aistudio.google.com/api-keys) to create an API key."
 msgstr "Visit [AI Studio](https://aistudio.google.com/api-keys) to create an API key."
-
-#: src/chat/components/input/use-dictation.ts
-msgid "Voice input is unavailable while Librelog is recording a meeting."
-msgstr "Voice input is unavailable while Librelog is recording a meeting."
 
 #: src/i18n/external-messages.ts
 msgid "Voice recording failed: {rest}"

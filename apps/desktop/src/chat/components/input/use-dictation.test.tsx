@@ -128,22 +128,28 @@ describe("useDictation", () => {
     expect(result.current.phase).toBe("idle");
   });
 
-  it("does not compete with an active meeting recording", async () => {
+  it("keeps voice input available while a meeting records", async () => {
     mocks.getCaptureState.mockResolvedValue({
       status: "ok",
       data: "active",
     });
-    const editorRef = { current: null };
-    const { result } = renderHook(() => useDictation({ editorRef }));
+    const editor = {
+      focus: vi.fn(() => true),
+      insertText: vi.fn(),
+    } as unknown as ChatEditorHandle;
+    const { result } = renderHook(() =>
+      useDictation({ editorRef: { current: editor } }),
+    );
 
     await act(async () => {
       await result.current.start();
     });
+    await act(async () => {
+      await result.current.stop();
+    });
 
-    expect(mocks.startRecording).not.toHaveBeenCalled();
-    expect(mocks.toastWarning).toHaveBeenCalledWith(
-      "Voice input is unavailable while Librelog is recording a meeting.",
-    );
+    expect(editor.insertText).toHaveBeenCalledWith("Hello world.");
+    expect(mocks.toastWarning).not.toHaveBeenCalled();
   });
 
   it("stops and transcribes at the recording time limit", async () => {

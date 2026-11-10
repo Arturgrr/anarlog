@@ -37,6 +37,11 @@ export const SETTING_DEFINITIONS = {
     path: ["dictation", "hands_free"],
     default: true as boolean,
   },
+  dictation_sounds: {
+    type: "boolean",
+    path: ["dictation", "sounds"],
+    default: true as boolean,
+  },
   export_directory: {
     type: "string",
     path: ["general", "export_directory"],

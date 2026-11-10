@@ -236,6 +236,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - run: swift build --package-path plugins/windows/swift-lib
+      - run: swift test --package-path crates/dictation-ui-macos/swift-lib
 
   ci:
     if: always()

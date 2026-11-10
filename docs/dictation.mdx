@@ -15,12 +15,28 @@ Keep Librelog running, focus a text field in another app, and use a dictation sh
 
 Hold the shortcut while speaking and release it to finish. With **Hands-free dictation** enabled, press once to start and again to finish. Text is inserted when transcription finishes. **Live transcript preview** shows words under the dictation indicator at the top of the screen when the selected provider supports a live connection.
 
-Dictation stops after five minutes and pauses while Librelog records a meeting. Press Escape to cancel; on Wayland, use Control + Alt + Escape.
+You hear a short sound when dictation starts and another when it stops and sends your audio to transcription. Cancelling is silent, and no sound plays while Librelog records a meeting. To dictate silently, turn off **Dictation sounds** in **Settings → Dictation**.
+
+Dictation stops after five minutes. Press Escape to cancel; on Wayland, use Control + Alt + Escape.
+
+Dictation also works while Librelog records a meeting, for example to type into the call's chat. The meeting keeps recording, and what you dictate is part of its microphone audio and transcript. With a self-hosted transcription server, the dictation skips the live preview and is transcribed when you finish, so it doesn't take the meeting's connection. With an on-device model, a dictation may wait a moment while the meeting's audio is being transcribed.
+
+## Where the text goes
+
+On macOS, text goes to whatever has keyboard focus when transcription finishes, so you can move to another field or app while Librelog transcribes.
+
+- Native macOS text fields, such as those in Notes and TextEdit, receive the text directly and your clipboard is left alone.
+- Web pages, browsers, Electron apps such as VS Code, Cursor, Slack, Discord, Notion and Obsidian, and terminals such as Terminal, iTerm2, Ghostty and Warp receive the text as a paste. So does any other app whose field doesn't take text directly. Librelog restores your previous clipboard shortly after the app reads it, and marks the dictation so clipboard managers that follow the nspasteboard.org convention skip it.
+- Chromium browsers at version 155 or 156, such as Chrome, Edge and Brave, receive the text as typed keystrokes, because those versions can drop a paste.
+
+The paste works with any keyboard layout, including Dvorak, Dvorak – QWERTY ⌘, AZERTY and Cyrillic layouts. Librelog waits up to two seconds for you to release the shortcut keys before it inserts text.
+
+Dictation does not insert into password fields. On macOS it is also unavailable while the focused app has Secure Keyboard Entry on, which Terminal and iTerm2 offer in their app menus.
 
 ## If insertion fails
 
-Keep the original text field focused until dictation finishes. If the target changed or the app cannot insert text, open **Settings → Dictation** and choose **Copy last dictation**, then paste it yourself. The last transcript stays in memory until you disable dictation or quit Librelog.
+If nothing editable had focus, or the app could not insert the text, open **Settings → Dictation** and choose **Copy last dictation**, then paste it yourself. The last transcript stays in memory until you disable dictation or quit Librelog.
 
-On Linux, approve the desktop's shortcut prompt on Wayland. The target app must expose an editable accessibility field; password fields are excluded. Clear a selected text range before dictating, or use the copy action to replace it yourself.
+On Windows and Linux, keep the original text field focused until dictation finishes. On Linux, approve the desktop's shortcut prompt on Wayland. The target app must expose an editable accessibility field; password fields are excluded. Clear a selected text range before dictating, or use the copy action to replace it yourself.
 
 Dictation is a desktop interaction. The CLI and MCP interfaces do not start dictation or insert text into other apps.

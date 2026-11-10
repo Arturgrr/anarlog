@@ -6,8 +6,12 @@ export function localizeExternalMessage(message: string): string {
   const text = message.trim();
 
   switch (text) {
-    case "Focus an editable text field and enable Librelog in System Settings > Privacy & Security > Accessibility. Password fields are excluded.":
-      return t`Focus an editable text field and enable Librelog in System Settings > Privacy & Security > Accessibility. Password fields are excluded.`;
+    case "Enable Librelog in System Settings > Privacy & Security > Accessibility to insert dictation into other apps.":
+      return t`Enable Librelog in System Settings > Privacy & Security > Accessibility to insert dictation into other apps.`;
+    case "Dictation is unavailable in password fields and while Secure Keyboard Entry is on.":
+      return t`Dictation is unavailable in password fields and while Secure Keyboard Entry is on.`;
+    case "Dictation is unavailable in password fields and while Secure Keyboard Entry is on. Copy your last dictation from Settings > Dictation.":
+      return t`Dictation is unavailable in password fields and while Secure Keyboard Entry is on. Copy your last dictation from Settings > Dictation.`;
     case "Focus an editable text field in an application with accessibility enabled. Password fields are excluded.":
       return t`Focus an editable text field in an application with accessibility enabled. Password fields are excluded.`;
     case "Focus an editable text field before dictating.":
@@ -59,6 +63,8 @@ export function localizeExternalMessage(message: string): string {
       return t`The new transcription returned much less text. Your saved transcript and recording were kept. Try transcribing again.`;
     case "No speech was detected in the audio.":
       return t`No speech was detected in the audio.`;
+    case "Local transcription is busy with another recording. Try again when it finishes.":
+      return t`Local transcription is busy with another recording. Try again when it finishes.`;
     case "The AI model is overloaded right now. Wait a moment, then retry.":
       return t`The AI model is overloaded right now. Wait a moment, then retry.`;
     case "Images must be 8 MB or smaller.":

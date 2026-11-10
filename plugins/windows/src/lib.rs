@@ -103,21 +103,39 @@ impl WindowExpansions {
     }
 }
 
-pub struct DockVisibilityState(AtomicBool);
+pub struct DockVisibilityState {
+    show_app_in_dock: AtomicBool,
+    menu_bar_icon_visible: AtomicBool,
+}
 
 impl Default for DockVisibilityState {
     fn default() -> Self {
-        Self(AtomicBool::new(true))
+        Self {
+            show_app_in_dock: AtomicBool::new(true),
+            // Until the tray reports its icon, the Dock icon stays the way back.
+            menu_bar_icon_visible: AtomicBool::new(false),
+        }
     }
 }
 
 impl DockVisibilityState {
     pub fn set_show_app_in_dock(&self, value: bool) {
-        self.0.store(value, Ordering::SeqCst);
+        self.show_app_in_dock.store(value, Ordering::SeqCst);
     }
 
     pub fn show_app_in_dock(&self) -> bool {
-        self.0.load(Ordering::SeqCst)
+        self.show_app_in_dock.load(Ordering::SeqCst)
+    }
+
+    pub fn set_menu_bar_icon_visible(&self, value: bool) {
+        self.menu_bar_icon_visible.store(value, Ordering::SeqCst);
+    }
+
+    /// With every regular window closed the app lives in the menu bar, unless
+    /// there is no menu-bar icon to reopen it from.
+    pub fn shows_dock_icon(&self, regular_window_open: bool) -> bool {
+        self.show_app_in_dock()
+            && (regular_window_open || !self.menu_bar_icon_visible.load(Ordering::SeqCst))
     }
 }
 
@@ -483,6 +501,25 @@ mod test {
         assert!(!state.begin_rebuild("main"));
         state.ready("main");
         assert!(state.begin_rebuild("main"));
+    }
+
+    #[test]
+    fn closing_the_last_window_leaves_the_dock_only_when_the_menu_bar_icon_can_reopen_the_app() {
+        let state = DockVisibilityState::default();
+        for (show_app_in_dock, menu_bar_icon_visible, regular_window_open, expected) in [
+            (true, true, true, true),
+            (true, true, false, false),
+            (true, false, false, true),
+            (false, false, true, false),
+        ] {
+            state.set_show_app_in_dock(show_app_in_dock);
+            state.set_menu_bar_icon_visible(menu_bar_icon_visible);
+            assert_eq!(
+                state.shows_dock_icon(regular_window_open),
+                expected,
+                "dock={show_app_in_dock} menu_bar={menu_bar_icon_visible} window={regular_window_open}"
+            );
+        }
     }
 
     #[cfg(target_os = "macos")]

@@ -184,9 +184,27 @@ struct BluetoothDefaultOwnership {
     requested: AudioDevice,
     endpoint_ids: std::sync::Mutex<Option<Vec<DeviceId>>>,
     active: std::sync::atomic::AtomicBool,
+    /// The default from before an earlier capture that ended while this one still
+    /// held the headset, restored in place of this capture's own previous default.
+    inherited_default: std::sync::Mutex<Option<DeviceId>>,
 }
 
 impl BluetoothDefaultOwnership {
+    fn new(requested: AudioDevice) -> Self {
+        Self {
+            requested,
+            endpoint_ids: std::sync::Mutex::new(None),
+            active: std::sync::atomic::AtomicBool::new(true),
+            inherited_default: std::sync::Mutex::new(None),
+        }
+    }
+
+    fn inherited_default(&self) -> std::sync::MutexGuard<'_, Option<DeviceId>> {
+        self.inherited_default
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+    }
+
     fn finish_handoff(
         &self,
         default_after: Option<&AudioDevice>,
@@ -251,17 +269,22 @@ pub fn bluetooth_input_owns_system_defaults() -> bool {
 fn retain_bluetooth_system_defaults(
     requested: AudioDevice,
 ) -> std::sync::Arc<BluetoothDefaultOwnership> {
-    let owner = std::sync::Arc::new(BluetoothDefaultOwnership {
-        requested,
-        endpoint_ids: std::sync::Mutex::new(None),
-        active: std::sync::atomic::AtomicBool::new(true),
-    });
+    let owner = std::sync::Arc::new(BluetoothDefaultOwnership::new(requested));
     let mut owners = BLUETOOTH_DEFAULT_OWNERS
         .lock()
         .unwrap_or_else(|e| e.into_inner());
     owners.retain(|owner| owner.strong_count() > 0);
     owners.push(std::sync::Arc::downgrade(&owner));
     owner
+}
+
+/// Live owners, oldest first.
+fn live_bluetooth_default_owners() -> Vec<std::sync::Arc<BluetoothDefaultOwnership>> {
+    let mut owners = BLUETOOTH_DEFAULT_OWNERS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    owners.retain(|owner| owner.strong_count() > 0);
+    owners.iter().filter_map(std::sync::Weak::upgrade).collect()
 }
 
 /// Keeps a Bluetooth headset in HFP/SCO for the life of a capture stream.
@@ -274,19 +297,43 @@ pub struct BluetoothInputActivation {
 }
 
 impl BluetoothInputActivation {
+    /// `live_owners` are every capture holding a headset, oldest first. A meeting and a
+    /// dictation can hold the same headset at once; only the last one to finish restores,
+    /// and it restores the default from before the first one started.
     fn restore_previous_default(
         &mut self,
         current: Option<&AudioDevice>,
+        live_owners: &[std::sync::Arc<BluetoothDefaultOwnership>],
         restore: impl FnOnce(&DeviceId) -> Result<(), Error>,
     ) {
-        let Some(previous) = self.previous_default.take() else {
+        let Some(ownership) = self.ownership.as_ref() else {
             return;
         };
-        if !self
-            .ownership
-            .as_ref()
-            .is_some_and(|owner| owner.owns_default(current))
-        {
+        let inherited = ownership.inherited_default().take();
+        let Some(previous) = inherited.or_else(|| self.previous_default.take()) else {
+            return;
+        };
+        if !ownership.owns_default(current) {
+            return;
+        }
+        let position = live_owners
+            .iter()
+            .position(|owner| std::sync::Arc::ptr_eq(owner, ownership));
+        let (earlier, later) = match position {
+            Some(position) => (&live_owners[..position], &live_owners[position + 1..]),
+            None => (&[][..], live_owners),
+        };
+        let holds_headset = |owner: &std::sync::Arc<BluetoothDefaultOwnership>| {
+            !std::sync::Arc::ptr_eq(owner, ownership) && owner.owns_default(current)
+        };
+        // The earlier capture restores its own, older default when it finishes.
+        if earlier.iter().any(holds_headset) {
+            return;
+        }
+        // Switching the default away now could drop the headset out of the call
+        // profile under the capture that is still recording.
+        if let Some(later) = later.iter().find(|owner| holds_headset(owner)) {
+            *later.inherited_default() = Some(previous);
             return;
         }
         if let Err(error) = restore(&previous) {
@@ -301,10 +348,15 @@ impl BluetoothInputActivation {
 
 impl Drop for BluetoothInputActivation {
     fn drop(&mut self) {
-        if self.previous_default.is_some() {
+        let inherited = self
+            .ownership
+            .as_ref()
+            .is_some_and(|ownership| ownership.inherited_default().is_some());
+        if self.previous_default.is_some() || inherited {
             let backend = backend();
             let current = backend.get_default_input_device().ok().flatten();
-            self.restore_previous_default(current.as_ref(), |previous| {
+            let live_owners = live_bluetooth_default_owners();
+            self.restore_previous_default(current.as_ref(), &live_owners, |previous| {
                 backend.set_default_input_device(previous)
             });
         }
@@ -455,11 +507,8 @@ mod tests {
         let usb = named_input("usb", "USB Microphone", TransportType::Usb);
         for current in [&requested, &handsfree] {
             for user_changed in [false, true] {
-                let ownership = std::sync::Arc::new(BluetoothDefaultOwnership {
-                    requested: requested.clone(),
-                    endpoint_ids: std::sync::Mutex::new(None),
-                    active: std::sync::atomic::AtomicBool::new(true),
-                });
+                let ownership =
+                    std::sync::Arc::new(BluetoothDefaultOwnership::new(requested.clone()));
                 ownership.finish_handoff(Some(current), None);
                 let mut activation = BluetoothInputActivation {
                     name: (current.id != requested.id).then(|| current.name.clone()),
@@ -474,7 +523,7 @@ mod tests {
                     assert!(!ownership.owns_default(Some(current)));
                 }
                 let mut selected = current.id.clone();
-                activation.restore_previous_default(Some(current), |previous| {
+                activation.restore_previous_default(Some(current), &[], |previous| {
                     selected = previous.clone();
                     Ok(())
                 });
@@ -496,11 +545,7 @@ mod tests {
             let requested = named_input("headset-a", "AirPods", TransportType::Bluetooth);
             let captured = named_input("headset-a-hfp", handoff_name, TransportType::Bluetooth);
             let other = named_input("headset-b", handoff_name, TransportType::Bluetooth);
-            let ownership = std::sync::Arc::new(BluetoothDefaultOwnership {
-                requested,
-                endpoint_ids: std::sync::Mutex::new(None),
-                active: std::sync::atomic::AtomicBool::new(true),
-            });
+            let ownership = std::sync::Arc::new(BluetoothDefaultOwnership::new(requested));
             ownership.finish_handoff(Some(&captured), None);
             assert!(ownership.owns_default(Some(&captured)));
             let mut activation = BluetoothInputActivation {
@@ -509,12 +554,61 @@ mod tests {
                 ownership: Some(ownership.clone()),
             };
             let mut selected = other.id.clone();
-            activation.restore_previous_default(Some(&other), |previous| {
+            activation.restore_previous_default(Some(&other), &[], |previous| {
                 selected = previous.clone();
                 Ok(())
             });
             assert_eq!(selected, other.id);
             assert!(!ownership.owns_default(Some(&other)));
+        }
+    }
+
+    #[test]
+    fn overlapping_captures_restore_the_original_default_only_when_the_last_one_ends() {
+        let requested = named_input("a2dp", "AirPods", TransportType::Bluetooth);
+        let handsfree = named_input("sco", "AirPods Hands-Free", TransportType::Bluetooth);
+        let builtin = DeviceId("builtin".into());
+        for first_ends_first in [true, false] {
+            let capture = |previous: DeviceId| {
+                let ownership =
+                    std::sync::Arc::new(BluetoothDefaultOwnership::new(requested.clone()));
+                ownership.finish_handoff(Some(&handsfree), None);
+                let activation = BluetoothInputActivation {
+                    name: Some(handsfree.name.clone()),
+                    previous_default: Some(previous),
+                    ownership: Some(ownership.clone()),
+                };
+                (ownership, activation)
+            };
+            // The second capture starts while the first holds the headset, so the
+            // default it saw is the headset itself.
+            let (first_owner, first) = capture(builtin.clone());
+            let (second_owner, second) = capture(handsfree.id.clone());
+            let mut restored = Vec::new();
+            let (mut ending, ending_owner, mut remaining, remaining_owner) = if first_ends_first {
+                (first, first_owner, second, second_owner)
+            } else {
+                (second, second_owner, first, first_owner)
+            };
+            let both = if first_ends_first {
+                vec![ending_owner.clone(), remaining_owner.clone()]
+            } else {
+                vec![remaining_owner.clone(), ending_owner.clone()]
+            };
+            ending.restore_previous_default(Some(&handsfree), &both, |previous| {
+                restored.push(previous.clone());
+                Ok(())
+            });
+            assert!(restored.is_empty(), "first_ends_first={first_ends_first}");
+            remaining.restore_previous_default(Some(&handsfree), &[remaining_owner], |previous| {
+                restored.push(previous.clone());
+                Ok(())
+            });
+            assert_eq!(
+                restored,
+                vec![builtin.clone()],
+                "first_ends_first={first_ends_first}"
+            );
         }
     }
 

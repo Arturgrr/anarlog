@@ -345,6 +345,12 @@ pub(super) fn format_user_friendly_error(error: &str) -> String {
         return "Access denied. Your API key may not have permission for this operation."
             .to_string();
     }
+    // The local whisper server's answer when it is still busy with another job
+    // after letting this one wait; it is not a provider quota.
+    if error_lower.contains("batch_busy") {
+        return "Local transcription is busy with another recording. Try again when it finishes."
+            .to_string();
+    }
     if error_lower.contains("429") || error_lower.contains("rate limit") {
         return "Rate limit exceeded. Wait a few minutes or check your provider plan's quota, then try again.".to_string();
     }
@@ -488,5 +494,12 @@ mod tests {
             let message = format_user_friendly_error(error);
             assert!(message.starts_with("This recording is too large"));
         }
+    }
+
+    #[test]
+    fn a_busy_local_server_is_not_reported_as_a_provider_rate_limit() {
+        let error = r#"UnexpectedStatus { status: 429, body: "{\"error\":\"batch_busy\",\"detail\":\"another local batch transcription is already running\"}" }"#;
+
+        assert!(format_user_friendly_error(error).starts_with("Local transcription is busy"));
     }
 }
