@@ -37,18 +37,18 @@ private final class DictationPasteProvider: NSObject, NSPasteboardItemDataProvid
   }
 }
 
-private extension AXUIElement {
-  func value(_ attribute: String) -> CFTypeRef? {
+extension AXUIElement {
+  fileprivate func value(_ attribute: String) -> CFTypeRef? {
     var value: CFTypeRef?
     return AXUIElementCopyAttributeValue(self, attribute as CFString, &value) == .success
       ? value : nil
   }
 
-  func string(_ attribute: String) -> String? { value(attribute) as? String }
+  fileprivate func string(_ attribute: String) -> String? { value(attribute) as? String }
 
-  func int(_ attribute: String) -> Int? { (value(attribute) as? NSNumber)?.intValue }
+  fileprivate func int(_ attribute: String) -> Int? { (value(attribute) as? NSNumber)?.intValue }
 
-  func element(_ attribute: String) -> AXUIElement? {
+  fileprivate func element(_ attribute: String) -> AXUIElement? {
     guard let value = value(attribute), CFGetTypeID(value) == AXUIElementGetTypeID() else {
       return nil
     }
@@ -57,7 +57,7 @@ private extension AXUIElement {
     return element
   }
 
-  func range(_ attribute: String) -> CFRange? {
+  fileprivate func range(_ attribute: String) -> CFRange? {
     guard let value = value(attribute), CFGetTypeID(value) == AXValueGetTypeID() else {
       return nil
     }
@@ -65,14 +65,14 @@ private extension AXUIElement {
     return AXValueGetValue(unsafeBitCast(value, to: AXValue.self), .cfRange, &range) ? range : nil
   }
 
-  func isSettable(_ attribute: String) -> Bool {
+  fileprivate func isSettable(_ attribute: String) -> Bool {
     var settable = DarwinBoolean(false)
     return AXUIElementIsAttributeSettable(self, attribute as CFString, &settable) == .success
       && settable.boolValue
   }
 
   /// Whether the element belongs to a web page. Too deep to tell counts as yes.
-  var isInWebArea: Bool {
+  fileprivate var isInWebArea: Bool {
     var current: AXUIElement? = self
     for _ in 0..<32 {
       guard let node = current else { return false }
@@ -85,8 +85,8 @@ private extension AXUIElement {
   }
 }
 
-private extension FocusedText {
-  init(_ element: AXUIElement) {
+extension FocusedText {
+  fileprivate init(_ element: AXUIElement) {
     role = element.string(kAXRoleAttribute)
     guard isTextControl else { return }
     selectedTextSettable = element.isSettable(kAXSelectedTextAttribute)

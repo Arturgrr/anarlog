@@ -61,7 +61,8 @@ struct AppTraits {
 
   var isTerminal: Bool {
     guard let bundleID else { return false }
-    return InsertionRoute.terminalBundleIDs.contains(bundleID) || bundleID.hasPrefix("dev.warp.Warp")
+    return InsertionRoute.terminalBundleIDs.contains(bundleID)
+      || bundleID.hasPrefix("dev.warp.Warp")
   }
 
   init(bundleID: String?, bundleURL: URL?, isCurrentProcess: Bool) {

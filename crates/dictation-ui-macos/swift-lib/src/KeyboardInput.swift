@@ -120,7 +120,8 @@ enum KeyboardInput {
     for stroke in strokes(text) {
       for keyDown in [true, false] {
         let keyCode = stroke == .lineBreak ? CGKeyCode(kVK_Return) : 0
-        guard let event = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: keyDown)
+        guard
+          let event = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: keyDown)
         else { return false }
         if case .text(let units) = stroke {
           event.flags = []
@@ -139,7 +140,9 @@ enum KeyboardInput {
   /// Waits for the keys of the dictation shortcut to come up, so a held Option or Shift can't turn
   /// Command-V into another shortcut. Blocks the calling thread; never call it on the main thread.
   static func waitForModifierRelease(timeout: TimeInterval = 2) -> Bool {
-    let held: CGEventFlags = [.maskCommand, .maskAlternate, .maskControl, .maskShift, .maskSecondaryFn]
+    let held: CGEventFlags = [
+      .maskCommand, .maskAlternate, .maskControl, .maskShift, .maskSecondaryFn,
+    ]
     let deadline = Date().addingTimeInterval(timeout)
     while !CGEventSource.flagsState(.hidSystemState).intersection(held).isEmpty {
       if Date() >= deadline { return false }

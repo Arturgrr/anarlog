@@ -600,14 +600,10 @@ mod tests {
                 Ok(())
             });
             assert!(restored.is_empty(), "first_ends_first={first_ends_first}");
-            remaining.restore_previous_default(
-                Some(&handsfree),
-                &[remaining_owner],
-                |previous| {
-                    restored.push(previous.clone());
-                    Ok(())
-                },
-            );
+            remaining.restore_previous_default(Some(&handsfree), &[remaining_owner], |previous| {
+                restored.push(previous.clone());
+                Ok(())
+            });
             assert_eq!(
                 restored,
                 vec![builtin.clone()],
