@@ -880,7 +880,11 @@ msgstr ""
 msgid "Berlin"
 msgstr ""
 
-#: src/settings/ai/stt/model-rows.tsx
+#: src/shared/device-copy.ts
+msgid "Best for this computer"
+msgstr ""
+
+#: src/shared/device-copy.ts
 msgid "Best for this Mac"
 msgstr ""
 
@@ -2815,7 +2819,11 @@ msgstr ""
 msgid "Install"
 msgstr ""
 
-#: src/onboarding/index.tsx
+#: src/shared/device-copy.ts
+msgid "Install a model on your computer or connect a cloud provider. It’s the same list as Settings › Transcription."
+msgstr ""
+
+#: src/shared/device-copy.ts
 msgid "Install a model on your Mac or connect a cloud provider. It’s the same list as Settings › Transcription."
 msgstr ""
 
@@ -3823,13 +3831,19 @@ msgstr ""
 msgid "Not available"
 msgstr ""
 
-#: src/settings/ai/llm/index.tsx
-#: src/settings/ai/stt/index.tsx
+#: src/shared/device-copy.ts
+msgid "Not available on this computer"
+msgstr ""
+
+#: src/shared/device-copy.ts
+msgid "Not available on this computer."
+msgstr ""
+
+#: src/shared/device-copy.ts
 msgid "Not available on this Mac"
 msgstr ""
 
-#: src/onboarding/model-status.ts
-#: src/settings/ai/stt/detail.tsx
+#: src/shared/device-copy.ts
 msgid "Not available on this Mac."
 msgstr ""
 
@@ -3918,8 +3932,11 @@ msgstr ""
 msgid "On device"
 msgstr ""
 
-#: src/settings/ai/llm/index.tsx
-#: src/settings/ai/stt/index.tsx
+#: src/shared/device-copy.ts
+msgid "On this computer"
+msgstr ""
+
+#: src/shared/device-copy.ts
 msgid "On this Mac"
 msgstr ""
 
@@ -4701,7 +4718,11 @@ msgstr ""
 msgid "Right Command"
 msgstr "Comando derecho"
 
-#: src/onboarding/index.tsx
+#: src/shared/device-copy.ts
+msgid "Run a model on your computer, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
+msgstr ""
+
+#: src/shared/device-copy.ts
 msgid "Run a model on your Mac, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
 msgstr ""
 
@@ -4713,6 +4734,10 @@ msgstr ""
 #: src/settings/ai/shared/provider-detail.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Runs after the recording finishes, not during the meeting."
+msgstr ""
+
+#: src/settings/ai/stt/provider-context.ts
+msgid "Runs entirely on your computer. Audio never leaves it."
 msgstr ""
 
 #: src/settings/ai/stt/provider-context.ts
@@ -5591,7 +5616,11 @@ msgstr ""
 msgid "The key was rejected. Check it above."
 msgstr ""
 
-#: src/settings/ai/stt/model-rows.tsx
+#: src/shared/device-copy.ts
+msgid "The model files are removed from this computer. You can download them again later."
+msgstr ""
+
+#: src/shared/device-copy.ts
 msgid "The model files are removed from this Mac. You can download them again later."
 msgstr ""
 
@@ -6149,6 +6178,10 @@ msgstr ""
 
 #: src/automations/starters.tsx
 msgid "Use a stable filename in the configured export directory."
+msgstr ""
+
+#: src/settings/ai/stt/provider-context.ts
+msgid "Use a whisper.cpp model file you already have. It runs on this computer after each recording."
 msgstr ""
 
 #: src/settings/ai/stt/provider-context.ts

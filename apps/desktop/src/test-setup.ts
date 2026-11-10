@@ -49,6 +49,12 @@ Object.defineProperty(globalThis.window, "__TAURI_INTERNALS__", {
   configurable: true,
 });
 
+Object.defineProperty(globalThis.window, "__TAURI_OS_PLUGIN_INTERNALS__", {
+  value: { platform: "macos" },
+  writable: true,
+  configurable: true,
+});
+
 Object.defineProperty(globalThis.window, "__TAURI_EVENT_PLUGIN_INTERNALS__", {
   value: {
     unregisterListener: vi.fn(),

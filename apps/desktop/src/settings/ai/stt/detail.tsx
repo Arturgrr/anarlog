@@ -8,7 +8,7 @@ import { usesFreeformSttModel } from "./catalog";
 import { languageSupportKey, type LanguageSupport } from "./language-support";
 import { LocalFileModel } from "./local-file-model";
 import { LanguageSupportLine, ModeChip, SttModelRow } from "./model-rows";
-import { STT_PROVIDER_CONTEXT } from "./provider-context";
+import { getSttProviderContext } from "./provider-context";
 
 import { ProviderConnectionForm, StyledStreamdown } from "~/settings/ai/shared";
 import {
@@ -22,6 +22,7 @@ import {
 } from "~/settings/ai/shared/provider-detail";
 import { providerDisplayName } from "~/settings/ai/shared/provider-labels";
 import { useConfigValue } from "~/shared/config";
+import { deviceCopy } from "~/shared/device-copy";
 
 export function SttProviderDetail({
   entry,
@@ -44,7 +45,7 @@ export function SttProviderDetail({
 }) {
   const { i18n, t } = useLingui();
   const { provider, status, models } = entry;
-  const context = STT_PROVIDER_CONTEXT[provider.id];
+  const context = getSttProviderContext(provider.id);
   const isCurrentProvider = current?.provider === provider.id;
   const selectable = status.configured;
   const checkedModel = isCurrentProvider ? current?.model : undefined;
@@ -82,7 +83,7 @@ export function SttProviderDetail({
       <DetailSection title={<Trans>Models</Trans>}>
         {status.setup.kind === "unavailable" ? (
           <p className="text-muted-foreground">
-            <Trans>Not available on this Mac.</Trans>
+            {deviceCopy.notAvailableSentence()}
           </p>
         ) : null}
         {!selectable && !("builtIn" in provider) ? (
