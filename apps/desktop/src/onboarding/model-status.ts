@@ -21,6 +21,7 @@ import {
 } from "~/settings/ai/stt/shared";
 import { useAiProviders } from "~/settings/providers";
 import { useConfigValues } from "~/shared/config";
+import { deviceCopy } from "~/shared/device-copy";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 import { isConfiguredSttModel, isOnDeviceSttModel } from "~/stt/capabilities";
 import { localSttQueries } from "~/stt/useLocalSttModel";
@@ -191,7 +192,7 @@ function useDescribeSetup() {
         return {
           kind: "error",
           ...labels,
-          message: t`Not available on this Mac.`,
+          message: deviceCopy.notAvailableSentence(),
         };
     }
 

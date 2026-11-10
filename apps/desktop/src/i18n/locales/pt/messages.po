@@ -890,7 +890,11 @@ msgstr "Modo de transcrição em lote"
 msgid "Berlin"
 msgstr "Berlim"
 
-#: src/settings/ai/stt/model-rows.tsx
+#: src/shared/device-copy.ts
+msgid "Best for this computer"
+msgstr "Ideal para este computador"
+
+#: src/shared/device-copy.ts
 msgid "Best for this Mac"
 msgstr "Ideal para este Mac"
 
@@ -2825,7 +2829,11 @@ msgstr "Insights"
 msgid "Install"
 msgstr "Instalar"
 
-#: src/onboarding/index.tsx
+#: src/shared/device-copy.ts
+msgid "Install a model on your computer or connect a cloud provider. It’s the same list as Settings › Transcription."
+msgstr "Instale um modelo no seu computador ou conecte um provedor na nuvem. É a mesma lista de Configurações › Transcrição."
+
+#: src/shared/device-copy.ts
 msgid "Install a model on your Mac or connect a cloud provider. It’s the same list as Settings › Transcription."
 msgstr "Instale um modelo no seu Mac ou conecte um provedor na nuvem. É a mesma lista de Configurações › Transcrição."
 
@@ -3833,13 +3841,19 @@ msgstr "Não é do tipo LLM"
 msgid "Not available"
 msgstr "Indisponível"
 
-#: src/settings/ai/llm/index.tsx
-#: src/settings/ai/stt/index.tsx
+#: src/shared/device-copy.ts
+msgid "Not available on this computer"
+msgstr "Indisponível neste computador"
+
+#: src/shared/device-copy.ts
+msgid "Not available on this computer."
+msgstr "Indisponível neste computador."
+
+#: src/shared/device-copy.ts
 msgid "Not available on this Mac"
 msgstr "Indisponível neste Mac"
 
-#: src/onboarding/model-status.ts
-#: src/settings/ai/stt/detail.tsx
+#: src/shared/device-copy.ts
 msgid "Not available on this Mac."
 msgstr "Indisponível neste Mac."
 
@@ -3928,8 +3942,11 @@ msgstr "Mais antigos"
 msgid "On device"
 msgstr "No dispositivo"
 
-#: src/settings/ai/llm/index.tsx
-#: src/settings/ai/stt/index.tsx
+#: src/shared/device-copy.ts
+msgid "On this computer"
+msgstr "Neste computador"
+
+#: src/shared/device-copy.ts
 msgid "On this Mac"
 msgstr "Neste Mac"
 
@@ -4711,7 +4728,11 @@ msgstr "⌥ direito"
 msgid "Right Command"
 msgstr "Command direito"
 
-#: src/onboarding/index.tsx
+#: src/shared/device-copy.ts
+msgid "Run a model on your computer, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
+msgstr "Execute um modelo no seu computador, entre com uma assinatura ou use uma chave de API. É a mesma lista de Configurações › Inteligência."
+
+#: src/shared/device-copy.ts
 msgid "Run a model on your Mac, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
 msgstr "Execute um modelo no seu Mac, entre com uma assinatura ou use uma chave de API. É a mesma lista de Configurações › Inteligência."
 
@@ -4724,6 +4745,10 @@ msgstr "Executando {0}…"
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Runs after the recording finishes, not during the meeting."
 msgstr "É executado após o fim da gravação, não durante a reunião."
+
+#: src/settings/ai/stt/provider-context.ts
+msgid "Runs entirely on your computer. Audio never leaves it."
+msgstr "Roda inteiramente no seu computador. O áudio nunca sai dele."
 
 #: src/settings/ai/stt/provider-context.ts
 msgid "Runs entirely on your Mac. Audio never leaves this computer."
@@ -5601,7 +5626,11 @@ msgstr "O campo de texto em foco mudou. Copie seu último ditado em Configuraç�
 msgid "The key was rejected. Check it above."
 msgstr "A chave foi recusada. Confira acima."
 
-#: src/settings/ai/stt/model-rows.tsx
+#: src/shared/device-copy.ts
+msgid "The model files are removed from this computer. You can download them again later."
+msgstr "Os arquivos do modelo serão removidos deste computador. Você pode baixá-los de novo depois."
+
+#: src/shared/device-copy.ts
 msgid "The model files are removed from this Mac. You can download them again later."
 msgstr "Os arquivos do modelo serão removidos deste Mac. Você pode baixá-los de novo depois."
 
@@ -6160,6 +6189,10 @@ msgstr "Usar um modelo que não está na lista"
 #: src/automations/starters.tsx
 msgid "Use a stable filename in the configured export directory."
 msgstr "Use um nome de arquivo fixo no diretório de exportação configurado."
+
+#: src/settings/ai/stt/provider-context.ts
+msgid "Use a whisper.cpp model file you already have. It runs on this computer after each recording."
+msgstr "Use um arquivo de modelo whisper.cpp que você já tem. Ele roda neste computador depois de cada gravação."
 
 #: src/settings/ai/stt/provider-context.ts
 msgid "Use a whisper.cpp model file you already have. It runs on this Mac after each recording."

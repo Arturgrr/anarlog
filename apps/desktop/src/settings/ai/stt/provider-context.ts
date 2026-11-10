@@ -1,14 +1,13 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
+import { platform } from "@tauri-apps/plugin-os";
 
 import type { ProviderId } from "./shared";
 
 export const STT_PROVIDER_CONTEXT: Partial<
   Record<ProviderId, MessageDescriptor>
 > = {
-  soniqo: msg`Runs entirely on your Mac. Audio never leaves this computer.`,
   apple_speech: msg`Uses the speech recognition built into macOS. Audio stays on this Mac.`,
-  local_file: msg`Use a whisper.cpp model file you already have. It runs on this Mac after each recording.`,
   inworld: msg`Use [Inworld Realtime STT](https://docs.inworld.ai/stt/overview) for live transcription. Paste the Base64 API credentials from Inworld Portal as-is; do not encode them again.`,
   gradium: msg`Use [Gradium STT](https://docs.gradium.ai/guides/speech-to-text) for live transcription in English, French, Spanish, Portuguese, or German.`,
   modulate: msg`Use [Modulate](https://docs.modulate.ai/get-started/stt) for live transcription. The multilingual model supports 25 European languages; the English model supports English only. Speaker labels identify up to four speakers with the multilingual model.`,
@@ -35,3 +34,21 @@ export const STT_PROVIDER_CONTEXT: Partial<
   revai: msg`Use [Rev AI](https://docs.rev.ai/api/asynchronous/get-started) asynchronous transcription. Librelog uploads the recording, waits for the job, and retrieves word timestamps and speaker labels.`,
   custom: msg`Point this at any **Deepgram-compatible** endpoint, including a server on this computer or your local network.`,
 };
+
+export function getSttProviderContext(
+  id: ProviderId,
+): MessageDescriptor | undefined {
+  const mac = platform() === "macos";
+  switch (id) {
+    case "soniqo":
+      return mac
+        ? msg`Runs entirely on your Mac. Audio never leaves this computer.`
+        : msg`Runs entirely on your computer. Audio never leaves it.`;
+    case "local_file":
+      return mac
+        ? msg`Use a whisper.cpp model file you already have. It runs on this Mac after each recording.`
+        : msg`Use a whisper.cpp model file you already have. It runs on this computer after each recording.`;
+    default:
+      return STT_PROVIDER_CONTEXT[id];
+  }
+}

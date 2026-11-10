@@ -48,6 +48,7 @@ import {
   ModelSettingsShell,
 } from "~/settings/ai/shared/settings-shell";
 import { useConfigValue } from "~/shared/config";
+import { deviceCopy } from "~/shared/device-copy";
 
 export function SttModelPicker({ variant }: { variant: ModelPickerVariant }) {
   // Onboarding has no working model to keep while a download runs, and saving
@@ -127,7 +128,7 @@ function SttPickerBody({ variant }: { variant: ModelPickerVariant }) {
   });
   const groups = (
     [
-      ["local", t`On this Mac`],
+      ["local", deviceCopy.onThisDevice()],
       ["cloud", t`Cloud · your key`],
       ["self_hosted", t`Self-hosted`],
     ] as const satisfies ReadonlyArray<readonly [SttProviderGroup, string]>
@@ -189,7 +190,7 @@ function SttPickerBody({ variant }: { variant: ModelPickerVariant }) {
               {(
                 [
                   ["all", t`All`],
-                  ["local", t`On this Mac`],
+                  ["local", deviceCopy.onThisDevice()],
                   ["cloud", t`Cloud`],
                   ["self_hosted", t`Self-hosted`],
                 ] as const
@@ -294,7 +295,7 @@ function describeSttProvider(
     ) : setup.kind === "rejected" ? (
       <Trans>Key rejected</Trans>
     ) : setup.kind === "unavailable" ? (
-      <Trans>Not available on this Mac</Trans>
+      deviceCopy.notAvailable()
     ) : setup.kind === "missing" ? (
       <MissingSetupLabel fields={setup.fields} />
     ) : provider.id === "apple_speech" ? (

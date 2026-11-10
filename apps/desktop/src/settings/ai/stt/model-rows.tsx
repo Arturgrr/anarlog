@@ -31,6 +31,7 @@ import {
 import { useNotifications } from "~/contexts/notifications";
 import { Chip } from "~/settings/ai/shared/chip";
 import { ModelOption } from "~/settings/ai/shared/model-options";
+import { deviceCopy } from "~/shared/device-copy";
 import { DestructiveConfirmationDialog } from "~/shared/ui/destructive-confirmation-dialog";
 import {
   canAppleSpeechTranscribe,
@@ -90,9 +91,7 @@ export function SttModelRow({
             </Chip>
           ) : null}
           {model.isRecommended ? (
-            <Chip emphasis>
-              <Trans>Best for this Mac</Trans>
-            </Chip>
+            <Chip emphasis>{deviceCopy.bestForThisDevice()}</Chip>
           ) : null}
         </>
       }
@@ -321,12 +320,7 @@ function LocalModelActions({
         open={confirmingDelete}
         onOpenChange={setConfirmingDelete}
         title={<Trans>Delete {label}?</Trans>}
-        description={
-          <Trans>
-            The model files are removed from this Mac. You can download them
-            again later.
-          </Trans>
-        }
+        description={deviceCopy.modelFilesRemoved()}
         confirmLabel={<Trans>Delete model</Trans>}
         isPending={deleteModel.isPending}
         confirmVariant="default"

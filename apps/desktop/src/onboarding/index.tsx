@@ -32,6 +32,7 @@ import { OnboardingSection } from "./shared";
 import { NotificationProvider } from "~/contexts/notifications";
 import { useSettingsReady } from "~/settings/queries";
 import { useConfigValues } from "~/shared/config";
+import { deviceCopy } from "~/shared/device-copy";
 import { StandaloneWindowShell } from "~/shared/window-shell";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
@@ -243,12 +244,7 @@ function OnboardingScreenContent({
             eyebrow={<Trans>1 of 2 · Transcription</Trans>}
             title={<Trans>How your meetings become text</Trans>}
             completedTitle={<TranscriptionSummary />}
-            description={
-              <Trans>
-                Install a model on your Mac or connect a cloud provider. It’s
-                the same list as Settings › Transcription.
-              </Trans>
-            }
+            description={deviceCopy.installModelOrConnectCloud()}
             status={getStepStatus("transcription", currentStep)}
             fill
             skippable={false}
@@ -263,12 +259,7 @@ function OnboardingScreenContent({
             eyebrow={<Trans>2 of 2 · Intelligence</Trans>}
             title={<Trans>Who writes your summaries</Trans>}
             completedTitle={<IntelligenceSummary />}
-            description={
-              <Trans>
-                Run a model on your Mac, sign in with a subscription or use an
-                API key. It’s the same list as Settings › Intelligence.
-              </Trans>
-            }
+            description={deviceCopy.runModelSignInOrApiKey()}
             status={getStepStatus("intelligence", currentStep)}
             fill
             skippable={false}

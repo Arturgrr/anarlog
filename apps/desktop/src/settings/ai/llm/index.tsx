@@ -41,6 +41,7 @@ import {
   type ModelPickerVariant,
   ModelSettingsShell,
 } from "~/settings/ai/shared/settings-shell";
+import { deviceCopy } from "~/shared/device-copy";
 
 export function LlmModelPicker({ variant }: { variant: ModelPickerVariant }) {
   const { t, i18n } = useLingui();
@@ -78,7 +79,7 @@ export function LlmModelPicker({ variant }: { variant: ModelPickerVariant }) {
   });
   const groups = (
     [
-      ["local", t`On this Mac`],
+      ["local", deviceCopy.onThisDevice()],
       ["subscription", t`Subscriptions`],
       ["api", t`API key`],
       ["custom", t`Custom`],
@@ -143,7 +144,7 @@ export function LlmModelPicker({ variant }: { variant: ModelPickerVariant }) {
               {(
                 [
                   ["all", t`All`],
-                  ["local", t`On this Mac`],
+                  ["local", deviceCopy.onThisDevice()],
                   ["subscription", t`Subscription`],
                   ["api", t`API key`],
                 ] as const
@@ -265,12 +266,12 @@ function describeLlmSubtitle(
       return <Trans>Key rejected</Trans>;
     case "stopped":
       return provider.id === "apple_foundation" ? (
-        <Trans>Not available on this Mac</Trans>
+        deviceCopy.notAvailable()
       ) : (
         <Trans>Server stopped</Trans>
       );
     case "unavailable":
-      return <Trans>Not available on this Mac</Trans>;
+      return deviceCopy.notAvailable();
     case "missing":
       return (
         <MissingSetupLabel
