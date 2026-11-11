@@ -209,7 +209,7 @@ async fn record_to_file(
     mut preview: Option<Preview>,
     meter: Option<Meter>,
     finalize: Arc<AtomicBool>,
-    mut quiet: Quiet,
+    quiet: Quiet,
 ) -> Result<RecordedAudio, Error> {
     let specification = hound::WavSpec {
         channels: 1,
@@ -223,19 +223,11 @@ async fn record_to_file(
     tokio::pin!(deadline);
     let mut sample_count = 0_u64;
     let mut pending = Vec::with_capacity(PREVIEW_CHUNK_SIZE);
-    let begin_at = quiet.begin_at();
-    let begin = tokio::time::sleep_until(begin_at.unwrap_or_else(tokio::time::Instant::now));
-    tokio::pin!(begin);
-    let mut begun = begin_at.is_none();
 
     loop {
         tokio::select! {
             _ = cancellation.cancelled() => break,
             _ = &mut deadline => break,
-            _ = &mut begin, if !begun => {
-                begun = true;
-                quiet.begin();
-            }
             next = stream.next() => {
                 let Some(frame) = next else {
                     break;

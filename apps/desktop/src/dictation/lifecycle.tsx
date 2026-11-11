@@ -36,7 +36,8 @@ export { useDictationStatus } from "./state";
 let lifecycle: Promise<void> = Promise.resolve();
 
 // How long the start cue sounds once asked for, opening its output included.
-// Muting or lowering other audio waits for it, so the cue is heard.
+// Muting or lowering other audio waits for it, so the cue is heard, unless
+// the last dictation left other audio quiet: it then stays quiet throughout.
 const START_CUE_MS = 400;
 
 export function waitForDictationCleanup() {

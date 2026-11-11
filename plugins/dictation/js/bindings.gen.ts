@@ -202,6 +202,8 @@ export type RecordingEnvironment = { config: Config;
 /**
  * Holds the change back this long after the microphone opens, so a
  * start sound already playing is heard before the output goes quiet.
+ * An output the last capture left quiet is taken over at once instead,
+ * so it does not come back in between.
  */
 delayMs: number }
 export type RecordingUpdate = { type: "transcript"; text: string; partial: string } | { type: "previewUnavailable" } | 

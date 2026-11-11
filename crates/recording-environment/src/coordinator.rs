@@ -31,6 +31,10 @@ impl Kind {
     const fn silences_output(self) -> bool {
         matches!(self, Self::Mute | Self::Duck)
     }
+
+    const fn quiets_audio(self) -> bool {
+        !matches!(self, Self::Sleep)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -63,6 +67,9 @@ pub(crate) enum Command {
     Begin {
         session: u64,
         effects: Vec<Effect>,
+        /// Holds the effects back this long, unless other audio is still
+        /// quiet from an earlier session.
+        delay: Duration,
     },
     End {
         session: u64,
@@ -89,6 +96,8 @@ struct Worker<E: Environment> {
     environment: E,
     grace: Duration,
     sessions: HashMap<u64, Vec<Effect>>,
+    /// Sessions waiting out their delay, and when it ends.
+    deferred: HashMap<u64, (Vec<Effect>, Instant)>,
     held: [Option<E::Held>; Kind::ALL.len()],
     release_at: [Option<Instant>; Kind::ALL.len()],
     /// `end_then` callbacks waiting for the output to be audible again.
@@ -101,6 +110,7 @@ impl<E: Environment> Worker<E> {
             environment,
             grace,
             sessions: HashMap::new(),
+            deferred: HashMap::new(),
             held: std::array::from_fn(|_| None),
             release_at: [None; Kind::ALL.len()],
             waiting: Vec::new(),
@@ -109,7 +119,13 @@ impl<E: Environment> Worker<E> {
 
     fn serve(mut self, commands: Receiver<Command>) {
         loop {
-            let next = match self.release_at.iter().flatten().min() {
+            let next = match self
+                .release_at
+                .iter()
+                .flatten()
+                .chain(self.deferred.values().map(|(_, at)| at))
+                .min()
+            {
                 Some(&deadline) => {
                     match commands.recv_timeout(deadline.saturating_duration_since(Instant::now()))
                     {
@@ -126,29 +142,32 @@ impl<E: Environment> Worker<E> {
             if let Some(command) = next {
                 self.handle(command);
             }
-            self.release_due(Instant::now());
+            let now = Instant::now();
+            self.begin_due(now);
+            self.release_due(now);
         }
         self.release_all();
     }
 
     fn handle(&mut self, command: Command) {
         match command {
-            Command::Begin { session, effects } => {
-                for kind in Kind::ALL {
-                    let Some(&effect) = effects.iter().find(|effect| effect.kind() == kind) else {
-                        continue;
-                    };
-                    if self.held[kind.index()].is_some() {
-                        self.release_at[kind.index()] = None;
-                    } else {
-                        let environment = &mut self.environment;
-                        self.held[kind.index()] =
-                            contained("changing the environment", || environment.hold(effect));
-                    }
+            Command::Begin {
+                session,
+                effects,
+                delay,
+            } => {
+                // Waiting while an earlier session still keeps other audio
+                // down would let it come back in between: back-to-back
+                // captures take it over at once instead.
+                if delay.is_zero() || self.quiet() {
+                    self.begin(session, effects);
+                } else {
+                    self.deferred
+                        .insert(session, (effects, Instant::now() + delay));
                 }
-                self.sessions.insert(session, effects);
             }
             Command::End { session, then } => {
+                self.deferred.remove(&session);
                 if let Some(effects) = self.sessions.remove(&session) {
                     let release_at = Instant::now() + self.grace;
                     for kind in effects.iter().map(|effect| effect.kind()) {
@@ -170,6 +189,7 @@ impl<E: Environment> Worker<E> {
             }
             Command::Shutdown(done) => {
                 self.sessions.clear();
+                self.deferred.clear();
                 self.release_all();
                 let _ = done.send(());
             }
@@ -178,6 +198,38 @@ impl<E: Environment> Worker<E> {
                 let _ = reply.send(());
             }
         }
+    }
+
+    fn begin(&mut self, session: u64, effects: Vec<Effect>) {
+        for kind in Kind::ALL {
+            let Some(&effect) = effects.iter().find(|effect| effect.kind() == kind) else {
+                continue;
+            };
+            if self.held[kind.index()].is_some() {
+                self.release_at[kind.index()] = None;
+            } else {
+                let environment = &mut self.environment;
+                self.held[kind.index()] =
+                    contained("changing the environment", || environment.hold(effect));
+            }
+        }
+        self.sessions.insert(session, effects);
+    }
+
+    fn begin_due(&mut self, now: Instant) {
+        let due: Vec<_> = self.deferred.extract_if(|_, (_, at)| *at <= now).collect();
+        for (session, (effects, _)) in due {
+            self.begin(session, effects);
+        }
+    }
+
+    /// Whether other audio is still muted, lowered or paused for a session,
+    /// live or within its grace.
+    fn quiet(&self) -> bool {
+        Kind::ALL
+            .into_iter()
+            .filter(|kind| kind.quiets_audio())
+            .any(|kind| self.held[kind.index()].is_some())
     }
 
     fn wanted(&self, kind: Kind) -> bool {
@@ -292,11 +344,16 @@ mod tests {
         }
 
         fn begin(&mut self, effects: &[Effect]) -> u64 {
+            self.begin_after(effects, Duration::ZERO)
+        }
+
+        fn begin_after(&mut self, effects: &[Effect], delay: Duration) -> u64 {
             self.next += 1;
             self.commands
                 .send(Command::Begin {
                     session: self.next,
                     effects: effects.to_vec(),
+                    delay,
                 })
                 .unwrap();
             self.next
@@ -367,6 +424,27 @@ mod tests {
         let second = environment.begin(&[Effect::Mute]);
         environment.end(second);
         assert_eq!(environment.settled(), [Held(Effect::Mute)]);
+        assert_eq!(environment.shutdown(), [Restored(Kind::Mute)]);
+    }
+
+    /// The start sound holds each capture's change back for longer than the
+    /// grace lasts, which let a queue's output come back between captures.
+    #[test]
+    fn a_capture_starting_while_the_output_is_still_quiet_takes_it_over_without_its_delay() {
+        let grace = Duration::from_millis(100);
+        let delay = Duration::from_millis(200);
+        let mut environment = Harness::new(grace);
+        let first = environment.begin_after(&[Effect::Mute], delay);
+        assert_eq!(environment.settled(), []);
+        std::thread::sleep(delay * 2);
+        assert_eq!(environment.settled(), [Held(Effect::Mute)]);
+
+        environment.end(first);
+        let second = environment.begin_after(&[Effect::Mute], delay);
+        std::thread::sleep((grace + delay) * 2);
+        assert_eq!(environment.settled(), []);
+
+        environment.end(second);
         assert_eq!(environment.shutdown(), [Restored(Kind::Mute)]);
     }
 

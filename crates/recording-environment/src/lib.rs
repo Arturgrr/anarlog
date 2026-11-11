@@ -10,11 +10,15 @@
 //! // At startup, once, before the first dictation.
 //! recording_environment::recover(app_data_dir);
 //!
-//! // When a capture starts, before the microphone opens. It returns at once.
-//! let environment = recording_environment::begin(Config {
-//!     behavior: AudioBehavior::Duck { volume: 0.2 },
-//!     prevent_sleep: true,
-//! });
+//! // When a capture starts, before the microphone opens. It returns at once;
+//! // the change waits until the start sound has played.
+//! let environment = recording_environment::begin(
+//!     Config {
+//!         behavior: AudioBehavior::Duck { volume: 0.2 },
+//!         prevent_sleep: true,
+//!     },
+//!     Duration::from_millis(400),
+//! );
 //! // ... record; the capture ends, by stopping, cancelling or failing:
 //! environment.end(); // dropping it does the same
 //!
@@ -27,9 +31,10 @@
 //! owns every change, so `begin`, `end` and dropping a [`Session`] only send
 //! it a message. Overlapping sessions share each change: the first one that
 //! wants it applies it, and it is restored once the last one ends and no new
-//! session wants it within [`RESTORE_GRACE`], so captures that follow each
-//! other keep the output quiet instead of capturing a lowered volume as the
-//! original.
+//! session wants it within [`RESTORE_GRACE`]. A session that begins while
+//! other audio is still quiet takes the change over at once, whatever delay
+//! it asked for, so captures that follow each other keep the output quiet
+//! instead of capturing a lowered volume as the original.
 //!
 //! The `macos-private-api` feature lets "Pause media" pause a browser on
 //! macOS; enable it only for direct distribution, never the App Store.
@@ -54,7 +59,8 @@ use std::time::Duration;
 use coordinator::{Command, Effect};
 
 /// How long a change outlives the session that made it, so the next capture
-/// of a queue or a double tap finds the output still quiet.
+/// of a queue or a double tap finds the output still quiet and takes it over
+/// without waiting for its start sound.
 pub const RESTORE_GRACE: Duration = Duration::from_millis(300);
 
 /// "Lower audio" volume when a setting carries no usable one, as a fraction
@@ -112,9 +118,12 @@ impl Config {
     }
 }
 
-/// Applies `config` until the returned session ends or drops. Returns at
-/// once; the changes, and any volume ramp, happen on a worker thread.
-pub fn begin(config: Config) -> Session {
+/// Applies `config` after `delay` until the returned session ends or drops.
+/// A `delay` lets a start sound already playing be heard first; it is
+/// skipped while an earlier session still keeps other audio muted, lowered
+/// or paused, so nothing comes back in between. Returns at once; the
+/// changes, and any volume ramp, happen on a worker thread.
+pub fn begin(config: Config, delay: Duration) -> Session {
     let effects = config.effects();
     if effects.is_empty() {
         return Session::inert();
@@ -128,6 +137,7 @@ pub fn begin(config: Config) -> Session {
         .send(Command::Begin {
             session: id,
             effects,
+            delay,
         })
         .is_err()
     {
