@@ -48,11 +48,21 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
-  async validate(shortcut: string): Promise<Result<null, string>> {
+  /**
+   * Checks a dictation shortcut, which must differ from the `paste_last`
+   * shortcut when there is one.
+   */
+  async validate(
+    shortcut: string,
+    pasteLast: string | null,
+  ): Promise<Result<null, string>> {
     try {
       return {
         status: "ok",
-        data: await TAURI_INVOKE("plugin:shortcut|validate", { shortcut }),
+        data: await TAURI_INVOKE("plugin:shortcut|validate", {
+          shortcut,
+          pasteLast,
+        }),
       };
     } catch (e) {
       if (e instanceof Error) throw e;
@@ -70,13 +80,56 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
+  /**
+   * Registers `shortcut`, a key with modifiers, to paste the last dictation
+   * again, replacing the previous one; `None` unregisters it. The dictation
+   * shortcuts are left as they are. Fires on key press only.
+   */
+  async configurePasteLast(
+    shortcut: string | null,
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:shortcut|configure_paste_last", {
+          shortcut,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
+  /**
+   * Checks a paste-last shortcut: a key with modifiers that none of the
+   * `dictation` shortcuts uses.
+   */
+  async validatePasteLast(
+    shortcut: string,
+    dictation: string[],
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:shortcut|validate_paste_last", {
+          shortcut,
+          dictation,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
 };
 
 /** user-defined events **/
 
 export const events = __makeEvents__<{
+  pasteLastEvent: PasteLastEvent;
   shortcutEvent: ShortcutEvent;
 }>({
+  pasteLastEvent: "plugin:shortcut:paste-last-event",
   shortcutEvent: "plugin:shortcut:shortcut-event",
 });
 
@@ -97,6 +150,11 @@ export type Options = {
   doubleTapLockEnabled?: boolean;
   minimumKeyTimeMs?: number;
 };
+/**
+ * Paste the last dictation again: its shortcut was pressed, or its tray
+ * item chosen.
+ */
+export type PasteLastEvent = Record<string, never>;
 export type ShortcutEvent =
   | { type: "pressed" }
   | { type: "released" }

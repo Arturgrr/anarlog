@@ -8,6 +8,7 @@ import { commands as transcription } from "@anlg/plugin-transcription";
 import { Button } from "@anlg/ui/components/ui/button";
 import { Textarea } from "@anlg/ui/components/ui/textarea";
 
+import { DictationPasteLastSettings } from "./dictation-paste-last";
 import { DictationShortcuts, isDoubleTapShortcut } from "./dictation-shortcut";
 
 import { useDictationStatus } from "~/dictation/state";
@@ -246,6 +247,7 @@ export function SettingsDictation() {
             Librelog closes.
           </Trans>
         </p>
+        <DictationPasteLastSettings />
         {status.lastTranscript && (
           <div className="flex flex-col gap-3">
             <h3 className="text-sm font-medium">

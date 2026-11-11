@@ -65,3 +65,9 @@ common_event_derives! {
         Discarded,
     }
 }
+
+common_event_derives! {
+    /// Paste the last dictation again: its shortcut was pressed, or its tray
+    /// item chosen.
+    pub struct PasteLastEvent {}
+}

@@ -10,9 +10,11 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
 import { waitForDictationCleanup } from "~/dictation/lifecycle";
+import { waitForPasteLastCleanup } from "~/dictation/paste-last";
 import { useDictationStatus } from "~/dictation/state";
 import { localizeExternalMessage } from "~/i18n/external-messages";
 import { setSettingValues } from "~/settings/queries";
+import { useConfigValue } from "~/shared/config";
 
 const MAX_SHORTCUTS = 4;
 const DOUBLE_TAP_PREFIX = "DoubleTap+";
@@ -39,7 +41,7 @@ export function isDoubleTapShortcut(shortcut: string) {
   return shortcut.startsWith(DOUBLE_TAP_PREFIX);
 }
 
-function shortcutKeys(shortcut: string) {
+export function shortcutKeys(shortcut: string) {
   return isDoubleTapShortcut(shortcut)
     ? [shortcut.slice(DOUBLE_TAP_PREFIX.length), "DoubleTap"]
     : shortcut.split("+");
@@ -73,7 +75,7 @@ function persist(shortcuts: string[]) {
   });
 }
 
-function useKeyLabel() {
+export function useKeyLabel() {
   const { t } = useLingui();
   const mac = platform() === "macos";
   const labels: Record<string, string> = {
@@ -101,7 +103,7 @@ function useKeyLabel() {
   return (key: string) => labels[key] ?? key.replace(/^(Key|Digit)/, "");
 }
 
-function ShortcutKeys({ keys }: { keys: string[] }) {
+export function ShortcutKeys({ keys }: { keys: string[] }) {
   const label = useKeyLabel();
   return (
     <span className="inline-flex items-center gap-1">
@@ -117,42 +119,35 @@ function ShortcutKeys({ keys }: { keys: string[] }) {
   );
 }
 
-export function DictationShortcuts({ shortcuts }: { shortcuts: string[] }) {
-  const { t } = useLingui();
-  const mac = platform() === "macos";
-  const label = useKeyLabel();
-  const titleId = useId();
-  const hintId = useId();
-  const [editing, setEditing] = useState<number | null>(null);
+// Records one shortcut at a time into `slot`. While recording, every global
+// shortcut is released so the keys reach the page; a validation result that
+// arrives after the recording ended is dropped.
+export function useShortcutRecorder<Slot>({
+  validate,
+  persist,
+}: {
+  validate: (value: string, slot: Slot) => Promise<string | null>;
+  persist: (value: string, slot: Slot) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState<Slot | null>(null);
   const attempt = useRef(0);
   const persisting = useRef(false);
   const save = useMutation({
     mutationFn: async ({
       value,
-      index,
+      slot,
       token,
     }: {
       value: string;
-      index: number;
+      slot: Slot;
       token: number;
     }) => {
-      const identity = shortcutIdentity(value);
-      if (
-        shortcuts.some(
-          (shortcut, position) =>
-            position !== index && shortcutIdentity(shortcut) === identity,
-        )
-      )
-        throw new Error(t`This shortcut is already in your list.`);
-      const result = await shortcutCommands.validate(value);
+      const problem = await validate(value, slot);
       if (token !== attempt.current) return;
-      if (result.status === "error")
-        throw new Error(localizeExternalMessage(result.error));
-      const next = shortcuts.slice();
-      next[index] = value;
+      if (problem) throw new Error(problem);
       persisting.current = true;
       try {
-        await persist(next);
+        await persist(value, slot);
       } finally {
         persisting.current = false;
       }
@@ -161,20 +156,12 @@ export function DictationShortcuts({ shortcuts }: { shortcuts: string[] }) {
       if (token === attempt.current) finish();
     },
   });
-  const remove = useMutation({
-    mutationFn: (index: number) =>
-      persist(shortcuts.filter((_, position) => position !== index)),
-  });
-  const busy = save.isPending || remove.isPending;
-  const full = shortcuts.length >= MAX_SHORTCUTS;
-  const error = save.error ?? remove.error;
 
-  function start(index: number) {
+  function start(slot: Slot) {
     attempt.current += 1;
     save.reset();
-    remove.reset();
     useDictationStatus.setState({ capturingShortcut: true });
-    setEditing(index);
+    setEditing(slot);
   }
 
   function finish() {
@@ -190,19 +177,102 @@ export function DictationShortcuts({ shortcuts }: { shortcuts: string[] }) {
     useDictationStatus.setState({ capturingShortcut: false });
   });
 
+  return {
+    editing,
+    start,
+    finish,
+    saving: save.isPending,
+    error: save.error,
+    save: (value: string, slot: Slot) =>
+      save.mutate({ value, slot, token: attempt.current }),
+    input: () => {
+      if (!save.isPending) save.reset();
+    },
+  };
+}
+
+export function ShortcutCaptureHint({
+  id,
+  doubleTap,
+}: {
+  id: string;
+  doubleTap: boolean;
+}) {
+  return (
+    <p id={id} className="text-muted-foreground text-xs">
+      {doubleTap ? (
+        <Trans>
+          Press the keys you want, or press one modifier key twice quickly, then
+          press Enter to save. Enter can't be part of a shortcut. Press
+          Backspace to clear or Escape to cancel.
+        </Trans>
+      ) : (
+        <Trans>
+          Press the keys you want, then press Enter to save. Enter can't be part
+          of a shortcut. Press Backspace to clear or Escape to cancel.
+        </Trans>
+      )}
+    </p>
+  );
+}
+
+export function DictationShortcuts({ shortcuts }: { shortcuts: string[] }) {
+  const { t } = useLingui();
+  const mac = platform() === "macos";
+  const label = useKeyLabel();
+  const titleId = useId();
+  const hintId = useId();
+  const pasteLastEnabled = useConfigValue("dictation_paste_last_enabled");
+  const pasteLast = useConfigValue("dictation_paste_last_shortcut");
+  const recorder = useShortcutRecorder<number>({
+    validate: async (value, index) => {
+      const identity = shortcutIdentity(value);
+      if (
+        shortcuts.some(
+          (shortcut, position) =>
+            position !== index && shortcutIdentity(shortcut) === identity,
+        )
+      )
+        return t`This shortcut is already in your list.`;
+      const result = await shortcutCommands.validate(
+        value,
+        pasteLastEnabled ? pasteLast : null,
+      );
+      return result.status === "error"
+        ? localizeExternalMessage(result.error)
+        : null;
+    },
+    persist: (value, index) => {
+      const next = shortcuts.slice();
+      next[index] = value;
+      return persist(next);
+    },
+  });
+  const remove = useMutation({
+    mutationFn: (index: number) =>
+      persist(shortcuts.filter((_, position) => position !== index)),
+  });
+  const busy = recorder.saving || remove.isPending;
+  const full = shortcuts.length >= MAX_SHORTCUTS;
+  const error = recorder.error ?? remove.error;
+  const editing = recorder.editing;
+
+  function start(index: number) {
+    remove.reset();
+    recorder.start(index);
+  }
+
   const describe = (shortcut: string) =>
     shortcutKeys(shortcut).map(label).join(" ");
   const capture = editing !== null && (
     <ShortcutCapture
+      label={t`New dictation shortcut`}
+      doubleTap={mac}
       describedBy={hintId}
-      busy={save.isPending}
-      onInput={() => {
-        if (!save.isPending) save.reset();
-      }}
-      onConfirm={(value) =>
-        save.mutate({ value, index: editing, token: attempt.current })
-      }
-      onCancel={finish}
+      busy={recorder.saving}
+      onInput={recorder.input}
+      onConfirm={(value) => recorder.save(value, editing)}
+      onCancel={recorder.finish}
     />
   );
 
@@ -263,22 +333,7 @@ export function DictationShortcuts({ shortcuts }: { shortcuts: string[] }) {
           )}
         </ul>
       </div>
-      {editing !== null && (
-        <p id={hintId} className="text-muted-foreground text-xs">
-          {mac ? (
-            <Trans>
-              Press the keys you want, or press one modifier key twice quickly,
-              then press Enter to save. Enter can't be part of a shortcut. Press
-              Backspace to clear or Escape to cancel.
-            </Trans>
-          ) : (
-            <Trans>
-              Press the keys you want, then press Enter to save. Enter can't be
-              part of a shortcut. Press Backspace to clear or Escape to cancel.
-            </Trans>
-          )}
-        </p>
-      )}
+      {editing !== null && <ShortcutCaptureHint id={hintId} doubleTap={mac} />}
       {error && (
         <p role="alert" className="text-destructive text-sm">
           {error.message}
@@ -314,13 +369,7 @@ export function DictationShortcuts({ shortcuts }: { shortcuts: string[] }) {
                     shortcutIdentity(shortcut) === shortcutIdentity(value),
                 )
               }
-              onClick={() =>
-                save.mutate({
-                  value,
-                  index: shortcuts.length,
-                  token: attempt.current,
-                })
-              }
+              onClick={() => recorder.save(value, shortcuts.length)}
             >
               {presetLabel}
             </Button>
@@ -332,25 +381,30 @@ export function DictationShortcuts({ shortcuts }: { shortcuts: string[] }) {
 
 // Keys are read on the window while capturing: WebKit does not focus a button
 // when it is clicked, so the button would never receive them.
-function ShortcutCapture({
+export function ShortcutCapture({
+  label,
+  doubleTap,
   describedBy,
   busy,
   onInput,
   onConfirm,
   onCancel,
 }: {
+  label: string;
+  doubleTap: boolean;
   describedBy: string;
   busy: boolean;
   onInput: () => void;
   onConfirm: (shortcut: string) => void;
   onCancel: () => void;
 }) {
-  const { t } = useLingui();
-  const mac = platform() === "macos";
   const ref = useRef<HTMLDivElement>(null);
-  // Wait until the registered dictation shortcuts are released, or pressing
-  // one would start dictation instead of reaching this page.
-  const prepare = useMutation({ mutationFn: waitForDictationCleanup });
+  // Wait until the registered shortcuts are released, or pressing one would
+  // start dictation or paste instead of reaching this page.
+  const prepare = useMutation({
+    mutationFn: () =>
+      Promise.all([waitForDictationCleanup(), waitForPasteLastCleanup()]),
+  });
   const [capture, setCapture] = useState<{
     pending: string | null;
     held: string[];
@@ -400,11 +454,13 @@ function ShortcutCapture({
         return update({ pending: null, held: [] });
       }
       if (MODIFIER_KEYS.includes(event.key)) {
-        // On macOS, two quick presses of one modifier key on its own record a
-        // double-tap shortcut.
+        // Where double taps are allowed (macOS dictation), two quick presses of
+        // one modifier key on its own record a double-tap shortcut.
         const previous = lastModifier;
         lastModifier =
-          mac && modifiers.length === 1 && DOUBLE_TAP_CODES.includes(event.code)
+          doubleTap &&
+          modifiers.length === 1 &&
+          DOUBLE_TAP_CODES.includes(event.code)
             ? { code: event.code, at: performance.now() }
             : null;
         if (
@@ -453,7 +509,7 @@ function ShortcutCapture({
       ref={ref}
       tabIndex={0}
       role="textbox"
-      aria-label={t`New dictation shortcut`}
+      aria-label={label}
       aria-describedby={describedBy}
       aria-busy={busy || !prepare.isSuccess}
       className={cn([

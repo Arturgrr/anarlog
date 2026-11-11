@@ -7,6 +7,8 @@ Default permissions for the plugin
 - `allow-configure`
 - `allow-validate`
 - `allow-set-active`
+- `allow-configure-paste-last`
+- `allow-validate-paste-last`
 - `allow-register-hotkey`
 - `allow-unregister-hotkey`
 
@@ -41,6 +43,32 @@ Enables the configure command without any pre-configured scope.
 <td>
 
 Denies the configure command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:allow-configure-paste-last`
+
+</td>
+<td>
+
+Enables the configure_paste_last command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:deny-configure-paste-last`
+
+</td>
+<td>
+
+Denies the configure_paste_last command without any pre-configured scope.
 
 </td>
 </tr>
@@ -145,6 +173,32 @@ Enables the validate command without any pre-configured scope.
 <td>
 
 Denies the validate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:allow-validate-paste-last`
+
+</td>
+<td>
+
+Enables the validate_paste_last command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:deny-validate-paste-last`
+
+</td>
+<td>
+
+Denies the validate_paste_last command without any pre-configured scope.
 
 </td>
 </tr>
