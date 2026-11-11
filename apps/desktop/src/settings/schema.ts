@@ -4,6 +4,17 @@ const DEFAULT_DICTATION_SHORTCUT =
     ? "DoubleTap+AltLeft"
     : "Control+Alt+Space";
 
+// Windows reports AltGr as Control + Alt, so Control + Alt + V would take
+// AltGr + V, which types "@" on some layouts.
+const DEFAULT_PASTE_LAST_SHORTCUT =
+  typeof navigator === "undefined"
+    ? "Control+Alt+KeyV"
+    : navigator.userAgent.includes("Macintosh")
+      ? "Alt+Shift+KeyV"
+      : navigator.userAgent.includes("Windows")
+        ? "Control+Alt+Shift+KeyV"
+        : "Control+Alt+KeyV";
+
 export const SETTING_DEFINITIONS = {
   intelligence_disabled: {
     type: "boolean",
@@ -50,10 +61,7 @@ export const SETTING_DEFINITIONS = {
   dictation_paste_last_shortcut: {
     type: "string",
     path: ["dictation", "paste_last_shortcut"],
-    default: (typeof navigator !== "undefined" &&
-    navigator.userAgent.includes("Macintosh")
-      ? "Alt+Shift+KeyV"
-      : "Control+Alt+KeyV") as string,
+    default: DEFAULT_PASTE_LAST_SHORTCUT as string,
   },
   dictation_keep_on_clipboard: {
     type: "boolean",
