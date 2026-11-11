@@ -50,6 +50,7 @@ import {
 } from "./queries";
 
 import { flushDatabaseWrites } from "~/db/write-queue";
+import { resolveConfigValue } from "~/shared/config";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 
 describe("SQLite settings", () => {
@@ -333,6 +334,38 @@ describe("SQLite settings", () => {
           ),
         ),
     ).toBe(false);
+  });
+
+  it("keeps the floating bar off after updating from a build that saved it on, until it is turned on again", async () => {
+    const rows = new Map([
+      ["floating_bar_enabled", JSON.stringify(true)],
+      [
+        "legacy_settings_document",
+        JSON.stringify({ general: { floating_bar_enabled: true } }),
+      ],
+    ]);
+    mocks.execute.mockImplementation(async () =>
+      Array.from(rows, ([id, value_json]) => ({ id, value_json })),
+    );
+    mocks.executeTransaction.mockImplementation(async (statements) => {
+      for (const statement of statements) {
+        rows.set(String(statement.params[0]), String(statement.params[1]));
+      }
+      return [1];
+    });
+    const launch = async () => {
+      await initializeApplicationSettings();
+      return resolveConfigValue(
+        "show_floating_bar",
+        await getStoredSettingValues(),
+      );
+    };
+
+    expect(await launch()).toBe(false);
+
+    await setSettingValues({ show_floating_bar: true });
+
+    expect(await launch()).toBe(true);
   });
 
   it("initializes languages from OS preferences", async () => {

@@ -9,7 +9,6 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import {
   createMeetingFloatLabelContext,
   createMeetingFloatRenderRequest,
-  loadMeetingFloatData,
   type MeetingFloatData,
   subscribeMeetingFloatData,
 } from "./hooks";
@@ -37,11 +36,9 @@ import {
   createFloatingMeetingWindowSynchronizer,
   hideFloatingMeetingPanel,
   hideLiveCaptionPanel,
-  showFloatingMeetingWindow,
 } from "./window-panel";
 
 import {
-  getStoredSettingValues,
   setSettingValue,
   useSetSettingValues,
   useStoredSettingValue,
@@ -57,7 +54,7 @@ export {
 } from "./route-state";
 
 export function FloatingMeetingWindowHost() {
-  const floatingBarEnabled = useConfigValue("floating_bar_enabled");
+  const floatingBarEnabled = useConfigValue("show_floating_bar");
   const storedSettings = useConfigValues(FLOATING_OVERLAY_SETTING_KEYS);
   const overlaySettings = getFloatingOverlaySettings(storedSettings);
   const floatingOverlaySupported = isFloatingBarSupported();
@@ -219,7 +216,6 @@ function FloatingMeetingWindowSync({
         enabledRef.current
           ? getCurrentFloatingRouteState(
               state,
-              undefined,
               settingsRef.current,
               getFloatingLiveCaptionToggleVisible(state),
               meetingData,
@@ -356,7 +352,6 @@ function FloatingMeetingWindowSettingsSync({
 
 function getCurrentFloatingRouteState(
   state: ListenerState,
-  sessionId?: string,
   settings: FloatingOverlaySettings = DEFAULT_FLOATING_OVERLAY_SETTINGS,
   liveCaptionToggleVisible = false,
   meetingData?: MeetingFloatData,
@@ -366,7 +361,6 @@ function getCurrentFloatingRouteState(
 ): FloatingRouteState | null {
   return getFloatingRouteState(state, {
     sttProvider,
-    sessionId,
     colorScheme: getCurrentFloatingBarColorScheme(),
     settings,
     liveCaptionToggleVisible,
@@ -440,36 +434,4 @@ function subscribeToAppliedTheme(onStoreChange: () => void) {
     attributes: true,
   });
   return () => observer.disconnect();
-}
-
-export async function openFloatingMeetingPanel({
-  sessionId,
-  enabled,
-}: {
-  sessionId?: string;
-  enabled: boolean;
-}) {
-  if (!enabled) {
-    await hideFloatingMeetingPanel();
-    return;
-  }
-
-  const state = listenerStore.getState();
-  const [{ values }, meetingData] = await Promise.all([
-    getStoredSettingValues(),
-    loadMeetingFloatData(),
-  ]);
-  const routeState = getCurrentFloatingRouteState(
-    state,
-    sessionId,
-    getFloatingOverlaySettings(values),
-    getFloatingLiveCaptionToggleVisible(state),
-    meetingData,
-  );
-
-  if (!routeState) {
-    return;
-  }
-
-  await showFloatingMeetingWindow(routeState, true);
 }

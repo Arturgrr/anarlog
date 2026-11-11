@@ -10,7 +10,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { OverflowButton } from "./index";
 
-import { openFloatingMeetingPanel } from "~/meeting-float/host";
 import type { EditorView } from "~/store/zustand/tabs/schema";
 
 const {
@@ -25,6 +24,7 @@ const {
   useHasTranscriptMock,
   useListenerMock,
   useConfigValueMock,
+  setShowFloatingBarMock,
   platformMock,
   windowShowMock,
   audioExistMock,
@@ -47,6 +47,7 @@ const {
   useHasTranscriptMock: vi.fn(),
   useListenerMock: vi.fn(),
   useConfigValueMock: vi.fn(),
+  setShowFloatingBarMock: vi.fn(),
   platformMock: vi.fn(() => "macos"),
   windowShowMock: vi.fn(() => Promise.resolve({ status: "ok", data: null })),
   audioExistMock: vi.fn(),
@@ -155,8 +156,8 @@ vi.mock("../metadata", () => ({
   ),
 }));
 
-vi.mock("~/meeting-float/host", () => ({
-  openFloatingMeetingPanel: vi.fn(),
+vi.mock("~/settings/queries", () => ({
+  useSetSettingValue: () => setShowFloatingBarMock,
 }));
 
 vi.mock("~/audio-player", () => ({
@@ -244,7 +245,8 @@ const ACTIONS = [
   "Show Audio in Finder",
   "Show Audio in Explorer",
   "Show Audio in Folder",
-  "Open floating panel",
+  "Show floating bar",
+  "Hide floating bar",
   "Open in New Window",
   "Delete recording",
   "Delete note",
@@ -361,7 +363,7 @@ describe("OverflowButton", () => {
       {},
       [
         "Start listening",
-        "Open floating panel",
+        "Hide floating bar",
         "Open in New Window",
         "Delete note",
       ],
@@ -427,19 +429,18 @@ describe("OverflowButton", () => {
     expect(regenerateTranscriptMock).toHaveBeenCalledTimes(1);
   });
 
-  it.each(["macos", "linux"])(
-    "opens the floating panel while actively listening on %s",
-    (platform) => {
-      arrange({ mode: "active", floatingPanel: true, platform });
+  it.each([
+    { shown: false, action: "Show floating bar", platform: "macos" },
+    { shown: true, action: "Hide floating bar", platform: "linux" },
+  ])(
+    "turns the floating bar on and off during a meeting: $action",
+    ({ shown, action, platform }) => {
+      arrange({ mode: "active", floatingPanel: shown, platform });
       renderOverflow();
 
-      fireEvent.click(
-        screen.getByRole("button", { name: "Open floating panel" }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: action }));
 
-      expect(openFloatingMeetingPanel).toHaveBeenCalledWith(
-        expect.objectContaining({ sessionId: "session-1", enabled: true }),
-      );
+      expect(setShowFloatingBarMock).toHaveBeenCalledWith(!shown);
     },
   );
 

@@ -36,7 +36,6 @@ const SETTINGS_FORM_KEYS = [
   "autostart",
   "automatic_updates",
   "auto_stop_meetings",
-  "floating_bar_enabled",
   "show_app_in_dock",
   "show_tray_icon",
   "notification_detect",
@@ -59,7 +58,6 @@ function useSettingsForm(storedSettings: StoredSettingValues) {
       autostart: settingsValue.autostart,
       automatic_updates: settingsValue.automatic_updates,
       auto_stop_meetings: settingsValue.auto_stop_meetings,
-      floating_bar_enabled: settingsValue.floating_bar_enabled,
       show_app_in_dock: settingsValue.show_app_in_dock,
       show_tray_icon: settingsValue.show_tray_icon,
       notification_detect: settingsValue.notification_detect,
@@ -97,7 +95,6 @@ function useSettingsForm(storedSettings: StoredSettingValues) {
         autostart: normalizedValue.autostart,
         automatic_updates: normalizedValue.automatic_updates,
         auto_stop_meetings: normalizedValue.auto_stop_meetings,
-        floating_bar_enabled: normalizedValue.floating_bar_enabled,
         show_app_in_dock: normalizedValue.show_app_in_dock,
         show_tray_icon: normalizedValue.show_tray_icon,
         notification_detect: normalizedValue.notification_detect,
@@ -160,6 +157,10 @@ function SettingsSectionContent({
 }) {
   const { form, submitFieldValue } = useSettingsForm(storedSettings);
   const setSettingValues = useSetSettingValues();
+  const showFloatingBar = resolveConfigValue(
+    "show_floating_bar",
+    storedSettings,
+  );
   const audioRetention =
     resolveConfigValue("audio_retention", storedSettings) || "forever";
   const rememberSpeakers =
@@ -300,9 +301,9 @@ function SettingsSectionContent({
                     submitFieldValue("auto_stop_meetings", value),
                 }}
                 floatingBar={{
-                  value: values.floating_bar_enabled,
+                  value: showFloatingBar,
                   onChange: (value) =>
-                    submitFieldValue("floating_bar_enabled", value),
+                    setSettingValues({ show_floating_bar: value }),
                 }}
                 meetingDisclosureAutoPost={{
                   value: values.consent_auto_send_chat,
