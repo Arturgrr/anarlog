@@ -409,6 +409,23 @@ function ActiveDictation() {
       onTranscript: (lastTranscript) => {
         if (!disposed) useDictationStatus.setState({ lastTranscript });
       },
+      // A shortcut being recorded in Settings would take the paste's keys,
+      // and the text would land in Settings.
+      insertionPaused: (signal) => {
+        if (!useDictationStatus.getState().capturingShortcut) return null;
+        return new Promise<void>((resolve) => {
+          const done = () => {
+            unsubscribe();
+            signal.removeEventListener("abort", done);
+            resolve();
+          };
+          const unsubscribe = useDictationStatus.subscribe((state) => {
+            if (!state.capturingShortcut) done();
+          });
+          signal.addEventListener("abort", done);
+          if (signal.aborted) done();
+        });
+      },
       onError,
       onStatus: (next, outcome) => {
         const previous = status;

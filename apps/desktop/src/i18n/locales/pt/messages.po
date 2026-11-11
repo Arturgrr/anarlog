@@ -2500,6 +2500,10 @@ msgstr "Pegando o Ritmo"
 msgid "Finish dictating before pasting your last dictation."
 msgstr "Termine de ditar antes de colar seu último ditado."
 
+#: src/dictation/paste-last.tsx
+msgid "Finish recording the shortcut before pasting your last dictation."
+msgstr "Termine de gravar o atalho antes de colar seu último ditado."
+
 #: src/settings/ai/llm/models.tsx
 msgid "Finish the connection above to see the models."
 msgstr "Conclua a conexão acima para ver os modelos."

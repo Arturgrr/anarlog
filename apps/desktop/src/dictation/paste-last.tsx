@@ -62,6 +62,14 @@ async function pasteLast() {
     toast.error(t`Finish dictating before pasting your last dictation.`);
     return;
   }
+  // The shortcut is released then, but the menu bar item is not: the paste
+  // would land in Settings, where the recorder would take its keys.
+  if (useDictationStatus.getState().capturingShortcut) {
+    toast.error(
+      t`Finish recording the shortcut before pasting your last dictation.`,
+    );
+    return;
+  }
   pasting = true;
   try {
     const text = await getLastDictation();

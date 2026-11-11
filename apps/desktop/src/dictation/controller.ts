@@ -89,6 +89,11 @@ export class DictationController<Context> {
       ) => void;
       onTranscript: (text: string) => void;
       onError: (error: unknown) => void;
+      /**
+       * While text may not be inserted, resolves once it may again, or once
+       * `signal` aborts; null when it may be inserted now.
+       */
+      insertionPaused?: (signal: AbortSignal) => Promise<void> | null;
       handsFree: boolean;
     },
   ) {}
@@ -248,8 +253,16 @@ export class DictationController<Context> {
         throw new Error(t`No speech detected. Please try again.`);
       }
       // Pasting while a capture is held would type through its shortcut keys
-      // or end it, so the text waits for the capture to finish.
-      while (this.capture) await this.capture.ended;
+      // or end it, so the text waits for the capture to finish, and for
+      // anything else that pauses insertions.
+      for (;;) {
+        const paused = this.capture
+          ? this.capture.ended
+          : this.dependencies.insertionPaused?.(signal);
+        if (!paused) break;
+        await paused;
+        signal.throwIfAborted();
+      }
       signal.throwIfAborted();
       this.dependencies.onTranscript(transcript.text);
       await this.dependencies.insert(transcript.text);

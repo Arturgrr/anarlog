@@ -2500,6 +2500,10 @@ msgstr "Finding Your Rhythm"
 msgid "Finish dictating before pasting your last dictation."
 msgstr "Finish dictating before pasting your last dictation."
 
+#: src/dictation/paste-last.tsx
+msgid "Finish recording the shortcut before pasting your last dictation."
+msgstr "Finish recording the shortcut before pasting your last dictation."
+
 #: src/settings/ai/llm/models.tsx
 msgid "Finish the connection above to see the models."
 msgstr "Finish the connection above to see the models."

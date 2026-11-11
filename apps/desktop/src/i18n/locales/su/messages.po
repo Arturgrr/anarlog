@@ -2490,6 +2490,10 @@ msgstr ""
 msgid "Finish dictating before pasting your last dictation."
 msgstr ""
 
+#: src/dictation/paste-last.tsx
+msgid "Finish recording the shortcut before pasting your last dictation."
+msgstr ""
+
 #: src/settings/ai/llm/models.tsx
 msgid "Finish the connection above to see the models."
 msgstr ""

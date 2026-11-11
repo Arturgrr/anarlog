@@ -676,6 +676,23 @@ describe("dictation access and lifecycle", () => {
     expect(mocks.insertText).toHaveBeenCalledWith("First.");
   });
 
+  it("holds a ready dictation while a shortcut is recorded, so its paste never lands in Settings", async () => {
+    const finishFirst = holdFirstTranscription();
+    render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await shortcut("pressed");
+    await shortcut("released");
+    await waitFor(() => expect(mocks.runBatch).toHaveBeenCalled());
+    act(() => useDictationStatus.setState({ capturingShortcut: true }));
+    await finishFirst();
+    await waitFor(() => expect(mocks.configure).toHaveBeenLastCalledWith([]));
+    expect(mocks.insertText).not.toHaveBeenCalled();
+    act(() => useDictationStatus.setState({ capturingShortcut: false }));
+    await waitFor(() =>
+      expect(mocks.insertText).toHaveBeenCalledWith("First."),
+    );
+  });
+
   it("records without a live connection to a self-hosted server while an earlier dictation is still transcribing", async () => {
     mocks.settings.dictation_live_preview = true;
     mocks.connection = {
