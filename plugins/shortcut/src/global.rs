@@ -296,8 +296,11 @@ pub async fn set_active(app: tauri::AppHandle, active: bool) -> Result<(), Strin
     let state = app.state::<GlobalState>();
     let mut registration = state.registration.lock().await;
     state.active.store(active, Ordering::SeqCst);
-    if !active {
-        app.state::<press::Presses>().reset();
+    let presses = app.state::<press::Presses>();
+    if active {
+        presses.activate();
+    } else {
+        presses.deactivate();
     }
     #[cfg(target_os = "linux")]
     if uses_portal() {

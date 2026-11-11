@@ -9,26 +9,57 @@ use crate::ShortcutEvent;
 /// it until that shortcut is released, so pressing another one meanwhile does
 /// nothing. `source` is the shortcut's position in the configured list.
 #[derive(Default)]
-pub struct Presses {
-    owner: Mutex<Option<usize>>,
+pub struct Presses(Mutex<State>);
+
+#[derive(Default)]
+struct State {
+    /// The shortcut holding the dictation, and which press that was.
+    owner: Option<(usize, u64)>,
+    presses: u64,
+    /// The press that held the shortcut when a capture became active.
+    active: Option<u64>,
 }
 
 impl Presses {
     fn filter(&self, source: usize, event: ShortcutEvent) -> Option<ShortcutEvent> {
-        let mut owner = self.owner.lock().unwrap_or_else(|e| e.into_inner());
+        let mut state = self.0.lock().unwrap_or_else(|e| e.into_inner());
         let pass = match event {
-            ShortcutEvent::Pressed => owner.is_none(),
-            ShortcutEvent::Released | ShortcutEvent::Discarded => *owner == Some(source),
+            ShortcutEvent::Pressed => state.owner.is_none(),
+            ShortcutEvent::Released | ShortcutEvent::Discarded => {
+                state.owner.is_some_and(|(owner, _)| owner == source)
+            }
             ShortcutEvent::Cancelled => true,
         };
         if pass {
-            *owner = matches!(event, ShortcutEvent::Pressed).then_some(source);
+            state.owner = if matches!(event, ShortcutEvent::Pressed) {
+                state.presses += 1;
+                Some((source, state.presses))
+            } else {
+                None
+            };
         }
         pass.then_some(event)
     }
 
     pub fn reset(&self) {
-        *self.owner.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        self.0.lock().unwrap_or_else(|e| e.into_inner()).owner = None;
+    }
+
+    /// A capture began, held by the current press if any.
+    pub fn activate(&self) {
+        let mut state = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        state.active = state.owner.map(|(_, press)| press);
+    }
+
+    /// A capture ended. Forgets the press that held it, whose release may
+    /// never come, but not a newer press: when a shortcut is released and
+    /// pressed again before this arrives, that press starts the next capture
+    /// and its release must still stop it.
+    pub fn deactivate(&self) {
+        let mut state = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        if state.owner.map(|(_, press)| press) == state.active.take() {
+            state.owner = None;
+        }
     }
 }
 
@@ -63,5 +94,24 @@ mod tests {
         assert!(!pass(0, ShortcutEvent::Discarded));
         assert!(pass(0, ShortcutEvent::Cancelled));
         assert!(pass(0, ShortcutEvent::Pressed));
+    }
+
+    #[test]
+    fn a_quick_second_press_still_stops_its_capture_when_the_first_ends_late() {
+        let presses = Presses::default();
+        let pass = |source, event| presses.filter(source, event).is_some();
+
+        assert!(pass(0, ShortcutEvent::Pressed));
+        presses.activate();
+        assert!(pass(0, ShortcutEvent::Released));
+        assert!(pass(0, ShortcutEvent::Pressed));
+        presses.deactivate();
+        assert!(pass(0, ShortcutEvent::Released));
+
+        // A release that never came no longer blocks the next dictation.
+        assert!(pass(0, ShortcutEvent::Pressed));
+        presses.activate();
+        presses.deactivate();
+        assert!(pass(1, ShortcutEvent::Pressed));
     }
 }
