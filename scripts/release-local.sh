@@ -117,7 +117,8 @@ publish() {
 
   # The same names, manifest and checksums as the workflow's publish job.
   assets="$(mktemp -d)"
-  trap 'rm -rf "$assets"' EXIT
+  # Expanded now: the EXIT trap runs after this function's locals are gone.
+  trap "rm -rf \"$assets\" \"$assets.sums\"" EXIT
   cp "$bundle/dmg/Librelog_${version}_aarch64.dmg" "$assets/"
   cp "$bundle/macos/Librelog.app.tar.gz" "$assets/Librelog_${version}_aarch64.app.tar.gz"
   cp "$bundle/macos/Librelog.app.tar.gz.sig" "$assets/Librelog_${version}_aarch64.app.tar.gz.sig"
