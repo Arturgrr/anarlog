@@ -56,6 +56,7 @@ describe("pt-BR rendering", () => {
             }}
             onStop={() => {}}
             onToggleExpanded={() => {}}
+            onHide={() => {}}
           />
         </ComponentLabelsProvider>
       </I18nProvider>,

@@ -27,6 +27,7 @@ type FloatingOverlaySettingsStorage = Pick<
   | "live_caption_line_count"
   | "live_caption_position"
   | "live_caption_minimized"
+  | "show_floating_bar"
 >;
 
 export const DEFAULT_FLOATING_OVERLAY_SETTINGS: FloatingOverlaySettings = {
@@ -208,6 +209,10 @@ export function getSettingsValuesFromNativeChange(
     change.liveCaptionMinimized !== undefined
   ) {
     values.live_caption_minimized = change.liveCaptionMinimized === true;
+  }
+
+  if (change.showFloatingBar !== null && change.showFloatingBar !== undefined) {
+    values.show_floating_bar = change.showFloatingBar === true;
   }
 
   return values;

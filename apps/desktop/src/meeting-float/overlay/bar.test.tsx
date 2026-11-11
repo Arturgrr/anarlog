@@ -56,6 +56,7 @@ describe("FloatingBarOverlay", () => {
           state={state({ status })}
           onStop={onStop}
           onToggleExpanded={vi.fn()}
+          onHide={vi.fn()}
         />,
       );
 
@@ -73,6 +74,7 @@ describe("FloatingBarOverlay", () => {
         state={state()}
         onStop={vi.fn()}
         onToggleExpanded={onToggleExpanded}
+        onHide={vi.fn()}
       />,
     );
 
@@ -87,6 +89,7 @@ describe("FloatingBarOverlay", () => {
         state={state({ liveCaptionMinimized: false })}
         onStop={vi.fn()}
         onToggleExpanded={onToggleExpanded}
+        onHide={vi.fn()}
       />,
     );
 
@@ -97,5 +100,24 @@ describe("FloatingBarOverlay", () => {
       screen.getByRole("button", { name: "Collapse live transcript" }),
     );
     expect(onToggleExpanded).toHaveBeenCalledWith(false);
+  });
+
+  it("turns itself off without stopping the recording", () => {
+    const onStop = vi.fn();
+    const onHide = vi.fn();
+
+    render(
+      <FloatingBarOverlay
+        state={state()}
+        onStop={onStop}
+        onToggleExpanded={vi.fn()}
+        onHide={onHide}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Hide floating bar" }));
+
+    expect(onHide).toHaveBeenCalledOnce();
+    expect(onStop).not.toHaveBeenCalled();
   });
 });

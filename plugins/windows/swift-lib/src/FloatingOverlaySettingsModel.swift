@@ -8,6 +8,7 @@ struct FloatingOverlaySettingsChangePayload: Codable {
   var liveCaptionLineCount: Int?
   var liveCaptionPosition: LiveCaptionPosition?
   var liveCaptionMinimized: Bool?
+  var showFloatingBar: Bool?
 }
 
 enum FloatingOverlayOpacity {
@@ -112,6 +113,12 @@ final class FloatingOverlaySettingsModel: ObservableObject {
     pendingLiveCaptionMinimized = value
     RustBridge.floatingBarSettingsChanged(
       FloatingOverlaySettingsChangePayload(liveCaptionMinimized: value))
+  }
+
+  // Turns the setting off; the app hides the panel once it has saved it.
+  func hideFloatingBar() {
+    RustBridge.floatingBarSettingsChanged(
+      FloatingOverlaySettingsChangePayload(showFloatingBar: false))
   }
 
   private func applyFloatingBarOpacity(_ value: Double) {

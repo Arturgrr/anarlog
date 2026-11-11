@@ -74,6 +74,7 @@ export function LiveCaptionOverlayScreen() {
             liveCaptionLineCount: null,
             liveCaptionPosition: null,
             liveCaptionMinimized: null,
+            showFloatingBar: null,
           });
         }}
         onHide={() => {
@@ -84,6 +85,7 @@ export function LiveCaptionOverlayScreen() {
             liveCaptionLineCount: null,
             liveCaptionPosition: null,
             liveCaptionMinimized: true,
+            showFloatingBar: null,
           });
         }}
       />

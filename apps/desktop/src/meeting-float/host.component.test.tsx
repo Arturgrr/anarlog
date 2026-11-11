@@ -4,6 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   enabled: true,
   meetingStop: null as null | (() => void),
+  settingsChange: null as
+    | null
+    | ((event: { payload: Record<string, unknown> }) => void),
   settings: {
     current: {
       floating_bar_opacity: 0.78,
@@ -58,7 +61,12 @@ vi.mock("@anlg/plugin-windows", () => ({
   },
   events: {
     floatingBarOpenMain: { listen: mocks.listen },
-    floatingBarSettingsChange: { listen: mocks.listen },
+    floatingBarSettingsChange: {
+      listen: vi.fn(async (callback) => {
+        mocks.settingsChange = callback;
+        return vi.fn();
+      }),
+    },
     floatingBarStop: {
       listen: vi.fn(async (callback) => {
         mocks.meetingStop = callback;
@@ -103,6 +111,7 @@ describe("FloatingMeetingWindowHost", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.meetingStop = null;
+    mocks.settingsChange = null;
     mocks.enabled = true;
     mocks.listenerState.live.status = "active";
     mocks.settings.current = {
@@ -147,5 +156,40 @@ describe("FloatingMeetingWindowHost", () => {
     expect(mocks.liveCaptionHide).toHaveBeenCalled();
     expect(mocks.floatingBarShow).toHaveBeenCalledOnce();
     expect(mocks.floatingBarHide).not.toHaveBeenCalled();
+  });
+
+  it("turns the floating bar off from the bar and back on during a meeting", async () => {
+    const view = render(<FloatingMeetingWindowHost />);
+    await waitFor(() => {
+      expect(mocks.floatingBarShow).toHaveBeenCalledOnce();
+      expect(mocks.settingsChange).not.toBeNull();
+    });
+
+    mocks.settingsChange?.({
+      payload: {
+        floatingBarOpacity: null,
+        liveCaptionOpacity: null,
+        liveCaptionWidth: null,
+        liveCaptionLineCount: null,
+        liveCaptionPosition: null,
+        liveCaptionMinimized: null,
+        showFloatingBar: false,
+      },
+    });
+    expect(mocks.setSettingValues).toHaveBeenCalledWith({
+      show_floating_bar: false,
+    });
+
+    mocks.enabled = false;
+    view.rerender(<FloatingMeetingWindowHost />);
+    await waitFor(() => {
+      expect(mocks.floatingBarHide).toHaveBeenCalled();
+    });
+
+    mocks.enabled = true;
+    view.rerender(<FloatingMeetingWindowHost />);
+    await waitFor(() => {
+      expect(mocks.floatingBarShow).toHaveBeenCalledTimes(2);
+    });
   });
 });

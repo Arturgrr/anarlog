@@ -31,7 +31,9 @@ enum FloatingBarLayout {
   static let dragClickThreshold: CGFloat = 4
 
   static func compactControlsWidth(showsExpand: Bool) -> CGFloat {
-    showsExpand ? compactStopWidth + compactGap + compactIconSize : compactSoloStopWidth
+    let stopAndExpand =
+      showsExpand ? compactStopWidth + compactGap + compactIconSize : compactSoloStopWidth
+    return stopAndExpand + compactGap + compactIconSize
   }
 
   static func compactWidth(showsExpand: Bool) -> CGFloat {
@@ -210,6 +212,16 @@ struct FloatingBarView: View {
           action: { performClick { setExpanded(!isExpanded) } }
         )
       }
+
+      FloatingIconButton(
+        systemName: "xmark",
+        accessibilityLabel: model.labels.hideFloatingBar,
+        color: primaryContentColor.opacity(0.55),
+        hoverFill: controlHoverFill,
+        size: FloatingBarLayout.compactIconSize,
+        action: { performClick { settings.hideFloatingBar() } }
+      )
+      .help(model.labels.hideFloatingBar)
     }
   }
 

@@ -211,6 +211,7 @@ pub struct FloatingBarSettingsChange {
     pub live_caption_line_count: Option<u32>,
     pub live_caption_position: Option<crate::window::live_caption::LiveCaptionPosition>,
     pub live_caption_minimized: Option<bool>,
+    pub show_floating_bar: Option<bool>,
 }
 
 #[cfg(test)]

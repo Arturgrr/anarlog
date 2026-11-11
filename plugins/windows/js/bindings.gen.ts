@@ -405,6 +405,7 @@ export type FloatingBarLabels = {
   barOpacity: string;
   showTranscript: string;
   hideTranscript: string;
+  hideFloatingBar: string;
 };
 export type FloatingBarOpenMain = Record<string, never>;
 export type FloatingBarOverlayAmplitude = { amplitude: number };
@@ -420,6 +421,7 @@ export type FloatingBarSettingsChange = {
   liveCaptionLineCount: number | null;
   liveCaptionPosition: LiveCaptionPosition | null;
   liveCaptionMinimized: boolean | null;
+  showFloatingBar: boolean | null;
 };
 export type FloatingBarState = {
   amplitude: number;
