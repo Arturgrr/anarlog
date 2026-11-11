@@ -9,4 +9,9 @@ permissions = [
   "allow-discard-recording",
   "allow-capture-target",
   "allow-insert-text",
+  "allow-frontmost-app",
+  "allow-keep-history-audio",
+  "allow-history-audio-path",
+  "allow-delete-history-audio",
+  "allow-prune-history-audio",
 ]

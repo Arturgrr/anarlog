@@ -42,6 +42,16 @@ export const SETTING_DEFINITIONS = {
     path: ["dictation", "sounds"],
     default: true as boolean,
   },
+  dictation_history_retention: {
+    type: "string",
+    path: ["dictation", "history_retention"],
+    default: "week" as string,
+  },
+  dictation_history_keep_audio: {
+    type: "boolean",
+    path: ["dictation", "history_keep_audio"],
+    default: false as boolean,
+  },
   export_directory: {
     type: "string",
     path: ["general", "export_directory"],

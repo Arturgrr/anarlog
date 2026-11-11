@@ -40,3 +40,11 @@ If nothing editable had focus, or the app could not insert the text, open **Sett
 On Windows and Linux, keep the original text field focused until dictation finishes. On Linux, approve the desktop's shortcut prompt on Wayland. The target app must expose an editable accessibility field; password fields are excluded. Clear a selected text range before dictating, or use the copy action to replace it yourself.
 
 Dictation is a desktop interaction. The CLI and MCP interfaces do not start dictation or insert text into other apps.
+
+## Dictation history
+
+**Settings → Dictation history** lists your dictations, newest first: when you dictated, the app the text went to, the model that transcribed it, and the text before and after any cleanup. A dictation whose text could not be inserted is marked **Not inserted**, so you can copy it from there. Search matches the text, the app and the model. The history stays on this computer: it is not synced, indexed for search, exported, or available to the CLI and MCP interfaces.
+
+Choose how long dictations are kept: 1 day, 7 days (the default), 30 days or forever. Older dictations and their audio are deleted when Librelog starts, when you change this, and every hour. **Off** stops saving new dictations; dictations already saved stay until you delete them or choose **Clear all**.
+
+Turn on **Keep dictation audio** to also save each dictation's recording, so you can choose **Transcribe again** with the selected transcription model or an on-device model installed on this computer. The text it replaces is kept as one of up to five earlier versions, and **Restore** switches back to it. Audio is deleted with its dictation. Turning the switch off stops saving audio; audio already saved stays until its dictation is deleted or expires.

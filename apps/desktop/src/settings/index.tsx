@@ -8,6 +8,7 @@ import {
 } from "./general";
 import { SettingsTodo } from "./todo";
 
+import { SettingsDictationHistory } from "~/dictation/history/page";
 import { LlmModelPicker } from "~/settings/ai/llm";
 import { SttModelPicker } from "~/settings/ai/stt";
 import { SettingsAppearance } from "~/settings/appearance";
@@ -66,6 +67,8 @@ function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
         return <SettingsDictionary />;
       case "dictation":
         return <SettingsDictation />;
+      case "dictation-history":
+        return <SettingsDictationHistory />;
       case "transcription":
         return <SttModelPicker variant="page" />;
       case "intelligence":

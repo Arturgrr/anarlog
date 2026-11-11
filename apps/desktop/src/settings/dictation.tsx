@@ -189,6 +189,17 @@ export function SettingsDictation() {
           >
             <Trans>Dictionary</Trans>
           </Button>
+          <Button
+            variant="outline"
+            onClick={() =>
+              openNew({
+                type: "settings",
+                state: { tab: "dictation-history" },
+              })
+            }
+          >
+            <Trans>History</Trans>
+          </Button>
         </div>
         {enabled && (
           <div className="border-border rounded-lg border p-4" role="status">

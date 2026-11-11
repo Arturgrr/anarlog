@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-frontmost-app"
+description = "Enables the frontmost_app command without any pre-configured scope."
+commands.allow = ["frontmost_app"]
+
+[[permission]]
+identifier = "deny-frontmost-app"
+description = "Denies the frontmost_app command without any pre-configured scope."
+commands.deny = ["frontmost_app"]

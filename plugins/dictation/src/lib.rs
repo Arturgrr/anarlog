@@ -3,9 +3,11 @@ mod error;
 mod events;
 mod ext;
 mod handler;
+mod history;
 mod insertion;
 mod preview;
 mod recorder;
+mod target_app;
 
 pub use error::*;
 pub use events::*;
@@ -29,6 +31,11 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::discard_recording::<tauri::Wry>,
             commands::capture_target,
             commands::insert_text,
+            commands::frontmost_app,
+            commands::keep_history_audio::<tauri::Wry>,
+            commands::history_audio_path::<tauri::Wry>,
+            commands::delete_history_audio::<tauri::Wry>,
+            commands::prune_history_audio::<tauri::Wry>,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }

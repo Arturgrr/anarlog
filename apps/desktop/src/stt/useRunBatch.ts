@@ -320,13 +320,15 @@ export const useRunBatch = (sessionId: string) => {
         selectedProviderId && selectedModel
           ? getBatchProvider(selectedProviderId, selectedModel)
           : null;
+      // An explicit endpoint selects a target even when no provider is set up.
+      const selectedBaseUrl = options?.baseUrl ?? conn?.baseUrl;
       const selectedTarget =
-        conn && selectedModel && selectedProvider
+        selectedBaseUrl !== undefined && selectedModel && selectedProvider
           ? {
               provider: selectedProvider,
               model: selectedModel,
-              baseUrl: options?.baseUrl ?? conn.baseUrl,
-              apiKey: options?.apiKey ?? conn.apiKey,
+              baseUrl: selectedBaseUrl,
+              apiKey: options?.apiKey ?? conn?.apiKey ?? "",
               label: selectedModel,
             }
           : null;
