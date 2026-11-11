@@ -364,11 +364,16 @@ fn create_tap_aggregate(tap_uid: &NSString) -> Result<AudioObjectID, String> {
 /// # Safety
 /// `list` must point at a valid `AudioBufferList` of 32-bit float samples.
 unsafe fn buffer_peak(list: NonNull<AudioBufferList>) -> f32 {
-    // SAFETY: The caller passes a valid list.
-    let list = unsafe { list.as_ref() };
-    // SAFETY: A valid list holds `mNumberBuffers` buffers.
-    let buffers: &[AudioBuffer] =
-        unsafe { std::slice::from_raw_parts(list.mBuffers.as_ptr(), list.mNumberBuffers as usize) };
+    let list = list.as_ptr();
+    // SAFETY: The caller passes a valid list, which holds `mNumberBuffers`
+    // buffers from `mBuffers` on. The pointer comes from the list's, not
+    // from a reference to its one-element array, so it may reach them all.
+    let buffers: &[AudioBuffer] = unsafe {
+        std::slice::from_raw_parts(
+            std::ptr::addr_of!((*list).mBuffers).cast::<AudioBuffer>(),
+            (*list).mNumberBuffers as usize,
+        )
+    };
     buffers
         .iter()
         .filter(|buffer| !buffer.mData.is_null())
