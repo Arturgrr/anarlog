@@ -18,6 +18,7 @@ import {
 import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
+import { normalizeAudioRetention } from "~/services/audio-retention-policy";
 import { setDownloadedSttSelection } from "~/settings/queries";
 import { useConfigValues } from "~/shared/config";
 import type { DownloadProgress } from "~/sidebar/toast/types";
@@ -36,6 +37,7 @@ interface NotificationState {
   shouldShowBadge: boolean;
   localSttStatus: ServerStatus | null;
   isLocalSttModel: boolean;
+  speakerSeparationModelMissing: boolean;
   dismissDownload: (model: LocalModel) => void;
 }
 
@@ -59,11 +61,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     current_stt_model,
     current_llm_provider,
     current_llm_model,
+    refine_speakers,
+    audio_retention,
   } = useConfigValues([
     "current_stt_provider",
     "current_stt_model",
     "current_llm_provider",
     "current_llm_model",
+    "refine_speakers",
+    "audio_retention",
   ] as const);
 
   const hasConfigBanner =
@@ -91,6 +97,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   });
 
   const localSttStatus = isLocalSttModel ? (localSttQuery.data ?? null) : null;
+
+  // Parakeet Streaming has no batch engine of its own to separate speakers
+  // after a meeting; refinement never downloads Parakeet Batch by itself.
+  const refinesWithStreamingModel =
+    refine_speakers !== false &&
+    normalizeAudioRetention(audio_retention) !== "none" &&
+    current_stt_provider === "soniqo" &&
+    current_stt_model === "soniqo-parakeet-streaming";
+  const parakeetBatchQuery = useQuery({
+    ...localSttQueries.isDownloaded("soniqo-parakeet-batch"),
+    enabled: refinesWithStreamingModel,
+  });
+  const speakerSeparationModelMissing =
+    refinesWithStreamingModel && parakeetBatchQuery.data === false;
 
   const [activeDownloads, setActiveDownloads] = useState<
     Map<LocalModel, number>
@@ -234,6 +254,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       shouldShowBadge: notificationCount > 0,
       localSttStatus,
       isLocalSttModel,
+      speakerSeparationModelMissing,
       dismissDownload,
     };
   }, [
@@ -244,6 +265,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     isAiTab,
     localSttStatus,
     isLocalSttModel,
+    speakerSeparationModelMissing,
     dismissDownload,
   ]);
 
@@ -264,6 +286,7 @@ const DEFAULT_NOTIFICATION_STATE: NotificationState = {
   shouldShowBadge: false,
   localSttStatus: null,
   isLocalSttModel: false,
+  speakerSeparationModelMissing: false,
   dismissDownload: () => {},
 };
 

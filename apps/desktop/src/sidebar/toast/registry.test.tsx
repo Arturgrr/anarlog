@@ -16,6 +16,7 @@ const baseParams: RegistryParams = {
   activeDownloads: [],
   localSttStatus: null,
   isLocalSttModel: false,
+  needsSpeakerSeparationModel: false,
   update: {
     status: null,
     version: null,
@@ -92,6 +93,30 @@ describe("sidebar toast registry", () => {
       showToast({
         isLiveMeetingActive: true,
         ...withUpdate({ status: "available" }),
+      }),
+    ).toBeNull();
+  });
+
+  it("offers the missing speaker separation model once, never mid-meeting", () => {
+    const onOpenSTTSettings = vi.fn();
+    const toast = showToast({
+      needsSpeakerSeparationModel: true,
+      onOpenSTTSettings,
+    });
+
+    expect(toast).toMatchObject({
+      id: "speaker-separation-needs-batch-model",
+      lifecycle: { type: "persistent", dismissal: "permanent" },
+    });
+    toast?.primaryAction?.onClick();
+    expect(onOpenSTTSettings).toHaveBeenCalledOnce();
+    expect(
+      showToast({ needsSpeakerSeparationModel: true }, () => true),
+    ).toBeNull();
+    expect(
+      showToast({
+        needsSpeakerSeparationModel: true,
+        isLiveMeetingActive: true,
       }),
     ).toBeNull();
   });
