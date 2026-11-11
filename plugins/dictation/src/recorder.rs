@@ -238,6 +238,9 @@ async fn record_to_file(
             }
         }
     }
+    // The live transcript can take seconds to finish; the next dictation may
+    // open the microphone meanwhile.
+    drop(stream);
     if !pending.is_empty()
         && preview
             .as_ref()
@@ -270,12 +273,28 @@ async fn record_to_file(
 mod tests {
     use std::sync::Arc;
 
+    use std::sync::atomic::AtomicUsize;
+    use std::time::Duration;
+
     use anlg_audio::{AudioProvider, CaptureConfig, CaptureFrame, CaptureStream};
-    use futures_util::stream;
+    use futures_util::{SinkExt, stream};
+    use tokio_tungstenite::tungstenite::Message;
 
     use super::*;
 
-    struct TestAudio;
+    /// A microphone of steady frames that counts its open streams.
+    #[derive(Default)]
+    struct TestAudio {
+        open: Arc<AtomicUsize>,
+    }
+
+    struct OpenStream(Arc<AtomicUsize>);
+
+    impl Drop for OpenStream {
+        fn drop(&mut self) {
+            self.0.fetch_sub(1, Ordering::SeqCst);
+        }
+    }
 
     impl AudioProvider for TestAudio {
         fn open_capture(&self, _config: CaptureConfig) -> Result<CaptureStream, anlg_audio::Error> {
@@ -296,16 +315,18 @@ mod tests {
             _sample_rate: u32,
             _chunk_size: usize,
         ) -> Result<CaptureStream, anlg_audio::Error> {
+            self.open.fetch_add(1, Ordering::SeqCst);
+            let open = OpenStream(self.open.clone());
             let frame = CaptureFrame {
                 raw_mic: Arc::from([0.25_f32; CHUNK_SIZE]),
                 raw_speaker: Arc::from([]),
                 aec_mic: None,
             };
             Ok(CaptureStream::new(stream::unfold(
-                frame,
-                |frame| async move {
-                    tokio::time::sleep(std::time::Duration::from_millis(1)).await;
-                    Some((Ok(frame.clone()), frame))
+                (frame, open),
+                |(frame, open)| async move {
+                    tokio::time::sleep(Duration::from_millis(1)).await;
+                    Some((Ok(frame.clone()), (frame, open)))
                 },
             )))
         }
@@ -339,7 +360,7 @@ mod tests {
     async fn records_and_discards_a_temporary_wav() {
         let recorder = Recorder::new();
         recorder
-            .start(Arc::new(TestAudio), None, "test".into())
+            .start(Arc::new(TestAudio::default()), None, "test".into())
             .unwrap();
         tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 
@@ -360,7 +381,7 @@ mod tests {
     async fn another_owner_cannot_stop_or_cancel_a_recording() {
         let recorder = Recorder::new();
         recorder
-            .start(Arc::new(TestAudio), None, "chat".into())
+            .start(Arc::new(TestAudio::default()), None, "chat".into())
             .unwrap();
         assert!(matches!(
             recorder.stop("system").await,
@@ -372,7 +393,7 @@ mod tests {
         ));
         recorder.cancel("chat").await.unwrap();
         recorder
-            .start(Arc::new(TestAudio), None, "system".into())
+            .start(Arc::new(TestAudio::default()), None, "system".into())
             .unwrap();
         recorder.cancel("system").await.unwrap();
     }
@@ -393,7 +414,7 @@ mod tests {
         let recorder = Recorder::new();
         recorder
             .start_with_feedback(
-                Arc::new(TestAudio),
+                Arc::new(TestAudio::default()),
                 None,
                 "test".into(),
                 Some(PreviewConfig {
@@ -428,7 +449,7 @@ mod tests {
         let recorder = Recorder::new();
         recorder
             .start_with_feedback(
-                Arc::new(TestAudio),
+                Arc::new(TestAudio::default()),
                 None,
                 "test".into(),
                 None,
@@ -443,15 +464,106 @@ mod tests {
         assert!(levels.iter().all(|rms| (rms - 0.25).abs() < 1e-6));
     }
 
+    /// Dictations overlap: the next capture opens the microphone while the
+    /// last one still waits on its live transcript, and no capture touches a
+    /// recording another one left for transcription.
+    #[tokio::test]
+    async fn a_new_capture_starts_while_earlier_recordings_are_pending() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (reply, replied) = tokio::sync::oneshot::channel::<()>();
+        let server = tokio::spawn(async move {
+            let (socket, _) = listener.accept().await.unwrap();
+            let mut ws = tokio_tungstenite::accept_async(socket).await.unwrap();
+            ws.next().await.unwrap().unwrap();
+            ws.send(Message::Text(r#"{"status":"auth"}"#.into()))
+                .await
+                .unwrap();
+            while let Some(Ok(message)) = ws.next().await {
+                if message
+                    .into_text()
+                    .is_ok_and(|text| text.contains("commit"))
+                {
+                    break;
+                }
+            }
+            replied.await.unwrap();
+            ws.send(Message::Text(
+                r#"{"status":"text","final":true,"body":{"text":"First."}}"#.into(),
+            ))
+            .await
+            .unwrap();
+        });
+        let audio = Arc::new(TestAudio::default());
+        let recorder = Arc::new(Recorder::new());
+        recorder
+            .start_with_feedback(
+                audio.clone(),
+                None,
+                "system".into(),
+                Some(PreviewConfig {
+                    provider: "wisprflow".into(),
+                    base_url: format!("http://{address}"),
+                    api_key: "test".into(),
+                    params: Default::default(),
+                }),
+                Some(Channel::new(|_| Ok(()))),
+                None,
+            )
+            .unwrap();
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        let first = tokio::spawn({
+            let recorder = recorder.clone();
+            async move { recorder.stop("system").await }
+        });
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while audio.open.load(Ordering::SeqCst) > 0 {
+                tokio::time::sleep(Duration::from_millis(1)).await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(!first.is_finished());
+
+        recorder
+            .start(audio.clone(), None, "system".into())
+            .unwrap();
+        tokio::time::sleep(Duration::from_millis(10)).await;
+        let second = recorder.stop("system").await.unwrap();
+        recorder
+            .start(audio.clone(), None, "system".into())
+            .unwrap();
+        recorder.cancel("system").await.unwrap();
+
+        reply.send(()).unwrap();
+        let first = tokio::time::timeout(Duration::from_secs(3), first)
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+        assert_eq!(first.transcript.as_deref(), Some("First."));
+        assert_ne!(first.file_path, second.file_path);
+        recorder.discard(first.file_path.clone()).unwrap();
+        assert!(!Path::new(&first.file_path).exists());
+        assert!(
+            hound::WavReader::open(&second.file_path)
+                .unwrap()
+                .duration()
+                > 0
+        );
+        recorder.discard(second.file_path).unwrap();
+        server.await.unwrap();
+    }
+
     #[tokio::test]
     async fn rejects_parallel_recordings() {
         let recorder = Recorder::new();
         recorder
-            .start(Arc::new(TestAudio), None, "test".into())
+            .start(Arc::new(TestAudio::default()), None, "test".into())
             .unwrap();
 
         assert!(matches!(
-            recorder.start(Arc::new(TestAudio), None, "test".into()),
+            recorder.start(Arc::new(TestAudio::default()), None, "test".into()),
             Err(Error::AlreadyRecording)
         ));
 

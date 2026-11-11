@@ -142,6 +142,8 @@ describe("dictation access and lifecycle", () => {
     mocks.settings.microphone_device = "";
     mocks.meeting = { status: "inactive", loading: false };
     mocks.listener = null;
+    for (const fn of [mocks.runBatch, mocks.captureTarget, mocks.stopRecording])
+      fn.mockReset();
     for (const fn of [
       mocks.configure,
       mocks.setActive,
@@ -526,6 +528,129 @@ describe("dictation access and lifecycle", () => {
     expect(mocks.runBatch).not.toHaveBeenCalled();
     expect(mocks.insertText).not.toHaveBeenCalled();
   });
+  const shortcut = async (type: string) => {
+    await act(async () => {
+      mocks.listener?.({ payload: { type } });
+    });
+  };
+  const holdFirstTranscription = () => {
+    let finish!: () => void;
+    mocks.runBatch.mockImplementationOnce(async (_path, options) => {
+      await new Promise<void>((resolve) => {
+        finish = resolve;
+        options.signal.addEventListener("abort", resolve);
+      });
+      options.handlePersist([{ text: "First.", start_ms: 0 }]);
+    });
+    return () => act(async () => finish());
+  };
+
+  it("dictates again while the last dictation transcribes, taking Escape only during each capture and inserting in order", async () => {
+    const finishFirst = holdFirstTranscription();
+    mocks.runBatch.mockImplementationOnce(async (_path, options) =>
+      options.handlePersist([{ text: "Second.", start_ms: 0 }]),
+    );
+    mocks.captureTarget
+      .mockResolvedValueOnce({ status: "ok", data: "first-field" })
+      .mockResolvedValueOnce({ status: "ok", data: "second-field" });
+    mocks.stopRecording
+      .mockResolvedValueOnce({ status: "ok", data: { filePath: "/tmp/1.wav" } })
+      .mockResolvedValueOnce({
+        status: "ok",
+        data: { filePath: "/tmp/2.wav" },
+      });
+    render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await shortcut("pressed");
+    await shortcut("released");
+    await waitFor(() =>
+      expect(mocks.setActive).toHaveBeenLastCalledWith(false),
+    );
+    expect(useDictationStatus.getState()).toMatchObject({
+      phase: "transcribing",
+      capturing: false,
+      pending: 1,
+    });
+    await shortcut("pressed");
+    await waitFor(() =>
+      expect(useDictationStatus.getState()).toMatchObject({
+        phase: "recording",
+        capturing: true,
+        pending: 1,
+      }),
+    );
+    await waitFor(() => expect(mocks.setActive).toHaveBeenLastCalledWith(true));
+    await shortcut("released");
+    await finishFirst();
+    await waitFor(() =>
+      expect(useDictationStatus.getState().phase).toBe("idle"),
+    );
+    expect(mocks.insertText.mock.calls).toEqual([
+      ["first-field", "First."],
+      ["second-field", "Second."],
+    ]);
+    expect(mocks.hud.mock.calls.map(([event]) => event.type)).toEqual([
+      "started",
+      "processing",
+      "started",
+      "processing",
+      "completed",
+    ]);
+    expect(mocks.discardRecording.mock.calls).toEqual([
+      ["/tmp/1.wav"],
+      ["/tmp/2.wav"],
+    ]);
+  });
+
+  it("cancels only the new capture when Escape is pressed while an earlier dictation transcribes", async () => {
+    const finishFirst = holdFirstTranscription();
+    render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await shortcut("pressed");
+    await shortcut("released");
+    await shortcut("pressed");
+    await waitFor(() =>
+      expect(useDictationStatus.getState().phase).toBe("recording"),
+    );
+    await shortcut("cancelled");
+    await waitFor(() =>
+      expect(useDictationStatus.getState().phase).toBe("transcribing"),
+    );
+    expect(mocks.cancelRecording).toHaveBeenCalledOnce();
+    await finishFirst();
+    await waitFor(() =>
+      expect(mocks.insertText).toHaveBeenCalledWith("focused-field", "First."),
+    );
+    expect(mocks.hud.mock.calls.map(([event]) => event.type)).toEqual([
+      "started",
+      "processing",
+      "started",
+      "processing",
+      "completed",
+    ]);
+  });
+
+  it("records without a live connection to a self-hosted server while an earlier dictation is still transcribing", async () => {
+    mocks.settings.dictation_live_preview = true;
+    mocks.connection = {
+      provider: "soniqo",
+      model: "soniqo-parakeet-streaming",
+      apiKey: "",
+      baseUrl: "http://127.0.0.1:1234",
+    };
+    const finishFirst = holdFirstTranscription();
+    render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await shortcut("pressed");
+    await shortcut("released");
+    await shortcut("pressed");
+    expect(mocks.startSystemRecording.mock.calls[0]![2]).toEqual(
+      expect.objectContaining({ baseUrl: "http://127.0.0.1:1234" }),
+    );
+    expect(mocks.startSystemRecording.mock.calls[1]![2]).toBeNull();
+    await finishFirst();
+  });
+
   it("streams the live preview to the selected local server", async () => {
     mocks.settings.dictation_live_preview = true;
     mocks.connection = {

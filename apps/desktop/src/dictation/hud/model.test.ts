@@ -37,6 +37,31 @@ describe("dictation HUD", () => {
     expect(model.active).toBe(false);
   });
 
+  it("records again over an earlier dictation's processing and stays up until the last one is done", () => {
+    const model = new HudModel();
+    model.handle({ type: "started" }, 0, false);
+    run(model, 0, 0.5);
+    model.handle({ type: "processing" }, 0.5, false);
+    run(model, 0.5, 0.5);
+    expect(model.scope.stage).toBe("processing");
+
+    model.handle({ type: "started" }, 1, false);
+    run(model, 1, 0.5);
+    expect(model.recording).toBe(true);
+    expect(model.scope.stage).toBe("recording");
+    expect(model.scope.pose().opacity).toBeGreaterThan(0.98);
+
+    model.handle({ type: "processing" }, 1.5, false);
+    run(model, 1.5, 3);
+    expect(model.scope.stage).toBe("processing");
+    expect(model.active).toBe(true);
+
+    model.handle({ type: "completed" }, 4.5, false);
+    run(model, 4.5, 2);
+    expect(model.scope.stage).toBe("done");
+    expect(model.active).toBe(false);
+  });
+
   it("turns red on failure and only fades on cancel", () => {
     const model = new HudModel();
     model.handle({ type: "started" }, 0, false);

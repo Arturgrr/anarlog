@@ -137,22 +137,21 @@ function ActiveDictation({
   useMountEffect(() => {
     let disposed = false;
     let armed = false;
-    let target = "";
-    let finalTranscript: string | null = null;
     let unlisten: (() => void) | undefined;
-    let abort = new AbortController();
     let presentation: Promise<void> = Promise.resolve();
-    // Whether this dictation's HUD is up, and how it ended; anything that
-    // ends without completing or cancelling failed.
+    let status = { phase: "idle", capturing: false, pending: 0 };
+    // The capture whose live words the HUD shows.
+    let live: object | null = null;
     let hudShown = false;
-    let outcome: "completed" | "cancelled" | null = null;
     // One at a time, so the HUD sees events in the order they happened.
     let hudEvents: Promise<unknown> = Promise.resolve();
+    const sendHud = (event: HudEvent) => {
+      const sent = hudEvents.then(() => dictation.hud(event));
+      hudEvents = sent.catch(() => {});
+      return sent;
+    };
     const hud = (event: HudEvent) => {
-      if (!hudShown) return;
-      hudEvents = hudEvents.then(async () => {
-        await dictation.hud(event);
-      });
+      if (hudShown) void sendHud(event);
     };
     const onError = (error: unknown) => {
       if (disposed) return;
@@ -181,11 +180,7 @@ function ActiveDictation({
     };
     const controller = new DictationController({
       handsFree,
-      start: async () => {
-        abort = new AbortController();
-        finalTranscript = null;
-        outcome = null;
-        const recordingAbort = abort;
+      start: async (signal) => {
         const { microphone, livePreview, conn, languages, dictionary } =
           current.current;
         useDictationStatus.setState({ error: null });
@@ -198,16 +193,21 @@ function ActiveDictation({
               t`Enable microphone permission in Settings > Permissions before dictating.`,
             );
         }
-        abort.signal.throwIfAborted();
+        signal.throwIfAborted();
         // Ahead of the microphone, so the cue answers the press and stays
         // mostly out of the recording.
         void cue("StartRecording");
-        target = unwrap(await dictation.captureTarget());
-        // A self-hosted server may take one live connection at a time, and a
-        // second one would cut off the meeting's transcript. The dictation is
-        // then transcribed when you finish.
+        const target = unwrap(await dictation.captureTarget());
+        // A self-hosted server may take one live connection at a time: a
+        // second one would cut off the meeting's transcript, or contend with
+        // an earlier dictation still finishing or transcribing there. This
+        // dictation is then transcribed when its turn comes.
         const preview =
-          conn && !(isLocalServer(conn.baseUrl) && (await meetingRecording()))
+          conn &&
+          !(
+            isLocalServer(conn.baseUrl) &&
+            (status.pending > 0 || (await meetingRecording()))
+          )
             ? {
                 provider: conn.provider,
                 baseUrl: conn.baseUrl,
@@ -225,15 +225,17 @@ function ActiveDictation({
                 },
               }
             : null;
-        abort.signal.throwIfAborted();
+        signal.throwIfAborted();
         // The HUD is on screen before the microphone opens.
-        const shown = await dictation.hud({ type: "started" });
+        const shown = await sendHud({ type: "started" });
         if (shown.status === "error")
           throw new Error(
             t`Could not show the dictation indicator. Please try again.`,
           );
         hudShown = true;
-        abort.signal.throwIfAborted();
+        signal.throwIfAborted();
+        const capture = {};
+        live = capture;
         unwrap(
           await dictation.startSystemRecording(
             microphone || null,
@@ -244,11 +246,8 @@ function ActiveDictation({
                 disposed ||
                 !livePreview ||
                 update.type !== "transcript" ||
-                recordingAbort.signal.aborted ||
-                recordingAbort !== abort ||
-                !["starting", "recording"].includes(
-                  useDictationStatus.getState().phase,
-                )
+                signal.aborted ||
+                live !== capture
               )
                 return;
               hud({
@@ -262,20 +261,21 @@ function ActiveDictation({
             }),
           ),
         );
+        return target;
       },
       stop: async () => {
-        const recorded = unwrap(await dictation.stopRecording(id));
-        finalTranscript = recorded.transcript ?? null;
-        return recorded.filePath;
+        live = null;
+        void cue("StopRecording");
+        return unwrap(await dictation.stopRecording(id));
       },
       cancel: async () => {
+        live = null;
         unwrap(await dictation.cancelRecording(id));
       },
-      transcribe: async (path) => {
-        if (finalTranscript !== null) return finalTranscript;
+      transcribe: async (path, signal) => {
         let text = "";
         await current.current.runBatch(path, {
-          signal: abort.signal,
+          signal,
           deferAudioFinalization: true,
           notifyOnCompletion: false,
           numSpeakers: 1,
@@ -291,32 +291,36 @@ function ActiveDictation({
         });
         return text;
       },
-      insert: async (text) => {
-        if (disposed) return;
+      insert: async (target, text) => {
         unwrap(await dictation.insertText(target, text));
-        outcome = "completed";
       },
       discard: async (path) => {
         unwrap(await dictation.discardRecording(path));
       },
+      onJobFinished: async () => {},
       onTranscript: (lastTranscript) => {
         if (!disposed) useDictationStatus.setState({ lastTranscript });
       },
       onError,
-      onPhase: (phase) => {
-        if (!disposed) useDictationStatus.setState({ phase });
-        if (phase === "transcribing") {
-          hud({ type: "processing" });
-          void cue("StopRecording");
+      onStatus: (next, outcome) => {
+        const previous = status;
+        status = next;
+        if (!disposed) useDictationStatus.setState(next);
+        // A capture shows recording over any pending jobs; once it ends the
+        // jobs show processing, and the last one to finish shows how it went.
+        if (next.phase !== previous.phase) {
+          if (next.phase === "transcribing") hud({ type: "processing" });
+          if (next.phase === "idle") {
+            hud({ type: outcome });
+            hudShown = false;
+          }
         }
-        if (phase === "idle") {
-          hud({ type: outcome ?? "failed" });
-          hudShown = false;
-        }
+        // Escape is only taken from other apps while a capture is in progress.
+        if (next.capturing === previous.capturing) return;
         presentation = presentation
           .then(async () => {
             try {
-              unwrap(await shortcuts.setActive(phase !== "idle" && !disposed));
+              unwrap(await shortcuts.setActive(next.capturing && !disposed));
             } catch (error) {
               onError(error);
             }
@@ -325,8 +329,6 @@ function ActiveDictation({
       },
     });
     const cancel = () => {
-      outcome ??= "cancelled";
-      abort.abort();
       void controller.cancel();
       void stopTranscription(id).catch(onError);
     };
@@ -343,7 +345,7 @@ function ActiveDictation({
             return;
           if (payload.type === "pressed") controller.press();
           else if (payload.type === "released") controller.release();
-          else cancel();
+          else void controller.cancelCapture();
         });
         if (disposed) {
           unlisten();
@@ -364,6 +366,8 @@ function ActiveDictation({
       useDictationStatus.setState({
         ready: false,
         phase: "idle",
+        capturing: false,
+        pending: 0,
         lastTranscript: useDictationStatus.getState().lastTranscript,
         cancel: null,
       });
