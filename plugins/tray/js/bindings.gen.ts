@@ -46,8 +46,9 @@ export const commands = {
     }
   },
   /**
-   * Shows "Paste last dictation" in the tray menu while dictation and its
-   * paste-last shortcut are enabled.
+   * Shows "Paste last dictation" in the menu bar icon's menu on macOS while
+   * dictation and its paste-last shortcut are enabled. Other platforms never
+   * show it.
    */
   async setTrayPasteLastVisible(
     visible: boolean,
