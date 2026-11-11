@@ -21,6 +21,16 @@ vi.mock("~/settings/queries", () => ({ setSettingValues: mocks.save }));
 vi.mock("~/dictation/lifecycle", () => ({
   waitForDictationCleanup: mocks.cleanup,
 }));
+vi.mock("~/dictation/paste-last", () => ({
+  waitForPasteLastCleanup: () => Promise.resolve(),
+}));
+vi.mock("~/shared/config", () => ({
+  useConfigValue: (key: string) =>
+    ({
+      dictation_paste_last_enabled: true,
+      dictation_paste_last_shortcut: "Alt+Shift+KeyV",
+    })[key],
+}));
 
 import { DictationShortcuts } from "./dictation-shortcut";
 
@@ -84,6 +94,10 @@ describe("dictation shortcut recorder", () => {
     enter();
     await waitFor(() =>
       expect(mocks.save).toHaveBeenCalledWith(saved(["Control+Alt+KeyD"])),
+    );
+    expect(mocks.validate).toHaveBeenCalledWith(
+      "Control+Alt+KeyD",
+      "Alt+Shift+KeyV",
     );
     await waitFor(() =>
       expect(useDictationStatus.getState().capturingShortcut).toBe(false),

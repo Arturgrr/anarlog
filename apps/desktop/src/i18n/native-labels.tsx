@@ -16,6 +16,7 @@ export function NativeLabelsSync() {
     const labels: TrayLabels = {
       openApp: t`Open ${app}`,
       startMeeting: t`Start a new meeting`,
+      pasteLastDictation: t`Paste last dictation`,
       settings: t`Settings`,
       checkForUpdates: t`Check for Updates`,
       downloadingUpdate: t`Downloading...`,

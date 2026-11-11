@@ -7,6 +7,7 @@ import { buildChatTools } from "~/chat/tools";
 import { searchContacts } from "~/contacts/queries";
 import { useRegisterTools } from "~/contexts/tool";
 import { DictationLifecycle } from "~/dictation/lifecycle";
+import { PasteLastLifecycle } from "~/dictation/paste-last";
 import { takePendingWelcomeSession } from "~/onboarding/welcome-note";
 import { useSearchEngine } from "~/search/contexts/engine";
 import { initEnhancerService } from "~/services/enhancer";
@@ -48,6 +49,7 @@ export function ClassicMainServices() {
       <RecordingImportWorker />
       <MainListenerControlBridge />
       <DictationLifecycle />
+      <PasteLastLifecycle />
       <ToolRegistration />
       <EnhancerInit />
     </>

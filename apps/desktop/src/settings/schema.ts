@@ -42,6 +42,24 @@ export const SETTING_DEFINITIONS = {
     path: ["dictation", "sounds"],
     default: true as boolean,
   },
+  dictation_paste_last_enabled: {
+    type: "boolean",
+    path: ["dictation", "paste_last_enabled"],
+    default: true as boolean,
+  },
+  dictation_paste_last_shortcut: {
+    type: "string",
+    path: ["dictation", "paste_last_shortcut"],
+    default: (typeof navigator !== "undefined" &&
+    navigator.userAgent.includes("Macintosh")
+      ? "Alt+Shift+KeyV"
+      : "Control+Alt+KeyV") as string,
+  },
+  dictation_keep_on_clipboard: {
+    type: "boolean",
+    path: ["dictation", "keep_on_clipboard"],
+    default: false as boolean,
+  },
   export_directory: {
     type: "string",
     path: ["general", "export_directory"],
