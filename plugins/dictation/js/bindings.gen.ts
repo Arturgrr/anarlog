@@ -73,6 +73,56 @@ async insertText(target: string, text: string) : Promise<Result<null, string>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * The application in front right now, for the dictation history.
+ */
+async frontmostApp() : Promise<Result<TargetApp | null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|frontmost_app") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Moves a finished recording into the dictation history and returns its
+ * file name there; the temporary recording is gone afterwards.
+ */
+async keepHistoryAudio(id: string, filePath: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|keep_history_audio", { id, filePath }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async historyAudioPath(fileName: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|history_audio_path", { fileName }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteHistoryAudio(fileNames: string[]) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|delete_history_audio", { fileNames }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes kept audio that no history entry refers to.
+ */
+async pruneHistoryAudio(referenced: string[]) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|prune_history_audio", { referenced }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -112,6 +162,11 @@ export type PreviewConfig = { provider: string; baseUrl: string; apiKey: string;
 export type RecordedAudio = { filePath: string; durationMs: number; transcript: string | null }
 export type RecordingUpdate = { type: "transcript"; text: string; partial: string } | { type: "previewUnavailable" }
 export type TAURI_CHANNEL<TSend> = null
+/**
+ * The application that has focus: its display name, and its bundle
+ * identifier (macOS), executable (Windows, Linux) when known.
+ */
+export type TargetApp = { name: string; id: string | null }
 
 /** tauri-specta globals **/
 

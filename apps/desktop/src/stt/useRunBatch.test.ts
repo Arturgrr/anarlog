@@ -966,7 +966,11 @@ describe("useRunBatch", () => {
     );
   });
 
-  test("uses an explicit local batch target for speaker refinement", async () => {
+  test.each([
+    ["a provider is selected", true],
+    ["no provider is set up", false],
+  ])("uses an explicit local batch target when %s", async (_, configured) => {
+    if (!configured) useSTTConnectionMock.mockReturnValue({ conn: null });
     startTranscriptionMock.mockResolvedValue(undefined);
 
     const { result } = renderHook(() => useRunBatch("session-1"));

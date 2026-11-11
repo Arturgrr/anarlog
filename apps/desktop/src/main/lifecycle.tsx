@@ -6,6 +6,7 @@ import { useSessionTab } from "~/chat/components/use-session-tab";
 import { buildChatTools } from "~/chat/tools";
 import { searchContacts } from "~/contacts/queries";
 import { useRegisterTools } from "~/contexts/tool";
+import { DictationHistoryRetention } from "~/dictation/history/retention";
 import { DictationLifecycle } from "~/dictation/lifecycle";
 import { PasteLastLifecycle } from "~/dictation/paste-last";
 import { takePendingWelcomeSession } from "~/onboarding/welcome-note";
@@ -50,6 +51,7 @@ export function ClassicMainServices() {
       <MainListenerControlBridge />
       <DictationLifecycle />
       <PasteLastLifecycle />
+      <DictationHistoryRetention />
       <ToolRegistration />
       <EnhancerInit />
     </>

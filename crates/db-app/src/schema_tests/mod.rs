@@ -151,6 +151,7 @@ async fn test_db_without_default_templates() -> Db {
 mod attachments;
 mod capture_lifecycle;
 mod consent;
+mod dictation_history;
 mod entities;
 mod migrations;
 mod replica_migrations;

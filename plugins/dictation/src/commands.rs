@@ -114,3 +114,66 @@ pub(crate) async fn start_system_recording<R: tauri::Runtime>(
         )
         .map_err(|error| error.to_string())
 }
+
+/// The application in front right now, for the dictation history.
+#[tauri::command]
+#[specta::specta]
+pub(crate) async fn frontmost_app() -> Result<Option<crate::target_app::TargetApp>, String> {
+    Ok(crate::target_app::frontmost().await)
+}
+
+/// Moves a finished recording into the dictation history and returns its
+/// file name there; the temporary recording is gone afterwards.
+#[tauri::command]
+#[specta::specta]
+pub(crate) async fn keep_history_audio<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    id: String,
+    file_path: String,
+) -> Result<String, String> {
+    let directory = crate::history::directory(&app).map_err(|error| error.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::history::keep(&directory, &id, file_path, |path| {
+            app.state::<Recorder>().discard(path)
+        })
+    })
+    .await
+    .map_err(|error| error.to_string())?
+    .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub(crate) async fn history_audio_path<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    file_name: String,
+) -> Result<String, String> {
+    let directory = crate::history::directory(&app).map_err(|error| error.to_string())?;
+    crate::history::resolve(&directory, &file_name)
+        .map(|path| path.to_string_lossy().into_owned())
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub(crate) async fn delete_history_audio<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    file_names: Vec<String>,
+) -> Result<(), String> {
+    let directory = crate::history::directory(&app).map_err(|error| error.to_string())?;
+    crate::history::delete(&directory, &file_names).map_err(|error| error.to_string())
+}
+
+/// Deletes kept audio that no history entry refers to.
+#[tauri::command]
+#[specta::specta]
+pub(crate) async fn prune_history_audio<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    referenced: Vec<String>,
+) -> Result<(), String> {
+    let directory = crate::history::directory(&app).map_err(|error| error.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || crate::history::prune(&directory, &referenced))
+        .await
+        .map_err(|error| error.to_string())?
+        .map_err(|error| error.to_string())
+}

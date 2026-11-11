@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-keep-history-audio"
+description = "Enables the keep_history_audio command without any pre-configured scope."
+commands.allow = ["keep_history_audio"]
+
+[[permission]]
+identifier = "deny-keep-history-audio"
+description = "Denies the keep_history_audio command without any pre-configured scope."
+commands.deny = ["keep_history_audio"]
