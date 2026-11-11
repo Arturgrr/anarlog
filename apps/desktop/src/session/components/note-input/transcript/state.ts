@@ -1,4 +1,5 @@
 import { useAudioPlayer } from "~/audio-player";
+import type { BatchPhase } from "~/store/zustand/listener/batch";
 import {
   getLiveCaptureUiMode,
   isLiveTranscriptInterrupted,
@@ -8,7 +9,6 @@ import type { Segment } from "~/stt/live-segment";
 import { useSessionTranscriptMetadata } from "~/stt/queries";
 
 type ListeningStatus = "listening" | "finalizing";
-type BatchPhase = "importing" | "transcribing";
 type RequestedLiveTranscription = boolean | null;
 
 export type TranscriptScreen =

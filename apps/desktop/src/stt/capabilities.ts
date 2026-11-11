@@ -168,6 +168,49 @@ export function isRealtimeLocalModel(model?: string | null) {
   return model === "soniqo-parakeet-streaming" || model === "apple-speech";
 }
 
+// The on-device batch engine that re-reads a live on-device recording to
+// separate the voices on the system-audio channel. Parakeet Batch only counts
+// when it is already downloaded and speaks the meeting's language: running it
+// otherwise would start a multi-gigabyte download or replace the transcript
+// with the wrong language. Apple Speech can re-read its own recordings.
+export function getSpeakerRefinementTarget(
+  liveModel: string | null | undefined,
+  parakeetBatchDownloaded: boolean,
+  languages: readonly string[],
+) {
+  if (!isRealtimeLocalModel(liveModel)) {
+    return null;
+  }
+
+  const [liveLanguage] = getOnDeviceTranscriptionConfig(
+    liveModel,
+    languages,
+  ).languages;
+  if (
+    parakeetBatchDownloaded &&
+    (!liveLanguage ||
+      SONIQO_PARAKEET_BATCH_LANGUAGE_CODES.has(baseLanguageCode(liveLanguage)))
+  ) {
+    return {
+      provider: "soniqo",
+      model: "soniqo-parakeet-batch",
+      baseUrl: "soniqo://local",
+      apiKey: "",
+    };
+  }
+
+  if (liveModel === "apple-speech") {
+    return {
+      provider: "apple_speech",
+      model: "apple-speech",
+      baseUrl: "apple-speech://local",
+      apiKey: "",
+    };
+  }
+
+  return null;
+}
+
 export function getSttModelTranscriptionMode(
   provider?: string | null,
   model?: string | null,

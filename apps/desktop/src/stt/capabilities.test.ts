@@ -17,6 +17,7 @@ import {
   getLiveTranscriptionConfig,
   getOnDeviceTranscriptionConfig,
   getOnDeviceTranscriptionMode,
+  getSpeakerRefinementTarget,
   getSttModelTranscriptionMode,
   getTranscriptionLanguages,
   getUnsupportedDesktopLocalSttRepair,
@@ -202,6 +203,20 @@ describe("isRealtimeLocalModel", () => {
     { model: "am-parakeet-v3", expected: false },
   ])("$model -> $expected", ({ model, expected }) => {
     expect(isRealtimeLocalModel(model)).toBe(expected);
+  });
+});
+
+describe("getSpeakerRefinementTarget", () => {
+  test("keeps a Japanese Apple Speech meeting off Parakeet Batch, which cannot transcribe it", () => {
+    expect(getSpeakerRefinementTarget("apple-speech", true, ["ja"])).toEqual({
+      provider: "apple_speech",
+      model: "apple-speech",
+      baseUrl: "apple-speech://local",
+      apiKey: "",
+    });
+    expect(
+      getSpeakerRefinementTarget("apple-speech", true, ["en"])?.model,
+    ).toBe("soniqo-parakeet-batch");
   });
 });
 

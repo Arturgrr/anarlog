@@ -224,6 +224,11 @@ export const SETTING_DEFINITIONS = {
     path: ["general", "remember_speakers"],
     default: true as boolean,
   },
+  refine_speakers: {
+    type: "boolean",
+    path: ["general", "refine_speakers"],
+    default: true as boolean,
+  },
   microphone_device: {
     type: "string",
     path: ["general", "microphone_device"],

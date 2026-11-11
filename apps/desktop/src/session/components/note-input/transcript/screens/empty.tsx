@@ -23,7 +23,7 @@ export function TranscriptEmptyState({
   isBatching?: boolean;
   hasAudio?: boolean;
   percentage?: number;
-  phase?: "importing" | "transcribing";
+  phase?: "importing" | "transcribing" | "refining_speakers";
   error?: string | null;
   onRetranscribe?: () => void;
   onUploadAudio?: () => void;
@@ -71,7 +71,9 @@ export function TranscriptEmptyState({
           <p className="text-base font-medium">
             {phase === "importing"
               ? t`Importing audio...`
-              : t`Generating transcript...`}
+              : phase === "refining_speakers"
+                ? t`Separating speakers...`
+                : t`Generating transcript...`}
           </p>
           {hasProgress && (
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed tabular-nums">

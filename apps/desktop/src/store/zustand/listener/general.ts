@@ -8,7 +8,7 @@ import {
 } from "@anlg/plugin-transcription";
 import type { TranscriptionParams } from "@anlg/plugin-transcription";
 
-import type { BatchActions, BatchState } from "./batch";
+import type { BatchActions, BatchPhase, BatchState } from "./batch";
 import { hasConflictingBatchSession, runBatchSession } from "./general-batch";
 import {
   attachLiveSession,
@@ -65,6 +65,7 @@ export type GeneralActions = {
       handlePersist?: BatchPersistCallback;
       notifyOnCompletion?: boolean;
       recovery?: boolean;
+      phase?: BatchPhase;
     },
   ) => Promise<void>;
   stopTranscription: (sessionId: string) => Promise<void>;
@@ -232,6 +233,7 @@ export const createGeneralSlice = <
       notifyOnCompletion: options?.notifyOnCompletion,
       recovery: options?.recovery,
       signal: options?.signal,
+      phase: options?.phase,
     });
   },
   stopTranscription: async (sessionId) => {

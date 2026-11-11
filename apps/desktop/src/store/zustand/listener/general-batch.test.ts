@@ -465,7 +465,7 @@ describe("runBatchSession", () => {
       },
     );
 
-    expect(handleBatchStarted).toHaveBeenCalledWith("session-1");
+    expect(handleBatchStarted).toHaveBeenCalledWith("session-1", undefined);
     expect(handleBatchResponse).toHaveBeenCalledWith("session-1", {
       metadata: null,
       results: { channels: [] },
