@@ -75,7 +75,7 @@ Librelog makes the change as recording starts, right after the start sound, and 
 
 What **Pause media** reaches depends on the platform:
 
-- On macOS it pauses Music, Spotify and VLC; macOS asks once for permission to control each of them. **Also pause the browser** pauses a browser tab that is playing sound, and needs System Audio Recording permission. Librelog from the App Store cannot pause other apps, so it offers only **Mute** and **Lower audio**.
+- On macOS it pauses Music, Spotify and VLC, but only those you allow Librelog to control. Choosing **Pause media**, or clicking **Allow…** under **Media player access**, asks macOS for each of them that is running, so open a player first. A dictation never asks: it leaves a player you haven't allowed playing. To change your answer, open **System Settings → Privacy & Security → Automation**. **Also pause the browser** pauses a browser tab that is playing sound, and needs System Audio Recording permission. Librelog from the App Store cannot pause other apps, so it offers only **Mute** and **Lower audio**.
 - On Windows it pauses apps and browser tabs that report what they play to Windows' media controls.
 - On Linux it pauses players that support MPRIS, including most browsers. **Mute** and **Lower audio** use PulseAudio or PipeWire.
 

@@ -17,6 +17,7 @@ Default permissions for the plugin
 - `allow-history-audio-path`
 - `allow-delete-history-audio`
 - `allow-prune-history-audio`
+- `allow-request-media-control`
 
 ## Permission Table
 
@@ -283,6 +284,32 @@ Enables the prune_history_audio command without any pre-configured scope.
 <td>
 
 Denies the prune_history_audio command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:allow-request-media-control`
+
+</td>
+<td>
+
+Enables the request_media_control command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:deny-request-media-control`
+
+</td>
+<td>
+
+Denies the request_media_control command without any pre-configured scope.
 
 </td>
 </tr>

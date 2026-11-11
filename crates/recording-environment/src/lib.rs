@@ -39,6 +39,8 @@
 //! The `macos-private-api` feature lets "Pause media" pause a browser on
 //! macOS; enable it only for direct distribution, never the App Store.
 
+#[cfg(any(target_os = "macos", test))]
+mod automation;
 mod coordinator;
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 mod media;
@@ -116,6 +118,39 @@ impl Config {
         }
         effects
     }
+}
+
+/// Whether macOS lets this app pause and resume a media player, under
+/// Privacy & Security > Automation in System Settings.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub enum MediaControl {
+    Allowed,
+    Denied,
+    /// macOS has not asked, or could not.
+    NotDetermined,
+    /// macOS asks only while the player runs.
+    NotRunning,
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerControl {
+    pub player: String,
+    pub control: MediaControl,
+}
+
+/// Asks macOS to let "Pause media" control each media player it knows
+/// (Music, Spotify, VLC) that is running, prompting for any it has not asked
+/// about yet, and says where each stands. A dictation never asks: it leaves
+/// a player without consent alone. Blocks until every prompt is answered, so
+/// call it off the main thread. Empty on other platforms, whose players need
+/// no consent.
+pub fn request_media_control() -> Vec<PlayerControl> {
+    #[cfg(target_os = "macos")]
+    return native::request_media_control();
+    #[cfg(not(target_os = "macos"))]
+    Vec::new()
 }
 
 /// Applies `config` after `delay` until the returned session ends or drops.

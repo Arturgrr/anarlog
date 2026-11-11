@@ -1,7 +1,7 @@
 //! macOS, adapted from Hex's recording environment: the default output
-//! device through CoreAudio, media players through AppleScript, a browser
-//! through its own output (with `macos-private-api`), and an IOKit
-//! assertion against idle sleep.
+//! device through CoreAudio, media players through AppleScript once
+//! Automation allows it, a browser through its own output (with
+//! `macos-private-api`), and an IOKit assertion against idle sleep.
 
 use std::collections::HashSet;
 use std::ffi::c_void;
@@ -22,7 +22,8 @@ use objc2_core_audio::{
 use objc2_core_audio_types::{AudioBuffer, AudioBufferList};
 use objc2_core_foundation::{CFRetained, CFString};
 
-use crate::{mute, ramp, records};
+use crate::automation::{self, Automation};
+use crate::{MediaControl, PlayerControl, mute, ramp, records};
 
 #[cfg(feature = "macos-private-api")]
 mod browser;
@@ -429,13 +430,18 @@ impl MediaPlayer {
         Self::ALL.into_iter().find(|player| player.name() == name)
     }
 
-    fn from_bundle_id(bundle_id: &str) -> Option<Self> {
-        match bundle_id {
-            "com.apple.Music" => Some(Self::Music),
-            "com.spotify.client" => Some(Self::Spotify),
-            "org.videolan.vlc" => Some(Self::Vlc),
-            _ => None,
+    fn bundle_id(self) -> &'static str {
+        match self {
+            Self::Music => "com.apple.Music",
+            Self::Spotify => "com.spotify.client",
+            Self::Vlc => "org.videolan.vlc",
         }
+    }
+
+    fn from_bundle_id(bundle_id: &str) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|player| player.bundle_id() == bundle_id)
     }
 
     fn playing_clause(self) -> &'static str {
@@ -491,7 +497,6 @@ fn osascript(script: &str) -> Option<String> {
         .inspect_err(|error| tracing::warn!(%error, "could not run AppleScript"))
         .ok()?;
     if !output.status.success() {
-        // Needs Automation consent for the player, which macOS asks for once.
         tracing::warn!(
             error = %String::from_utf8_lossy(&output.stderr).trim(),
             "AppleScript could not control a media player"
@@ -501,13 +506,99 @@ fn osascript(script: &str) -> Option<String> {
     Some(String::from_utf8_lossy(&output.stdout).into_owned())
 }
 
+/// `AEDesc`, which AEDataModel.h packs to two bytes.
+#[repr(C, packed(2))]
+struct AeDesc {
+    descriptor_type: u32,
+    data_handle: *mut c_void,
+}
+
+const TYPE_APPLICATION_BUNDLE_ID: u32 = u32::from_be_bytes(*b"bund");
+const TYPE_WILD_CARD: u32 = u32::from_be_bytes(*b"****");
+const PROC_NOT_FOUND: i32 = -600;
+const ERR_AE_EVENT_NOT_PERMITTED: i32 = -1743;
+const ERR_AE_EVENT_WOULD_REQUIRE_USER_CONSENT: i32 = -1744;
+
+/// Automation consent to send `player` Apple events. With `ask`, macOS
+/// prompts if it has not asked yet, and this blocks until the answer.
+fn automation_consent(player: MediaPlayer, ask: bool) -> MediaControl {
+    let bundle_id = player.bundle_id();
+    let mut target = AeDesc {
+        descriptor_type: 0,
+        data_handle: std::ptr::null_mut(),
+    };
+    // SAFETY: The bundle ID's bytes outlive the call, which copies them into
+    // `target`, a writable descriptor.
+    if unsafe {
+        AECreateDesc(
+            TYPE_APPLICATION_BUNDLE_ID,
+            bundle_id.as_ptr().cast(),
+            bundle_id.len() as isize,
+            &mut target,
+        )
+    } != 0
+    {
+        return MediaControl::NotDetermined;
+    }
+    // SAFETY: `target` is the address descriptor created above.
+    let status = unsafe {
+        AEDeterminePermissionToAutomateTarget(
+            &target,
+            TYPE_WILD_CARD,
+            TYPE_WILD_CARD,
+            u8::from(ask),
+        )
+    };
+    // SAFETY: Disposes of the descriptor created above, once.
+    unsafe { AEDisposeDesc(&mut target) };
+    match status {
+        0 => MediaControl::Allowed,
+        ERR_AE_EVENT_NOT_PERMITTED => MediaControl::Denied,
+        PROC_NOT_FOUND => MediaControl::NotRunning,
+        ERR_AE_EVENT_WOULD_REQUIRE_USER_CONSENT => MediaControl::NotDetermined,
+        status => {
+            tracing::warn!(?player, status, "could not read Automation consent");
+            MediaControl::NotDetermined
+        }
+    }
+}
+
+struct Players;
+
+impl Automation for Players {
+    type Player = MediaPlayer;
+
+    fn running(&mut self) -> Vec<MediaPlayer> {
+        let running = running_players();
+        MediaPlayer::ALL
+            .into_iter()
+            .filter(|player| running.contains(player))
+            .collect()
+    }
+
+    fn consent(&mut self, player: MediaPlayer, ask: bool) -> MediaControl {
+        automation_consent(player, ask)
+    }
+}
+
+pub(crate) fn request_media_control() -> Vec<PlayerControl> {
+    automation::request(&mut Players, &MediaPlayer::ALL)
+        .into_iter()
+        .map(|(player, control)| PlayerControl {
+            player: player.name().into(),
+            control,
+        })
+        .collect()
+}
+
 fn pause_players() -> Vec<MediaPlayer> {
-    let running = running_players();
-    if running.is_empty() {
+    // Asking for consent mid-dictation would hold the worker on a prompt.
+    let players = automation::allowed(&mut Players);
+    if players.is_empty() {
         return Vec::new();
     }
     let mut script = String::from("set pausedPlayers to {}\n");
-    for player in MediaPlayer::ALL.into_iter().filter(|p| running.contains(p)) {
+    for player in players {
         script.push_str(&player.pause_fragment());
     }
     script.push_str("return pausedPlayers\n");
@@ -618,6 +709,18 @@ impl Drop for Awake {
             );
         }
     }
+}
+
+#[link(name = "CoreServices", kind = "framework")]
+unsafe extern "C" {
+    fn AECreateDesc(type_code: u32, data: *const c_void, size: isize, result: *mut AeDesc) -> i16;
+    fn AEDisposeDesc(desc: *mut AeDesc) -> i16;
+    fn AEDeterminePermissionToAutomateTarget(
+        target: *const AeDesc,
+        event_class: u32,
+        event_id: u32,
+        ask_user_if_needed: u8,
+    ) -> i32;
 }
 
 #[link(name = "IOKit", kind = "framework")]

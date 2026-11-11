@@ -12,6 +12,7 @@ const COMMANDS: &[&str] = &[
     "history_audio_path",
     "delete_history_audio",
     "prune_history_audio",
+    "request_media_control",
 ];
 
 fn main() {

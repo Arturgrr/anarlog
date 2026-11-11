@@ -132,6 +132,19 @@ async pruneHistoryAudio(referenced: string[]) : Promise<Result<null, string>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Asks macOS to let "Pause media" control each known media player that is
+ * running, prompting for any it has not asked about yet, and says where each
+ * stands. Empty on other platforms.
+ */
+async requestMediaControl() : Promise<Result<PlayerControl[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|request_media_control") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -192,6 +205,20 @@ export type HudEvent =
  */
 { type: "preview"; stable: string; tentative: string }
 export type ListenParams = { model?: string | null; channels?: number; sample_rate?: number; languages?: string[]; keywords?: string[]; num_speakers?: number | null; min_speakers?: number | null; max_speakers?: number | null; mic_num_speakers?: number | null; custom_query?: Partial<{ [key in string]: string }> | null }
+/**
+ * Whether macOS lets this app pause and resume a media player, under
+ * Privacy & Security > Automation in System Settings.
+ */
+export type MediaControl = "allowed" | "denied" | 
+/**
+ * macOS has not asked, or could not.
+ */
+"notDetermined" | 
+/**
+ * macOS asks only while the player runs.
+ */
+"notRunning"
+export type PlayerControl = { player: string; control: MediaControl }
 export type PreviewConfig = { provider: string; baseUrl: string; apiKey: string; params: ListenParams }
 export type RecordedAudio = { filePath: string; durationMs: number; transcript: string | null }
 /**

@@ -14,6 +14,8 @@ use linux as platform;
 mod macos;
 #[cfg(target_os = "macos")]
 use macos as platform;
+#[cfg(target_os = "macos")]
+pub(crate) use macos::request_media_control;
 #[cfg(target_os = "windows")]
 mod windows;
 #[cfg(target_os = "windows")]

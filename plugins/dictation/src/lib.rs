@@ -37,6 +37,7 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::history_audio_path::<tauri::Wry>,
             commands::delete_history_audio::<tauri::Wry>,
             commands::prune_history_audio::<tauri::Wry>,
+            commands::request_media_control,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }

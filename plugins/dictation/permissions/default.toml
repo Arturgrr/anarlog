@@ -14,4 +14,5 @@ permissions = [
   "allow-history-audio-path",
   "allow-delete-history-audio",
   "allow-prune-history-audio",
+  "allow-request-media-control",
 ]

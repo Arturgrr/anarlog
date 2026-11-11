@@ -124,6 +124,19 @@ pub(crate) async fn start_system_recording<R: tauri::Runtime>(
         .map_err(|error| error.to_string())
 }
 
+/// Asks macOS to let "Pause media" control each known media player that is
+/// running, prompting for any it has not asked about yet, and says where each
+/// stands. Empty on other platforms.
+#[tauri::command]
+#[specta::specta]
+pub(crate) async fn request_media_control()
+-> Result<Vec<anlg_recording_environment::PlayerControl>, String> {
+    // Each prompt blocks until it is answered.
+    tauri::async_runtime::spawn_blocking(anlg_recording_environment::request_media_control)
+        .await
+        .map_err(|error| error.to_string())
+}
+
 /// The application in front right now, for the dictation history.
 #[tauri::command]
 #[specta::specta]
