@@ -60,6 +60,22 @@ export const SETTING_DEFINITIONS = {
     path: ["dictation", "keep_on_clipboard"],
     default: false as boolean,
   },
+  dictation_audio_behavior: {
+    type: "string",
+    path: ["dictation", "audio_behavior"],
+    default: "nothing" as string,
+  },
+  // Percent of the output volume when dictation starts.
+  dictation_audio_duck_volume: {
+    type: "number",
+    path: ["dictation", "audio_duck_volume"],
+    default: 20 as number,
+  },
+  dictation_audio_pause_browser: {
+    type: "boolean",
+    path: ["dictation", "audio_pause_browser"],
+    default: false as boolean,
+  },
   export_directory: {
     type: "string",
     path: ["general", "export_directory"],
