@@ -196,6 +196,22 @@ msgstr "{peakCount} de {total} conversas ({share}) começaram neste dia da seman
 msgid "{platformLabel} shared screen"
 msgstr "Tela compartilhada no {platformLabel}"
 
+#: src/settings/dictation-audio.tsx
+msgid "{player}: allowed"
+msgstr "{player}: permitido"
+
+#: src/settings/dictation-audio.tsx
+msgid "{player}: not allowed. Turn it on in System Settings > Privacy & Security > Automation."
+msgstr "{player}: não permitido. Ative em Ajustes do Sistema > Privacidade e Segurança > Automação."
+
+#: src/settings/dictation-audio.tsx
+msgid "{player}: not decided"
+msgstr "{player}: ainda sem resposta"
+
+#: src/settings/dictation-audio.tsx
+msgid "{player}: not running"
+msgstr "{player}: não está aberto"
+
 #: src/composer/index.tsx
 msgid "{primaryModifier} ↩ to send"
 msgstr "{primaryModifier} ↩ para enviar"
@@ -570,6 +586,10 @@ msgstr "Permitir Acessibilidade"
 #: src/stt/start-failure.ts
 msgid "Allow microphone access for Librelog, then try again."
 msgstr "Permita o acesso ao microfone para o Librelog e tente novamente."
+
+#: src/settings/dictation-audio.tsx
+msgid "Allow…"
+msgstr "Permitir…"
 
 #: src/onboarding/final.tsx
 msgid "Almost ready"
@@ -3186,6 +3206,10 @@ msgstr "O Librelog precisa ser atualizado"
 msgid "Librelog needs microphone and system audio to transcribe your meetings, plus Accessibility to read meeting controls, visible chat."
 msgstr "O Librelog precisa do microfone e do áudio do sistema para transcrever suas reuniões, além da Acessibilidade para ler os controles da reunião e o chat visível."
 
+#: src/settings/dictation-audio.tsx
+msgid "Librelog pauses only the players you allow. macOS asks only while a player is running, so open it first."
+msgstr "O Librelog pausa apenas os players que você permitir. O macOS só pergunta enquanto o player está aberto, então abra-o antes."
+
 #: src/stt/saved-capture-audio.tsx
 msgid "Librelog saved this meeting's audio"
 msgstr "O Librelog salvou o áudio desta reunião"
@@ -3454,6 +3478,10 @@ msgstr "Configuração do MCP copiada"
 #: src/settings/developers/cli.tsx
 msgid "MCP server"
 msgstr "Servidor MCP"
+
+#: src/settings/dictation-audio.tsx
+msgid "Media player access"
+msgstr "Acesso aos players de mídia"
 
 #. placeholder {0}: number.format(stats.timedConversations)
 #: src/settings/stats/insights.tsx
@@ -4308,12 +4336,12 @@ msgid "Paste your Kimi Code API key."
 msgstr "Cole sua chave de API do Kimi Code."
 
 #: src/settings/dictation-paste-last.tsx
-msgid "Paste your last dictation into the focused app again. It's also in the menu bar icon's menu."
-msgstr "Cola seu último ditado de novo no app em foco. Também está no menu do ícone da barra de menus."
+msgid "Paste your last dictation into the focused app again."
+msgstr "Cola seu último ditado de novo no app em foco."
 
 #: src/settings/dictation-paste-last.tsx
-msgid "Paste your last dictation into the focused app again. It's also in the tray icon's menu."
-msgstr "Cola seu último ditado de novo no app em foco. Também está no menu do ícone da bandeja do sistema."
+msgid "Paste your last dictation into the focused app again. It's also in the menu bar icon's menu."
+msgstr "Cola seu último ditado de novo no app em foco. Também está no menu do ícone da barra de menus."
 
 #: src/audio-player/timeline.tsx
 #: src/i18n/component-labels.tsx
@@ -4346,8 +4374,8 @@ msgid "Pauses apps and browser tabs that are playing, and resumes them when dict
 msgstr "Pausa apps e abas do navegador que estejam tocando e os retoma quando o ditado termina."
 
 #: src/settings/dictation-audio.tsx
-msgid "Pauses Music, Spotify, and VLC if they are playing, and resumes them when dictation ends. macOS asks once for permission to control each of them."
-msgstr "Pausa o Música, o Spotify e o VLC se estiverem tocando e os retoma quando o ditado termina. O macOS pede uma vez permissão para controlar cada um deles."
+msgid "Pauses Music, Spotify, and VLC if they are playing, and resumes them when dictation ends."
+msgstr "Pausa o Música, o Spotify e o VLC se estiverem tocando e os retoma quando o ditado termina."
 
 #: src/contacts/organization-details.tsx
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx

@@ -196,6 +196,22 @@ msgstr "{peakCount} of {total} conversations ({share}) started on this weekday i
 msgid "{platformLabel} shared screen"
 msgstr "{platformLabel} shared screen"
 
+#: src/settings/dictation-audio.tsx
+msgid "{player}: allowed"
+msgstr "{player}: allowed"
+
+#: src/settings/dictation-audio.tsx
+msgid "{player}: not allowed. Turn it on in System Settings > Privacy & Security > Automation."
+msgstr "{player}: not allowed. Turn it on in System Settings > Privacy & Security > Automation."
+
+#: src/settings/dictation-audio.tsx
+msgid "{player}: not decided"
+msgstr "{player}: not decided"
+
+#: src/settings/dictation-audio.tsx
+msgid "{player}: not running"
+msgstr "{player}: not running"
+
 #: src/composer/index.tsx
 msgid "{primaryModifier} ↩ to send"
 msgstr "{primaryModifier} ↩ to send"
@@ -570,6 +586,10 @@ msgstr "Allow Accessibility"
 #: src/stt/start-failure.ts
 msgid "Allow microphone access for Librelog, then try again."
 msgstr "Allow microphone access for Librelog, then try again."
+
+#: src/settings/dictation-audio.tsx
+msgid "Allow…"
+msgstr "Allow…"
 
 #: src/onboarding/final.tsx
 msgid "Almost ready"
@@ -3186,6 +3206,10 @@ msgstr "Librelog needs an update"
 msgid "Librelog needs microphone and system audio to transcribe your meetings, plus Accessibility to read meeting controls, visible chat."
 msgstr "Librelog needs microphone and system audio to transcribe your meetings, plus Accessibility to read meeting controls, visible chat."
 
+#: src/settings/dictation-audio.tsx
+msgid "Librelog pauses only the players you allow. macOS asks only while a player is running, so open it first."
+msgstr "Librelog pauses only the players you allow. macOS asks only while a player is running, so open it first."
+
 #: src/stt/saved-capture-audio.tsx
 msgid "Librelog saved this meeting's audio"
 msgstr "Librelog saved this meeting's audio"
@@ -3454,6 +3478,10 @@ msgstr "MCP configuration copied"
 #: src/settings/developers/cli.tsx
 msgid "MCP server"
 msgstr "MCP server"
+
+#: src/settings/dictation-audio.tsx
+msgid "Media player access"
+msgstr "Media player access"
 
 #. placeholder {0}: number.format(stats.timedConversations)
 #: src/settings/stats/insights.tsx
@@ -4308,12 +4336,12 @@ msgid "Paste your Kimi Code API key."
 msgstr "Paste your Kimi Code API key."
 
 #: src/settings/dictation-paste-last.tsx
-msgid "Paste your last dictation into the focused app again. It's also in the menu bar icon's menu."
-msgstr "Paste your last dictation into the focused app again. It's also in the menu bar icon's menu."
+msgid "Paste your last dictation into the focused app again."
+msgstr "Paste your last dictation into the focused app again."
 
 #: src/settings/dictation-paste-last.tsx
-msgid "Paste your last dictation into the focused app again. It's also in the tray icon's menu."
-msgstr "Paste your last dictation into the focused app again. It's also in the tray icon's menu."
+msgid "Paste your last dictation into the focused app again. It's also in the menu bar icon's menu."
+msgstr "Paste your last dictation into the focused app again. It's also in the menu bar icon's menu."
 
 #: src/audio-player/timeline.tsx
 #: src/i18n/component-labels.tsx
@@ -4346,8 +4374,8 @@ msgid "Pauses apps and browser tabs that are playing, and resumes them when dict
 msgstr "Pauses apps and browser tabs that are playing, and resumes them when dictation ends."
 
 #: src/settings/dictation-audio.tsx
-msgid "Pauses Music, Spotify, and VLC if they are playing, and resumes them when dictation ends. macOS asks once for permission to control each of them."
-msgstr "Pauses Music, Spotify, and VLC if they are playing, and resumes them when dictation ends. macOS asks once for permission to control each of them."
+msgid "Pauses Music, Spotify, and VLC if they are playing, and resumes them when dictation ends."
+msgstr "Pauses Music, Spotify, and VLC if they are playing, and resumes them when dictation ends."
 
 #: src/contacts/organization-details.tsx
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
