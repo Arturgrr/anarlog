@@ -2778,6 +2778,12 @@ msgstr "Hide {app}"
 msgid "Hide all notification panels, Dock alerts, and completion sounds."
 msgstr "Hide all notification panels, Dock alerts, and completion sounds."
 
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
+#: src/session/components/outer-header/overflow/index.tsx
+msgid "Hide floating bar"
+msgstr "Hide floating bar"
+
 #: src/i18n/native-labels.tsx
 msgid "Hide Others"
 msgstr "Hide Others"
@@ -4181,10 +4187,6 @@ msgid "Open file"
 msgstr "Open file"
 
 #: src/session/components/outer-header/overflow/index.tsx
-msgid "Open floating panel"
-msgstr "Open floating panel"
-
-#: src/session/components/outer-header/overflow/index.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Open in New Window"
 msgstr "Open in New Window"
@@ -5335,6 +5337,7 @@ msgstr "Show Audio in Folder"
 msgid "Show fewer"
 msgstr "Show fewer"
 
+#: src/session/components/outer-header/overflow/index.tsx
 #: src/settings/general/meeting-settings.tsx
 msgid "Show floating bar"
 msgstr "Show floating bar"

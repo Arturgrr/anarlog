@@ -66,6 +66,7 @@ describe("pt-BR rendering", () => {
       ["Close", msg`Close`],
       ["Stop listening", msg`Stop listening`],
       ["Expand live transcript", msg`Expand live transcript`],
+      ["Hide floating bar", msg`Hide floating bar`],
     ] as const) {
       const translated = i18n._(descriptor);
       expect(translated).not.toBe(english);
