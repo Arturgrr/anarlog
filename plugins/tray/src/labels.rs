@@ -8,6 +8,7 @@ pub struct TrayLabels {
     /// Contains `{app}`, like the other `*_app` and `quit_completely_*` labels.
     pub open_app: String,
     pub start_meeting: String,
+    pub paste_last_dictation: String,
     pub settings: String,
     pub check_for_updates: String,
     pub downloading_update: String,
@@ -63,6 +64,7 @@ impl Default for TrayLabels {
         Self {
             open_app: "Open {app}".into(),
             start_meeting: "Start a new meeting".into(),
+            paste_last_dictation: "Paste last dictation".into(),
             settings: "Settings".into(),
             check_for_updates: "Check for Updates".into(),
             downloading_update: "Downloading...".into(),

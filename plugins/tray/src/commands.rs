@@ -21,6 +21,19 @@ pub async fn set_tray_labels(
         .map_err(|error| error.to_string())
 }
 
+/// Shows "Paste last dictation" in the tray menu while dictation and its
+/// paste-last shortcut are enabled.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_tray_paste_last_visible(
+    app: tauri::AppHandle<tauri::Wry>,
+    visible: bool,
+) -> Result<(), String> {
+    app.tray()
+        .set_paste_last_visible(visible)
+        .map_err(|error| error.to_string())
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn set_tray_recording_title(

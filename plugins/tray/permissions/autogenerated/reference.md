@@ -6,6 +6,7 @@ Default permissions for the plugin
 
 - `allow-set-tray-icon-visible`
 - `allow-set-tray-labels`
+- `allow-set-tray-paste-last-visible`
 - `allow-set-tray-recording-title`
 
 ## Permission Table
@@ -65,6 +66,32 @@ Enables the set_tray_labels command without any pre-configured scope.
 <td>
 
 Denies the set_tray_labels command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`anlg-tray:allow-set-tray-paste-last-visible`
+
+</td>
+<td>
+
+Enables the set_tray_paste_last_visible command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`anlg-tray:deny-set-tray-paste-last-visible`
+
+</td>
+<td>
+
+Denies the set_tray_paste_last_visible command without any pre-configured scope.
 
 </td>
 </tr>

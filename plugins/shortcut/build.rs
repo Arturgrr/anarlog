@@ -4,6 +4,8 @@ const COMMANDS: &[&str] = &[
     "configure",
     "validate",
     "set_active",
+    "configure_paste_last",
+    "validate_paste_last",
 ];
 
 fn main() {
