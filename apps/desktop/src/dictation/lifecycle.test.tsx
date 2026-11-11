@@ -652,6 +652,30 @@ describe("dictation access and lifecycle", () => {
     ]);
   });
 
+  it("still inserts and records a dictation waiting to be transcribed when the shortcuts change", async () => {
+    const finishFirst = holdFirstTranscription();
+    const view = render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await shortcut("pressed");
+    await shortcut("released");
+    await waitFor(() => expect(mocks.runBatch).toHaveBeenCalled());
+    mocks.settings.dictation_shortcuts = ["Control+Alt+Space", "Fn"];
+    view.rerender(<DictationLifecycle />);
+    await waitFor(() =>
+      expect(mocks.configure).toHaveBeenLastCalledWith([
+        "Control+Alt+Space",
+        "Fn",
+      ]),
+    );
+    await finishFirst();
+    await waitFor(() =>
+      expect(mocks.recordDictation).toHaveBeenCalledWith(
+        expect.objectContaining({ finalText: "First.", inserted: true }),
+      ),
+    );
+    expect(mocks.insertText).toHaveBeenCalledWith("First.");
+  });
+
   it("records without a live connection to a self-hosted server while an earlier dictation is still transcribing", async () => {
     mocks.settings.dictation_live_preview = true;
     mocks.connection = {

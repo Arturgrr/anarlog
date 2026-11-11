@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Channel } from "@tauri-apps/api/core";
 import { platform } from "@tauri-apps/plugin-os";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import {
   commands as dictation,
@@ -46,26 +46,22 @@ export function waitForDictationCleanup() {
 export function DictationLifecycle() {
   const settingsReady = useSettingsReady();
   const enabled = useConfigValue("dictation_enabled");
-  const shortcuts = useConfigValue("dictation_shortcuts");
-  const handsFree = useConfigValue("dictation_hands_free");
-  const capturingShortcut = useDictationStatus(
-    (state) => state.capturingShortcut,
-  );
-  const retry = useDictationStatus((state) => state.retry);
 
   if (!settingsReady || !enabled) return null;
   return (
     <TranscriptRetention>
-      {!capturingShortcut && (
-        <ActiveDictation
-          key={`${JSON.stringify(shortcuts)}:${handsFree}:${retry}`}
-          shortcuts={shortcuts}
-          handsFree={handsFree}
-        />
-      )}
+      <ActiveDictation />
     </TranscriptRetention>
   );
 }
+
+/** What the registered shortcuts drive; it outlives their registration. */
+type Dictation = {
+  onShortcut: (type: string) => void;
+  /** Cancels the capture in progress; resolves once it let go of the recorder and Escape. */
+  stopCapture: () => Promise<void>;
+  onError: (error: unknown) => void;
+};
 
 function TranscriptRetention({ children }: { children: React.ReactNode }) {
   useMountEffect(() => () => {
@@ -105,13 +101,17 @@ function isLocalServer(baseUrl: string) {
   );
 }
 
-function ActiveDictation({
-  shortcuts: configured,
-  handsFree,
-}: {
-  shortcuts: string[];
-  handsFree: boolean;
-}) {
+// Dictations already accepted outlive a change of shortcuts or hands-free, a
+// retry and a shortcut being recorded: only turning dictation off, or Cancel,
+// drops them.
+function ActiveDictation() {
+  const configured = useConfigValue("dictation_shortcuts");
+  const handsFree = useConfigValue("dictation_hands_free");
+  const capturingShortcut = useDictationStatus(
+    (state) => state.capturingShortcut,
+  );
+  const retry = useDictationStatus((state) => state.retry);
+  const [session, setSession] = useState<Dictation | null>(null);
   const id = useRef(`system-dictation-${crypto.randomUUID()}`).current;
   const runBatch = useRunBatch(id);
   const stopTranscription = useListener((state) => state.stopTranscription);
@@ -139,6 +139,7 @@ function ActiveDictation({
     audio,
     meetingActive,
     conn,
+    handsFree,
   });
   current.current = {
     runBatch,
@@ -150,12 +151,11 @@ function ActiveDictation({
     audio,
     meetingActive,
     conn,
+    handsFree,
   };
 
   useMountEffect(() => {
     let disposed = false;
-    let armed = false;
-    let unlisten: (() => void) | undefined;
     let presentation: Promise<void> = Promise.resolve();
     let status = { phase: "idle", capturing: false, pending: 0 };
     // The capture whose live words the HUD shows, and what makes them.
@@ -212,7 +212,10 @@ function ActiveDictation({
       return capture.status === "error" || capture.data !== "inactive";
     };
     const controller = new DictationController({
-      handsFree,
+      // Read at each press: the controller outlives a change of the setting.
+      get handsFree() {
+        return current.current.handsFree;
+      },
       start: async (signal) => {
         // First, while the app being dictated into is still in front.
         const app = frontmostApp().catch(() => null);
@@ -436,6 +439,63 @@ function ActiveDictation({
       void controller.cancel();
       void stopTranscription(id).catch(onError);
     };
+    useDictationStatus.setState({ cancel });
+    setSession({
+      onShortcut: (type) => {
+        if (type === "pressed") controller.press();
+        else if (type === "released") controller.release();
+        else void controller.cancelCapture();
+      },
+      stopCapture: async () => {
+        await controller.cancelCapture();
+        await presentation;
+      },
+      onError,
+    });
+
+    return () => {
+      disposed = true;
+      cancel();
+      useDictationStatus.setState({
+        ready: false,
+        phase: "idle",
+        capturing: false,
+        pending: 0,
+        cancel: null,
+      });
+      lifecycle = lifecycle
+        .then(async () => {
+          await controller.cancel();
+          await presentation;
+        })
+        .catch(() => {});
+    };
+  });
+
+  if (!session || capturingShortcut) return null;
+  return (
+    <ShortcutRegistration
+      key={`${JSON.stringify(configured)}:${handsFree}:${retry}`}
+      shortcuts={configured}
+      dictation={session}
+    />
+  );
+}
+
+// Registered again whenever the shortcuts, hands-free or a retry change, and
+// released while a shortcut is recorded. The next registration waits until
+// this one's capture has let go of the recorder.
+function ShortcutRegistration({
+  shortcuts: configured,
+  dictation: { onShortcut, stopCapture, onError },
+}: {
+  shortcuts: string[];
+  dictation: Dictation;
+}) {
+  useMountEffect(() => {
+    let disposed = false;
+    let armed = false;
+    let unlisten: (() => void) | undefined;
 
     lifecycle = lifecycle
       .then(async () => {
@@ -447,9 +507,7 @@ function ActiveDictation({
             useDictationStatus.getState().capturingShortcut
           )
             return;
-          if (payload.type === "pressed") controller.press();
-          else if (payload.type === "released") controller.release();
-          else void controller.cancelCapture();
+          onShortcut(payload.type);
         });
         if (disposed) {
           unlisten();
@@ -458,7 +516,7 @@ function ActiveDictation({
         unwrap(await shortcuts.configure(configured));
         armed = !disposed;
         if (!disposed)
-          useDictationStatus.setState({ ready: true, error: null, cancel });
+          useDictationStatus.setState({ ready: true, error: null });
       })
       .catch(onError);
 
@@ -466,20 +524,12 @@ function ActiveDictation({
       disposed = true;
       armed = false;
       unlisten?.();
-      cancel();
-      useDictationStatus.setState({
-        ready: false,
-        phase: "idle",
-        capturing: false,
-        pending: 0,
-        lastTranscript: useDictationStatus.getState().lastTranscript,
-        cancel: null,
-      });
+      useDictationStatus.setState({ ready: false });
+      const stopped = stopCapture();
       lifecycle = lifecycle
         .then(async () => {
           unlisten?.();
-          await controller.cancel();
-          await presentation;
+          await stopped;
           unwrap(await shortcuts.configure([]));
         })
         .catch(() => {});
