@@ -92,7 +92,7 @@ npx mint validate
 npx mint broken-links
 ```
 
-Check the affected workflow under `.github/workflows/` for stricter package-specific commands.
+Check the affected workflow under `.github/workflows/` for stricter package-specific commands. Pull requests that change Rust, Swift or Cargo files also run the macOS, Windows and Linux desktop checks in `desktop_ci.yaml`; to get them for a branch they skip, run that workflow from the Actions tab.
 
 ## Open a pull request
 

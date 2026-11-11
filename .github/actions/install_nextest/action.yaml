@@ -1,0 +1,21 @@
+name: Install cargo-nextest
+description: Installs a pinned cargo-nextest on a macOS runner, the only platform whose tests run from nextest archives.
+runs:
+  using: "composite"
+  steps:
+    # The checksum is of the release asset below. /usr/local/bin is already on
+    # PATH and outside the rust-cache paths.
+    - shell: bash
+      env:
+        NEXTEST_VERSION: "0.9.149"
+        NEXTEST_SHA256: "47b9941765a9ff94e304a3fe5444ac1c7593da655525b8b69f8f2b31a9217507"
+      run: |
+        archive="$RUNNER_TEMP/cargo-nextest.tar.gz"
+        curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+          --output "$archive" \
+          "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-$NEXTEST_VERSION/cargo-nextest-$NEXTEST_VERSION-universal-apple-darwin.tar.gz"
+        echo "$NEXTEST_SHA256  $archive" | shasum -a 256 --check
+        tar -xzf "$archive" -C "$RUNNER_TEMP"
+        sudo mkdir -p /usr/local/bin
+        sudo install -m 0755 "$RUNNER_TEMP/cargo-nextest" /usr/local/bin/cargo-nextest
+        cargo-nextest nextest --version
