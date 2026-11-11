@@ -2,6 +2,15 @@ inputs:
   platform:
     required: false
     default: ""
+  # Jobs that compile the same thing share one cache under this key instead of
+  # one cache per job.
+  cache-key:
+    required: false
+    default: ""
+  # Only main writes caches, so other refs restore main's and never evict it.
+  save-cache:
+    required: false
+    default: ${{ github.ref == 'refs/heads/main' }}
 runs:
   using: "composite"
   steps:
@@ -67,3 +76,5 @@ runs:
       with:
         cache-targets: "true"
         prefix-key: v0-rust${{ steps.cache-key.outputs.suffix }}
+        shared-key: ${{ inputs.cache-key }}
+        save-if: ${{ inputs.save-cache }}
