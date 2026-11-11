@@ -5210,6 +5210,18 @@ msgstr ""
 msgid "Seoul"
 msgstr ""
 
+#: src/settings/general/audio-settings.tsx
+msgid "Separate speakers after meetings"
+msgstr ""
+
+#: src/sidebar/toast/registry.tsx
+msgid "Separating speakers after meetings needs Parakeet Batch"
+msgstr ""
+
+#: src/session/components/note-input/transcript/screens/empty.tsx
+msgid "Separating speakers..."
+msgstr ""
+
 #: src/onboarding/model-status.ts
 #: src/settings/ai/llm/index.tsx
 msgid "Server stopped"
@@ -5517,6 +5529,10 @@ msgstr ""
 #: src/meeting-float/speaker-labels.ts
 #: src/stt/live-segment.ts
 msgid "Speaker {speakerNumber}"
+msgstr ""
+
+#: src/stt/capture-lifecycle.ts
+msgid "Speakers could not be separated"
 msgstr ""
 
 #: src/settings/general/storage/legacy-cleanup.tsx
@@ -5868,6 +5884,10 @@ msgstr ""
 #: src/onboarding/model-status.ts
 #: src/settings/ai/llm/models.tsx
 msgid "The key was rejected. Check it above."
+msgstr ""
+
+#: src/stt/capture-lifecycle.ts
+msgid "The live transcript was kept. Re-transcribe the meeting to try again."
 msgstr ""
 
 #: src/settings/ai/stt/model-rows.tsx
@@ -6290,6 +6310,10 @@ msgstr ""
 msgid "Unpin Organization"
 msgstr ""
 
+#: src/sidebar/toast/registry.tsx
+msgid "Until it is downloaded, everyone heard through your computer stays one speaker."
+msgstr ""
+
 #: src/chat/components/message/tool/search-meetings.tsx
 #: src/chat/context/session-drag.ts
 #: src/services/tray-recording.tsx
@@ -6679,6 +6703,10 @@ msgstr ""
 
 #: src/changelog/index.tsx
 msgid "What's new in {version}?"
+msgstr ""
+
+#: src/settings/general/audio-settings.tsx
+msgid "When a meeting is transcribed live on this Mac, transcribe the saved recording again after it ends to tell apart the people heard through your computer. Needs saved audio and Parakeet Batch or Apple Speech, and takes a few minutes after each meeting."
 msgstr ""
 
 #: src/settings/ai/stt/index.tsx

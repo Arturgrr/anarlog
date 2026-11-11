@@ -5220,6 +5220,18 @@ msgstr "sent"
 msgid "Seoul"
 msgstr "Seoul"
 
+#: src/settings/general/audio-settings.tsx
+msgid "Separate speakers after meetings"
+msgstr "Separate speakers after meetings"
+
+#: src/sidebar/toast/registry.tsx
+msgid "Separating speakers after meetings needs Parakeet Batch"
+msgstr "Separating speakers after meetings needs Parakeet Batch"
+
+#: src/session/components/note-input/transcript/screens/empty.tsx
+msgid "Separating speakers..."
+msgstr "Separating speakers..."
+
 #: src/onboarding/model-status.ts
 #: src/settings/ai/llm/index.tsx
 msgid "Server stopped"
@@ -5528,6 +5540,10 @@ msgstr "Speaker"
 #: src/stt/live-segment.ts
 msgid "Speaker {speakerNumber}"
 msgstr "Speaker {speakerNumber}"
+
+#: src/stt/capture-lifecycle.ts
+msgid "Speakers could not be separated"
+msgstr "Speakers could not be separated"
 
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "SQLite migration verification is incomplete"
@@ -5879,6 +5895,10 @@ msgstr "The focused text field changed. Copy your last dictation from Settings >
 #: src/settings/ai/llm/models.tsx
 msgid "The key was rejected. Check it above."
 msgstr "The key was rejected. Check it above."
+
+#: src/stt/capture-lifecycle.ts
+msgid "The live transcript was kept. Re-transcribe the meeting to try again."
+msgstr "The live transcript was kept. Re-transcribe the meeting to try again."
 
 #: src/settings/ai/stt/model-rows.tsx
 msgid "The model files are removed from this Mac. You can download them again later."
@@ -6300,6 +6320,10 @@ msgstr "Unpin organization"
 msgid "Unpin Organization"
 msgstr "Unpin Organization"
 
+#: src/sidebar/toast/registry.tsx
+msgid "Until it is downloaded, everyone heard through your computer stays one speaker."
+msgstr "Until it is downloaded, everyone heard through your computer stays one speaker."
+
 #: src/chat/components/message/tool/search-meetings.tsx
 #: src/chat/context/session-drag.ts
 #: src/services/tray-recording.tsx
@@ -6700,6 +6724,10 @@ msgstr "What were the key decisions that have been made?"
 #: src/changelog/index.tsx
 msgid "What's new in {version}?"
 msgstr "What's new in {version}?"
+
+#: src/settings/general/audio-settings.tsx
+msgid "When a meeting is transcribed live on this Mac, transcribe the saved recording again after it ends to tell apart the people heard through your computer. Needs saved audio and Parakeet Batch or Apple Speech, and takes a few minutes after each meeting."
+msgstr "When a meeting is transcribed live on this Mac, transcribe the saved recording again after it ends to tell apart the people heard through your computer. Needs saved audio and Parakeet Batch or Apple Speech, and takes a few minutes after each meeting."
 
 #: src/settings/ai/stt/index.tsx
 msgid "When it transcribes"
