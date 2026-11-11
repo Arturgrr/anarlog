@@ -17,8 +17,14 @@ pub struct PreviewConfig {
 #[derive(Clone, serde::Serialize, specta::Type)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum RecordingUpdate {
-    Transcript { text: String, partial: String },
+    Transcript {
+        text: String,
+        partial: String,
+    },
     PreviewUnavailable,
+    /// The microphone is closed and any audio the capture quieted is audible
+    /// again, so a stop sound played now is heard.
+    Ended,
 }
 
 pub struct Preview {

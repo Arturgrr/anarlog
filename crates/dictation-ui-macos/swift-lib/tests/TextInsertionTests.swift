@@ -1,3 +1,4 @@
+import AppKit
 import Carbon
 import XCTest
 
@@ -75,5 +76,16 @@ final class TextInsertionTests: XCTestCase {
     XCTAssertEqual(
       KeyboardInput.strokes("abcdefghijklmnopqrs😀z\r\nnext\n"),
       [text("abcdefghijklmnopqrs"), text("😀z"), .lineBreak, text("next"), .lineBreak])
+  }
+
+  /// A fixed wait after Command-V let the next insertion replace the clipboard before a slow app
+  /// read it. The next one now waits until the app asks the paste's provider for the text.
+  func testAPasteCountsAsReadOnlyOnceAnAppAsksForTheText() {
+    let provider = DictationPasteProvider(text: "Hello")
+    XCTAssertEqual(provider.read.wait(timeout: .now()), .timedOut)
+    let item = NSPasteboardItem()
+    provider.pasteboard(nil, item: item, provideDataForType: .string)
+    XCTAssertEqual(provider.read.wait(timeout: .now()), .success)
+    XCTAssertEqual(item.string(forType: .string), "Hello")
   }
 }

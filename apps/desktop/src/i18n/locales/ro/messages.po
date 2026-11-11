@@ -186,6 +186,22 @@ msgstr ""
 msgid "{platformLabel} shared screen"
 msgstr ""
 
+#: src/settings/dictation-audio.tsx
+msgid "{player}: allowed"
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "{player}: not allowed. Turn it on in System Settings > Privacy & Security > Automation."
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "{player}: not decided"
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "{player}: not running"
+msgstr ""
+
 #: src/composer/index.tsx
 msgid "{primaryModifier} ↩ to send"
 msgstr ""
@@ -243,6 +259,7 @@ msgstr ""
 msgid "{weeks} weeks ago"
 msgstr ""
 
+#: src/dictation/history/page.tsx
 #: src/settings/general/audio-settings.tsx
 msgid "1 day"
 msgstr ""
@@ -271,10 +288,12 @@ msgstr ""
 msgid "3 days"
 msgstr ""
 
+#: src/dictation/history/page.tsx
 #: src/settings/stats/date-range.tsx
 msgid "30 days"
 msgstr ""
 
+#: src/dictation/history/page.tsx
 #: src/settings/stats/date-range.tsx
 msgid "7 days"
 msgstr ""
@@ -558,8 +577,20 @@ msgstr ""
 msgid "Allow microphone access for Librelog, then try again."
 msgstr ""
 
+#: src/settings/dictation-audio.tsx
+msgid "Allow…"
+msgstr ""
+
 #: src/onboarding/final.tsx
 msgid "Almost ready"
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Also pause the browser"
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Also save each dictation's recording on this computer, so you can transcribe it again with another model. Audio is deleted with its dictation. Turning this off stops saving audio; audio already saved stays until its dictation is deleted or expires."
 msgstr ""
 
 #: src/session/components/outer-header/overflow/always-on-top.tsx
@@ -1023,6 +1054,7 @@ msgstr ""
 msgid "Change photo"
 msgstr ""
 
+#: src/settings/dictation-paste-last.tsx
 #: src/settings/dictation-shortcut.tsx
 msgid "Change shortcut {keys}"
 msgstr ""
@@ -1061,6 +1093,10 @@ msgstr ""
 
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "Checking migration..."
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Checking models…"
 msgstr ""
 
 #: src/onboarding/model-status.ts
@@ -1233,12 +1269,21 @@ msgstr ""
 msgid "Cleaning up..."
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Clear all"
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Clear dictation history?"
+msgstr ""
+
 #: src/settings/ai/shared/settings-shell.tsx
 msgid "Clear filters"
 msgstr ""
 
 #: src/contacts/related-notes.tsx
 #: src/contacts/shared.tsx
+#: src/dictation/history/page.tsx
 #: src/folders/sidebar.tsx
 #: src/settings/ai/shared/provider-search.tsx
 #: src/sidebar/automations.tsx
@@ -1490,6 +1535,10 @@ msgstr ""
 msgid "Copy config"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Copy dictation"
+msgstr ""
+
 #: src/settings/dictation.tsx
 msgid "Copy last dictation"
 msgstr ""
@@ -1515,6 +1564,10 @@ msgstr ""
 msgid "Could not clear the selected model"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Could not clear your history. Please try again."
+msgstr ""
+
 #: src/settings/ai/llm/subscriptions/oauth.ts
 msgid "Could not connect ChatGPT subscription."
 msgstr ""
@@ -1525,6 +1578,10 @@ msgstr ""
 
 #: src/settings/ai/stt/health.tsx
 msgid "Could not connect to the local speech-to-text model."
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Could not copy the dictation. Select the text to copy it."
 msgstr ""
 
 #: src/settings/developers/cli.tsx
@@ -1545,6 +1602,10 @@ msgstr ""
 
 #: src/automations/actions.ts
 msgid "Could not delete the automation"
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Could not delete the dictation. Please try again."
 msgstr ""
 
 #: src/session/hooks/useDeleteSession.ts
@@ -1599,6 +1660,10 @@ msgstr ""
 msgid "Could not register dictation shortcut. It may be used by another app: {rest}"
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "Could not register the paste last dictation shortcut. It may be used by another app: {rest}"
+msgstr ""
+
 #: src/automations/actions.ts
 msgid "Could not remove the automation"
 msgstr ""
@@ -1617,6 +1682,10 @@ msgstr ""
 
 #: src/chat/store/use-chat-actions.ts
 msgid "Could not save this chat message."
+msgstr ""
+
+#: src/dictation/lifecycle.tsx
+msgid "Could not save this dictation to your history."
 msgstr ""
 
 #: src/dictation/lifecycle.tsx
@@ -1849,6 +1918,10 @@ msgstr ""
 msgid "Delete Contact"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Delete dictation"
+msgstr ""
+
 #: src/folders/folder-editor.tsx
 #: src/sidebar/folder-materials.tsx
 msgid "Delete folder"
@@ -1911,6 +1984,19 @@ msgstr ""
 msgid "Dictation"
 msgstr ""
 
+#: src/dictation/controller.ts
+msgid "Dictation cancelled."
+msgstr ""
+
+#: src/dictation/history/page.tsx
+#: src/sidebar/settings-nav-groups.ts
+msgid "Dictation history"
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Dictation history is off. Choose how long to keep dictations to start saving them."
+msgstr ""
+
 #: src/i18n/external-messages.ts
 msgid "Dictation is unavailable in password fields and while Secure Keyboard Entry is on."
 msgstr ""
@@ -1932,7 +2018,11 @@ msgid "Dictation sounds"
 msgstr ""
 
 #: src/settings/dictation.tsx
-msgid "Dictation uses your microphone, transcription provider, languages, and dictionary. Temporary audio is deleted after transcription. Your last transcript stays in memory until dictation is disabled or Librelog closes."
+msgid "Dictation uses your microphone, transcription provider, languages, and dictionary. Your history keeps dictations on this computer for as long as you choose, and their recordings only if you turn on Keep dictation audio; otherwise each recording is deleted after transcription. With history off, only your last dictation is kept, in memory, until dictation is turned off or Librelog closes."
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Dictations"
 msgstr ""
 
 #: src/settings/dictation.tsx
@@ -1968,6 +2058,10 @@ msgstr ""
 
 #: src/i18n/component-labels.tsx
 msgid "Divider"
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Do nothing"
 msgstr ""
 
 #: src/main/windows-title-bar.tsx
@@ -2085,8 +2179,16 @@ msgstr ""
 msgid "Duration"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Each dictation is saved on this computer with its date, the app it went to, the model that transcribed it, and its text. Your history never leaves this computer."
+msgstr ""
+
 #: src/templates/auto-format-examples-dialog.tsx
 msgid "Each example must be 12,000 characters or fewer."
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Earlier versions"
 msgstr ""
 
 #: src/session/components/version-history-dialog.tsx
@@ -2240,6 +2342,10 @@ msgstr ""
 msgid "Every conversation adds to your story."
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Every saved dictation and its audio are deleted from this computer. This cannot be undone."
+msgstr ""
+
 #: src/settings/ai/llm/models.tsx
 msgid "Exact model ID, as the provider names it"
 msgstr ""
@@ -2360,6 +2466,10 @@ msgstr ""
 msgid "Filter providers and models"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Final text"
+msgstr ""
+
 #: src/session/components/note-input/transcript/screens/listening.tsx
 msgid "Finalizing transcript..."
 msgstr ""
@@ -2374,6 +2484,14 @@ msgstr ""
 
 #: src/settings/stats/badge-collection.tsx
 msgid "Finding Your Rhythm"
+msgstr ""
+
+#: src/dictation/paste-last.tsx
+msgid "Finish dictating before pasting your last dictation."
+msgstr ""
+
+#: src/dictation/paste-last.tsx
+msgid "Finish recording the shortcut before pasting your last dictation."
 msgstr ""
 
 #: src/settings/ai/llm/models.tsx
@@ -2451,6 +2569,7 @@ msgstr ""
 msgid "For enabled notifications"
 msgstr ""
 
+#: src/dictation/history/page.tsx
 #: src/settings/general/audio-settings.tsx
 msgid "Forever"
 msgstr ""
@@ -2680,6 +2799,7 @@ msgid "High reasoning"
 msgstr ""
 
 #: src/session/components/note-conflict-banner.tsx
+#: src/settings/dictation.tsx
 msgid "History"
 msgstr ""
 
@@ -2867,6 +2987,18 @@ msgstr ""
 
 #: src/onboarding/final.tsx
 msgid "Join our community and stay updated:"
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Keep dictation audio"
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Keep dictations for"
+msgstr ""
+
+#: src/settings/dictation-paste-last.tsx
+msgid "Keep last dictation on the clipboard"
 msgstr ""
 
 #: src/settings/dictation.tsx
@@ -3066,6 +3198,10 @@ msgstr ""
 
 #: src/onboarding/index.tsx
 msgid "Librelog needs microphone and system audio to transcribe your meetings, plus Accessibility to read meeting controls, visible chat."
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Librelog pauses only the players you allow. macOS asks only while a player is running, so open it first."
 msgstr ""
 
 #: src/stt/saved-capture-audio.tsx
@@ -3276,6 +3412,14 @@ msgstr ""
 msgid "Low-light canvas"
 msgstr ""
 
+#: src/settings/dictation-audio.tsx
+msgid "Lower audio"
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Lower to"
+msgstr ""
+
 #: src/settings/ai/shared/provider-connection.tsx
 msgid "macOS cannot access your login Keychain. Repairing briefly locks it and asks for your Mac password before Librelog retries this API key."
 msgstr ""
@@ -3327,6 +3471,10 @@ msgstr ""
 
 #: src/settings/developers/cli.tsx
 msgid "MCP server"
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Media player access"
 msgstr ""
 
 #. placeholder {0}: number.format(stats.timedConversations)
@@ -3502,6 +3650,10 @@ msgstr ""
 msgid "Model is thinking..."
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Model to transcribe with"
+msgstr ""
+
 #: src/settings/ai/llm/models.tsx
 #: src/settings/ai/stt/detail.tsx
 msgid "Models"
@@ -3541,7 +3693,12 @@ msgid "Move up"
 msgstr ""
 
 #: src/onboarding/index.tsx
+#: src/settings/dictation-audio.tsx
 msgid "Mute"
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Mutes your computer's sound until dictation ends."
 msgstr ""
 
 #: src/sidebar/automations.tsx
@@ -3578,6 +3735,10 @@ msgstr ""
 msgid "New dictation shortcut"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "New dictations are not saved. Dictations already saved stay until you delete them."
+msgstr ""
+
 #: src/folders/sidebar.tsx
 msgid "New folder"
 msgstr ""
@@ -3590,6 +3751,10 @@ msgstr ""
 #: src/main/empty.tsx
 #: src/main/windows-title-bar.tsx
 msgid "New Note"
+msgstr ""
+
+#: src/settings/dictation-paste-last.tsx
+msgid "New paste last dictation shortcut"
 msgstr ""
 
 #: src/session/components/note-input/raw.tsx
@@ -3656,6 +3821,14 @@ msgstr ""
 msgid "No completion support"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "No dictations match your search."
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "No dictations yet. Dictations you make appear here."
+msgstr ""
+
 #: src/session/components/version-history-dialog.tsx
 msgid "No earlier versions yet."
 msgstr ""
@@ -3704,6 +3877,10 @@ msgstr ""
 msgid "No icons found"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "No installed or selected transcription model supports your languages. Choose one in Settings, Transcription."
+msgstr ""
+
 #: src/sidebar/timeline/index.tsx
 msgid "No items today"
 msgstr ""
@@ -3724,6 +3901,10 @@ msgstr "Nu s-au găsit limbi care se potrivesc"
 
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
 msgid "No matching people"
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "No model"
 msgstr ""
 
 #: src/settings/ai/llm/in-use.tsx
@@ -3786,6 +3967,7 @@ msgid "No speech detected"
 msgstr ""
 
 #: src/dictation/controller.ts
+#: src/dictation/history/queries.ts
 msgid "No speech detected. Please try again."
 msgstr ""
 
@@ -3857,6 +4039,10 @@ msgstr ""
 msgid "Not in this provider’s list"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Not inserted"
+msgstr ""
+
 #: src/settings/developers/cli.tsx
 msgid "Not installed"
 msgstr ""
@@ -3912,8 +4098,20 @@ msgstr ""
 msgid "Objects"
 msgstr ""
 
+#: src/settings/dictation-audio.tsx
+msgid "Of the volume your computer had when dictation started."
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Off"
+msgstr ""
+
 #: src/settings/ai/llm/models.tsx
 msgid "Old or deprecated model"
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Older dictations and their audio are deleted automatically."
 msgstr ""
 
 #: src/settings/general/storage/legacy-cleanup.tsx
@@ -4037,6 +4235,14 @@ msgstr ""
 msgid "Organization name"
 msgstr ""
 
+#: src/settings/dictation-audio.tsx
+msgid "Other audio keeps playing while you dictate."
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Other audio keeps playing while you dictate. Librelog from the App Store can't pause other apps, but it can mute or lower your computer's sound."
+msgstr ""
+
 #: src/session/components/version-history-dialog.tsx
 msgid "Other device's version"
 msgstr ""
@@ -4091,6 +4297,22 @@ msgstr ""
 msgid "Paste an API key from your Kimi Code membership."
 msgstr ""
 
+#: src/settings/dictation-paste-last.tsx
+msgid "Paste it anywhere with ⌘V, without a shortcut. It replaces what was on the clipboard."
+msgstr ""
+
+#: src/settings/dictation-paste-last.tsx
+msgid "Paste it anywhere with Ctrl+V, without a shortcut. It replaces what was on the clipboard."
+msgstr ""
+
+#: src/i18n/native-labels.tsx
+msgid "Paste last dictation"
+msgstr ""
+
+#: src/settings/dictation-paste-last.tsx
+msgid "Paste last dictation shortcut"
+msgstr ""
+
 #: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Paste the authorization code"
 msgstr ""
@@ -4107,6 +4329,14 @@ msgstr ""
 msgid "Paste your Kimi Code API key."
 msgstr ""
 
+#: src/settings/dictation-paste-last.tsx
+msgid "Paste your last dictation into the focused app again."
+msgstr ""
+
+#: src/settings/dictation-paste-last.tsx
+msgid "Paste your last dictation into the focused app again. It's also in the menu bar icon's menu."
+msgstr ""
+
 #: src/audio-player/timeline.tsx
 #: src/i18n/component-labels.tsx
 #: src/settings/developers/webhooks.tsx
@@ -4121,8 +4351,24 @@ msgstr ""
 msgid "Pause auto-dismiss"
 msgstr ""
 
+#: src/settings/dictation-audio.tsx
+msgid "Pause media"
+msgstr ""
+
 #: src/settings/developers/webhooks.tsx
 msgid "Paused"
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Pauses a browser tab that is playing sound, and plays it again only if the pause worked. Needs the System Audio Recording permission."
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Pauses apps and browser tabs that are playing, and resumes them when dictation ends."
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "Pauses Music, Spotify, and VLC if they are playing, and resumes them when dictation ends."
 msgstr ""
 
 #: src/contacts/organization-details.tsx
@@ -4238,7 +4484,7 @@ msgid "Press Enter to use this model ID."
 msgstr ""
 
 #: src/settings/dictation.tsx
-msgid "Press Escape to cancel. Dictation stops after five minutes."
+msgid "Press Escape to cancel the dictation you're recording; earlier ones still finish. Dictation stops after five minutes."
 msgstr ""
 
 #: src/settings/dictation-shortcut.tsx
@@ -4649,6 +4895,7 @@ msgstr ""
 msgid "Restart to Apply Update"
 msgstr ""
 
+#: src/dictation/history/page.tsx
 #: src/main/windows-window-controls.tsx
 #: src/session/components/version-history-dialog.tsx
 msgid "Restore"
@@ -4803,6 +5050,10 @@ msgstr ""
 
 #: src/contacts/shared.tsx
 msgid "Search contacts..."
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Search dictations"
 msgstr ""
 
 #: src/templates/template-icon-picker.tsx
@@ -5091,6 +5342,10 @@ msgstr ""
 msgid "Show meeting times as 14:00 instead of 2:00 PM."
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Show more"
+msgstr ""
+
 #: src/settings/general/about.tsx
 msgid "Show release notes"
 msgstr ""
@@ -5190,6 +5445,10 @@ msgstr ""
 msgid "Smileys & People"
 msgstr ""
 
+#: src/settings/dictation-audio.tsx
+msgid "Smoothly lowers your computer's sound, then brings it back when dictation ends."
+msgstr ""
+
 #: src/contacts/details.tsx
 msgid "Software Engineer"
 msgstr ""
@@ -5245,7 +5504,7 @@ msgid "Sparkle"
 msgstr ""
 
 #: src/settings/dictation.tsx
-msgid "Speak into the focused text field in your apps. Your transcript appears when you finish."
+msgid "Speak into the focused text field in your apps. Your transcript appears when you finish. You can start the next dictation while earlier ones are transcribed; they're inserted in order."
 msgstr ""
 
 #: src/meeting-float/route-state.ts
@@ -5590,6 +5849,10 @@ msgstr ""
 msgid "The Apple Intelligence model is still downloading."
 msgstr ""
 
+#: src/dictation/history/queries.ts
+msgid "The audio of this dictation is no longer available."
+msgstr ""
+
 #: src/onboarding/model-setup.tsx
 msgid "The download stopped before it finished."
 msgstr ""
@@ -5668,12 +5931,24 @@ msgstr ""
 msgid "There are currently no updates available."
 msgstr ""
 
+#: src/dictation/paste-last.tsx
+msgid "There's no dictation to paste yet."
+msgstr ""
+
 #: src/chat/components/message/loading.tsx
 msgid "Thinking..."
 msgstr ""
 
 #: src/session/components/version-history-dialog.tsx
 msgid "This device"
+msgstr ""
+
+#: src/dictation/history/queries.ts
+msgid "This dictation has no audio."
+msgstr ""
+
+#: src/dictation/history/store.ts
+msgid "This dictation is no longer in your history."
 msgstr ""
 
 #: src/edit/tab-content.tsx
@@ -5712,6 +5987,14 @@ msgstr ""
 msgid "This recording is using batch transcription, so the transcript isn't available to chat yet. Ask again after transcription finishes, or switch to a Pro model for live transcription."
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "This shortcut already pastes the last dictation. Choose another one."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "This shortcut already starts dictation. Choose another one."
+msgstr ""
+
 #: src/settings/dictation-shortcut.tsx
 msgid "This shortcut is already in your list."
 msgstr ""
@@ -5735,6 +6018,10 @@ msgstr ""
 
 #: src/chat/components/input/hooks.ts
 msgid "This unsent chat draft is too large to keep after closing the editor."
+msgstr ""
+
+#: src/dictation/history/store.ts
+msgid "This version is no longer available."
 msgstr ""
 
 #. placeholder {0}: status.fileCount
@@ -5779,6 +6066,14 @@ msgstr ""
 msgid "Tomorrow"
 msgstr ""
 
+#: src/dictation/controller.ts
+msgid "Too many dictations are waiting to be transcribed. Try again when one finishes."
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Transcribe again"
+msgstr ""
+
 #. placeholder {0}: formatLanguageList(languages, i18n)
 #: src/settings/ai/stt/index.tsx
 #: src/settings/ai/stt/model-rows.tsx
@@ -5794,6 +6089,7 @@ msgstr ""
 msgid "Transcribing…"
 msgstr ""
 
+#: src/dictation/history/page.tsx
 #: src/session/components/note-input/header-transcript.tsx
 #: src/session/components/outer-header/overflow/export-modal.tsx
 #: src/settings/automations/markdown-export-options.tsx
@@ -5917,6 +6213,10 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
+#: src/dictation/history/page.tsx
+msgid "Unknown app"
+msgstr ""
+
 #: src/session/components/outer-header/metadata/date.tsx
 msgid "Unknown date"
 msgstr ""
@@ -5929,6 +6229,10 @@ msgstr ""
 #: src/settings/ai/llm/health.tsx
 #: src/settings/ai/shared/list-common.ts
 msgid "Unknown error"
+msgstr ""
+
+#: src/dictation/history/page.tsx
+msgid "Unknown model"
 msgstr ""
 
 #: src/main/update-banner.tsx
@@ -6396,6 +6700,10 @@ msgstr ""
 #: src/settings/ai/llm/index.tsx
 #: src/settings/ai/stt/index.tsx
 msgid "Where it runs"
+msgstr ""
+
+#: src/settings/dictation-audio.tsx
+msgid "While dictating"
 msgstr ""
 
 #: src/settings/ai/stt/local-file-model.tsx

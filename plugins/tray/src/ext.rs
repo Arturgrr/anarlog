@@ -23,7 +23,9 @@ use crate::{
 };
 
 #[cfg(target_os = "macos")]
-use crate::menu_items::{AppInfo, AppNew, HelpReportBug, HelpSuggestFeature, TrayQuit};
+use crate::menu_items::{
+    AppInfo, AppNew, HelpReportBug, HelpSuggestFeature, TrayPasteLast, TrayQuit,
+};
 use crate::menu_items::{
     MenuItemHandler, TrayCheckUpdate, TrayHide, TrayOpen, TrayQuitCompletely, TraySettings,
     TrayStart, TrayVersion,
@@ -35,6 +37,7 @@ static IS_RECORDING: AtomicBool = AtomicBool::new(false);
 static IS_DEGRADED: AtomicBool = AtomicBool::new(false);
 static IS_UPDATE_AVAILABLE: AtomicBool = AtomicBool::new(false);
 static START_DISABLED: AtomicBool = AtomicBool::new(false);
+static PASTE_LAST_VISIBLE: AtomicBool = AtomicBool::new(false);
 static ANIMATION_TASK: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
 static MENU_BAR_TITLE: Mutex<Option<String>> = Mutex::new(None);
 static RECORDING_TITLE: Mutex<Option<String>> = Mutex::new(None);
@@ -312,6 +315,12 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
             app,
             START_DISABLED.load(Ordering::SeqCst),
         )?)?;
+        // Clicking the notification area on Windows and Linux takes focus from
+        // the app being pasted into; a menu bar extra on macOS does not.
+        #[cfg(target_os = "macos")]
+        if PASTE_LAST_VISIBLE.load(Ordering::SeqCst) {
+            menu.append(&TrayPasteLast::build(app)?)?;
+        }
         menu.append(&TraySettings::build(app)?)?;
         menu.append(&PredefinedMenuItem::separator(app)?)?;
         menu.append(&TrayVersion::build(app)?)?;
@@ -456,6 +465,13 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
 
     pub fn set_start_disabled(&self, disabled: bool) -> Result<()> {
         START_DISABLED.store(disabled, Ordering::SeqCst);
+        Self::rebuild_menu(self.manager.app_handle())
+    }
+
+    pub fn set_paste_last_visible(&self, visible: bool) -> Result<()> {
+        if PASTE_LAST_VISIBLE.swap(visible, Ordering::SeqCst) == visible {
+            return Ok(());
+        }
         Self::rebuild_menu(self.manager.app_handle())
     }
 }

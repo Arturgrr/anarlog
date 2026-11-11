@@ -5,8 +5,14 @@ const COMMANDS: &[&str] = &[
     "stop_recording",
     "cancel_recording",
     "discard_recording",
-    "capture_target",
+    "check_insertion",
     "insert_text",
+    "frontmost_app",
+    "keep_history_audio",
+    "history_audio_path",
+    "delete_history_audio",
+    "prune_history_audio",
+    "request_media_control",
 ];
 
 fn main() {

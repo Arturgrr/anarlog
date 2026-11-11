@@ -4,13 +4,20 @@ use std::sync::{
 };
 
 use tauri::Manager;
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
+use tauri_plugin_global_shortcut::{Code, Shortcut, ShortcutState};
+use tauri_specta::Event;
 
-use crate::{ShortcutEvent, ShortcutPluginExt, press};
+use crate::{PasteLastEvent, ShortcutEvent, ShortcutPluginExt, press};
 
 pub fn uses_portal() -> bool {
     cfg!(target_os = "linux") && std::env::var_os("WAYLAND_DISPLAY").is_some()
 }
+
+const UNAVAILABLE: &str = "Global shortcuts are unavailable in this desktop session.";
+const NEEDS_MODIFIER: &str = "Choose a shortcut with Control, Alt, Shift, or Command.";
+const TAKEN_BY_DICTATION: &str = "This shortcut already starts dictation. Choose another one.";
+const TAKEN_BY_PASTE_LAST: &str =
+    "This shortcut already pastes the last dictation. Choose another one.";
 
 #[derive(Default)]
 pub struct GlobalState {
@@ -20,10 +27,167 @@ pub struct GlobalState {
 
 #[derive(Default)]
 struct Registration {
-    shortcuts: Vec<Shortcut>,
-    cancel_keys: Vec<Shortcut>,
+    keys: Keys,
     #[cfg(target_os = "linux")]
     portal: Option<portal::Registration>,
+    #[cfg(target_os = "linux")]
+    paste_last_portal: Option<portal::Registration>,
+}
+
+/// The accelerators held through tauri-plugin-global-shortcut, kept by what
+/// they do so that reconfiguring dictation never drops the paste-last
+/// shortcut, and the other way round.
+#[derive(Default)]
+struct Keys {
+    dictation: Vec<Shortcut>,
+    cancel: Vec<Shortcut>,
+    paste_last: Option<Shortcut>,
+}
+
+#[derive(Clone, Copy)]
+enum Action {
+    /// Starts and stops dictation; the shortcut's position in the configured
+    /// list.
+    Dictate(usize),
+    Cancel,
+    PasteLast,
+}
+
+trait Backend {
+    fn register(&self, key: Shortcut, action: Action) -> Result<(), String>;
+    fn unregister(&self, key: Shortcut) -> Result<(), String>;
+}
+
+impl Keys {
+    fn add_dictation(
+        &mut self,
+        backend: &impl Backend,
+        keys: Vec<(usize, Shortcut)>,
+    ) -> Result<(), String> {
+        for (source, key) in keys {
+            if self.paste_last == Some(key) {
+                return Err(TAKEN_BY_PASTE_LAST.into());
+            }
+            backend
+                .register(key, Action::Dictate(source))
+                .map_err(|e| {
+                    format!(
+                        "Could not register dictation shortcut. It may be used by another app: {e}"
+                    )
+                })?;
+            self.dictation.push(key);
+        }
+        Ok(())
+    }
+
+    fn remove_dictation(&mut self, backend: &impl Backend) -> Result<(), String> {
+        release(&mut self.cancel, backend)?;
+        release(&mut self.dictation, backend)
+    }
+
+    /// Escape, alone and with each dictation shortcut's modifiers, which may
+    /// still be held.
+    fn add_cancel(&mut self, backend: &impl Backend) -> Result<(), String> {
+        let keys = std::iter::once(Shortcut::new(None, Code::Escape))
+            .chain(
+                self.dictation
+                    .iter()
+                    .map(|shortcut| Shortcut::new(Some(shortcut.mods), Code::Escape)),
+            )
+            .collect::<Vec<_>>();
+        for key in keys {
+            if self.cancel.contains(&key) {
+                continue;
+            }
+            backend.register(key, Action::Cancel)?;
+            self.cancel.push(key);
+        }
+        Ok(())
+    }
+
+    fn remove_cancel(&mut self, backend: &impl Backend) -> Result<(), String> {
+        release(&mut self.cancel, backend)
+    }
+
+    /// Replaces the paste-last shortcut with `key`, or only removes it.
+    fn set_paste_last(
+        &mut self,
+        backend: &impl Backend,
+        key: Option<Shortcut>,
+    ) -> Result<(), String> {
+        if let Some(current) = self.paste_last {
+            backend.unregister(current)?;
+            self.paste_last = None;
+        }
+        let Some(key) = key else {
+            return Ok(());
+        };
+        if self.dictation.contains(&key) {
+            return Err(TAKEN_BY_DICTATION.into());
+        }
+        backend.register(key, Action::PasteLast).map_err(|e| {
+            format!(
+                "Could not register the paste last dictation shortcut. It may be used by another app: {e}"
+            )
+        })?;
+        self.paste_last = Some(key);
+        Ok(())
+    }
+}
+
+fn release(keys: &mut Vec<Shortcut>, backend: &impl Backend) -> Result<(), String> {
+    while let Some(key) = keys.last().copied() {
+        backend.unregister(key)?;
+        keys.pop();
+    }
+    Ok(())
+}
+
+struct Global<'a> {
+    shortcuts: &'a GlobalShortcut,
+    active: &'a Arc<AtomicBool>,
+}
+
+impl Backend for Global<'_> {
+    fn register(&self, key: Shortcut, action: Action) -> Result<(), String> {
+        let registered = match action {
+            Action::Dictate(source) => self.shortcuts.on_shortcut(key, move |app, _, event| {
+                let event = if event.state == ShortcutState::Pressed {
+                    ShortcutEvent::Pressed
+                } else {
+                    ShortcutEvent::Released
+                };
+                press::emit(app, source, event);
+            }),
+            Action::Cancel => {
+                let enabled = self.active.clone();
+                self.shortcuts.on_shortcut(key, move |app, _, event| {
+                    if event.state == ShortcutState::Pressed && enabled.load(Ordering::SeqCst) {
+                        press::cancel(app);
+                    }
+                })
+            }
+            Action::PasteLast => self.shortcuts.on_shortcut(key, |app, _, event| {
+                if event.state == ShortcutState::Pressed {
+                    let _ = PasteLastEvent {}.emit(app);
+                }
+            }),
+        };
+        registered.map_err(|e| e.to_string())
+    }
+
+    fn unregister(&self, key: Shortcut) -> Result<(), String> {
+        self.shortcuts.unregister(key).map_err(|e| e.to_string())
+    }
+}
+
+/// None where tauri-plugin-global-shortcut isn't running: on Wayland, or when
+/// it failed to start.
+fn global<'a>(app: &'a tauri::AppHandle, state: &'a GlobalState) -> Option<Global<'a>> {
+    app.try_state::<GlobalShortcut>().map(|shortcuts| Global {
+        shortcuts: shortcuts.inner(),
+        active: &state.active,
+    })
 }
 
 /// The configured shortcuts, each paired with its position in the list and
@@ -48,7 +212,7 @@ pub async fn configure(app: tauri::AppHandle, shortcuts: Vec<String>) -> Result<
     let mut registration = state.registration.lock().await;
     state.active.store(false, Ordering::SeqCst);
     app.state::<press::Presses>().reset();
-    unregister(&app, &mut registration).await?;
+    unregister(&app, &state, &mut registration).await?;
 
     let result = async {
         #[cfg(target_os = "macos")]
@@ -65,41 +229,25 @@ pub async fn configure(app: tauri::AppHandle, shortcuts: Vec<String>) -> Result<
             registration.portal = Some(portal::register(app.clone(), plan.accelerators).await?);
             return Ok(());
         }
-        for (source, key) in plan.accelerators {
-            app.global_shortcut()
-                .on_shortcut(key, move |app, _, event| {
-                    let event = if event.state == ShortcutState::Pressed {
-                        ShortcutEvent::Pressed
-                    } else {
-                        ShortcutEvent::Released
-                    };
-                    press::emit(app, source, event);
-                })
-                .map_err(|e| {
-                    format!(
-                        "Could not register dictation shortcut. It may be used by another app: {e}"
-                    )
-                })?;
-            registration.shortcuts.push(key);
-        }
-        Ok::<(), String>(())
+        let global = global(&app, &state).ok_or(UNAVAILABLE)?;
+        registration.keys.add_dictation(&global, plan.accelerators)
     }
     .await;
     if result.is_err() {
-        let _ = unregister(&app, &mut registration).await;
+        let _ = unregister(&app, &state, &mut registration).await;
     }
     result
 }
 
-async fn unregister(app: &tauri::AppHandle, registration: &mut Registration) -> Result<(), String> {
+/// Releases the dictation shortcuts; the paste-last one stays.
+async fn unregister(
+    app: &tauri::AppHandle,
+    state: &GlobalState,
+    registration: &mut Registration,
+) -> Result<(), String> {
     app.shortcut().unregister().map_err(|e| e.to_string())?;
-    if let Some(global) = app.try_state::<GlobalShortcut>() {
-        for keys in [&mut registration.cancel_keys, &mut registration.shortcuts] {
-            while let Some(key) = keys.last().copied() {
-                global.unregister(key).map_err(|e| e.to_string())?;
-                keys.pop();
-            }
-        }
+    if let Some(global) = global(app, state) {
+        registration.keys.remove_dictation(&global)?;
     }
     #[cfg(target_os = "linux")]
     if let Some(portal) = registration.portal.take() {
@@ -108,52 +256,64 @@ async fn unregister(app: &tauri::AppHandle, registration: &mut Registration) -> 
     Ok(())
 }
 
+/// Registers `shortcut`, a key with modifiers, to paste the last dictation
+/// again, replacing the previous one; `None` unregisters it. The dictation
+/// shortcuts are left as they are. Fires on key press only.
+#[tauri::command]
+#[specta::specta]
+pub async fn configure_paste_last(
+    app: tauri::AppHandle,
+    shortcut: Option<String>,
+) -> Result<(), String> {
+    let global_available = app.try_state::<GlobalShortcut>().is_some();
+    let key = shortcut
+        .map(|shortcut| paste_last_key(&shortcut, global_available))
+        .transpose()?;
+    let state = app.state::<GlobalState>();
+    let mut registration = state.registration.lock().await;
+    #[cfg(target_os = "linux")]
+    if let Some(portal) = registration.paste_last_portal.take() {
+        portal.close().await;
+    }
+    #[cfg(target_os = "linux")]
+    if uses_portal() {
+        if let Some(key) = key {
+            registration.paste_last_portal =
+                Some(portal::register_paste_last(app.clone(), key).await?);
+        }
+        return Ok(());
+    }
+    match global(&app, &state) {
+        Some(global) => registration.keys.set_paste_last(&global, key),
+        None if key.is_some() => Err(UNAVAILABLE.into()),
+        None => Ok(()),
+    }
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn set_active(app: tauri::AppHandle, active: bool) -> Result<(), String> {
     let state = app.state::<GlobalState>();
     let mut registration = state.registration.lock().await;
     state.active.store(active, Ordering::SeqCst);
-    if !active {
-        app.state::<press::Presses>().reset();
+    let presses = app.state::<press::Presses>();
+    if active {
+        presses.activate();
+    } else {
+        presses.deactivate();
     }
     #[cfg(target_os = "linux")]
     if uses_portal() {
         return Ok(());
     }
-    let Some(global) = app.try_state::<GlobalShortcut>() else {
+    let Some(global) = global(&app, &state) else {
         return Ok(());
     };
     if active {
-        let keys = std::iter::once(Shortcut::new(None, Code::Escape))
-            .chain(
-                registration
-                    .shortcuts
-                    .iter()
-                    .map(|shortcut| Shortcut::new(Some(shortcut.mods), Code::Escape)),
-            )
-            .collect::<Vec<_>>();
-        for key in keys {
-            if registration.cancel_keys.contains(&key) {
-                continue;
-            }
-            let enabled = state.active.clone();
-            global
-                .on_shortcut(key, move |app, _, event| {
-                    if event.state == ShortcutState::Pressed && enabled.load(Ordering::SeqCst) {
-                        press::cancel(app);
-                    }
-                })
-                .map_err(|e| e.to_string())?;
-            registration.cancel_keys.push(key);
-        }
+        registration.keys.add_cancel(&global)
     } else {
-        while let Some(key) = registration.cancel_keys.last().copied() {
-            global.unregister(key).map_err(|e| e.to_string())?;
-            registration.cancel_keys.pop();
-        }
+        registration.keys.remove_cancel(&global)
     }
-    Ok(())
 }
 
 #[cfg(target_os = "linux")]
@@ -161,10 +321,76 @@ mod portal;
 #[cfg(any(target_os = "linux", test))]
 mod trigger;
 
+/// Checks a dictation shortcut, which must differ from the `paste_last`
+/// shortcut when there is one.
 #[tauri::command]
 #[specta::specta]
-pub fn validate(app: tauri::AppHandle, shortcut: String) -> Result<(), String> {
-    validate_shortcut(&shortcut, app.try_state::<GlobalShortcut>().is_some())
+pub fn validate(
+    app: tauri::AppHandle,
+    shortcut: String,
+    paste_last: Option<String>,
+) -> Result<(), String> {
+    validate_dictation(
+        &shortcut,
+        paste_last.as_deref(),
+        app.try_state::<GlobalShortcut>().is_some(),
+    )
+}
+
+/// Checks a paste-last shortcut: a key with modifiers that none of the
+/// `dictation` shortcuts uses.
+#[tauri::command]
+#[specta::specta]
+pub fn validate_paste_last(
+    app: tauri::AppHandle,
+    shortcut: String,
+    dictation: Vec<String>,
+) -> Result<(), String> {
+    validate_paste_last_shortcut(
+        &shortcut,
+        &dictation,
+        app.try_state::<GlobalShortcut>().is_some(),
+    )
+}
+
+fn validate_dictation(
+    shortcut: &str,
+    paste_last: Option<&str>,
+    global_available: bool,
+) -> Result<(), String> {
+    validate_shortcut(shortcut, global_available)?;
+    if let (Ok(key), Some(Ok(paste_last))) =
+        (parse_shortcut(shortcut), paste_last.map(parse_shortcut))
+        && key == paste_last
+    {
+        return Err(TAKEN_BY_PASTE_LAST.into());
+    }
+    Ok(())
+}
+
+fn validate_paste_last_shortcut(
+    shortcut: &str,
+    dictation: &[String],
+    global_available: bool,
+) -> Result<(), String> {
+    let key = paste_last_key(shortcut, global_available)?;
+    if dictation
+        .iter()
+        .any(|shortcut| parse_shortcut(shortcut).is_ok_and(|other| other == key))
+    {
+        return Err(TAKEN_BY_DICTATION.into());
+    }
+    Ok(())
+}
+
+/// Paste-last needs a key with modifiers: modifier-only and double-tap
+/// triggers are for dictation.
+fn paste_last_key(shortcut: &str, global_available: bool) -> Result<Shortcut, String> {
+    if is_native(shortcut) {
+        return Err(NEEDS_MODIFIER.into());
+    }
+    validate_shortcut(shortcut, global_available)?;
+    parse_shortcut(shortcut)
 }
 
 /// `DoubleTap+<KeyboardEvent.code>`: two quick taps of one modifier key.
@@ -226,7 +452,7 @@ fn validate_shortcut(shortcut: &str, global_available: bool) -> Result<(), Strin
     }
     let key = parse_shortcut(shortcut)?;
     if !uses_portal() && !global_available {
-        return Err("Global shortcuts are unavailable in this desktop session.".into());
+        return Err(UNAVAILABLE.into());
     }
     #[cfg(target_os = "linux")]
     if uses_portal() {
@@ -260,7 +486,7 @@ fn parse_shortcut(shortcut: &str) -> Result<Shortcut, String> {
         .parse()
         .map_err(|e| format!("Invalid dictation shortcut: {e}"))?;
     if key.mods.is_empty() {
-        return Err("Choose a shortcut with Control, Alt, Shift, or Command.".into());
+        return Err(NEEDS_MODIFIER.into());
     }
     if key.key == Code::Escape {
         return Err("Escape is reserved for cancelling dictation. Choose another key.".into());
@@ -287,6 +513,27 @@ mod validation_tests {
             cfg!(target_os = "macos")
         );
         assert!(validate_shortcut("DoubleTap+KeyA", true).is_err());
+    }
+
+    #[test]
+    fn rejects_a_paste_last_shortcut_that_dictation_uses_and_the_other_way_round() {
+        let dictation = ["DoubleTap+AltLeft".to_string(), "Control+Alt+KeyV".into()];
+        assert!(validate_paste_last_shortcut("Alt+Shift+KeyV", &dictation, true).is_ok());
+        assert_eq!(
+            validate_paste_last_shortcut("Alt+Control+KeyV", &dictation, true),
+            Err(TAKEN_BY_DICTATION.into())
+        );
+        assert_eq!(
+            validate_dictation("Shift+Alt+KeyV", Some("Alt+Shift+KeyV"), true),
+            Err(TAKEN_BY_PASTE_LAST.into())
+        );
+        assert!(validate_dictation("Shift+Alt+KeyV", None, true).is_ok());
+        for modifier_only in ["Fn", "RightCommand", "DoubleTap+AltLeft", "KeyV"] {
+            assert_eq!(
+                validate_paste_last_shortcut(modifier_only, &[], true),
+                Err(NEEDS_MODIFIER.into())
+            );
+        }
     }
 
     #[test]
@@ -322,5 +569,76 @@ mod validation_tests {
             );
             assert_eq!(sources(&plan.accelerators), [1]);
         }
+    }
+}
+
+#[cfg(test)]
+mod registration_tests {
+    use std::{cell::RefCell, collections::HashSet};
+
+    use super::*;
+
+    /// Holds each accelerator once, as the OS does.
+    #[derive(Default)]
+    struct Os(RefCell<HashSet<Shortcut>>);
+
+    impl Backend for Os {
+        fn register(&self, key: Shortcut, _: Action) -> Result<(), String> {
+            if self.0.borrow_mut().insert(key) {
+                Ok(())
+            } else {
+                Err("already registered".into())
+            }
+        }
+
+        fn unregister(&self, key: Shortcut) -> Result<(), String> {
+            if self.0.borrow_mut().remove(&key) {
+                Ok(())
+            } else {
+                Err("not registered".into())
+            }
+        }
+    }
+
+    #[test]
+    fn reconfiguring_dictation_or_paste_last_never_drops_the_other() {
+        let key = |shortcut: &str| parse_shortcut(shortcut).unwrap();
+        let os = Os::default();
+        let held = || os.0.borrow().clone();
+        let mut keys = Keys::default();
+
+        keys.add_dictation(&os, vec![(0, key("Control+Alt+Space"))])
+            .unwrap();
+        keys.set_paste_last(&os, Some(key("Alt+Shift+KeyV")))
+            .unwrap();
+        keys.add_cancel(&os).unwrap();
+        keys.remove_dictation(&os).unwrap();
+        assert_eq!(held(), HashSet::from([key("Alt+Shift+KeyV")]));
+
+        keys.add_dictation(&os, vec![(0, key("Control+Alt+KeyD"))])
+            .unwrap();
+        keys.set_paste_last(&os, Some(key("Control+Shift+KeyV")))
+            .unwrap();
+        assert_eq!(
+            held(),
+            HashSet::from([key("Control+Alt+KeyD"), key("Control+Shift+KeyV")])
+        );
+        keys.set_paste_last(&os, None).unwrap();
+        assert_eq!(held(), HashSet::from([key("Control+Alt+KeyD")]));
+
+        assert_eq!(
+            keys.set_paste_last(&os, Some(key("Alt+Control+KeyD"))),
+            Err(TAKEN_BY_DICTATION.into())
+        );
+        keys.set_paste_last(&os, Some(key("Alt+Shift+KeyV")))
+            .unwrap();
+        assert_eq!(
+            keys.add_dictation(&os, vec![(1, key("Shift+Alt+KeyV"))]),
+            Err(TAKEN_BY_PASTE_LAST.into())
+        );
+        assert_eq!(
+            held(),
+            HashSet::from([key("Control+Alt+KeyD"), key("Alt+Shift+KeyV")])
+        );
     }
 }

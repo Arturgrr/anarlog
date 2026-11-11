@@ -5,6 +5,7 @@ mod help_suggest_feature;
 mod tray_check_update;
 mod tray_hide;
 mod tray_open;
+mod tray_paste_last;
 mod tray_quit;
 mod tray_quit_completely;
 mod tray_settings;
@@ -18,6 +19,7 @@ pub use help_suggest_feature::HelpSuggestFeature;
 pub use tray_check_update::{TrayCheckUpdate, UpdateMenuState};
 pub use tray_hide::TrayHide;
 pub use tray_open::TrayOpen;
+pub use tray_paste_last::TrayPasteLast;
 pub use tray_quit::TrayQuit;
 pub use tray_quit_completely::{TrayQuitCompletely, quit_completely};
 pub use tray_settings::TraySettings;
@@ -73,6 +75,7 @@ macro_rules! menu_items {
 menu_items! {
     TrayOpen => TrayOpen,
     TrayStart => TrayStart,
+    TrayPasteLast => TrayPasteLast,
     TraySettings => TraySettings,
     TrayCheckUpdate => TrayCheckUpdate,
     TrayHide => TrayHide,

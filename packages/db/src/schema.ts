@@ -685,6 +685,32 @@ export const dailyNotes = sqliteTable(
   (table) => [index("idx_daily_notes_note_date").on(table.noteDate)],
 );
 
+export const dictationHistory = sqliteTable(
+  "dictation_history",
+  {
+    id: text("id").primaryKey().notNull(),
+    createdAt: text("created_at").notNull().default(currentTimestamp),
+    durationMs: integer("duration_ms").notNull().default(0),
+    targetAppName: text("target_app_name"),
+    targetAppId: text("target_app_id"),
+    provider: text("provider"),
+    model: text("model"),
+    language: text("language"),
+    rawText: text("raw_text").notNull().default(""),
+    finalText: text("final_text").notNull().default(""),
+    inserted: integer("inserted", { mode: "boolean" }).notNull().default(false),
+    audioPath: text("audio_path"),
+    transcribedAt: text("transcribed_at"),
+    versionsJson: text("versions_json").notNull().default("[]"),
+  },
+  (table) => [
+    index("idx_dictation_history_created_at").on(
+      sql`${table.createdAt} DESC`,
+      sql`${table.id} DESC`,
+    ),
+  ],
+);
+
 export const appSettings = sqliteTable("app_settings", {
   id: text("id").primaryKey().notNull(),
   valueJson: text("value_json").notNull().default("null"),

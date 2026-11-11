@@ -319,6 +319,18 @@
           "markdownDescription": "Denies the set_tray_labels command without any pre-configured scope."
         },
         {
+          "description": "Enables the set_tray_paste_last_visible command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-tray-paste-last-visible",
+          "markdownDescription": "Enables the set_tray_paste_last_visible command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_tray_paste_last_visible command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-tray-paste-last-visible",
+          "markdownDescription": "Denies the set_tray_paste_last_visible command without any pre-configured scope."
+        },
+        {
           "description": "Enables the set_tray_recording_title command without any pre-configured scope.",
           "type": "string",
           "const": "allow-set-tray-recording-title",
@@ -331,10 +343,10 @@
           "markdownDescription": "Denies the set_tray_recording_title command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-recording-title`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-recording-title`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-recording-title`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-recording-title`"
         }
       ]
     }

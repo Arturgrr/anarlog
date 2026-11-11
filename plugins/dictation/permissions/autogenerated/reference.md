@@ -10,8 +10,14 @@ Default permissions for the plugin
 - `allow-stop-recording`
 - `allow-cancel-recording`
 - `allow-discard-recording`
-- `allow-capture-target`
+- `allow-check-insertion`
 - `allow-insert-text`
+- `allow-frontmost-app`
+- `allow-keep-history-audio`
+- `allow-history-audio-path`
+- `allow-delete-history-audio`
+- `allow-prune-history-audio`
+- `allow-request-media-control`
 
 ## Permission Table
 
@@ -51,12 +57,12 @@ Denies the cancel_recording command without any pre-configured scope.
 <tr>
 <td>
 
-`dictation:allow-capture-target`
+`dictation:allow-check-insertion`
 
 </td>
 <td>
 
-Enables the capture_target command without any pre-configured scope.
+Enables the check_insertion command without any pre-configured scope.
 
 </td>
 </tr>
@@ -64,12 +70,38 @@ Enables the capture_target command without any pre-configured scope.
 <tr>
 <td>
 
-`dictation:deny-capture-target`
+`dictation:deny-check-insertion`
 
 </td>
 <td>
 
-Denies the capture_target command without any pre-configured scope.
+Denies the check_insertion command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:allow-delete-history-audio`
+
+</td>
+<td>
+
+Enables the delete_history_audio command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:deny-delete-history-audio`
+
+</td>
+<td>
+
+Denies the delete_history_audio command without any pre-configured scope.
 
 </td>
 </tr>
@@ -96,6 +128,58 @@ Enables the discard_recording command without any pre-configured scope.
 <td>
 
 Denies the discard_recording command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:allow-frontmost-app`
+
+</td>
+<td>
+
+Enables the frontmost_app command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:deny-frontmost-app`
+
+</td>
+<td>
+
+Denies the frontmost_app command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:allow-history-audio-path`
+
+</td>
+<td>
+
+Enables the history_audio_path command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:deny-history-audio-path`
+
+</td>
+<td>
+
+Denies the history_audio_path command without any pre-configured scope.
 
 </td>
 </tr>
@@ -148,6 +232,84 @@ Enables the insert_text command without any pre-configured scope.
 <td>
 
 Denies the insert_text command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:allow-keep-history-audio`
+
+</td>
+<td>
+
+Enables the keep_history_audio command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:deny-keep-history-audio`
+
+</td>
+<td>
+
+Denies the keep_history_audio command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:allow-prune-history-audio`
+
+</td>
+<td>
+
+Enables the prune_history_audio command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:deny-prune-history-audio`
+
+</td>
+<td>
+
+Denies the prune_history_audio command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:allow-request-media-control`
+
+</td>
+<td>
+
+Enables the request_media_control command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`dictation:deny-request-media-control`
+
+</td>
+<td>
+
+Denies the request_media_control command without any pre-configured scope.
 
 </td>
 </tr>

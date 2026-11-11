@@ -4,6 +4,7 @@ import {
   Bell,
   BookOpen,
   ChartLineUp,
+  ClockCounterClockwise,
   Code,
   FileText,
   FolderSimple,
@@ -56,6 +57,11 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
       items: [
         { id: "transcription", label: t`Transcription`, icon: Waveform },
         { id: "dictation", label: t`Dictation`, icon: Microphone },
+        {
+          id: "dictation-history",
+          label: t`Dictation history`,
+          icon: ClockCounterClockwise,
+        },
         { id: "intelligence", label: t`Intelligence`, icon: Sparkle },
         { id: "dictionary", label: t`Dictionary`, icon: BookOpen },
       ],

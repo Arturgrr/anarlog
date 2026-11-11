@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Channel } from "@tauri-apps/api/core";
 import { platform } from "@tauri-apps/plugin-os";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import {
   commands as dictation,
@@ -15,11 +15,18 @@ import { commands as transcription } from "@anlg/plugin-transcription";
 import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
+import { keepOnClipboard } from "./clipboard";
 import { DictationController } from "./controller";
+import {
+  dictationAudioBehaviors,
+  recordingEnvironmentConfig,
+} from "./environment";
+import { recordDictation } from "./history/store";
 import { useDictationStatus } from "./state";
 
 import { localizeExternalMessage } from "~/i18n/external-messages";
 import { useSettingsReady } from "~/settings/queries";
+import { isAppStoreBuild } from "~/shared/app-store";
 import { useConfigValue } from "~/shared/config";
 import { useListener } from "~/stt/contexts";
 import { useRunBatch } from "~/stt/useRunBatch";
@@ -28,6 +35,11 @@ export { useDictationStatus } from "./state";
 
 let lifecycle: Promise<void> = Promise.resolve();
 
+// How long the start cue sounds once asked for, opening its output included.
+// Muting or lowering other audio waits for it, so the cue is heard, unless
+// the last dictation left other audio quiet: it then stays quiet throughout.
+const START_CUE_MS = 400;
+
 export function waitForDictationCleanup() {
   return lifecycle;
 }
@@ -35,26 +47,22 @@ export function waitForDictationCleanup() {
 export function DictationLifecycle() {
   const settingsReady = useSettingsReady();
   const enabled = useConfigValue("dictation_enabled");
-  const shortcuts = useConfigValue("dictation_shortcuts");
-  const handsFree = useConfigValue("dictation_hands_free");
-  const capturingShortcut = useDictationStatus(
-    (state) => state.capturingShortcut,
-  );
-  const retry = useDictationStatus((state) => state.retry);
 
   if (!settingsReady || !enabled) return null;
   return (
     <TranscriptRetention>
-      {!capturingShortcut && (
-        <ActiveDictation
-          key={`${JSON.stringify(shortcuts)}:${handsFree}:${retry}`}
-          shortcuts={shortcuts}
-          handsFree={handsFree}
-        />
-      )}
+      <ActiveDictation />
     </TranscriptRetention>
   );
 }
+
+/** What the registered shortcuts drive; it outlives their registration. */
+type Dictation = {
+  onShortcut: (type: string) => void;
+  /** Cancels the capture in progress; resolves once it let go of the recorder and Escape. */
+  stopCapture: () => Promise<void>;
+  onError: (error: unknown) => void;
+};
 
 function TranscriptRetention({ children }: { children: React.ReactNode }) {
   useMountEffect(() => () => {
@@ -94,13 +102,17 @@ function isLocalServer(baseUrl: string) {
   );
 }
 
-function ActiveDictation({
-  shortcuts: configured,
-  handsFree,
-}: {
-  shortcuts: string[];
-  handsFree: boolean;
-}) {
+// Dictations already accepted outlive a change of shortcuts or hands-free, a
+// retry and a shortcut being recorded: only turning dictation off, or Cancel,
+// drops them.
+function ActiveDictation() {
+  const configured = useConfigValue("dictation_shortcuts");
+  const handsFree = useConfigValue("dictation_hands_free");
+  const capturingShortcut = useDictationStatus(
+    (state) => state.capturingShortcut,
+  );
+  const retry = useDictationStatus((state) => state.retry);
+  const [session, setSession] = useState<Dictation | null>(null);
   const id = useRef(`system-dictation-${crypto.randomUUID()}`).current;
   const runBatch = useRunBatch(id);
   const stopTranscription = useListener((state) => state.stopTranscription);
@@ -109,6 +121,11 @@ function ActiveDictation({
   const dictionary = useConfigValue("personalization_dictionary_terms");
   const languages = useConfigValue("spoken_languages");
   const sounds = useConfigValue("dictation_sounds");
+  const audio = {
+    behavior: useConfigValue("dictation_audio_behavior"),
+    duckVolume: useConfigValue("dictation_audio_duck_volume"),
+    pauseBrowser: useConfigValue("dictation_audio_pause_browser"),
+  };
   const meetingActive = useListener(
     (state) => state.live.status !== "inactive" || state.live.loading,
   );
@@ -120,8 +137,10 @@ function ActiveDictation({
     languages,
     dictionary,
     sounds,
+    audio,
     meetingActive,
     conn,
+    handsFree,
   });
   current.current = {
     runBatch,
@@ -130,29 +149,35 @@ function ActiveDictation({
     languages,
     dictionary,
     sounds,
+    audio,
     meetingActive,
     conn,
+    handsFree,
   };
 
   useMountEffect(() => {
     let disposed = false;
-    let armed = false;
-    let target = "";
-    let finalTranscript: string | null = null;
-    let unlisten: (() => void) | undefined;
-    let abort = new AbortController();
     let presentation: Promise<void> = Promise.resolve();
-    // Whether this dictation's HUD is up, and how it ended; anything that
-    // ends without completing or cancelling failed.
+    let status = { phase: "idle", capturing: false, pending: 0 };
+    // The capture whose live words the HUD shows, and what makes them.
+    let live: {
+      stopped: boolean;
+      preview: {
+        provider: string;
+        model: string;
+        language: string | null;
+      } | null;
+    } | null = null;
     let hudShown = false;
-    let outcome: "completed" | "cancelled" | null = null;
     // One at a time, so the HUD sees events in the order they happened.
     let hudEvents: Promise<unknown> = Promise.resolve();
+    const sendHud = (event: HudEvent) => {
+      const sent = hudEvents.then(() => dictation.hud(event));
+      hudEvents = sent.catch(() => {});
+      return sent;
+    };
     const hud = (event: HudEvent) => {
-      if (!hudShown) return;
-      hudEvents = hudEvents.then(async () => {
-        await dictation.hud(event);
-      });
+      if (hudShown) void sendHud(event);
     };
     const onError = (error: unknown) => {
       if (disposed) return;
@@ -164,15 +189,23 @@ function ActiveDictation({
     };
     // Through the speakers a cue would reach the microphone, so it never plays
     // while a meeting records: it would leak into the call and its recording.
+    // Resolves whether it played.
     const cue = async (sound: AppSounds) => {
       const { sounds, meetingActive } = current.current;
-      if (disposed || !sounds || meetingActive) return;
+      if (disposed || !sounds || meetingActive) return false;
       try {
         const capture = unwrap(await transcription.getCaptureState());
-        if (capture === "inactive") await sfx.play(sound);
+        if (capture !== "inactive") return false;
+        await sfx.play(sound);
+        return true;
       } catch (error) {
         console.error(error);
+        return false;
       }
+    };
+    const frontmostApp = async () => {
+      const app = await dictation.frontmostApp();
+      return app.status === "ok" ? app.data : null;
     };
     const meetingRecording = async () => {
       if (current.current.meetingActive) return true;
@@ -180,15 +213,17 @@ function ActiveDictation({
       return capture.status === "error" || capture.data !== "inactive";
     };
     const controller = new DictationController({
-      handsFree,
-      start: async () => {
-        abort = new AbortController();
-        finalTranscript = null;
-        outcome = null;
-        const recordingAbort = abort;
-        const { microphone, livePreview, conn, languages, dictionary } =
+      // Read at each press: the controller outlives a change of the setting.
+      get handsFree() {
+        return current.current.handsFree;
+      },
+      start: async (signal) => {
+        // First, while the app being dictated into is still in front.
+        const app = frontmostApp().catch(() => null);
+        const { microphone, livePreview, conn, languages, dictionary, audio } =
           current.current;
         useDictationStatus.setState({ error: null });
+        const meeting = meetingRecording().catch(() => true);
         if (platform() === "macos") {
           const permission = unwrap(
             await permissions.checkPermission("microphone"),
@@ -198,16 +233,22 @@ function ActiveDictation({
               t`Enable microphone permission in Settings > Permissions before dictating.`,
             );
         }
-        abort.signal.throwIfAborted();
+        signal.throwIfAborted();
         // Ahead of the microphone, so the cue answers the press and stays
         // mostly out of the recording.
-        void cue("StartRecording");
-        target = unwrap(await dictation.captureTarget());
-        // A self-hosted server may take one live connection at a time, and a
-        // second one would cut off the meeting's transcript. The dictation is
-        // then transcribed when you finish.
+        const cueEnds = Date.now() + START_CUE_MS;
+        const started = cue("StartRecording");
+        unwrap(await dictation.checkInsertion());
+        // A self-hosted server may take one live connection at a time: a
+        // second one would cut off the meeting's transcript, or contend with
+        // an earlier dictation still finishing or transcribing there. This
+        // dictation is then transcribed when its turn comes.
         const preview =
-          conn && !(isLocalServer(conn.baseUrl) && (await meetingRecording()))
+          conn &&
+          !(
+            isLocalServer(conn.baseUrl) &&
+            (status.pending > 0 || (await meeting))
+          )
             ? {
                 provider: conn.provider,
                 baseUrl: conn.baseUrl,
@@ -225,30 +266,54 @@ function ActiveDictation({
                 },
               }
             : null;
-        abort.signal.throwIfAborted();
+        // Muting or pausing would silence the call a meeting records.
+        const environment = (await meeting)
+          ? null
+          : {
+              config: recordingEnvironmentConfig({
+                ...audio,
+                available: dictationAudioBehaviors({
+                  os: platform(),
+                  appStore: isAppStoreBuild(),
+                }),
+              }),
+              delayMs: (await started) ? Math.max(0, cueEnds - Date.now()) : 0,
+            };
+        signal.throwIfAborted();
         // The HUD is on screen before the microphone opens.
-        const shown = await dictation.hud({ type: "started" });
+        const shown = await sendHud({ type: "started" });
         if (shown.status === "error")
           throw new Error(
             t`Could not show the dictation indicator. Please try again.`,
           );
         hudShown = true;
-        abort.signal.throwIfAborted();
+        signal.throwIfAborted();
+        const capture = {
+          stopped: false,
+          preview: conn &&
+            preview && {
+              provider: conn.provider,
+              model: conn.model,
+              language: (languages || []).join(",") || null,
+            },
+        };
+        live = capture;
         unwrap(
           await dictation.startSystemRecording(
             microphone || null,
             id,
             preview,
             new Channel<RecordingUpdate>((update) => {
+              if (update.type === "ended") {
+                if (capture.stopped) void cue("StopRecording");
+                return;
+              }
               if (
                 disposed ||
                 !livePreview ||
                 update.type !== "transcript" ||
-                recordingAbort.signal.aborted ||
-                recordingAbort !== abort ||
-                !["starting", "recording"].includes(
-                  useDictationStatus.getState().phase,
-                )
+                signal.aborted ||
+                live !== capture
               )
                 return;
               hud({
@@ -260,22 +325,35 @@ function ActiveDictation({
                     : update.partial,
               });
             }),
+            environment,
           ),
         );
+        return { app };
       },
       stop: async () => {
+        const capture = live;
+        live = null;
+        // The stop cue plays once the recording has ended and any audio it
+        // quieted is back.
+        if (capture) capture.stopped = true;
         const recorded = unwrap(await dictation.stopRecording(id));
-        finalTranscript = recorded.transcript ?? null;
-        return recorded.filePath;
+        return {
+          filePath: recorded.filePath,
+          durationMs: recorded.durationMs,
+          transcript:
+            recorded.transcript != null && capture?.preview
+              ? { text: recorded.transcript, ...capture.preview }
+              : null,
+        };
       },
       cancel: async () => {
+        live = null;
         unwrap(await dictation.cancelRecording(id));
       },
-      transcribe: async (path) => {
-        if (finalTranscript !== null) return finalTranscript;
+      transcribe: async (path, signal) => {
         let text = "";
-        await current.current.runBatch(path, {
-          signal: abort.signal,
+        const used = await current.current.runBatch(path, {
+          signal,
           deferAudioFinalization: true,
           notifyOnCompletion: false,
           numSpeakers: 1,
@@ -289,34 +367,85 @@ function ActiveDictation({
               .trim();
           },
         });
-        return text;
+        return {
+          text,
+          provider: used.provider,
+          model: used.model,
+          language: used.languages.join(",") || null,
+        };
       },
       insert: async (text) => {
-        if (disposed) return;
-        unwrap(await dictation.insertText(target, text));
-        outcome = "completed";
+        try {
+          unwrap(await dictation.insertText(text));
+        } finally {
+          await keepOnClipboard(text).catch(console.error);
+        }
       },
       discard: async (path) => {
         unwrap(await dictation.discardRecording(path));
       },
+      onJobFinished: async (job) => {
+        if (job.cancelled) return { claimedAudio: false };
+        try {
+          const { audioKept } = await recordDictation({
+            id: job.id,
+            createdAt: job.createdAt,
+            durationMs: job.durationMs,
+            targetApp: await job.context.app,
+            provider: job.provider,
+            model: job.model,
+            language: job.language,
+            rawText: job.rawText,
+            finalText: job.finalText,
+            inserted: job.inserted,
+            audioPath: job.audioPath,
+          });
+          return { claimedAudio: audioKept };
+        } catch (error) {
+          console.error("[dictation] history", error);
+          throw new Error(t`Could not save this dictation to your history.`);
+        }
+      },
       onTranscript: (lastTranscript) => {
         if (!disposed) useDictationStatus.setState({ lastTranscript });
       },
+      // A shortcut being recorded in Settings would take the paste's keys,
+      // and the text would land in Settings.
+      insertionPaused: (signal) => {
+        if (!useDictationStatus.getState().capturingShortcut) return null;
+        return new Promise<void>((resolve) => {
+          const done = () => {
+            unsubscribe();
+            signal.removeEventListener("abort", done);
+            resolve();
+          };
+          const unsubscribe = useDictationStatus.subscribe((state) => {
+            if (!state.capturingShortcut) done();
+          });
+          signal.addEventListener("abort", done);
+          if (signal.aborted) done();
+        });
+      },
       onError,
-      onPhase: (phase) => {
-        if (!disposed) useDictationStatus.setState({ phase });
-        if (phase === "transcribing") {
-          hud({ type: "processing" });
-          void cue("StopRecording");
+      onStatus: (next, outcome) => {
+        const previous = status;
+        status = next;
+        if (!disposed) useDictationStatus.setState(next);
+        // A capture shows recording over any pending jobs; once it ends the
+        // jobs show processing, and the last one to finish shows how it went.
+        if (next.phase !== previous.phase) {
+          if (next.phase === "transcribing") hud({ type: "processing" });
+          if (next.phase === "idle") {
+            hud({ type: outcome });
+            hudShown = false;
+          }
         }
-        if (phase === "idle") {
-          hud({ type: outcome ?? "failed" });
-          hudShown = false;
-        }
+        // Escape is only taken from other apps while a capture is in progress.
+        if (next.capturing === previous.capturing) return;
         presentation = presentation
           .then(async () => {
             try {
-              unwrap(await shortcuts.setActive(phase !== "idle" && !disposed));
+              unwrap(await shortcuts.setActive(next.capturing && !disposed));
             } catch (error) {
               onError(error);
             }
@@ -325,11 +454,66 @@ function ActiveDictation({
       },
     });
     const cancel = () => {
-      outcome ??= "cancelled";
-      abort.abort();
       void controller.cancel();
       void stopTranscription(id).catch(onError);
     };
+    useDictationStatus.setState({ cancel });
+    setSession({
+      onShortcut: (type) => {
+        if (type === "pressed") controller.press();
+        else if (type === "released") controller.release();
+        else void controller.cancelCapture();
+      },
+      stopCapture: async () => {
+        await controller.cancelCapture();
+        await presentation;
+      },
+      onError,
+    });
+
+    return () => {
+      disposed = true;
+      cancel();
+      useDictationStatus.setState({
+        ready: false,
+        phase: "idle",
+        capturing: false,
+        pending: 0,
+        cancel: null,
+      });
+      lifecycle = lifecycle
+        .then(async () => {
+          await controller.cancel();
+          await presentation;
+        })
+        .catch(() => {});
+    };
+  });
+
+  if (!session || capturingShortcut) return null;
+  return (
+    <ShortcutRegistration
+      key={`${JSON.stringify(configured)}:${handsFree}:${retry}`}
+      shortcuts={configured}
+      dictation={session}
+    />
+  );
+}
+
+// Registered again whenever the shortcuts, hands-free or a retry change, and
+// released while a shortcut is recorded. The next registration waits until
+// this one's capture has let go of the recorder.
+function ShortcutRegistration({
+  shortcuts: configured,
+  dictation: { onShortcut, stopCapture, onError },
+}: {
+  shortcuts: string[];
+  dictation: Dictation;
+}) {
+  useMountEffect(() => {
+    let disposed = false;
+    let armed = false;
+    let unlisten: (() => void) | undefined;
 
     lifecycle = lifecycle
       .then(async () => {
@@ -341,9 +525,7 @@ function ActiveDictation({
             useDictationStatus.getState().capturingShortcut
           )
             return;
-          if (payload.type === "pressed") controller.press();
-          else if (payload.type === "released") controller.release();
-          else cancel();
+          onShortcut(payload.type);
         });
         if (disposed) {
           unlisten();
@@ -352,7 +534,7 @@ function ActiveDictation({
         unwrap(await shortcuts.configure(configured));
         armed = !disposed;
         if (!disposed)
-          useDictationStatus.setState({ ready: true, error: null, cancel });
+          useDictationStatus.setState({ ready: true, error: null });
       })
       .catch(onError);
 
@@ -360,18 +542,12 @@ function ActiveDictation({
       disposed = true;
       armed = false;
       unlisten?.();
-      cancel();
-      useDictationStatus.setState({
-        ready: false,
-        phase: "idle",
-        lastTranscript: useDictationStatus.getState().lastTranscript,
-        cancel: null,
-      });
+      useDictationStatus.setState({ ready: false });
+      const stopped = stopCapture();
       lifecycle = lifecycle
         .then(async () => {
           unlisten?.();
-          await controller.cancel();
-          await presentation;
+          await stopped;
           unwrap(await shortcuts.configure([]));
         })
         .catch(() => {});

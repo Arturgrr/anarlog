@@ -4,6 +4,17 @@ const DEFAULT_DICTATION_SHORTCUT =
     ? "DoubleTap+AltLeft"
     : "Control+Alt+Space";
 
+// Windows reports AltGr as Control + Alt, so Control + Alt + V would take
+// AltGr + V, which types "@" on some layouts.
+const DEFAULT_PASTE_LAST_SHORTCUT =
+  typeof navigator === "undefined"
+    ? "Control+Alt+KeyV"
+    : navigator.userAgent.includes("Macintosh")
+      ? "Alt+Shift+KeyV"
+      : navigator.userAgent.includes("Windows")
+        ? "Control+Alt+Shift+KeyV"
+        : "Control+Alt+KeyV";
+
 export const SETTING_DEFINITIONS = {
   intelligence_disabled: {
     type: "boolean",
@@ -41,6 +52,47 @@ export const SETTING_DEFINITIONS = {
     type: "boolean",
     path: ["dictation", "sounds"],
     default: true as boolean,
+  },
+  dictation_paste_last_enabled: {
+    type: "boolean",
+    path: ["dictation", "paste_last_enabled"],
+    default: true as boolean,
+  },
+  dictation_paste_last_shortcut: {
+    type: "string",
+    path: ["dictation", "paste_last_shortcut"],
+    default: DEFAULT_PASTE_LAST_SHORTCUT as string,
+  },
+  dictation_keep_on_clipboard: {
+    type: "boolean",
+    path: ["dictation", "keep_on_clipboard"],
+    default: false as boolean,
+  },
+  dictation_audio_behavior: {
+    type: "string",
+    path: ["dictation", "audio_behavior"],
+    default: "nothing" as string,
+  },
+  // Percent of the output volume when dictation starts.
+  dictation_audio_duck_volume: {
+    type: "number",
+    path: ["dictation", "audio_duck_volume"],
+    default: 20 as number,
+  },
+  dictation_audio_pause_browser: {
+    type: "boolean",
+    path: ["dictation", "audio_pause_browser"],
+    default: false as boolean,
+  },
+  dictation_history_retention: {
+    type: "string",
+    path: ["dictation", "history_retention"],
+    default: "week" as string,
+  },
+  dictation_history_keep_audio: {
+    type: "boolean",
+    path: ["dictation", "history_keep_audio"],
+    default: false as boolean,
   },
   export_directory: {
     type: "string",

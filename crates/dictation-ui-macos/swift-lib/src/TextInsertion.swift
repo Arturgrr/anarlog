@@ -19,8 +19,10 @@ private enum Message {
   static let prepare = "Could not prepare dictation for insertion."
 }
 
-private final class DictationPasteProvider: NSObject, NSPasteboardItemDataProvider {
+final class DictationPasteProvider: NSObject, NSPasteboardItemDataProvider {
   let text: String
+  /// Signalled each time an app asks for the text, which it does once Command-V reaches it.
+  let read = DispatchSemaphore(value: 0)
   var didRead: (() -> Void)?
   init(text: String) { self.text = text }
   func pasteboard(
@@ -28,6 +30,7 @@ private final class DictationPasteProvider: NSObject, NSPasteboardItemDataProvid
     provideDataForType type: NSPasteboard.PasteboardType
   ) {
     item.setString(text, forType: type)
+    read.signal()
     // The pasteboard keeps the text once provided, so later reads never reach the provider.
     // Restore a moment after the first one: apps may read again, or a clipboard manager may have
     // read just before the target.
@@ -173,6 +176,8 @@ private final class DictationTarget {
   var clipboardSnapshot: [NSPasteboardItem]?
   var clipboardChangeCount: Int?
   var clipboardProvider: DictationPasteProvider?
+  /// The paste the last insertion made, until something waits for it to be read.
+  var pendingPaste: DictationPasteProvider?
 
   /// Text goes wherever focus is when the transcript is ready, so starting only checks what can
   /// already rule dictation out.
@@ -184,7 +189,13 @@ private final class DictationTarget {
     return "ok:" + token
   }
 
+  func takePendingPaste() -> DictationPasteProvider? {
+    defer { pendingPaste = nil }
+    return pendingPaste
+  }
+
   func insert(token: String, text: String) -> String {
+    pendingPaste = nil
     guard !token.isEmpty, token == self.token else { return Message.failed }
     self.token = ""
     // Posting keystrokes to other apps needs Accessibility too.
@@ -256,6 +267,7 @@ private final class DictationTarget {
     clipboardSnapshot = saved
     clipboardChangeCount = changeCount
     clipboardProvider = provider
+    pendingPaste = provider
     provider.didRead = {
       self.restoreClipboard(saved, expectedChangeCount: changeCount, retries: 2)
     }
@@ -314,4 +326,14 @@ public func insertDictationText(target: SRString, text: SRString) -> SRString {
   // Rust calls this off the main thread, so waiting here doesn't stall the indicator.
   guard KeyboardInput.waitForModifierRelease() else { return SRString(Message.shortcutHeld) }
   return SRString(onMain { DictationTarget.shared.insert(token: token, text: text) })
+}
+
+/// Waits up to `timeout` seconds for the app to read what the last insertion pasted, so the next
+/// one doesn't replace it first. True once it has, or when that insertion pasted nothing.
+@_cdecl("_wait_for_dictation_paste_read")
+public func waitForDictationPasteRead(timeout: Double) -> Bool {
+  // The read arrives on the main thread, which waiting there would hold up.
+  if Thread.isMainThread { return false }
+  guard let paste = onMain({ DictationTarget.shared.takePendingPaste() }) else { return true }
+  return paste.read.wait(timeout: .now() + timeout) == .success
 }

@@ -55,6 +55,10 @@ export function localizeExternalMessage(message: string): string {
       return t`Double-tap shortcuts are only available on macOS.`;
     case "Escape is reserved for cancelling dictation. Choose another key.":
       return t`Escape is reserved for cancelling dictation. Choose another key.`;
+    case "This shortcut already starts dictation. Choose another one.":
+      return t`This shortcut already starts dictation. Choose another one.`;
+    case "This shortcut already pastes the last dictation. Choose another one.":
+      return t`This shortcut already pastes the last dictation. Choose another one.`;
     case "Transcription stopped.":
       return t`Transcription stopped.`;
     case "Batch transcription did not include the current recording.":
@@ -87,6 +91,11 @@ export function localizeExternalMessage(message: string): string {
   );
   if (rest !== null)
     return t`Could not register dictation shortcut. It may be used by another app: ${rest}`;
+  rest = detail(
+    "Could not register the paste last dictation shortcut. It may be used by another app: ",
+  );
+  if (rest !== null)
+    return t`Could not register the paste last dictation shortcut. It may be used by another app: ${rest}`;
   rest = detail("Invalid dictation shortcut: ");
   if (rest !== null) return t`Invalid dictation shortcut: ${rest}`;
   rest = detail("dictation indicator failed: ");

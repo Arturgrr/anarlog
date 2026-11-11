@@ -94,6 +94,7 @@ async fn migrations_apply_cleanly() {
             "cloudsync_session_evictions",
             "cloudsync_writable_workspaces",
             "daily_notes",
+            "dictation_history",
             "e2ee_apply_guard",
             "e2ee_ciphertext_archive",
             "e2ee_cloud_authority",

@@ -320,13 +320,15 @@ export const useRunBatch = (sessionId: string) => {
         selectedProviderId && selectedModel
           ? getBatchProvider(selectedProviderId, selectedModel)
           : null;
+      // An explicit endpoint selects a target even when no provider is set up.
+      const selectedBaseUrl = options?.baseUrl ?? conn?.baseUrl;
       const selectedTarget =
-        conn && selectedModel && selectedProvider
+        selectedBaseUrl !== undefined && selectedModel && selectedProvider
           ? {
               provider: selectedProvider,
               model: selectedModel,
-              baseUrl: options?.baseUrl ?? conn.baseUrl,
-              apiKey: options?.apiKey ?? conn.apiKey,
+              baseUrl: selectedBaseUrl,
+              apiKey: options?.apiKey ?? conn?.apiKey ?? "",
               label: selectedModel,
             }
           : null;
@@ -531,11 +533,18 @@ export const useRunBatch = (sessionId: string) => {
         }
       }
 
+      // Resolved for callers that record what transcribed the audio: the
+      // fallback when the selected model could not.
+      const used = {
+        provider: target.provider,
+        model: target.model,
+        languages,
+      };
       if (options?.recovery) {
         options.signal?.throwIfAborted();
         await options.recovery.persist(stagedWords, stagedHints);
         await acknowledgeCompletedBatch(jobId);
-        return;
+        return used;
       }
 
       try {
@@ -614,6 +623,7 @@ export const useRunBatch = (sessionId: string) => {
       if (options?.notifyOnCompletion !== false) {
         await notifyBatchCompleted();
       }
+      return used;
     },
     [
       conn,

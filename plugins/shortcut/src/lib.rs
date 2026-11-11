@@ -24,8 +24,10 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             global::configure,
             global::validate,
             global::set_active,
+            global::configure_paste_last,
+            global::validate_paste_last,
         ])
-        .events(tauri_specta::collect_events![ShortcutEvent])
+        .events(tauri_specta::collect_events![ShortcutEvent, PasteLastEvent])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }
 

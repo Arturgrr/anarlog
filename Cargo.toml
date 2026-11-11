@@ -78,6 +78,7 @@ anlg-opencode = { path = "crates/opencode", package = "opencode" }
 anlg-openrouter = { path = "crates/openrouter", package = "openrouter" }
 anlg-overlay-kit = { path = "crates/overlay-kit", package = "overlay-kit" }
 anlg-pyannote-local = { path = "crates/pyannote-local", package = "pyannote-local" }
+anlg-recording-environment = { path = "crates/recording-environment", package = "recording-environment" }
 anlg-resampler = { path = "crates/resampler", package = "resampler" }
 anlg-session-ingest = { path = "crates/session-ingest", package = "session-ingest" }
 anlg-shortcut-macos = { path = "crates/shortcut-macos", package = "shortcut-macos" }

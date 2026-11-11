@@ -45,6 +45,27 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
+  /**
+   * Shows "Paste last dictation" in the menu bar icon's menu on macOS while
+   * dictation and its paste-last shortcut are enabled. Other platforms never
+   * show it.
+   */
+  async setTrayPasteLastVisible(
+    visible: boolean,
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE(
+          "plugin:anlg-tray|set_tray_paste_last_visible",
+          { visible },
+        ),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
 };
 
 /** user-defined events **/
@@ -59,6 +80,7 @@ export type TrayLabels = {
    */
   openApp: string;
   startMeeting: string;
+  pasteLastDictation: string;
   settings: string;
   checkForUpdates: string;
   downloadingUpdate: string;

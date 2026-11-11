@@ -307,16 +307,28 @@
           "markdownDescription": "Denies the cancel_recording command without any pre-configured scope."
         },
         {
-          "description": "Enables the capture_target command without any pre-configured scope.",
+          "description": "Enables the check_insertion command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-capture-target",
-          "markdownDescription": "Enables the capture_target command without any pre-configured scope."
+          "const": "allow-check-insertion",
+          "markdownDescription": "Enables the check_insertion command without any pre-configured scope."
         },
         {
-          "description": "Denies the capture_target command without any pre-configured scope.",
+          "description": "Denies the check_insertion command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-capture-target",
-          "markdownDescription": "Denies the capture_target command without any pre-configured scope."
+          "const": "deny-check-insertion",
+          "markdownDescription": "Denies the check_insertion command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the delete_history_audio command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-delete-history-audio",
+          "markdownDescription": "Enables the delete_history_audio command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the delete_history_audio command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-delete-history-audio",
+          "markdownDescription": "Denies the delete_history_audio command without any pre-configured scope."
         },
         {
           "description": "Enables the discard_recording command without any pre-configured scope.",
@@ -329,6 +341,30 @@
           "type": "string",
           "const": "deny-discard-recording",
           "markdownDescription": "Denies the discard_recording command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the frontmost_app command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-frontmost-app",
+          "markdownDescription": "Enables the frontmost_app command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the frontmost_app command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-frontmost-app",
+          "markdownDescription": "Denies the frontmost_app command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the history_audio_path command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-history-audio-path",
+          "markdownDescription": "Enables the history_audio_path command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the history_audio_path command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-history-audio-path",
+          "markdownDescription": "Denies the history_audio_path command without any pre-configured scope."
         },
         {
           "description": "Enables the hud command without any pre-configured scope.",
@@ -353,6 +389,42 @@
           "type": "string",
           "const": "deny-insert-text",
           "markdownDescription": "Denies the insert_text command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the keep_history_audio command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-keep-history-audio",
+          "markdownDescription": "Enables the keep_history_audio command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the keep_history_audio command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-keep-history-audio",
+          "markdownDescription": "Denies the keep_history_audio command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the prune_history_audio command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-prune-history-audio",
+          "markdownDescription": "Enables the prune_history_audio command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the prune_history_audio command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-prune-history-audio",
+          "markdownDescription": "Denies the prune_history_audio command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the request_media_control command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-request-media-control",
+          "markdownDescription": "Enables the request_media_control command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the request_media_control command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-request-media-control",
+          "markdownDescription": "Denies the request_media_control command without any pre-configured scope."
         },
         {
           "description": "Enables the start_recording command without any pre-configured scope.",
@@ -391,10 +463,10 @@
           "markdownDescription": "Denies the stop_recording command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-hud`\n- `allow-start-recording`\n- `allow-start-system-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-discard-recording`\n- `allow-capture-target`\n- `allow-insert-text`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-hud`\n- `allow-start-recording`\n- `allow-start-system-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-discard-recording`\n- `allow-check-insertion`\n- `allow-insert-text`\n- `allow-frontmost-app`\n- `allow-keep-history-audio`\n- `allow-history-audio-path`\n- `allow-delete-history-audio`\n- `allow-prune-history-audio`\n- `allow-request-media-control`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-hud`\n- `allow-start-recording`\n- `allow-start-system-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-discard-recording`\n- `allow-capture-target`\n- `allow-insert-text`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-hud`\n- `allow-start-recording`\n- `allow-start-system-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-discard-recording`\n- `allow-check-insertion`\n- `allow-insert-text`\n- `allow-frontmost-app`\n- `allow-keep-history-audio`\n- `allow-history-audio-path`\n- `allow-delete-history-audio`\n- `allow-prune-history-audio`\n- `allow-request-media-control`"
         }
       ]
     }

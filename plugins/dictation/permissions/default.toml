@@ -7,6 +7,12 @@ permissions = [
   "allow-stop-recording",
   "allow-cancel-recording",
   "allow-discard-recording",
-  "allow-capture-target",
+  "allow-check-insertion",
   "allow-insert-text",
+  "allow-frontmost-app",
+  "allow-keep-history-audio",
+  "allow-history-audio-path",
+  "allow-delete-history-audio",
+  "allow-prune-history-audio",
+  "allow-request-media-control",
 ]

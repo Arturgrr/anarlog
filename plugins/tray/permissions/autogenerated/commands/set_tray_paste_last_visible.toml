@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-set-tray-paste-last-visible"
+description = "Enables the set_tray_paste_last_visible command without any pre-configured scope."
+commands.allow = ["set_tray_paste_last_visible"]
+
+[[permission]]
+identifier = "deny-set-tray-paste-last-visible"
+description = "Denies the set_tray_paste_last_visible command without any pre-configured scope."
+commands.deny = ["set_tray_paste_last_visible"]
