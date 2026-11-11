@@ -23,10 +23,12 @@ use crate::{
 };
 
 #[cfg(target_os = "macos")]
-use crate::menu_items::{AppInfo, AppNew, HelpReportBug, HelpSuggestFeature, TrayQuit};
 use crate::menu_items::{
-    MenuItemHandler, TrayCheckUpdate, TrayHide, TrayOpen, TrayPasteLast, TrayQuitCompletely,
-    TraySettings, TrayStart, TrayVersion,
+    AppInfo, AppNew, HelpReportBug, HelpSuggestFeature, TrayPasteLast, TrayQuit,
+};
+use crate::menu_items::{
+    MenuItemHandler, TrayCheckUpdate, TrayHide, TrayOpen, TrayQuitCompletely, TraySettings,
+    TrayStart, TrayVersion,
 };
 
 const TRAY_ID: &str = "anlg-tray";
@@ -313,6 +315,9 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
             app,
             START_DISABLED.load(Ordering::SeqCst),
         )?)?;
+        // Clicking the notification area on Windows and Linux takes focus from
+        // the app being pasted into; a menu bar extra on macOS does not.
+        #[cfg(target_os = "macos")]
         if PASTE_LAST_VISIBLE.load(Ordering::SeqCst) {
             menu.append(&TrayPasteLast::build(app)?)?;
         }

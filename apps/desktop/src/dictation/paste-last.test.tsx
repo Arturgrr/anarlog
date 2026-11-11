@@ -2,6 +2,7 @@ import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  platform: "macos",
   settings: {} as Record<string, unknown>,
   configurePasteLast: vi.fn(),
   setTrayPasteLastVisible: vi.fn(),
@@ -10,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   toast: Object.assign(vi.fn(), { error: vi.fn() }),
   listener: null as ((event: { payload: object }) => void) | null,
 }));
+vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => mocks.platform }));
 vi.mock("~/settings/queries", () => ({ useSettingsReady: () => true }));
 vi.mock("~/shared/config", () => ({
   useConfigValue: (key: string) => mocks.settings[key],
@@ -54,6 +56,7 @@ async function requestPaste() {
 describe("paste last dictation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.platform = "macos";
     mocks.settings = {
       dictation_enabled: true,
       dictation_paste_last_enabled: true,
@@ -142,5 +145,17 @@ describe("paste last dictation", () => {
       expect(mocks.setTrayPasteLastVisible).toHaveBeenLastCalledWith(false),
     );
     expect(mocks.listener).toBeNull();
+  });
+
+  it("pastes from the shortcut on Windows without a tray menu item, which would take the focus", async () => {
+    mocks.platform = "windows";
+    render(<PasteLastLifecycle />);
+    await requestPaste();
+    await waitFor(() =>
+      expect(mocks.insertText).toHaveBeenCalledWith("Hello again"),
+    );
+    cleanup();
+    await waitForPasteLastCleanup();
+    expect(mocks.setTrayPasteLastVisible).not.toHaveBeenCalled();
   });
 });

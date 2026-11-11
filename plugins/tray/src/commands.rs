@@ -21,8 +21,9 @@ pub async fn set_tray_labels(
         .map_err(|error| error.to_string())
 }
 
-/// Shows "Paste last dictation" in the tray menu while dictation and its
-/// paste-last shortcut are enabled.
+/// Shows "Paste last dictation" in the menu bar icon's menu on macOS while
+/// dictation and its paste-last shortcut are enabled. Other platforms never
+/// show it.
 #[tauri::command]
 #[specta::specta]
 pub async fn set_tray_paste_last_visible(

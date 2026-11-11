@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+import { platform } from "@tauri-apps/plugin-os";
 import { create } from "zustand";
 
 import { commands as dictation } from "@anlg/plugin-dictation";
@@ -104,21 +105,24 @@ export function PasteLastLifecycle() {
   );
 }
 
+// Only the macOS menu bar has the menu item: clicking the notification area
+// on Windows and Linux takes focus from the app the text should go to.
 function PasteLastRequests() {
   useMountEffect(() => {
     let disposed = false;
     let unlisten: (() => void) | undefined;
+    const tray = platform() === "macos";
     void events.pasteLastEvent
       .listen(() => void pasteLast())
       .then((stop) => {
         if (disposed) stop();
         else unlisten = stop;
       });
-    showTrayItem(true);
+    if (tray) showTrayItem(true);
     return () => {
       disposed = true;
       unlisten?.();
-      showTrayItem(false);
+      if (tray) showTrayItem(false);
     };
   });
   return null;

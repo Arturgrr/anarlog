@@ -62,8 +62,7 @@ export function DictationPasteLastSettings() {
               </Trans>
             ) : (
               <Trans>
-                Paste your last dictation into the focused app again. It's also
-                in the tray icon's menu.
+                Paste your last dictation into the focused app again.
               </Trans>
             )
           }
