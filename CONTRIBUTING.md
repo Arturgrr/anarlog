@@ -110,6 +110,8 @@ Releases are cut by merging a version bump into `main`:
 
 Betas are published as regular releases, not prereleases, because the updater reads `releases/latest`. If a build fails, rerun the workflow from the Actions tab with the same version.
 
+When the macOS build never starts because GitHub has no runner for it ("The job was not acquired by Runner of type hosted"), release from an Apple silicon Mac instead. Check out the `main` commit that carries the version bump, cancel any queued release run, and run `scripts/release-local.sh build`, then `scripts/release-local.sh publish`. The build signs with the certificate in `~/.librelog-signing` (from `scripts/create-macos-signing-certificate.sh`) and the updater key in `~/.tauri/anarlog-fork-updater.key`; publishing uploads the same files the workflow would and publishes the draft it created.
+
 ## License
 
 By submitting a contribution, you agree that it may be distributed under the repository's [MIT License](LICENSE). Only submit material you have the right to license this way, and record the upstream revision and license of any third-party code you reuse.
