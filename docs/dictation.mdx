@@ -21,9 +21,19 @@ Dictation stops after five minutes. Press Escape to cancel; on Wayland, use Cont
 
 Dictation also works while Librelog records a meeting, for example to type into the call's chat. The meeting keeps recording, and what you dictate is part of its microphone audio and transcript. With a self-hosted transcription server, the dictation skips the live preview and is transcribed when you finish, so it doesn't take the meeting's connection. With an on-device model, a dictation may wait a moment while the meeting's audio is being transcribed.
 
+## Dictate again while one transcribes
+
+You don't have to wait for a dictation to appear before starting the next one. Up to five dictations can wait to be transcribed; while five are waiting, the shortcut shows an error until one finishes.
+
+- Dictations are transcribed and inserted in the order you made them, each one at the focus when its text is inserted.
+- A dictation that is ready waits while you record the next one, so its text never arrives while you hold the shortcut. It is inserted as soon as that recording ends.
+- Escape cancels only the dictation you are recording. Dictations already waiting still finish. **Cancel dictation** in **Settings → Dictation** cancels all of them.
+
 ## Where the text goes
 
-On macOS, text goes to whatever has keyboard focus when transcription finishes, so you can move to another field or app while Librelog transcribes.
+Text goes to whatever has keyboard focus when it is inserted, so you can move to another field or app while Librelog transcribes. Insertions happen one at a time: dictations and **Paste last dictation** never interrupt each other.
+
+On macOS:
 
 - Native macOS text fields, such as those in Notes and TextEdit, receive the text directly and your clipboard is left alone.
 - Web pages, browsers, Electron apps such as VS Code, Cursor, Slack, Discord, Notion and Obsidian, and terminals such as Terminal, iTerm2, Ghostty and Warp receive the text as a paste. So does any other app whose field doesn't take text directly. Librelog restores your previous clipboard shortly after the app reads it, and marks the dictation so clipboard managers that follow the nspasteboard.org convention skip it.
@@ -35,9 +45,41 @@ Dictation does not insert into password fields. On macOS it is also unavailable 
 
 ## If insertion fails
 
-If nothing editable had focus, or the app could not insert the text, open **Settings → Dictation** and choose **Copy last dictation**, then paste it yourself. The last transcript stays in memory until you disable dictation or quit Librelog.
+If nothing editable had focus, or the app could not insert the text, you still have it:
 
-On Windows and Linux, keep the original text field focused until dictation finishes. On Linux, approve the desktop's shortcut prompt on Wayland. The target app must expose an editable accessibility field; password fields are excluded. Clear a selected text range before dictating, or use the copy action to replace it yourself.
+- Focus the field and use **Paste last dictation** (below).
+- Open **Settings → Dictation** and choose **Copy last dictation**, then paste it yourself.
+- Find it in **Settings → Dictation history**, where it is marked **Not inserted**, unless history is off.
+- With **Keep last dictation on the clipboard** on, it is already on your clipboard.
+
+On Windows and Linux, the focused field must be editable when the text is inserted. On Linux, approve the desktop's shortcut prompt on Wayland. The target app must expose an editable accessibility field; password fields are excluded. Clear a selected text range before dictating, or use the copy action to replace it yourself.
+
+## Paste last dictation
+
+To paste your last dictation again into the focused field, press Option + Shift + V on macOS or Control + Alt + V on Windows and Linux. Change the shortcut, or turn it off, under **Paste last dictation shortcut** in **Settings → Dictation**. The same action is in the menu bar icon's menu on macOS and the tray icon's menu on Windows and Linux.
+
+It pastes the newest dictation in your history, including one you transcribed again, or the last one of this session while history is off. It is unavailable while you are recording a dictation; dictations still waiting to be inserted take turns with it.
+
+Turn on **Keep last dictation on the clipboard** to leave each dictation's text on the clipboard after it is inserted, or after the insertion fails, so you can paste it anywhere with ⌘V or Control + V. It replaces what was on the clipboard.
+
+## While dictating
+
+Choose what happens to other audio while you record a dictation in **Settings → Dictation → While dictating**:
+
+- **Do nothing**, the default, leaves it playing.
+- **Mute** mutes your computer's sound output, unless you had muted it already.
+- **Lower audio** smoothly lowers the output to the share of its volume you choose, then brings it back.
+- **Pause media** pauses players that are playing and resumes only those it paused.
+
+Librelog makes the change as recording starts, right after the start sound, and undoes it when recording ends; **Mute** and **Lower audio** act on the default output device. The stop sound plays once your audio is back. Dictations that follow each other closely keep it quiet in between. If Librelog quits unexpectedly while your sound is muted or lowered, it restores it the next time it starts, unless you changed it meanwhile. Nothing changes while Librelog records a meeting, so you never silence a call.
+
+What **Pause media** reaches depends on the platform:
+
+- On macOS it pauses Music, Spotify and VLC; macOS asks once for permission to control each of them. **Also pause the browser** pauses a browser tab that is playing sound, and needs System Audio Recording permission. Librelog from the App Store cannot pause other apps, so it offers only **Mute** and **Lower audio**.
+- On Windows it pauses apps and browser tabs that report what they play to Windows' media controls.
+- On Linux it pauses players that support MPRIS, including most browsers. **Mute** and **Lower audio** use PulseAudio or PipeWire.
+
+While you record a dictation, your computer does not go to sleep from inactivity.
 
 Dictation is a desktop interaction. The CLI and MCP interfaces do not start dictation or insert text into other apps.
 

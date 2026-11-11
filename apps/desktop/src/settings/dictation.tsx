@@ -65,7 +65,8 @@ export function SettingsDictation() {
         <p className="text-muted-foreground text-sm">
           <Trans>
             Speak into the focused text field in your apps. Your transcript
-            appears when you finish.
+            appears when you finish. You can start the next dictation while
+            earlier ones are transcribed; they're inserted in order.
           </Trans>
         </p>
         <SettingSwitchRow
@@ -154,6 +155,37 @@ export function SettingsDictation() {
           onChange={setSounds}
         />
         <DictationAudioSettings />
+        <DictationPasteLastSettings />
+        {status.lastTranscript && (
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium">
+              <Trans>Last dictation</Trans>
+            </h3>
+            <p className="border-border rounded-lg border p-4 text-sm whitespace-pre-wrap">
+              {status.lastTranscript}
+            </p>
+            <Button
+              className="self-start"
+              variant="outline"
+              disabled={copy.isPending}
+              onClick={() => copy.mutate(status.lastTranscript)}
+            >
+              {copy.isSuccess && copy.variables === status.lastTranscript ? (
+                <Trans>Copied</Trans>
+              ) : (
+                <Trans>Copy last dictation</Trans>
+              )}
+            </Button>
+            {copy.isError && (
+              <p role="alert" className="text-destructive text-sm">
+                <Trans>
+                  Could not copy the transcript. Select the text above to copy
+                  it.
+                </Trans>
+              </p>
+            )}
+          </div>
+        )}
         <p className="text-muted-foreground text-xs">
           {platform() === "linux" ? (
             <Trans>
@@ -163,7 +195,8 @@ export function SettingsDictation() {
             </Trans>
           ) : (
             <Trans>
-              Press Escape to cancel. Dictation stops after five minutes.
+              Press Escape to cancel the dictation you're recording; earlier
+              ones still finish. Dictation stops after five minutes.
             </Trans>
           )}
         </p>
@@ -255,42 +288,13 @@ export function SettingsDictation() {
         <p className="text-muted-foreground text-xs">
           <Trans>
             Dictation uses your microphone, transcription provider, languages,
-            and dictionary. Temporary audio is deleted after transcription. Your
-            last transcript stays in memory until dictation is disabled or
-            Librelog closes.
+            and dictionary. Your history keeps dictations on this computer for
+            as long as you choose, and their recordings only if you turn on Keep
+            dictation audio; otherwise each recording is deleted after
+            transcription. With history off, only your last dictation is kept,
+            in memory, until dictation is turned off or Librelog closes.
           </Trans>
         </p>
-        <DictationPasteLastSettings />
-        {status.lastTranscript && (
-          <div className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium">
-              <Trans>Last dictation</Trans>
-            </h3>
-            <p className="border-border rounded-lg border p-4 text-sm whitespace-pre-wrap">
-              {status.lastTranscript}
-            </p>
-            <Button
-              className="self-start"
-              variant="outline"
-              disabled={copy.isPending}
-              onClick={() => copy.mutate(status.lastTranscript)}
-            >
-              {copy.isSuccess && copy.variables === status.lastTranscript ? (
-                <Trans>Copied</Trans>
-              ) : (
-                <Trans>Copy last dictation</Trans>
-              )}
-            </Button>
-            {copy.isError && (
-              <p role="alert" className="text-destructive text-sm">
-                <Trans>
-                  Could not copy the transcript. Select the text above to copy
-                  it.
-                </Trans>
-              </p>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
