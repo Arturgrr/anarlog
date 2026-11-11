@@ -8,6 +8,7 @@ import { commands as transcription } from "@anlg/plugin-transcription";
 import { Button } from "@anlg/ui/components/ui/button";
 import { Textarea } from "@anlg/ui/components/ui/textarea";
 
+import { DictationAudioSettings } from "./dictation-audio";
 import { DictationShortcuts, isDoubleTapShortcut } from "./dictation-shortcut";
 
 import { useDictationStatus } from "~/dictation/state";
@@ -151,6 +152,7 @@ export function SettingsDictation() {
           checked={sounds}
           onChange={setSounds}
         />
+        <DictationAudioSettings />
         <p className="text-muted-foreground text-xs">
           {platform() === "linux" ? (
             <Trans>
