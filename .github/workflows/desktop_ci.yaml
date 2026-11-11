@@ -1,15 +1,14 @@
 # https://github.com/tauri-apps/tauri-action/blob/3013cac/examples/test-build-only.yml
 #
-# The native jobs (macOS, Windows, Linux, Swift) cost up to an hour of scarce
-# macOS time, so pull requests and pushes get them only when they touch what
-# those jobs build; `changes` decides, and `ci` counts a native job it skipped
-# as passing. Schedule and manual runs always get them.
+# The native jobs (macOS, Windows, Linux) take up to an hour each, so pull
+# requests and pushes get them only when they touch what those jobs build;
+# `changes` decides, and `ci` counts a native job it skipped as passing.
+# Schedule and manual runs always get them.
 #
-# Each platform compiles its tests once. On macOS, `macos_check` type-checks the
-# two distribution feature sets while `macos_build` packs the test binaries into
-# nextest archives that `macos_test` runs in partitions without compiling.
-# nextest cannot run doctests or `harness = false` tests without libtest
-# support, so `macos_build` runs those with cargo against the same build.
+# macOS is one job on purpose: hosted macOS runners are scarce here and a job
+# left waiting for one is cancelled, so a run asks for a single runner. Its
+# checks keep going after a failure, so that one run reports all of them.
+# Windows and Linux build their tests once instead of checking first.
 #
 # Only main saves Rust caches (rust_install), one per platform; everything else
 # restores them, so a pull request can neither evict nor replace them.
@@ -23,7 +22,6 @@ on:
     paths:
       - .cargo/**
       - .github/actions/install_desktop_deps/**
-      - .github/actions/install_nextest/**
       - .github/actions/rust_install/**
       - .github/workflows/desktop_ci.yaml
       - apps/cli/**
@@ -42,7 +40,6 @@ on:
     paths:
       - .cargo/**
       - .github/actions/install_desktop_deps/**
-      - .github/actions/install_nextest/**
       - .github/actions/rust_install/**
       - .github/workflows/desktop_ci.yaml
       - apps/cli/**
@@ -68,7 +65,7 @@ concurrency:
 
 env:
   # CI-only settings; local builds keep the profiles in Cargo.toml. Debug info
-  # only slows linking and grows the test archives here.
+  # only slows linking and fills the runner's disk here.
   CARGO_INCREMENTAL: "0"
   CARGO_PROFILE_DEV_DEBUG: "0"
 
@@ -97,7 +94,7 @@ jobs:
           pattern='^(\.cargo|apps/cli|apps/desktop/src-tauri|crates|plugins|skills)/'
           pattern+='|^(Cargo\.toml|Cargo\.lock|rust-toolchain\.toml)$'
           pattern+='|^\.github/workflows/desktop_ci\.yaml$'
-          pattern+='|^\.github/actions/(install_desktop_deps|install_nextest|rust_install)/'
+          pattern+='|^\.github/actions/(install_desktop_deps|rust_install)/'
           pattern+='|^scripts/(bash-guard|setup-linux-others|setup-linux-tauri)\.sh$'
 
           native=true
@@ -137,104 +134,10 @@ jobs:
           SHARD_TOTAL: ${{ strategy.job-total }}
         run: pnpm -F desktop test --shard="$SHARD/$SHARD_TOTAL"
 
-  macos_check:
+  macos_ci:
     needs: changes
     if: needs.changes.outputs.native == 'true'
     runs-on: macos-26
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          submodules: recursive
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: $/.github/actions/install_desktop_deps
-        with:
-          target: macos
-      # Restores macos_build's cache for the registry and dependency build
-      # scripts but never saves, so the cache keeps the test build.
-      - uses: $/.github/actions/rust_install
-        with:
-          platform: macos
-          cache-key: desktop
-          save-cache: false
-      - run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
-      - run: cargo check --locked -p desktop --features direct-distribution
-      - run: cargo check --locked -p desktop --features app-store
-
-  macos_build:
-    needs: changes
-    if: needs.changes.outputs.native == 'true'
-    runs-on: macos-26
-    outputs:
-      archives: ${{ steps.upload.outputs.artifact-id }}
-    env:
-      WORKSPACE_TESTS: >-
-        --workspace
-        --exclude desktop
-        --exclude control-tauri
-        --exclude ai
-        --exclude lago
-        --exclude notch
-        --exclude notification-macos
-        --exclude tcc
-        --exclude notification-linux
-        --exclude am
-        --exclude aec
-        --exclude whisper
-        --exclude whisper-local
-        --exclude whisper-local-model
-        --exclude vad2
-        --exclude vad
-        --exclude vvad
-        --exclude vad-masking
-        --exclude vad-chunking
-        --exclude onnx
-        --exclude pyannote-local
-        --exclude llama
-        --exclude tools
-        --exclude bundle
-        --exclude host
-        --exclude intercept
-        --exclude frontmatter
-        --exclude audio
-        --exclude audio-device
-        --exclude transcribe-whisper-local
-        --exclude device-monitor
-        --exclude tauri-plugin-analytics
-        --exclude tauri-plugin-auth
-        --exclude tauri-plugin-db2
-        --exclude tauri-plugin-deeplink2
-        --exclude tauri-plugin-detect
-        --exclude tauri-plugin-fs-db
-        --exclude tauri-plugin-fs-sync
-        --exclude tauri-plugin-fs2
-        --exclude tauri-plugin-hooks
-        --exclude tauri-plugin-icon
-        --exclude tauri-plugin-listener
-        --exclude tauri-plugin-listener2
-        --exclude tauri-plugin-local-auth
-        --exclude tauri-plugin-apple-foundation
-        --exclude tauri-plugin-local-stt
-        --exclude tauri-plugin-misc
-        --exclude tauri-plugin-notification
-        --exclude tauri-plugin-notify
-        --exclude tauri-plugin-opener2
-        --exclude tauri-plugin-pdf
-        --exclude tauri-plugin-permissions
-        --exclude tauri-plugin-settings
-        --exclude tauri-plugin-sfx
-        --exclude tauri-plugin-sidecar2
-        --exclude tauri-plugin-store2
-        --exclude tauri-plugin-tantivy
-        --exclude tauri-plugin-template
-        --exclude tauri-plugin-tracing
-        --exclude tauri-plugin-tray
-        --exclude tauri-plugin-updater2
-        --exclude tauri-plugin-windows
-        --exclude db3
-        --exclude db-core
-        --exclude activity-capture-macos
-        --exclude tauri-plugin-activity-capture
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -248,91 +151,90 @@ jobs:
         with:
           platform: macos
           cache-key: desktop
-      - run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
-      - uses: $/.github/actions/install_nextest
-      # Three invocations, as with cargo test before, so each keeps its own
-      # feature resolution.
-      - run: |
-          mkdir -p "$RUNNER_TEMP/nextest-archives"
-          cargo nextest archive --locked -p desktop \
-            --archive-file "$RUNNER_TEMP/nextest-archives/desktop.tar.zst"
-      - run: >-
-          cargo nextest archive --locked -p tauri-plugin-template --lib
-          --archive-file "$RUNNER_TEMP/nextest-archives/template.tar.zst"
-      # native_quit is a plain `fn main` test that nextest would list as empty.
-      - run: |
-          read -r -a selection <<<"$WORKSPACE_TESTS"
-          cargo nextest archive --locked "${selection[@]}" \
-            -E 'not binary_id(tauri-plugin-dock::native_quit)' \
-            --archive-file "$RUNNER_TEMP/nextest-archives/workspace.tar.zst"
-          ls -lh "$RUNNER_TEMP/nextest-archives"
-      - id: upload
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: macos-nextest-archives
-          path: ${{ runner.temp }}/nextest-archives
-          if-no-files-found: error
-          # Long enough to re-run failed macos_test jobs on a later day.
-          retention-days: 3
-          # A re-run of this job replaces the archives of the earlier attempt.
-          overwrite: true
-          # The archives are already zstd-compressed.
-          compression-level: 0
-      - run: |
-          read -r -a selection <<<"$WORKSPACE_TESTS"
-          cargo test --locked "${selection[@]}" --test native_quit
-      - run: cargo test --locked -p desktop --doc
-      - run: |
-          read -r -a selection <<<"$WORKSPACE_TESTS"
-          cargo test --locked "${selection[@]}" --doc
-      # The build scripts regenerated these; macos_test checks the bindings
-      # that the tests regenerate.
-      - run: |
-          git diff --exit-code -- \
-            plugins/db/permissions/autogenerated \
-            plugins/db/permissions/schemas/schema.json
-
-  macos_test:
-    needs: macos_build
-    # Also runs when a doctest failed after the archives were uploaded.
-    if: ${{ !cancelled() && needs.macos_build.outputs.archives != '' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        partition: [1, 2]
-    runs-on: macos-26
-    env:
-      PARTITION: count:${{ matrix.partition }}/${{ strategy.job-total }}
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          submodules: recursive
-          persist-credentials: false
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: macos-nextest-archives
-          path: ${{ runner.temp }}/nextest-archives
-      - uses: $/.github/actions/install_nextest
-      # Extracting into the checkout puts target/ where macos_build had it, so
-      # paths compiled into the tests still resolve.
-      - run: >-
-          cargo-nextest nextest run --no-fail-fast --partition "$PARTITION"
-          --archive-file "$RUNNER_TEMP/nextest-archives/desktop.tar.zst"
-          --workspace-remap "$GITHUB_WORKSPACE"
-          --extract-to "$GITHUB_WORKSPACE" --extract-overwrite
-      - if: ${{ !cancelled() }}
-        run: >-
-          cargo-nextest nextest run --no-fail-fast --partition "$PARTITION"
-          --archive-file "$RUNNER_TEMP/nextest-archives/template.tar.zst"
-          --workspace-remap "$GITHUB_WORKSPACE"
-          --extract-to "$GITHUB_WORKSPACE" --extract-overwrite
-      - if: ${{ !cancelled() }}
-        run: >-
-          cargo-nextest nextest run --no-fail-fast --partition "$PARTITION"
-          --archive-file "$RUNNER_TEMP/nextest-archives/workspace.tar.zst"
-          --workspace-remap "$GITHUB_WORKSPACE"
-          --extract-to "$GITHUB_WORKSPACE" --extract-overwrite
-      - if: ${{ !cancelled() }}
+      - id: setup
+        run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
+      # Every check after setup runs even when an earlier one failed.
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: swift build --package-path plugins/windows/swift-lib
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: swift test --package-path crates/dictation-ui-macos/swift-lib
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: cargo check --locked -p desktop --features direct-distribution
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: cargo check --locked -p desktop --features app-store
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: cargo test --locked -p desktop
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: cargo test --locked -p tauri-plugin-template --lib
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: |
+          cargo test --locked --workspace \
+            --exclude desktop \
+            --exclude control-tauri \
+            --exclude ai \
+            --exclude lago \
+            --exclude notch \
+            --exclude notification-macos \
+            --exclude tcc \
+            --exclude notification-linux \
+            --exclude am \
+            --exclude aec \
+            --exclude whisper \
+            --exclude whisper-local \
+            --exclude whisper-local-model \
+            --exclude vad2 \
+            --exclude vad \
+            --exclude vvad \
+            --exclude vad-masking \
+            --exclude vad-chunking \
+            --exclude onnx \
+            --exclude pyannote-local \
+            --exclude llama \
+            --exclude tools \
+            --exclude bundle \
+            --exclude host \
+            --exclude intercept \
+            --exclude frontmatter \
+            --exclude audio \
+            --exclude audio-device \
+            --exclude transcribe-whisper-local \
+            --exclude device-monitor \
+            --exclude tauri-plugin-analytics \
+            --exclude tauri-plugin-auth \
+            --exclude tauri-plugin-db2 \
+            --exclude tauri-plugin-deeplink2 \
+            --exclude tauri-plugin-detect \
+            --exclude tauri-plugin-fs-db \
+            --exclude tauri-plugin-fs-sync \
+            --exclude tauri-plugin-fs2 \
+            --exclude tauri-plugin-hooks \
+            --exclude tauri-plugin-icon \
+            --exclude tauri-plugin-listener \
+            --exclude tauri-plugin-listener2 \
+            --exclude tauri-plugin-local-auth \
+            --exclude tauri-plugin-apple-foundation \
+            --exclude tauri-plugin-local-stt \
+            --exclude tauri-plugin-misc \
+            --exclude tauri-plugin-notification \
+            --exclude tauri-plugin-notify \
+            --exclude tauri-plugin-opener2 \
+            --exclude tauri-plugin-pdf \
+            --exclude tauri-plugin-permissions \
+            --exclude tauri-plugin-settings \
+            --exclude tauri-plugin-sfx \
+            --exclude tauri-plugin-sidecar2 \
+            --exclude tauri-plugin-store2 \
+            --exclude tauri-plugin-tantivy \
+            --exclude tauri-plugin-template \
+            --exclude tauri-plugin-tracing \
+            --exclude tauri-plugin-tray \
+            --exclude tauri-plugin-updater2 \
+            --exclude tauri-plugin-windows \
+            --exclude db3 \
+            --exclude db-core \
+            --exclude activity-capture-macos \
+            --exclude tauri-plugin-activity-capture
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: |
           git diff --exit-code -- \
             plugins/db/js/bindings.gen.ts \
@@ -401,32 +303,15 @@ jobs:
       - uses: $/.github/actions/pnpm_install
       - run: pnpm -F desktop i18n:check
 
-  desktop_swift:
-    needs: changes
-    if: needs.changes.outputs.native == 'true'
-    # The image macos_build compiles these packages on, through swift-rs.
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          submodules: recursive
-          fetch-depth: 0
-          persist-credentials: false
-      - run: swift build --package-path plugins/windows/swift-lib
-      - run: swift test --package-path crates/dictation-ui-macos/swift-lib
-
   ci:
     if: always()
     needs: [
       changes,
       js_ci,
-      macos_check,
-      macos_build,
-      macos_test,
+      macos_ci,
       windows_ci,
       linux_ci,
       desktop_i18n,
-      desktop_swift,
     ]
     runs-on: ubuntu-latest
     steps:
