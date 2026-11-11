@@ -5,25 +5,29 @@ use tauri::Manager;
 use crate::{
     events::HudEvent,
     ext::DictationPluginExt,
-    recorder::{RecordedAudio, Recorder},
+    recorder::{Feedback, RecordedAudio, Recorder},
 };
 
+/// Fails fast when text could not be inserted where the focus is now. Skipped
+/// while an insertion is in flight, which it must not disturb.
 #[tauri::command]
 #[specta::specta]
-pub(crate) async fn capture_target() -> Result<String, String> {
-    crate::insertion::capture().await
+pub(crate) async fn check_insertion() -> Result<(), String> {
+    crate::insertion::check().await
 }
 
+/// Inserts `text` where the focus is when its turn comes: insertions run one
+/// at a time, in the order they were asked for.
 #[tauri::command]
 #[specta::specta]
-pub(crate) async fn insert_text(target: String, text: String) -> Result<(), String> {
+pub(crate) async fn insert_text(text: String) -> Result<(), String> {
     if text.contains('\0') {
         return Err("Dictation text contains an unsupported NUL character".into());
     }
     if text.is_empty() || text.len() > 100_000 {
         return Err("Dictation text is empty or too long".into());
     }
-    crate::insertion::insert(target, text).await
+    crate::insertion::insert(text).await
 }
 
 #[tauri::command]
@@ -86,8 +90,9 @@ pub(crate) async fn discard_recording<R: tauri::Runtime>(
         .map_err(|error| error.to_string())
 }
 
-/// Records for system-wide dictation: the HUD follows the microphone, and the
-/// live preview's words arrive over `updates`.
+/// Records for system-wide dictation: the HUD follows the microphone, the
+/// live preview's words arrive over `updates`, and `environment` quiets other
+/// audio and keeps the computer awake until the recording ends.
 #[tauri::command]
 #[specta::specta]
 pub(crate) async fn start_system_recording<R: tauri::Runtime>(
@@ -96,6 +101,7 @@ pub(crate) async fn start_system_recording<R: tauri::Runtime>(
     owner: String,
     preview: Option<crate::preview::PreviewConfig>,
     updates: tauri::ipc::Channel<crate::preview::RecordingUpdate>,
+    environment: Option<crate::environment::RecordingEnvironment>,
 ) -> Result<(), String> {
     let audio = app
         .state::<Arc<dyn anlg_audio::AudioProvider>>()
@@ -108,9 +114,12 @@ pub(crate) async fn start_system_recording<R: tauri::Runtime>(
             audio,
             microphone_device,
             owner,
-            preview,
-            Some(updates),
-            Some(meter),
+            Feedback {
+                preview,
+                updates: Some(updates),
+                meter: Some(meter),
+                environment,
+            },
         )
         .map_err(|error| error.to_string())
 }

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { recordingEnvironmentConfig } from "./environment";
+import {
+  dictationAudioBehaviors,
+  recordingEnvironmentConfig,
+} from "./environment";
 
 describe("recordingEnvironmentConfig", () => {
   it("turns stored settings into the native config, repairing values the native side would misread", () => {
@@ -42,5 +45,18 @@ describe("recordingEnvironmentConfig", () => {
         pauseBrowser: false,
       }).behavior,
     ).toEqual({ type: "nothing" });
+  });
+
+  it("never asks the sandboxed macOS App Store build to pause media it may not control", () => {
+    const pause = (os: string, appStore: boolean) =>
+      recordingEnvironmentConfig({
+        behavior: "pause",
+        duckVolume: 20,
+        pauseBrowser: true,
+        available: dictationAudioBehaviors({ os, appStore }),
+      }).behavior.type;
+    expect(pause("macos", true)).toBe("nothing");
+    expect(pause("macos", false)).toBe("pauseMedia");
+    expect(pause("windows", true)).toBe("pauseMedia");
   });
 });

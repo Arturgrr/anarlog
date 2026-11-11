@@ -10,6 +10,7 @@ import {
 } from "@anlg/ui/components/ui/select";
 
 import {
+  dictationAudioBehaviors,
   normalizeDictationAudioBehavior,
   normalizeDuckVolume,
 } from "~/dictation/environment";
@@ -26,8 +27,12 @@ const DUCK_VOLUME_STEPS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90];
 
 export function DictationAudioSettings() {
   const { t, i18n } = useLingui();
+  const os = platform();
+  const appStore = isAppStoreBuild();
+  const available = dictationAudioBehaviors({ os, appStore });
   const behavior = normalizeDictationAudioBehavior(
     useConfigValue("dictation_audio_behavior"),
+    available,
   );
   const setBehavior = useSetSettingValue("dictation_audio_behavior");
   const duckVolume = normalizeDuckVolume(
@@ -38,18 +43,17 @@ export function DictationAudioSettings() {
   const setPauseBrowser = useSetSettingValue("dictation_audio_pause_browser");
   // Windows and Linux report browser tabs like any other player. The macOS
   // browser pause relies on private APIs the App Store build leaves out.
-  const os = platform();
-  const browserPause = os === "macos" && !isAppStoreBuild();
+  const browserPause = os === "macos" && !appStore;
   const percent = new Intl.NumberFormat(i18n.locale, { style: "percent" });
   const steps = DUCK_VOLUME_STEPS.includes(duckVolume)
     ? DUCK_VOLUME_STEPS
     : [...DUCK_VOLUME_STEPS, duckVolume].sort((a, b) => a - b);
-  const behaviors = [
-    { value: "nothing", label: t`Do nothing` },
-    { value: "mute", label: t`Mute` },
-    { value: "duck", label: t`Lower audio` },
-    { value: "pause", label: t`Pause media` },
-  ];
+  const labels = {
+    nothing: t`Do nothing`,
+    mute: t`Mute`,
+    duck: t`Lower audio`,
+    pause: t`Pause media`,
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -67,7 +71,8 @@ export function DictationAudioSettings() {
             os === "macos" ? (
               <Trans>
                 Pauses Music, Spotify, and VLC if they are playing, and resumes
-                them when dictation ends.
+                them when dictation ends. macOS asks once for permission to
+                control each of them.
               </Trans>
             ) : (
               <Trans>
@@ -75,6 +80,12 @@ export function DictationAudioSettings() {
                 when dictation ends.
               </Trans>
             )
+          ) : appStore && os === "macos" ? (
+            <Trans>
+              Other audio keeps playing while you dictate. Librelog from the App
+              Store can't pause other apps, but it can mute or lower your
+              computer's sound.
+            </Trans>
           ) : (
             <Trans>Other audio keeps playing while you dictate.</Trans>
           )
@@ -86,9 +97,9 @@ export function DictationAudioSettings() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {behaviors.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+              {available.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {labels[option]}
                 </SelectItem>
               ))}
             </SelectContent>

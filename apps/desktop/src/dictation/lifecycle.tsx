@@ -15,11 +15,18 @@ import { commands as transcription } from "@anlg/plugin-transcription";
 import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
+import { keepOnClipboard } from "./clipboard";
 import { DictationController } from "./controller";
+import {
+  dictationAudioBehaviors,
+  recordingEnvironmentConfig,
+} from "./environment";
+import { recordDictation } from "./history/store";
 import { useDictationStatus } from "./state";
 
 import { localizeExternalMessage } from "~/i18n/external-messages";
 import { useSettingsReady } from "~/settings/queries";
+import { isAppStoreBuild } from "~/shared/app-store";
 import { useConfigValue } from "~/shared/config";
 import { useListener } from "~/stt/contexts";
 import { useRunBatch } from "~/stt/useRunBatch";
@@ -27,6 +34,10 @@ import { useSTTConnection } from "~/stt/useSTTConnection";
 export { useDictationStatus } from "./state";
 
 let lifecycle: Promise<void> = Promise.resolve();
+
+// How long the start cue sounds once asked for, opening its output included.
+// Muting or lowering other audio waits for it, so the cue is heard.
+const START_CUE_MS = 400;
 
 export function waitForDictationCleanup() {
   return lifecycle;
@@ -109,6 +120,11 @@ function ActiveDictation({
   const dictionary = useConfigValue("personalization_dictionary_terms");
   const languages = useConfigValue("spoken_languages");
   const sounds = useConfigValue("dictation_sounds");
+  const audio = {
+    behavior: useConfigValue("dictation_audio_behavior"),
+    duckVolume: useConfigValue("dictation_audio_duck_volume"),
+    pauseBrowser: useConfigValue("dictation_audio_pause_browser"),
+  };
   const meetingActive = useListener(
     (state) => state.live.status !== "inactive" || state.live.loading,
   );
@@ -120,6 +136,7 @@ function ActiveDictation({
     languages,
     dictionary,
     sounds,
+    audio,
     meetingActive,
     conn,
   });
@@ -130,6 +147,7 @@ function ActiveDictation({
     languages,
     dictionary,
     sounds,
+    audio,
     meetingActive,
     conn,
   };
@@ -140,8 +158,15 @@ function ActiveDictation({
     let unlisten: (() => void) | undefined;
     let presentation: Promise<void> = Promise.resolve();
     let status = { phase: "idle", capturing: false, pending: 0 };
-    // The capture whose live words the HUD shows.
-    let live: object | null = null;
+    // The capture whose live words the HUD shows, and what makes them.
+    let live: {
+      stopped: boolean;
+      preview: {
+        provider: string;
+        model: string;
+        language: string | null;
+      } | null;
+    } | null = null;
     let hudShown = false;
     // One at a time, so the HUD sees events in the order they happened.
     let hudEvents: Promise<unknown> = Promise.resolve();
@@ -163,15 +188,23 @@ function ActiveDictation({
     };
     // Through the speakers a cue would reach the microphone, so it never plays
     // while a meeting records: it would leak into the call and its recording.
+    // Resolves whether it played.
     const cue = async (sound: AppSounds) => {
       const { sounds, meetingActive } = current.current;
-      if (disposed || !sounds || meetingActive) return;
+      if (disposed || !sounds || meetingActive) return false;
       try {
         const capture = unwrap(await transcription.getCaptureState());
-        if (capture === "inactive") await sfx.play(sound);
+        if (capture !== "inactive") return false;
+        await sfx.play(sound);
+        return true;
       } catch (error) {
         console.error(error);
+        return false;
       }
+    };
+    const frontmostApp = async () => {
+      const app = await dictation.frontmostApp();
+      return app.status === "ok" ? app.data : null;
     };
     const meetingRecording = async () => {
       if (current.current.meetingActive) return true;
@@ -181,9 +214,12 @@ function ActiveDictation({
     const controller = new DictationController({
       handsFree,
       start: async (signal) => {
-        const { microphone, livePreview, conn, languages, dictionary } =
+        // First, while the app being dictated into is still in front.
+        const app = frontmostApp().catch(() => null);
+        const { microphone, livePreview, conn, languages, dictionary, audio } =
           current.current;
         useDictationStatus.setState({ error: null });
+        const meeting = meetingRecording().catch(() => true);
         if (platform() === "macos") {
           const permission = unwrap(
             await permissions.checkPermission("microphone"),
@@ -196,8 +232,9 @@ function ActiveDictation({
         signal.throwIfAborted();
         // Ahead of the microphone, so the cue answers the press and stays
         // mostly out of the recording.
-        void cue("StartRecording");
-        const target = unwrap(await dictation.captureTarget());
+        const cueEnds = Date.now() + START_CUE_MS;
+        const started = cue("StartRecording");
+        unwrap(await dictation.checkInsertion());
         // A self-hosted server may take one live connection at a time: a
         // second one would cut off the meeting's transcript, or contend with
         // an earlier dictation still finishing or transcribing there. This
@@ -206,7 +243,7 @@ function ActiveDictation({
           conn &&
           !(
             isLocalServer(conn.baseUrl) &&
-            (status.pending > 0 || (await meetingRecording()))
+            (status.pending > 0 || (await meeting))
           )
             ? {
                 provider: conn.provider,
@@ -225,6 +262,19 @@ function ActiveDictation({
                 },
               }
             : null;
+        // Muting or pausing would silence the call a meeting records.
+        const environment = (await meeting)
+          ? null
+          : {
+              config: recordingEnvironmentConfig({
+                ...audio,
+                available: dictationAudioBehaviors({
+                  os: platform(),
+                  appStore: isAppStoreBuild(),
+                }),
+              }),
+              delayMs: (await started) ? Math.max(0, cueEnds - Date.now()) : 0,
+            };
         signal.throwIfAborted();
         // The HUD is on screen before the microphone opens.
         const shown = await sendHud({ type: "started" });
@@ -234,7 +284,15 @@ function ActiveDictation({
           );
         hudShown = true;
         signal.throwIfAborted();
-        const capture = {};
+        const capture = {
+          stopped: false,
+          preview: conn &&
+            preview && {
+              provider: conn.provider,
+              model: conn.model,
+              language: (languages || []).join(",") || null,
+            },
+        };
         live = capture;
         unwrap(
           await dictation.startSystemRecording(
@@ -242,6 +300,10 @@ function ActiveDictation({
             id,
             preview,
             new Channel<RecordingUpdate>((update) => {
+              if (update.type === "ended") {
+                if (capture.stopped) void cue("StopRecording");
+                return;
+              }
               if (
                 disposed ||
                 !livePreview ||
@@ -259,14 +321,26 @@ function ActiveDictation({
                     : update.partial,
               });
             }),
+            environment,
           ),
         );
-        return target;
+        return { app };
       },
       stop: async () => {
+        const capture = live;
         live = null;
-        void cue("StopRecording");
-        return unwrap(await dictation.stopRecording(id));
+        // The stop cue plays once the recording has ended and any audio it
+        // quieted is back.
+        if (capture) capture.stopped = true;
+        const recorded = unwrap(await dictation.stopRecording(id));
+        return {
+          filePath: recorded.filePath,
+          durationMs: recorded.durationMs,
+          transcript:
+            recorded.transcript != null && capture?.preview
+              ? { text: recorded.transcript, ...capture.preview }
+              : null,
+        };
       },
       cancel: async () => {
         live = null;
@@ -274,7 +348,7 @@ function ActiveDictation({
       },
       transcribe: async (path, signal) => {
         let text = "";
-        await current.current.runBatch(path, {
+        const used = await current.current.runBatch(path, {
           signal,
           deferAudioFinalization: true,
           notifyOnCompletion: false,
@@ -289,15 +363,45 @@ function ActiveDictation({
               .trim();
           },
         });
-        return text;
+        return {
+          text,
+          provider: used.provider,
+          model: used.model,
+          language: used.languages.join(",") || null,
+        };
       },
-      insert: async (target, text) => {
-        unwrap(await dictation.insertText(target, text));
+      insert: async (text) => {
+        try {
+          unwrap(await dictation.insertText(text));
+        } finally {
+          await keepOnClipboard(text).catch(console.error);
+        }
       },
       discard: async (path) => {
         unwrap(await dictation.discardRecording(path));
       },
-      onJobFinished: async () => {},
+      onJobFinished: async (job) => {
+        if (job.cancelled) return { claimedAudio: false };
+        try {
+          const { audioKept } = await recordDictation({
+            id: job.id,
+            createdAt: job.createdAt,
+            durationMs: job.durationMs,
+            targetApp: await job.context.app,
+            provider: job.provider,
+            model: job.model,
+            language: job.language,
+            rawText: job.rawText,
+            finalText: job.finalText,
+            inserted: job.inserted,
+            audioPath: job.audioPath,
+          });
+          return { claimedAudio: audioKept };
+        } catch (error) {
+          console.error("[dictation] history", error);
+          throw new Error(t`Could not save this dictation to your history.`);
+        }
+      },
       onTranscript: (lastTranscript) => {
         if (!disposed) useDictationStatus.setState({ lastTranscript });
       },

@@ -5,11 +5,26 @@ export type DictationPhase = "idle" | "starting" | "recording" | "transcribing";
 const MAX_PENDING_JOBS = 5;
 const MAX_CAPTURE_MS = 300_000;
 
-type Capture = {
-  phase: "starting" | "recording";
+/** A transcript and what made it. */
+type Transcript = {
+  text: string;
+  provider: string | null;
+  model: string | null;
+  language: string | null;
+};
+
+type Recording = {
+  filePath: string;
+  durationMs: number;
+  /** The live preview's final transcript, when it has one. */
+  transcript?: Transcript | null;
+};
+
+type Capture<Context> = {
   abort: AbortController;
   createdAt: string;
-  target: string;
+  /** What `start` resolved, once the microphone is open. */
+  opened: { context: Context } | null;
   released: boolean;
   timer?: ReturnType<typeof setTimeout>;
   operation: Promise<void>;
@@ -17,16 +32,12 @@ type Capture = {
   end: () => void;
 };
 
-type Job = {
+type Job<Context> = {
   id: string;
   createdAt: string;
-  target: string;
+  context: Context;
   abort: AbortController;
-  recording: Promise<{
-    filePath: string;
-    durationMs: number;
-    transcript?: string | null;
-  }>;
+  recording: Promise<Recording>;
 };
 
 /**
@@ -34,35 +45,40 @@ type Job = {
  * inserted in the order it was made. Neither starting nor cancelling a
  * capture touches the jobs already accepted.
  */
-export class DictationController {
-  private capture: Capture | null = null;
-  private jobs: Job[] = [];
+export class DictationController<Context> {
+  private capture: Capture<Context> | null = null;
+  private jobs: Job<Context>[] = [];
   private queue: Promise<void> = Promise.resolve();
   private outcome: "completed" | "failed" | "cancelled" = "failed";
 
   constructor(
     private readonly dependencies: {
-      start: (signal: AbortSignal) => Promise<string>;
-      stop: () => Promise<{
-        filePath: string;
-        durationMs: number;
-        transcript?: string | null;
-      }>;
+      /** Opens the microphone; resolves what its job carries to `onJobFinished`. */
+      start: (signal: AbortSignal) => Promise<Context>;
+      stop: () => Promise<Recording>;
       cancel: () => Promise<void>;
-      transcribe: (path: string, signal: AbortSignal) => Promise<string>;
-      insert: (target: string, text: string) => Promise<void>;
+      transcribe: (path: string, signal: AbortSignal) => Promise<Transcript>;
+      insert: (text: string) => Promise<void>;
       discard: (path: string) => Promise<void>;
+      /**
+       * Once per accepted job, before its recording is discarded. Resolves
+       * whether it took the recording file, which is then left alone.
+       */
       onJobFinished: (job: {
         id: string;
         createdAt: string;
         durationMs: number;
-        target: string;
+        context: Context;
+        provider: string | null;
+        model: string | null;
+        language: string | null;
         rawText: string;
         finalText: string;
         inserted: boolean;
+        cancelled: boolean;
         audioPath: string | null;
         error: string | null;
-      }) => Promise<void> | void;
+      }) => Promise<{ claimedAudio: boolean }>;
       onStatus: (
         status: {
           phase: DictationPhase;
@@ -94,11 +110,10 @@ export class DictationController {
     const ended = new Promise<void>((resolve) => {
       end = resolve;
     });
-    const capture: Capture = {
-      phase: "starting",
+    const capture: Capture<Context> = {
       abort: new AbortController(),
       createdAt: new Date().toISOString(),
-      target: "",
+      opened: null,
       released: false,
       operation: Promise.resolve(),
       ended,
@@ -124,7 +139,7 @@ export class DictationController {
       clearTimeout(capture.timer);
       this.outcome = "cancelled";
       // A starting capture cancels itself once the microphone has opened.
-      if (capture.phase === "recording") {
+      if (capture.opened) {
         capture.operation = this.dependencies
           .cancel()
           .catch(this.dependencies.onError)
@@ -142,18 +157,24 @@ export class DictationController {
   }
 
   private emit() {
+    const capture = this.capture;
     this.dependencies.onStatus(
       {
-        phase:
-          this.capture?.phase ?? (this.jobs.length ? "transcribing" : "idle"),
-        capturing: this.capture !== null,
+        phase: capture
+          ? capture.opened
+            ? "recording"
+            : "starting"
+          : this.jobs.length
+            ? "transcribing"
+            : "idle",
+        capturing: capture !== null,
         pending: this.jobs.length,
       },
       this.outcome,
     );
   }
 
-  private endCapture(capture: Capture) {
+  private endCapture(capture: Capture<Context>) {
     clearTimeout(capture.timer);
     capture.end();
     if (this.capture !== capture) return;
@@ -161,15 +182,16 @@ export class DictationController {
     this.emit();
   }
 
-  private stopCapture(capture: Capture) {
+  private stopCapture(capture: Capture<Context>) {
     if (this.capture !== capture || capture.abort.signal.aborted) return;
-    if (capture.phase === "starting") capture.released = true;
-    else this.accept(capture);
+    if (capture.opened) this.accept(capture, capture.opened.context);
+    else capture.released = true;
   }
 
-  private async start(capture: Capture) {
+  private async start(capture: Capture<Context>) {
+    let context: Context;
     try {
-      capture.target = await this.dependencies.start(capture.abort.signal);
+      context = await this.dependencies.start(capture.abort.signal);
     } catch (error) {
       // A rejected start never owns the recorder (chat may already be using it).
       if (!capture.abort.signal.aborted) {
@@ -184,19 +206,19 @@ export class DictationController {
       this.endCapture(capture);
       return;
     }
-    capture.phase = "recording";
+    capture.opened = { context };
     capture.timer = setTimeout(() => this.stopCapture(capture), MAX_CAPTURE_MS);
     this.emit();
-    if (capture.released) this.accept(capture);
+    if (capture.released) this.accept(capture, context);
   }
 
-  private accept(capture: Capture) {
+  private accept(capture: Capture<Context>, context: Context) {
     const recording = this.dependencies.stop();
     recording.catch(() => {});
-    const job: Job = {
+    const job: Job<Context> = {
       id: crypto.randomUUID(),
       createdAt: capture.createdAt,
-      target: capture.target,
+      context,
       abort: new AbortController(),
       recording,
     };
@@ -205,12 +227,11 @@ export class DictationController {
     this.queue = this.queue.then(() => this.process(job));
   }
 
-  private async process(job: Job) {
+  private async process(job: Job<Context>) {
     const { signal } = job.abort;
     let audioPath: string | null = null;
     let durationMs = 0;
-    let rawText = "";
-    let finalText = "";
+    let transcript: Transcript | null = null;
     let inserted = false;
     let error: string | null = null;
     try {
@@ -218,19 +239,20 @@ export class DictationController {
       audioPath = recorded.filePath;
       durationMs = recorded.durationMs;
       signal.throwIfAborted();
-      rawText = (
+      const made =
         recorded.transcript ??
-        (await this.dependencies.transcribe(recorded.filePath, signal))
-      ).trim();
+        (await this.dependencies.transcribe(recorded.filePath, signal));
+      transcript = { ...made, text: made.text.trim() };
       signal.throwIfAborted();
-      finalText = rawText;
-      if (!finalText) throw new Error(t`No speech detected. Please try again.`);
+      if (!transcript.text) {
+        throw new Error(t`No speech detected. Please try again.`);
+      }
       // Pasting while a capture is held would type through its shortcut keys
       // or end it, so the text waits for the capture to finish.
       while (this.capture) await this.capture.ended;
       signal.throwIfAborted();
-      this.dependencies.onTranscript(finalText);
-      await this.dependencies.insert(job.target, finalText);
+      this.dependencies.onTranscript(transcript.text);
+      await this.dependencies.insert(transcript.text);
       inserted = true;
     } catch (caught) {
       if (signal.aborted) {
@@ -245,22 +267,27 @@ export class DictationController {
       : signal.aborted
         ? "cancelled"
         : "failed";
+    let claimedAudio = false;
     try {
-      await this.dependencies.onJobFinished({
+      ({ claimedAudio } = await this.dependencies.onJobFinished({
         id: job.id,
         createdAt: job.createdAt,
         durationMs,
-        target: job.target,
-        rawText,
-        finalText,
+        context: job.context,
+        provider: transcript?.provider ?? null,
+        model: transcript?.model ?? null,
+        language: transcript?.language ?? null,
+        rawText: transcript?.text ?? "",
+        finalText: transcript?.text ?? "",
         inserted,
+        cancelled: this.outcome === "cancelled",
         audioPath,
         error,
-      });
+      }));
     } catch (caught) {
       this.dependencies.onError(caught);
     }
-    if (audioPath) {
+    if (audioPath && !claimedAudio) {
       await this.dependencies
         .discard(audioPath)
         .catch(this.dependencies.onError);

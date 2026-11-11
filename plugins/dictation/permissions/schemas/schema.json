@@ -307,16 +307,16 @@
           "markdownDescription": "Denies the cancel_recording command without any pre-configured scope."
         },
         {
-          "description": "Enables the capture_target command without any pre-configured scope.",
+          "description": "Enables the check_insertion command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-capture-target",
-          "markdownDescription": "Enables the capture_target command without any pre-configured scope."
+          "const": "allow-check-insertion",
+          "markdownDescription": "Enables the check_insertion command without any pre-configured scope."
         },
         {
-          "description": "Denies the capture_target command without any pre-configured scope.",
+          "description": "Denies the check_insertion command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-capture-target",
-          "markdownDescription": "Denies the capture_target command without any pre-configured scope."
+          "const": "deny-check-insertion",
+          "markdownDescription": "Denies the check_insertion command without any pre-configured scope."
         },
         {
           "description": "Enables the delete_history_audio command without any pre-configured scope.",
@@ -451,10 +451,10 @@
           "markdownDescription": "Denies the stop_recording command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-hud`\n- `allow-start-recording`\n- `allow-start-system-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-discard-recording`\n- `allow-capture-target`\n- `allow-insert-text`\n- `allow-frontmost-app`\n- `allow-keep-history-audio`\n- `allow-history-audio-path`\n- `allow-delete-history-audio`\n- `allow-prune-history-audio`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-hud`\n- `allow-start-recording`\n- `allow-start-system-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-discard-recording`\n- `allow-check-insertion`\n- `allow-insert-text`\n- `allow-frontmost-app`\n- `allow-keep-history-audio`\n- `allow-history-audio-path`\n- `allow-delete-history-audio`\n- `allow-prune-history-audio`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-hud`\n- `allow-start-recording`\n- `allow-start-system-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-discard-recording`\n- `allow-capture-target`\n- `allow-insert-text`\n- `allow-frontmost-app`\n- `allow-keep-history-audio`\n- `allow-history-audio-path`\n- `allow-delete-history-audio`\n- `allow-prune-history-audio`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-hud`\n- `allow-start-recording`\n- `allow-start-system-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-discard-recording`\n- `allow-check-insertion`\n- `allow-insert-text`\n- `allow-frontmost-app`\n- `allow-keep-history-audio`\n- `allow-history-audio-path`\n- `allow-delete-history-audio`\n- `allow-prune-history-audio`"
         }
       ]
     }

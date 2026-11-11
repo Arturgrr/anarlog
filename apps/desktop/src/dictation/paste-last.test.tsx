@@ -5,8 +5,8 @@ const mocks = vi.hoisted(() => ({
   settings: {} as Record<string, unknown>,
   configurePasteLast: vi.fn(),
   setTrayPasteLastVisible: vi.fn(),
-  captureTarget: vi.fn(),
   insertText: vi.fn(),
+  latestDictation: vi.fn(),
   toast: Object.assign(vi.fn(), { error: vi.fn() }),
   listener: null as ((event: { payload: object }) => void) | null,
 }));
@@ -16,6 +16,9 @@ vi.mock("~/shared/config", () => ({
 }));
 vi.mock("./lifecycle", () => ({
   waitForDictationCleanup: () => Promise.resolve(),
+}));
+vi.mock("./history/store", () => ({
+  latestDictation: mocks.latestDictation,
 }));
 vi.mock("@anlg/plugin-shortcut", () => ({
   commands: { configurePasteLast: mocks.configurePasteLast },
@@ -34,10 +37,7 @@ vi.mock("@anlg/plugin-tray", () => ({
   commands: { setTrayPasteLastVisible: mocks.setTrayPasteLastVisible },
 }));
 vi.mock("@anlg/plugin-dictation", () => ({
-  commands: {
-    captureTarget: mocks.captureTarget,
-    insertText: mocks.insertText,
-  },
+  commands: { insertText: mocks.insertText },
 }));
 vi.mock("@anlg/ui/components/ui/toast", () => ({ toast: mocks.toast }));
 
@@ -65,13 +65,12 @@ describe("paste last dictation", () => {
       mocks.insertText,
     ])
       fn.mockResolvedValue({ status: "ok", data: null });
-    mocks.captureTarget.mockResolvedValue({
-      status: "ok",
-      data: "focused-field",
-    });
+    mocks.latestDictation.mockResolvedValue(null);
     useDictationStatus.setState({
       capturingShortcut: false,
       phase: "idle",
+      capturing: false,
+      pending: 0,
       lastTranscript: "Hello again",
     });
   });
@@ -80,25 +79,39 @@ describe("paste last dictation", () => {
     await waitForPasteLastCleanup();
   });
 
-  it("pastes the last dictation into the field focused when it is requested", async () => {
+  it("pastes the newest dictation in the history, or this session's while history is off", async () => {
+    mocks.latestDictation.mockResolvedValueOnce({
+      id: "newest",
+      text: "Re-transcribed text",
+    });
     render(<PasteLastLifecycle />);
     await requestPaste();
     await waitFor(() =>
-      expect(mocks.insertText).toHaveBeenCalledWith(
-        "focused-field",
-        "Hello again",
-      ),
+      expect(mocks.insertText).toHaveBeenLastCalledWith("Re-transcribed text"),
+    );
+    await requestPaste();
+    await waitFor(() =>
+      expect(mocks.insertText).toHaveBeenLastCalledWith("Hello again"),
     );
     expect(mocks.toast.error).not.toHaveBeenCalled();
   });
 
-  it("refuses to paste while a dictation is in progress", async () => {
-    useDictationStatus.setState({ phase: "recording" });
+  it("refuses to paste during a capture, but not while dictations only wait to be inserted", async () => {
+    useDictationStatus.setState({ phase: "recording", capturing: true });
     render(<PasteLastLifecycle />);
     await requestPaste();
     expect(mocks.toast.error).toHaveBeenCalled();
-    expect(mocks.captureTarget).not.toHaveBeenCalled();
     expect(mocks.insertText).not.toHaveBeenCalled();
+
+    useDictationStatus.setState({
+      phase: "transcribing",
+      capturing: false,
+      pending: 2,
+    });
+    await requestPaste();
+    await waitFor(() =>
+      expect(mocks.insertText).toHaveBeenCalledWith("Hello again"),
+    );
   });
 
   it("releases the shortcut while one is recorded and when paste-last is turned off", async () => {

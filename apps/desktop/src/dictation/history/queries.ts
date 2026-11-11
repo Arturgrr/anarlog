@@ -180,7 +180,7 @@ export function useRetranscribe() {
         throw new Error(t`The audio of this dictation is no longer available.`);
       }
       let text = "";
-      await runBatch(path.data, {
+      const used = await runBatch(path.data, {
         provider: model.provider,
         model: model.model,
         baseUrl: model.baseUrl,
@@ -195,8 +195,8 @@ export function useRetranscribe() {
       if (!text) throw new Error(t`No speech detected. Please try again.`);
       await replaceDictationText(entry.id, {
         text,
-        provider: model.provider,
-        model: model.model,
+        provider: used.provider,
+        model: used.model,
         language: entry.language,
       });
     },

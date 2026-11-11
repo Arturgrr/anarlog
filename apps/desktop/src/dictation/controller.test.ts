@@ -2,21 +2,28 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DictationController } from "./controller";
 
+const said = (text: string) => ({
+  text,
+  provider: "deepgram",
+  model: "nova-3",
+  language: "ko,en",
+});
+
 function setup(handsFree = false) {
   let recordings = 0;
   const dependencies = {
     handsFree,
-    start: vi.fn().mockResolvedValue("focused-field"),
+    start: vi.fn().mockResolvedValue("capture"),
     stop: vi.fn(async () => ({
       filePath: `/tmp/dictation-${++recordings}.wav`,
       durationMs: 1_000,
       transcript: null,
     })),
     cancel: vi.fn().mockResolvedValue(undefined),
-    transcribe: vi.fn().mockResolvedValue("안녕하세요, world."),
+    transcribe: vi.fn().mockResolvedValue(said("안녕하세요, world.")),
     insert: vi.fn().mockResolvedValue(undefined),
     discard: vi.fn().mockResolvedValue(undefined),
-    onJobFinished: vi.fn(),
+    onJobFinished: vi.fn().mockResolvedValue({ claimedAudio: false }),
     onStatus: vi.fn(),
     onTranscript: vi.fn(),
     onError: vi.fn(),
@@ -55,10 +62,7 @@ describe("system dictation", () => {
     state.controller.press();
     state.controller.release();
     await settle(state);
-    expect(state.insert).toHaveBeenCalledWith(
-      "focused-field",
-      "안녕하세요, world.",
-    );
+    expect(state.insert).toHaveBeenCalledWith("안녕하세요, world.");
     expect(state.discard).toHaveBeenCalledWith("/tmp/dictation-1.wav");
   });
 
@@ -94,7 +98,7 @@ describe("system dictation", () => {
 
   it("cancelling everything stops the capture, drops every pending dictation and removes each recording", async () => {
     const state = setup();
-    const late = gate<string>();
+    const late = gate<ReturnType<typeof said>>();
     state.transcribe.mockReturnValueOnce(late.promise);
     await dictate(state);
     await vi.waitFor(() => expect(state.transcribe).toHaveBeenCalled());
@@ -102,7 +106,7 @@ describe("system dictation", () => {
     state.controller.press();
     await settle(state, "recording");
     const cancelled = state.controller.cancel();
-    late.open("Do not insert this");
+    late.open(said("Do not insert this"));
     await cancelled;
     expect(state.cancel).toHaveBeenCalledOnce();
     expect(state.insert).not.toHaveBeenCalled();
@@ -112,6 +116,9 @@ describe("system dictation", () => {
       ["/tmp/dictation-1.wav"],
       ["/tmp/dictation-2.wav"],
     ]);
+    expect(
+      state.onJobFinished.mock.calls.map(([job]) => job.cancelled),
+    ).toEqual([true, true]);
     expect(status(state)).toEqual({
       phase: "idle",
       capturing: false,
@@ -134,7 +141,7 @@ describe("system dictation", () => {
   it("cleans up failed and silent transcriptions without inserting", async () => {
     for (const transcript of [
       Promise.reject(new Error("Network unavailable")),
-      Promise.resolve("  "),
+      Promise.resolve(said("  ")),
     ]) {
       const state = setup();
       state.transcribe.mockReturnValueOnce(transcript);
@@ -149,24 +156,28 @@ describe("system dictation", () => {
 
   it("hands every finished dictation, silent ones included, to history before its audio is removed", async () => {
     const state = setup();
-    const claimed = gate<void>();
-    state.onJobFinished.mockReturnValueOnce(claimed.promise);
-    state.transcribe.mockResolvedValueOnce(" ");
+    const finished = gate<{ claimedAudio: boolean }>();
+    state.onJobFinished.mockReturnValueOnce(finished.promise);
+    state.transcribe.mockResolvedValueOnce(said(" "));
     await dictate(state);
     await vi.waitFor(() => expect(state.onJobFinished).toHaveBeenCalled());
     expect(state.onJobFinished).toHaveBeenLastCalledWith({
       id: expect.any(String),
       createdAt: expect.any(String),
       durationMs: 1_000,
-      target: "focused-field",
+      context: "capture",
+      provider: "deepgram",
+      model: "nova-3",
+      language: "ko,en",
       rawText: "",
       finalText: "",
       inserted: false,
+      cancelled: false,
       audioPath: "/tmp/dictation-1.wav",
       error: expect.stringMatching(/no speech/iu),
     });
     expect(state.discard).not.toHaveBeenCalled();
-    claimed.open();
+    finished.open({ claimedAudio: false });
     await vi.waitFor(() =>
       expect(state.discard).toHaveBeenCalledWith("/tmp/dictation-1.wav"),
     );
@@ -182,6 +193,23 @@ describe("system dictation", () => {
         error: null,
       }),
     );
+  });
+
+  it("leaves a recording history took alone, and still removes one when history fails without breaking the queue", async () => {
+    const state = setup();
+    state.onJobFinished
+      .mockResolvedValueOnce({ claimedAudio: true })
+      .mockRejectedValueOnce(new Error("database is locked"));
+    await dictate(state);
+    await dictate(state);
+    await dictate(state);
+    await settle(state);
+    expect(state.insert).toHaveBeenCalledTimes(3);
+    expect(state.discard.mock.calls).toEqual([
+      ["/tmp/dictation-2.wav"],
+      ["/tmp/dictation-3.wav"],
+    ]);
+    expect(state.onError).toHaveBeenCalledOnce();
   });
 
   it("caps hands-free recording at five minutes", async () => {
@@ -201,13 +229,13 @@ describe("system dictation", () => {
     "in %s mode, starts a new dictation while the last one transcribes and inserts both in the order they were made",
     async (_mode, handsFree) => {
       const state = setup(handsFree);
-      const first = gate<string>();
+      const first = gate<ReturnType<typeof said>>();
       state.transcribe
         .mockReturnValueOnce(first.promise)
-        .mockResolvedValueOnce("Second.");
+        .mockResolvedValueOnce(said("Second."));
       state.start
-        .mockResolvedValueOnce("first-field")
-        .mockResolvedValueOnce("second-field");
+        .mockResolvedValueOnce("first-capture")
+        .mockResolvedValueOnce("second-capture");
       await dictate(state);
       await vi.waitFor(() => expect(state.transcribe).toHaveBeenCalled());
       state.controller.press();
@@ -217,16 +245,22 @@ describe("system dictation", () => {
         capturing: true,
         pending: 1,
       });
-      first.open("First.");
+      first.open(said("First."));
       await new Promise((resolve) => setTimeout(resolve));
       // The earlier text waits for the capture in progress to end.
       expect(state.insert).not.toHaveBeenCalled();
       if (handsFree) state.controller.press();
       else state.controller.release();
       await settle(state);
-      expect(state.insert.mock.calls).toEqual([
-        ["first-field", "First."],
-        ["second-field", "Second."],
+      expect(state.insert.mock.calls).toEqual([["First."], ["Second."]]);
+      expect(
+        state.onJobFinished.mock.calls.map(([job]) => [
+          job.context,
+          job.finalText,
+        ]),
+      ).toEqual([
+        ["first-capture", "First."],
+        ["second-capture", "Second."],
       ]);
       expect(state.onError).not.toHaveBeenCalled();
     },
@@ -234,7 +268,7 @@ describe("system dictation", () => {
 
   it("escape cancels only the capture in progress, never a dictation already accepted", async () => {
     const state = setup();
-    const first = gate<string>();
+    const first = gate<ReturnType<typeof said>>();
     state.transcribe.mockReturnValueOnce(first.promise);
     await dictate(state);
     await vi.waitFor(() => expect(state.transcribe).toHaveBeenCalled());
@@ -247,12 +281,9 @@ describe("system dictation", () => {
       capturing: false,
       pending: 1,
     });
-    first.open("Five minutes of thought.");
+    first.open(said("Five minutes of thought."));
     await settle(state);
-    expect(state.insert).toHaveBeenCalledWith(
-      "focused-field",
-      "Five minutes of thought.",
-    );
+    expect(state.insert).toHaveBeenCalledWith("Five minutes of thought.");
     expect(state.onStatus.mock.lastCall?.[1]).toBe("completed");
   });
 
@@ -265,13 +296,13 @@ describe("system dictation", () => {
           fail = reject;
         }),
       )
-      .mockResolvedValueOnce("Second.");
+      .mockResolvedValueOnce(said("Second."));
     await dictate(state);
     await dictate(state);
     fail(new Error("Network unavailable"));
     await settle(state);
     expect(state.onError).toHaveBeenCalledOnce();
-    expect(state.insert.mock.calls).toEqual([["focused-field", "Second."]]);
+    expect(state.insert.mock.calls).toEqual([["Second."]]);
     expect(state.discard).toHaveBeenCalledTimes(2);
   });
 
@@ -280,7 +311,7 @@ describe("system dictation", () => {
     const backlog = gate<void>();
     state.transcribe.mockImplementation(async () => {
       await backlog.promise;
-      return "Queued.";
+      return said("Queued.");
     });
     for (let count = 0; count < 5; count++) await dictate(state);
     expect(status(state)?.pending).toBe(5);

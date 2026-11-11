@@ -10,6 +10,8 @@
     <string>Librelog reads and updates your reminders when you sync tasks with Apple Reminders.</string>
     <key>NSLocalNetworkUsageDescription</key>
     <string>Librelog connects to AI and transcription servers you run on your local network.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Librelog pauses Music, Spotify, and VLC while you dictate, if you choose to, and resumes them afterwards.</string>
     <key>CFBundleIconName</key>
     <string>AppIcon</string>
     <key>CFBundleIconFile</key>

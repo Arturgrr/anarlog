@@ -99,6 +99,7 @@ tracing = { workspace = true }
 [features]
 default = []
 direct-distribution = [
+  "tauri-plugin-dictation/macos-private-api",
   "tauri-plugin-permissions/private-tcc",
   "tauri-plugin-windows/macos-private-api",
 ]

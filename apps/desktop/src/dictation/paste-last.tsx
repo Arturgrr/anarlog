@@ -1,5 +1,4 @@
 import { t } from "@lingui/core/macro";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { create } from "zustand";
 
 import { commands as dictation } from "@anlg/plugin-dictation";
@@ -8,12 +7,13 @@ import { commands as tray } from "@anlg/plugin-tray";
 import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
+import { latestDictation } from "./history/store";
 import { waitForDictationCleanup } from "./lifecycle";
 import { useDictationStatus } from "./state";
 
 import { localizeExternalMessage } from "~/i18n/external-messages";
-import { getStoredSettingValues, useSettingsReady } from "~/settings/queries";
-import { resolveConfigValue, useConfigValue } from "~/shared/config";
+import { useSettingsReady } from "~/settings/queries";
+import { useConfigValue } from "~/shared/config";
 
 export const usePasteLastStatus = create<{ error: string | null }>(() => ({
   error: null,
@@ -27,21 +27,19 @@ export function waitForPasteLastCleanup() {
   return registration;
 }
 
+/** The newest dictation in the history, or this session's while history is off. */
 export async function getLastDictation(): Promise<string | null> {
-  return useDictationStatus.getState().lastTranscript || null;
+  const latest = await latestDictation().catch((error: unknown) => {
+    console.error("[paste-last] history", error);
+    return null;
+  });
+  return latest?.text || useDictationStatus.getState().lastTranscript || null;
 }
 
-// Transcribing counts too: on macOS a paste would take the one insertion
-// target the dictation captured when it started.
+// A paste would type through the held shortcut keys or end the capture.
+// Dictations waiting to be inserted take turns with it instead.
 export function isDictating() {
-  return useDictationStatus.getState().phase !== "idle";
-}
-
-export async function keepOnClipboard(text: string): Promise<void> {
-  const stored = await getStoredSettingValues();
-  if (resolveConfigValue("dictation_keep_on_clipboard", stored)) {
-    await writeText(text);
-  }
+  return useDictationStatus.getState().capturing;
 }
 
 function unwrap<T>(
@@ -70,8 +68,7 @@ async function pasteLast() {
       toast(t`There's no dictation to paste yet.`);
       return;
     }
-    const target = unwrap(await dictation.captureTarget());
-    unwrap(await dictation.insertText(target, text));
+    unwrap(await dictation.insertText(text));
   } catch (error) {
     toast.error(describe(error));
   } finally {

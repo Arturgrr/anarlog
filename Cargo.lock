@@ -12762,6 +12762,7 @@ dependencies = [
  "objc2-foundation",
  "owhisper-client",
  "owhisper-interface",
+ "recording-environment",
  "serde",
  "serde_json",
  "specta",
@@ -12774,6 +12775,7 @@ dependencies = [
  "tokio",
  "tokio-tungstenite 0.29.0",
  "tokio-util",
+ "tracing",
  "url",
  "windows 0.62.2",
 ]

@@ -10,6 +10,7 @@ use tauri::async_runtime::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 use crate::Error;
+use crate::environment::{Quiet, RecordingEnvironment};
 use crate::preview::{Preview, PreviewConfig, RecordingUpdate};
 use tauri::ipc::Channel;
 
@@ -29,6 +30,16 @@ pub struct RecordedAudio {
     pub file_path: String,
     pub duration_ms: u64,
     pub transcript: Option<String>,
+}
+
+/// What a capture reports while it records, and what it asks of the
+/// computer's other audio.
+#[derive(Default)]
+pub struct Feedback {
+    pub preview: Option<PreviewConfig>,
+    pub updates: Option<Channel<RecordingUpdate>>,
+    pub meter: Option<Meter>,
+    pub environment: Option<RecordingEnvironment>,
 }
 
 struct ActiveRecording {
@@ -57,7 +68,7 @@ impl Recorder {
         microphone_device: Option<String>,
         owner: String,
     ) -> Result<(), Error> {
-        self.start_with_feedback(audio, microphone_device, owner, None, None, None)
+        self.start_with_feedback(audio, microphone_device, owner, Feedback::default())
     }
 
     pub fn start_with_feedback(
@@ -65,9 +76,12 @@ impl Recorder {
         audio: Arc<dyn anlg_audio::AudioProvider>,
         microphone_device: Option<String>,
         owner: String,
-        preview: Option<PreviewConfig>,
-        updates: Option<Channel<RecordingUpdate>>,
-        meter: Option<Meter>,
+        Feedback {
+            preview,
+            updates,
+            meter,
+            environment,
+        }: Feedback,
     ) -> Result<(), Error> {
         let mut active = self
             .active
@@ -77,6 +91,7 @@ impl Recorder {
             return Err(Error::AlreadyRecording);
         }
 
+        let quiet = Quiet::new(environment, updates.clone());
         let stream = audio
             .open_mic_capture(microphone_device, SAMPLE_RATE, CHUNK_SIZE)
             .map_err(|error| Error::Capture(error.to_string()))?;
@@ -105,6 +120,7 @@ impl Recorder {
                 preview,
                 meter,
                 task_finalize,
+                quiet,
             )
             .await;
             if result.is_err() {
@@ -193,6 +209,7 @@ async fn record_to_file(
     mut preview: Option<Preview>,
     meter: Option<Meter>,
     finalize: Arc<AtomicBool>,
+    mut quiet: Quiet,
 ) -> Result<RecordedAudio, Error> {
     let specification = hound::WavSpec {
         channels: 1,
@@ -206,11 +223,19 @@ async fn record_to_file(
     tokio::pin!(deadline);
     let mut sample_count = 0_u64;
     let mut pending = Vec::with_capacity(PREVIEW_CHUNK_SIZE);
+    let begin_at = quiet.begin_at();
+    let begin = tokio::time::sleep_until(begin_at.unwrap_or_else(tokio::time::Instant::now));
+    tokio::pin!(begin);
+    let mut begun = begin_at.is_none();
 
     loop {
         tokio::select! {
             _ = cancellation.cancelled() => break,
             _ = &mut deadline => break,
+            _ = &mut begin, if !begun => {
+                begun = true;
+                quiet.begin();
+            }
             next = stream.next() => {
                 let Some(frame) = next else {
                     break;
@@ -239,8 +264,9 @@ async fn record_to_file(
         }
     }
     // The live transcript can take seconds to finish; the next dictation may
-    // open the microphone meanwhile.
+    // open the microphone meanwhile, and other audio comes back now.
     drop(stream);
+    drop(quiet);
     if !pending.is_empty()
         && preview
             .as_ref()
@@ -417,14 +443,16 @@ mod tests {
                 Arc::new(TestAudio::default()),
                 None,
                 "test".into(),
-                Some(PreviewConfig {
-                    provider: "unsupported".into(),
-                    base_url: "http://localhost".into(),
-                    api_key: String::new(),
-                    params: Default::default(),
-                }),
-                Some(updates),
-                None,
+                Feedback {
+                    preview: Some(PreviewConfig {
+                        provider: "unsupported".into(),
+                        base_url: "http://localhost".into(),
+                        api_key: String::new(),
+                        params: Default::default(),
+                    }),
+                    updates: Some(updates),
+                    ..Feedback::default()
+                },
             )
             .unwrap();
         tokio::time::timeout(std::time::Duration::from_secs(1), async {
@@ -452,9 +480,10 @@ mod tests {
                 Arc::new(TestAudio::default()),
                 None,
                 "test".into(),
-                None,
-                None,
-                Some(Arc::new(move |rms| heard.lock().unwrap().push(rms))),
+                Feedback {
+                    meter: Some(Arc::new(move |rms| heard.lock().unwrap().push(rms))),
+                    ..Feedback::default()
+                },
             )
             .unwrap();
         tokio::time::sleep(std::time::Duration::from_millis(20)).await;
@@ -465,8 +494,9 @@ mod tests {
     }
 
     /// Dictations overlap: the next capture opens the microphone while the
-    /// last one still waits on its live transcript, and no capture touches a
-    /// recording another one left for transcription.
+    /// last one still waits on its live transcript, other audio comes back
+    /// before that transcript does, and no capture touches a recording
+    /// another one left for transcription.
     #[tokio::test]
     async fn a_new_capture_starts_while_earlier_recordings_are_pending() {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -496,19 +526,37 @@ mod tests {
         });
         let audio = Arc::new(TestAudio::default());
         let recorder = Arc::new(Recorder::new());
+        let ended = Arc::new(AtomicBool::new(false));
+        let heard = ended.clone();
         recorder
             .start_with_feedback(
                 audio.clone(),
                 None,
                 "system".into(),
-                Some(PreviewConfig {
-                    provider: "wisprflow".into(),
-                    base_url: format!("http://{address}"),
-                    api_key: "test".into(),
-                    params: Default::default(),
-                }),
-                Some(Channel::new(|_| Ok(()))),
-                None,
+                Feedback {
+                    preview: Some(PreviewConfig {
+                        provider: "wisprflow".into(),
+                        base_url: format!("http://{address}"),
+                        api_key: "test".into(),
+                        params: Default::default(),
+                    }),
+                    updates: Some(Channel::new(move |body| {
+                        if let tauri::ipc::InvokeResponseBody::Json(json) = body
+                            && json.contains("ended")
+                        {
+                            heard.store(true, Ordering::SeqCst);
+                        }
+                        Ok(())
+                    })),
+                    environment: Some(RecordingEnvironment {
+                        config: anlg_recording_environment::Config {
+                            behavior: anlg_recording_environment::AudioBehavior::Nothing,
+                            prevent_sleep: false,
+                        },
+                        delay_ms: 0,
+                    }),
+                    ..Feedback::default()
+                },
             )
             .unwrap();
         tokio::time::sleep(Duration::from_millis(20)).await;
@@ -517,7 +565,7 @@ mod tests {
             async move { recorder.stop("system").await }
         });
         tokio::time::timeout(Duration::from_secs(1), async {
-            while audio.open.load(Ordering::SeqCst) > 0 {
+            while audio.open.load(Ordering::SeqCst) > 0 || !ended.load(Ordering::SeqCst) {
                 tokio::time::sleep(Duration::from_millis(1)).await;
             }
         })

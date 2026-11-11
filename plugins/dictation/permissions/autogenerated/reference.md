@@ -10,7 +10,7 @@ Default permissions for the plugin
 - `allow-stop-recording`
 - `allow-cancel-recording`
 - `allow-discard-recording`
-- `allow-capture-target`
+- `allow-check-insertion`
 - `allow-insert-text`
 - `allow-frontmost-app`
 - `allow-keep-history-audio`
@@ -56,12 +56,12 @@ Denies the cancel_recording command without any pre-configured scope.
 <tr>
 <td>
 
-`dictation:allow-capture-target`
+`dictation:allow-check-insertion`
 
 </td>
 <td>
 
-Enables the capture_target command without any pre-configured scope.
+Enables the check_insertion command without any pre-configured scope.
 
 </td>
 </tr>
@@ -69,12 +69,12 @@ Enables the capture_target command without any pre-configured scope.
 <tr>
 <td>
 
-`dictation:deny-capture-target`
+`dictation:deny-check-insertion`
 
 </td>
 <td>
 
-Denies the capture_target command without any pre-configured scope.
+Denies the check_insertion command without any pre-configured scope.
 
 </td>
 </tr>

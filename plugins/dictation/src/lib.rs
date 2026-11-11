@@ -1,4 +1,5 @@
 mod commands;
+mod environment;
 mod error;
 mod events;
 mod ext;
@@ -29,7 +30,7 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::stop_recording::<tauri::Wry>,
             commands::cancel_recording::<tauri::Wry>,
             commands::discard_recording::<tauri::Wry>,
-            commands::capture_target,
+            commands::check_insertion,
             commands::insert_text,
             commands::frontmost_app,
             commands::keep_history_audio::<tauri::Wry>,
@@ -48,6 +49,12 @@ pub fn init() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         .setup(move |app, _api| {
             app.manage(Handler::new(app.clone()));
             app.manage(Recorder::new());
+            match app.path().app_data_dir() {
+                Ok(directory) => anlg_recording_environment::recover(directory),
+                Err(error) => {
+                    tracing::warn!(%error, "dictation cannot restore audio a previous run left quiet")
+                }
+            }
             Ok(())
         })
         .build()

@@ -1,3 +1,5 @@
+import type { RecordingEnvironment } from "@anlg/plugin-dictation";
+
 import { SETTING_DEFINITIONS } from "~/settings/schema";
 
 export const DICTATION_AUDIO_BEHAVIORS = [
@@ -9,24 +11,28 @@ export const DICTATION_AUDIO_BEHAVIORS = [
 
 export type DictationAudioBehavior = (typeof DICTATION_AUDIO_BEHAVIORS)[number];
 
-// The `recording-environment` crate's `Config`, as its serde attributes
-// spell it.
-export type RecordingEnvironmentConfig = {
-  behavior:
-    | { type: "nothing" }
-    | { type: "mute" }
-    | { type: "duck"; volume: number }
-    | { type: "pauseMedia"; browsers: boolean };
-  preventSleep: boolean;
-};
+/**
+ * The behaviours this build can carry out. The App Store build is sandboxed:
+ * it may not script Music, Spotify, or VLC, and it leaves out the private
+ * browser pause, so on macOS it cannot pause anything.
+ */
+export function dictationAudioBehaviors({
+  os,
+  appStore,
+}: {
+  os: string;
+  appStore: boolean;
+}): readonly DictationAudioBehavior[] {
+  return os === "macos" && appStore
+    ? DICTATION_AUDIO_BEHAVIORS.filter((behavior) => behavior !== "pause")
+    : DICTATION_AUDIO_BEHAVIORS;
+}
 
 export function normalizeDictationAudioBehavior(
   value: string,
+  available: readonly DictationAudioBehavior[] = DICTATION_AUDIO_BEHAVIORS,
 ): DictationAudioBehavior {
-  return (
-    DICTATION_AUDIO_BEHAVIORS.find((behavior) => behavior === value) ??
-    "nothing"
-  );
+  return available.find((behavior) => behavior === value) ?? "nothing";
 }
 
 export function normalizeDuckVolume(percent: number): number {
@@ -39,13 +45,15 @@ export function recordingEnvironmentConfig({
   behavior,
   duckVolume,
   pauseBrowser,
+  available,
 }: {
   behavior: string;
   duckVolume: number;
   pauseBrowser: boolean;
-}): RecordingEnvironmentConfig {
+  available?: readonly DictationAudioBehavior[];
+}): RecordingEnvironment["config"] {
   const preventSleep = true;
-  switch (normalizeDictationAudioBehavior(behavior)) {
+  switch (normalizeDictationAudioBehavior(behavior, available)) {
     case "mute":
       return { behavior: { type: "mute" }, preventSleep };
     case "duck":

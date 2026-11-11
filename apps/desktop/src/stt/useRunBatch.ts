@@ -533,11 +533,18 @@ export const useRunBatch = (sessionId: string) => {
         }
       }
 
+      // Resolved for callers that record what transcribed the audio: the
+      // fallback when the selected model could not.
+      const used = {
+        provider: target.provider,
+        model: target.model,
+        languages,
+      };
       if (options?.recovery) {
         options.signal?.throwIfAborted();
         await options.recovery.persist(stagedWords, stagedHints);
         await acknowledgeCompletedBatch(jobId);
-        return;
+        return used;
       }
 
       try {
@@ -616,6 +623,7 @@ export const useRunBatch = (sessionId: string) => {
       if (options?.notifyOnCompletion !== false) {
         await notifyBatchCompleted();
       }
+      return used;
     },
     [
       conn,

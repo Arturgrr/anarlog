@@ -16,6 +16,12 @@ impl<'a, R: tauri::Runtime, M: tauri::Manager<R>> Dictation<'a, R, M> {
     pub fn meter(&self, rms: f32) {
         self.manager.state::<Handler>().meter(rms)
     }
+
+    /// Puts back the audio and sleep settings dictation changed, waiting up
+    /// to `timeout`. Call as the app exits. Returns whether all came back.
+    pub fn shutdown_environment(&self, timeout: std::time::Duration) -> bool {
+        anlg_recording_environment::shutdown(timeout)
+    }
 }
 
 pub trait DictationPluginExt<R: tauri::Runtime> {

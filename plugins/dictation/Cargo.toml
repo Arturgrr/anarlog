@@ -5,15 +5,21 @@ edition = "2024"
 exclude = ["/js", "/node_modules"]
 links = "tauri-plugin-dictation"
 
+[features]
+# Lets "Pause media" pause a browser on macOS; direct distribution only.
+macos-private-api = ["anlg-recording-environment/macos-private-api"]
+
 [build-dependencies]
 tauri-plugin = { workspace = true, features = ["build"] }
 
 [dev-dependencies]
 specta-typescript = { workspace = true }
+tokio = { workspace = true, features = ["test-util"] }
 tokio-tungstenite = { workspace = true }
 
 [dependencies]
 anlg-audio = { workspace = true }
+anlg-recording-environment = { workspace = true }
 owhisper-client = { workspace = true }
 owhisper-interface = { workspace = true }
 url = { workspace = true }
@@ -27,6 +33,7 @@ tempfile = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
 tokio-util = { workspace = true }
+tracing = { workspace = true }
 
 tauri = { workspace = true, features = ["test"] }
 tauri-specta = { workspace = true, features = ["derive", "typescript"] }

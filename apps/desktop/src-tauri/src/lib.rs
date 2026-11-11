@@ -17,6 +17,7 @@ use store::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use tauri::{Emitter, Manager};
+use tauri_plugin_dictation::DictationPluginExt;
 use tauri_plugin_permissions::{Permission, PermissionsPluginExt};
 use tauri_plugin_windows::AppWindow;
 
@@ -446,6 +447,9 @@ pub fn main() {
                 ctx.mark_exiting();
                 ctx.stop();
             }
+
+            app.dictation()
+                .shutdown_environment(std::time::Duration::from_secs(2));
 
             anlg_host::kill_processes_by_matcher(anlg_host::ProcessMatcher::Sidecar);
         }

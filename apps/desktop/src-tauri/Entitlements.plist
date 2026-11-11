@@ -7,6 +7,9 @@
     <!-- Apple Reminders reads through EventKit, which needs the calendars entitlement. -->
     <key>com.apple.security.personal-information.calendars</key>
     <true/>
+    <!-- "Pause media" while dictating asks Music, Spotify, and VLC to pause through AppleScript. -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key>

@@ -23,12 +23,13 @@ async startRecording(microphoneDevice: string | null, owner: string) : Promise<R
 }
 },
 /**
- * Records for system-wide dictation: the HUD follows the microphone, and the
- * live preview's words arrive over `updates`.
+ * Records for system-wide dictation: the HUD follows the microphone, the
+ * live preview's words arrive over `updates`, and `environment` quiets other
+ * audio and keeps the computer awake until the recording ends.
  */
-async startSystemRecording(microphoneDevice: string | null, owner: string, preview: PreviewConfig | null, updates: TAURI_CHANNEL<RecordingUpdate>) : Promise<Result<null, string>> {
+async startSystemRecording(microphoneDevice: string | null, owner: string, preview: PreviewConfig | null, updates: TAURI_CHANNEL<RecordingUpdate>, environment: RecordingEnvironment | null) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|start_system_recording", { microphoneDevice, owner, preview, updates }) };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|start_system_recording", { microphoneDevice, owner, preview, updates, environment }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -58,17 +59,25 @@ async discardRecording(filePath: string) : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async captureTarget() : Promise<Result<string, string>> {
+/**
+ * Fails fast when text could not be inserted where the focus is now. Skipped
+ * while an insertion is in flight, which it must not disturb.
+ */
+async checkInsertion() : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|capture_target") };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|check_insertion") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
-async insertText(target: string, text: string) : Promise<Result<null, string>> {
+/**
+ * Inserts `text` where the focus is when its turn comes: insertions run one
+ * at a time, in the order they were asked for.
+ */
+async insertText(text: string) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|insert_text", { target, text }) };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:dictation|insert_text", { text }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -137,6 +146,31 @@ async pruneHistoryAudio(referenced: string[]) : Promise<Result<null, string>> {
 /** user-defined types **/
 
 /**
+ * What happens to other audio while dictating.
+ */
+export type AudioBehavior = { type: "nothing" } | 
+/**
+ * Mutes the default output, unless it is muted already.
+ */
+{ type: "mute" } | 
+/**
+ * Ramps the default output down to `volume`, a fraction (0 to 1) of
+ * its volume when the dictation starts, keeping its channel balance.
+ */
+{ type: "duck"; volume: number } | 
+/**
+ * Pauses media players that are playing and resumes those it paused.
+ * On macOS `browsers` also pauses a browser that is audibly playing;
+ * Windows and Linux report browser tabs like any other player, so they
+ * are paused either way.
+ */
+{ type: "pauseMedia"; browsers: boolean }
+export type Config = { behavior: AudioBehavior; 
+/**
+ * Keeps the computer from idle sleep while the session lasts.
+ */
+preventSleep: boolean }
+/**
  * What the dictation HUD is told, as Hex's indicator events: the HUD keeps
  * its own clock for how long each look shows.
  */
@@ -160,7 +194,22 @@ export type HudEvent =
 export type ListenParams = { model?: string | null; channels?: number; sample_rate?: number; languages?: string[]; keywords?: string[]; num_speakers?: number | null; min_speakers?: number | null; max_speakers?: number | null; mic_num_speakers?: number | null; custom_query?: Partial<{ [key in string]: string }> | null }
 export type PreviewConfig = { provider: string; baseUrl: string; apiKey: string; params: ListenParams }
 export type RecordedAudio = { filePath: string; durationMs: number; transcript: string | null }
-export type RecordingUpdate = { type: "transcript"; text: string; partial: string } | { type: "previewUnavailable" }
+/**
+ * What a dictation asks of the computer's other audio, and of sleep, while
+ * it records.
+ */
+export type RecordingEnvironment = { config: Config; 
+/**
+ * Holds the change back this long after the microphone opens, so a
+ * start sound already playing is heard before the output goes quiet.
+ */
+delayMs: number }
+export type RecordingUpdate = { type: "transcript"; text: string; partial: string } | { type: "previewUnavailable" } | 
+/**
+ * The microphone is closed and any audio the capture quieted is audible
+ * again, so a stop sound played now is heard.
+ */
+{ type: "ended" }
 export type TAURI_CHANNEL<TSend> = null
 /**
  * The application that has focus: its display name, and its bundle
