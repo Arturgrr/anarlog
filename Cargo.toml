@@ -92,6 +92,7 @@ anlg-template-eval = { path = "crates/template-eval", package = "template-eval" 
 anlg-tiptap = { path = "crates/tiptap", package = "tiptap" }
 anlg-transcribe-core = { path = "crates/transcribe-core", package = "transcribe-core" }
 anlg-transcribe-gguf = { path = "crates/transcribe-gguf", package = "transcribe-gguf" }
+anlg-transcribe-gguf-local = { path = "crates/transcribe-gguf-local", package = "transcribe-gguf-local" }
 anlg-transcribe-soniqo = { path = "crates/transcribe-soniqo", package = "transcribe-soniqo" }
 anlg-transcribe-speechanalyzer = { path = "crates/transcribe-speechanalyzer", package = "transcribe-speechanalyzer" }
 anlg-transcribe-whisper-local = { path = "crates/transcribe-whisper-local", package = "transcribe-whisper-local" }

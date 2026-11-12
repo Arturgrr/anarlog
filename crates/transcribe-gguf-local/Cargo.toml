@@ -1,0 +1,29 @@
+[package]
+name = "transcribe-gguf-local"
+version = "0.1.0"
+edition = "2024"
+description = "The internal /v1/listen batch server for transcribe.cpp models"
+
+[dependencies]
+anlg-audio-chunking = { workspace = true }
+anlg-audio-utils = { workspace = true }
+anlg-transcribe-core = { workspace = true }
+anlg-transcribe-gguf = { workspace = true }
+owhisper-interface = { workspace = true }
+
+axum = { workspace = true }
+futures-util = { workspace = true }
+hound = { workspace = true }
+rodio = { workspace = true }
+serde_html_form = { workspace = true }
+serde_json = { workspace = true }
+tempfile = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["fs", "io-util", "rt", "sync", "time"] }
+tower = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+anlg-data = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
+tokio = { workspace = true, features = ["macros", "net", "rt-multi-thread"] }
