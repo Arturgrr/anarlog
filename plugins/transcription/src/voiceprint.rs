@@ -937,13 +937,18 @@ async fn maybe_assign_speakers_from_voiceprints<R: tauri::Runtime>(
         &owner_emails,
     );
     // 1:1 meetings are named from the participant list. Voiceprints only
-    // identify people when the participant list cannot uniquely name the remotes.
-    if remote_human_ids.len() < 2 {
-        return Ok(());
-    }
+    // identify people when the participant list cannot uniquely name the
+    // remotes. With nobody listed, anyone whose voice the user confirmed
+    // before may be on the call, so all of them compete for every voice and a
+    // match has to clear the same score and margin against each of them.
+    let candidate_human_ids = match remote_human_ids.len() {
+        1 => return Ok(()),
+        0 => known_voice_human_ids(pool, workspace_id, &owner_user_id, &owner_emails).await?,
+        _ => remote_human_ids.clone(),
+    };
 
     let mut exemplars = Vec::new();
-    for human_id in &remote_human_ids {
+    for human_id in &candidate_human_ids {
         if index.assigned_human_ids.contains(human_id) {
             continue;
         }
@@ -972,38 +977,7 @@ async fn maybe_assign_speakers_from_voiceprints<R: tauri::Runtime>(
         }
     }
 
-    let samples: Vec<_> = embeddings
-        .iter()
-        .filter(|(span, _)| span.channel != 0)
-        .filter(|(span, _)| {
-            !index.assigned_speakers.contains(&VoiceprintSpeakerKey {
-                channel: span.channel,
-                speaker_index: span.speaker_index,
-            })
-        })
-        .map(|(span, embedding)| {
-            (
-                VoiceprintSpeakerKey {
-                    channel: span.channel,
-                    speaker_index: span.speaker_index,
-                },
-                capture_domain(span.channel),
-                embedding.as_slice(),
-            )
-        })
-        .collect();
-    let scores = collect_match_scores(&samples, &exemplars);
-    let voiceprint_namings: Vec<SpeakerNaming> = pick_unique_voiceprint_assignments(
-        &scores
-            .iter()
-            .map(|(speaker, human_id, score)| (*speaker, human_id.as_str(), *score))
-            .collect::<Vec<_>>(),
-        MIN_UNIQUE_SCORE,
-        MIN_UNIQUE_MARGIN,
-    )
-    .into_iter()
-    .map(SpeakerNaming::from_voiceprint)
-    .collect();
+    let voiceprint_namings = voiceprint_namings(embeddings, &index, &exemplars);
 
     for attempt in 0..2 {
         // Elimination depends on which pairs the current hints leave open, so
@@ -1064,6 +1038,76 @@ async fn maybe_assign_speakers_from_voiceprints<R: tauri::Runtime>(
         }
     }
     Ok(())
+}
+
+/// Unique, confident voiceprint matches for the diarized voices that are not
+/// named yet. A system-audio channel without speaker indices carries every
+/// remote voice at once, so it is never named after a single person.
+fn voiceprint_namings(
+    embeddings: &[SpanEmbedding],
+    index: &SpeakerIndex,
+    exemplars: &[(String, String, Vec<f32>)],
+) -> Vec<SpeakerNaming> {
+    let samples: Vec<_> = embeddings
+        .iter()
+        .filter(|(span, _)| span.channel != DIRECT_MIC_CHANNEL && span.speaker_index.is_some())
+        .filter(|(span, _)| {
+            !index.assigned_speakers.contains(&VoiceprintSpeakerKey {
+                channel: span.channel,
+                speaker_index: span.speaker_index,
+            })
+        })
+        .map(|(span, embedding)| {
+            (
+                VoiceprintSpeakerKey {
+                    channel: span.channel,
+                    speaker_index: span.speaker_index,
+                },
+                capture_domain(span.channel),
+                embedding.as_slice(),
+            )
+        })
+        .collect();
+    let scores = collect_match_scores(&samples, exemplars);
+    pick_unique_voiceprint_assignments(
+        &scores
+            .iter()
+            .map(|(speaker, human_id, score)| (*speaker, human_id.as_str(), *score))
+            .collect::<Vec<_>>(),
+        MIN_UNIQUE_SCORE,
+        MIN_UNIQUE_MARGIN,
+    )
+    .into_iter()
+    .map(SpeakerNaming::from_voiceprint)
+    .collect()
+}
+
+/// People other than the owner who have a confirmed voiceprint in this
+/// workspace: the candidates for a call with no participants listed.
+async fn known_voice_human_ids(
+    pool: &sqlx::SqlitePool,
+    workspace_id: &str,
+    owner_user_id: &str,
+    owner_emails: &[String],
+) -> Result<Vec<String>, String> {
+    let rows = sqlx::query_as::<_, (String, String)>(
+        "SELECT DISTINCT exemplar.human_id, human.email
+         FROM voiceprint_exemplars AS exemplar
+         JOIN humans AS human
+           ON human.id = exemplar.human_id AND human.deleted_at IS NULL
+         WHERE exemplar.workspace_id = ? AND exemplar.deleted_at IS NULL
+         ORDER BY exemplar.human_id",
+    )
+    .bind(workspace_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|error| error.to_string())?;
+    Ok(remote_participant_human_ids(
+        rows.iter()
+            .map(|(human_id, email)| (human_id.as_str(), email.as_str())),
+        owner_user_id,
+        owner_emails,
+    ))
 }
 
 async fn load_transcript_words_and_hints(
@@ -1726,5 +1770,88 @@ mod tests {
                 .map(|naming| naming.human_id),
             Some("cy".to_string())
         );
+    }
+
+    #[test]
+    fn an_undiarized_remote_channel_is_never_named_after_one_person() {
+        let span = |speaker_index: Option<i64>| SelectedSpan {
+            channel: REMOTE_CHANNEL,
+            speaker_index,
+            start_ms: 0,
+            end_ms: 4_000,
+            quality_score: 1.0,
+        };
+        let ada = vec![1.0, 0.0, 0.0];
+        let exemplars = vec![
+            ("ada".to_string(), "system_audio".to_string(), ada.clone()),
+            (
+                "marco".to_string(),
+                "system_audio".to_string(),
+                vec![0.0, 1.0, 0.0],
+            ),
+        ];
+        let index = SpeakerIndex::default();
+
+        // The whole far end of a channel-only transcript sounds like Ada.
+        assert!(voiceprint_namings(&[(span(None), ada.clone())], &index, &exemplars).is_empty());
+        // Once diarized, Ada's own voice is named.
+        assert_eq!(
+            voiceprint_namings(&[(span(Some(1)), ada)], &index, &exemplars),
+            vec![SpeakerNaming {
+                speaker: remote_speaker(1),
+                human_id: "ada".to_string(),
+                basis: NamingBasis::Voiceprint { score: 1.0 },
+            }]
+        );
+    }
+
+    #[tokio::test]
+    async fn known_voices_exclude_the_owner_and_deleted_people() {
+        let db = anlg_db_core::Db::connect_memory_plain().await.unwrap();
+        anlg_db_app::prepare_schema(&db).await.unwrap();
+        sqlx::raw_sql(
+            "INSERT INTO humans (id, workspace_id, name, email, deleted_at) VALUES
+               ('owner', 'workspace-1', 'Me', 'me@example.com', NULL),
+               ('owner-alias', 'workspace-1', 'Me again', 'ME@example.com', NULL),
+               ('ada', 'workspace-1', 'Ada', 'ada@example.com', NULL),
+               ('gone', 'workspace-1', 'Gone', 'gone@example.com', '2026-01-01T00:00:00Z'),
+               ('stale', 'workspace-1', 'Stale', '', NULL),
+               ('elsewhere', 'workspace-2', 'Elsewhere', '', NULL);
+             INSERT INTO voiceprint_exemplars (
+               id, workspace_id, human_id, keyring_key, model_provider,
+               model_version, capture_domain, confirmation_source,
+               source_session_id, source_transcript_id, source_attachment_id,
+               source_speaker_label, source_end_ms, deleted_at
+             )
+             SELECT
+               exemplar.id, exemplar.workspace_id, exemplar.human_id, exemplar.id,
+               'pyannote', 'wespeaker-embedding-onnx-1', 'system_audio',
+               'manual_speaker_assignment', 'session-1', 'transcript-1',
+               'attachment-1', 'ch1:s0', 4000, exemplar.deleted_at
+             FROM (
+               SELECT 'e-owner' AS id, 'workspace-1' AS workspace_id,
+                      'owner' AS human_id, NULL AS deleted_at
+               UNION ALL SELECT 'e-alias', 'workspace-1', 'owner-alias', NULL
+               UNION ALL SELECT 'e-ada-1', 'workspace-1', 'ada', NULL
+               UNION ALL SELECT 'e-ada-2', 'workspace-1', 'ada', NULL
+               UNION ALL SELECT 'e-gone', 'workspace-1', 'gone', NULL
+               UNION ALL SELECT 'e-stale', 'workspace-1', 'stale', '2026-01-01T00:00:00Z'
+               UNION ALL SELECT 'e-elsewhere', 'workspace-2', 'elsewhere', NULL
+             ) AS exemplar;",
+        )
+        .execute(db.pool())
+        .await
+        .unwrap();
+
+        let ids = known_voice_human_ids(
+            db.pool(),
+            "workspace-1",
+            "owner",
+            &["me@example.com".to_string()],
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(ids, vec!["ada".to_string()]);
     }
 }

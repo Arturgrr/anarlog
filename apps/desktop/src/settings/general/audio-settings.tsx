@@ -18,6 +18,7 @@ import {
 export function AudioSettingsView({
   audioRetention,
   microphoneDevice,
+  refineSpeakers,
   rememberSpeakers,
 }: {
   audioRetention: {
@@ -28,6 +29,10 @@ export function AudioSettingsView({
     value: string;
     devices: string[];
     onChange: (value: string) => void;
+  };
+  refineSpeakers: {
+    value: boolean;
+    onChange: (value: boolean) => void;
   };
   rememberSpeakers: {
     value: boolean;
@@ -48,6 +53,19 @@ export function AudioSettingsView({
       <AudioRetentionRow
         value={audioRetention.value}
         onChange={audioRetention.onChange}
+      />
+      <SettingSwitchRow
+        title={<Trans>Separate speakers after meetings</Trans>}
+        description={
+          <Trans>
+            When a meeting is transcribed live on this Mac, transcribe the saved
+            recording again after it ends to tell apart the people heard through
+            your computer. Needs saved audio and Parakeet Batch or Apple Speech,
+            and takes a few minutes after each meeting.
+          </Trans>
+        }
+        checked={refineSpeakers.value}
+        onChange={refineSpeakers.onChange}
       />
       <SettingSwitchRow
         title={<Trans>Remember speakers</Trans>}

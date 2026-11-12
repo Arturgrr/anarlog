@@ -11,6 +11,7 @@ import {
   CaretDown,
   Square,
   WarningCircle,
+  X,
 } from "@anlg/ui/components/icons";
 import { DancingSticks } from "@anlg/ui/components/ui/dancing-sticks";
 import { cn } from "@anlg/utils";
@@ -36,10 +37,12 @@ export function FloatingBarOverlay({
   state,
   onStop,
   onToggleExpanded,
+  onHide,
 }: {
   state: FloatingBarState;
   onStop: () => void;
   onToggleExpanded: (expanded: boolean) => void;
+  onHide: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const isExpanded =
@@ -124,6 +127,7 @@ export function FloatingBarOverlay({
               colors={colors}
               onStop={onStop}
               onToggleExpanded={onToggleExpanded}
+              onHide={onHide}
             />
           </div>
         </div>
@@ -138,12 +142,14 @@ function FloatingControls({
   colors,
   onStop,
   onToggleExpanded,
+  onHide,
 }: {
   state: FloatingBarState;
   isExpanded: boolean;
   colors: BarColors;
   onStop: () => void;
   onToggleExpanded: (expanded: boolean) => void;
+  onHide: () => void;
 }) {
   const { t } = useLingui();
 
@@ -176,6 +182,22 @@ function FloatingControls({
           )}
         </button>
       ) : null}
+      <button
+        type="button"
+        data-tauri-drag-region="false"
+        aria-label={t`Hide floating bar`}
+        title={t`Hide floating bar`}
+        onClick={onHide}
+        className="flex items-center justify-center"
+        style={{
+          width: FLOATING_BAR_COMPACT_ICON_SIZE,
+          height: FLOATING_BAR_COMPACT_ICON_SIZE,
+          borderRadius: FLOATING_BAR_CONTROL_RADIUS,
+          color: colors.muted,
+        }}
+      >
+        <X size={14} weight="bold" />
+      </button>
     </div>
   );
 }

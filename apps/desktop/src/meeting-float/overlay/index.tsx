@@ -84,6 +84,18 @@ export function FloatingBarOverlayScreen() {
             liveCaptionLineCount: null,
             liveCaptionPosition: null,
             liveCaptionMinimized: !expanded,
+            showFloatingBar: null,
+          });
+        }}
+        onHide={() => {
+          void windowsEvents.floatingBarSettingsChange.emit({
+            floatingBarOpacity: null,
+            liveCaptionOpacity: null,
+            liveCaptionWidth: null,
+            liveCaptionLineCount: null,
+            liveCaptionPosition: null,
+            liveCaptionMinimized: null,
+            showFloatingBar: false,
           });
         }}
       />

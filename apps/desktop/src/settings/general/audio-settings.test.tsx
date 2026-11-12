@@ -9,6 +9,10 @@ function renderAudioSettings({
     devices: ["External Microphone"],
     onChange: vi.fn(),
   },
+  refineSpeakers = {
+    value: false,
+    onChange: vi.fn(),
+  },
   rememberSpeakers = {
     value: false,
     onChange: vi.fn(),
@@ -18,6 +22,7 @@ function renderAudioSettings({
     <AudioSettingsView
       audioRetention={{ value: "forever", onChange: vi.fn() }}
       microphoneDevice={microphoneDevice}
+      refineSpeakers={refineSpeakers}
       rememberSpeakers={rememberSpeakers}
     />,
   );
@@ -43,18 +48,22 @@ describe("AudioSettingsView", () => {
   });
 
   it.each([
-    [false, true],
-    [true, false],
-  ])("toggles remember speakers from %s to %s", (value, nextValue) => {
-    const onChange = vi.fn();
-    renderAudioSettings({
-      rememberSpeakers: { value, onChange },
-    });
+    ["rememberSpeakers", "Remember speakers", false, true],
+    ["rememberSpeakers", "Remember speakers", true, false],
+    ["refineSpeakers", "Separate speakers after meetings", true, false],
+  ] as const)(
+    "toggles %s (%s) from %s to %s",
+    (prop, name, value, nextValue) => {
+      const onChange = vi.fn();
+      renderAudioSettings({
+        [prop]: { value, onChange },
+      });
 
-    const toggle = screen.getByRole("switch", { name: "Remember speakers" });
-    expect(toggle.getAttribute("aria-checked")).toBe(String(value));
+      const toggle = screen.getByRole("switch", { name });
+      expect(toggle.getAttribute("aria-checked")).toBe(String(value));
 
-    toggle.click();
-    expect(onChange).toHaveBeenCalledWith(nextValue);
-  });
+      toggle.click();
+      expect(onChange).toHaveBeenCalledWith(nextValue);
+    },
+  );
 });

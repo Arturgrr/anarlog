@@ -134,10 +134,13 @@ export const SETTING_DEFINITIONS = {
     path: ["general", "auto_stop_meetings"],
     default: true as boolean,
   },
-  floating_bar_enabled: {
+  // Replaces `floating_bar_enabled`, which defaulted to on and was saved by the
+  // whole settings form whether or not anyone chose it. The new key starts
+  // every install with the bar off; older builds keep reading the old key.
+  show_floating_bar: {
     type: "boolean",
-    path: ["general", "floating_bar_enabled"],
-    default: true as boolean,
+    path: ["general", "show_floating_bar"],
+    default: false as boolean,
   },
   floating_bar_opacity: {
     type: "number",
@@ -222,6 +225,11 @@ export const SETTING_DEFINITIONS = {
   remember_speakers: {
     type: "boolean",
     path: ["general", "remember_speakers"],
+    default: true as boolean,
+  },
+  refine_speakers: {
+    type: "boolean",
+    path: ["general", "refine_speakers"],
     default: true as boolean,
   },
   microphone_device: {

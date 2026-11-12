@@ -12,6 +12,7 @@ import {
 import {
   EMPTY_BATCH_TRANSCRIPT_ERROR,
   type BatchActions,
+  type BatchPhase,
   type BatchState,
 } from "./batch";
 
@@ -44,10 +45,11 @@ export const runBatchSession = async <T extends BatchStore>(
     notifyOnCompletion?: boolean;
     signal?: AbortSignal;
     recovery?: boolean;
+    phase?: BatchPhase;
   },
 ) => {
   const resumeFromRecovery = get().batch[sessionId]?.recovered === true;
-  get().handleBatchStarted(sessionId);
+  get().handleBatchStarted(sessionId, options?.phase);
 
   let unlisten: (() => void) | undefined;
   let syntheticProgressTimer: ReturnType<typeof setInterval> | undefined;

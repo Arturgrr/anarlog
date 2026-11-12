@@ -16,7 +16,7 @@ import {
   type TranscriptTimingSource,
 } from "~/stt/timing";
 
-type BatchPhase = "importing" | "transcribing";
+export type BatchPhase = "importing" | "transcribing" | "refining_speakers";
 type BatchTerminalReason = "failed" | "timed_out" | "stopped";
 
 export type BatchState = {
@@ -125,7 +125,7 @@ export const createBatchSlice = <T extends BatchState>(
           ...(state.batch[sessionId] ?? { percentage: 1 }),
           percentage: 1,
           isComplete: true,
-          phase: "transcribing",
+          phase: state.batch[sessionId]?.phase ?? "transcribing",
           terminalReason: undefined,
           error: undefined,
           errorCode: undefined,
@@ -187,7 +187,7 @@ export const createBatchSlice = <T extends BatchState>(
         [sessionId]: {
           percentage,
           isComplete: isComplete || false,
-          phase: "transcribing",
+          phase: state.batch[sessionId]?.phase ?? "transcribing",
           terminalReason: undefined,
           error: undefined,
           errorCode: undefined,

@@ -58,6 +58,7 @@ pub struct FloatingBarLabels {
     pub bar_opacity: String,
     pub show_transcript: String,
     pub hide_transcript: String,
+    pub hide_floating_bar: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
@@ -113,11 +114,12 @@ pub(crate) mod layout {
     }
 
     pub fn compact_controls_width(shows_expand: bool) -> f64 {
-        if shows_expand {
+        let stop_and_expand = if shows_expand {
             COMPACT_STOP_WIDTH + COMPACT_GAP + COMPACT_ICON_SIZE
         } else {
             COMPACT_SOLO_STOP_WIDTH
-        }
+        };
+        stop_and_expand + COMPACT_GAP + COMPACT_ICON_SIZE
     }
 
     pub fn compact_width(shows_expand: bool) -> f64 {

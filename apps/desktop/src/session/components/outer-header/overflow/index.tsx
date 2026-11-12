@@ -43,7 +43,6 @@ import { useAudioPlayer } from "~/audio-player";
 import { DEVICE_AUTH_REASON } from "~/lock/auth";
 import { isLockedFlag } from "~/lock/flag";
 import { useAppLock } from "~/lock/store";
-import { openFloatingMeetingPanel } from "~/meeting-float/host";
 import { isFloatingBarSupported } from "~/meeting-float/support";
 import { useRegenerateTranscript } from "~/session/components/note-input/transcript/actions";
 import {
@@ -53,6 +52,7 @@ import {
 import { VersionHistoryDialog } from "~/session/components/version-history-dialog";
 import { useSession } from "~/session/queries";
 import { openStandaloneNoteWindow } from "~/session/window";
+import { useSetSettingValue } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
 import type { EditorView } from "~/store/zustand/tabs/schema";
 import { useListener } from "~/stt/contexts";
@@ -87,8 +87,8 @@ export function OverflowButton({
   const { uploadAudio, uploadTranscript } = useUploadFile(sessionId);
   const regenerateTranscript = useRegenerateTranscript(sessionId);
   const sessionMode = useListener((state) => state.getSessionMode(sessionId));
-  const floatingBarEnabled = useConfigValue("floating_bar_enabled");
-  const floatingBarSupported = isFloatingBarSupported();
+  const showFloatingBar = useConfigValue("show_floating_bar");
+  const setShowFloatingBar = useSetSettingValue("show_floating_bar");
   const isMeetingInProgress =
     sessionMode === "active" || sessionMode === "finalizing";
   const showListeningAction = allowListening;
@@ -107,11 +107,8 @@ export function OverflowButton({
       : platform() === "windows"
         ? t`Show Audio in Explorer`
         : t`Show Audio in Folder`;
-  const canOpenFloatingPanel =
-    floatingBarSupported &&
-    allowListening &&
-    floatingBarEnabled &&
-    sessionMode === "active";
+  const canToggleFloatingBar =
+    isFloatingBarSupported() && allowListening && sessionMode === "active";
   const hasRecordingActions =
     showListeningAction ||
     showRetranscribeAction ||
@@ -160,12 +157,9 @@ export function OverflowButton({
       await openerCommands.openPath(dir.data, null);
     }
   };
-  const handleOpenFloatingPanel = () => {
+  const handleToggleFloatingBar = () => {
     setOpen(false);
-    void openFloatingMeetingPanel({
-      sessionId,
-      enabled: floatingBarEnabled,
-    });
+    setShowFloatingBar(!showFloatingBar);
   };
   const handleOpenStandaloneWindow = () => {
     setOpen(false);
@@ -284,14 +278,18 @@ export function OverflowButton({
                 </span>
               </DropdownMenuItem>
             )}
-            {canOpenFloatingPanel && (
+            {canToggleFloatingBar && (
               <DropdownMenuItem
-                onClick={handleOpenFloatingPanel}
+                onClick={handleToggleFloatingBar}
                 className="cursor-pointer"
               >
                 <PictureInPicture />
                 <span>
-                  <Trans>Open floating panel</Trans>
+                  {showFloatingBar ? (
+                    <Trans>Hide floating bar</Trans>
+                  ) : (
+                    <Trans>Show floating bar</Trans>
+                  )}
                 </span>
               </DropdownMenuItem>
             )}

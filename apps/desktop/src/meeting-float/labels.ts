@@ -23,5 +23,6 @@ export function getFloatingBarLabels(
     barOpacity: t`Bar opacity`,
     showTranscript: t`Show transcript`,
     hideTranscript: t`Hide transcript`,
+    hideFloatingBar: t`Hide floating bar`,
   };
 }

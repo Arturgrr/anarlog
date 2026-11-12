@@ -29,6 +29,26 @@ After applying a memo or summary edit, use the editor's **Undo** command to rest
 
 Deleting the recording does not delete the memo, summary, or transcript. It only removes the retained audio file.
 
+## Speakers in a transcript
+
+Librelog records your microphone and your computer's audio as separate channels, so your own words and everyone you hear through the computer are always told apart.
+
+- **Live on-device models** (Parakeet Streaming, Apple Speech) put everyone heard through the computer under one speaker while the meeting runs. When the meeting ends and the recording is kept, Librelog separates those voices on this Mac. See [Speakers after a live on-device meeting](/models-and-providers#speakers-after-a-live-on-device-meeting) for what it needs.
+- **After-recording models**, and hosted providers that support it, separate speakers as part of transcription.
+- With exactly one other participant listed, the far end stays one speaker named after that person.
+- Your microphone stays one speaker unless the meeting was in person, with no computer audio and its participants listed, and was transcribed after recording.
+
+Separated voices appear as numbered speakers until you name them. Select a speaker label, choose the person, and keep **Apply to all** on to name every segment of that voice. The person is added to the meeting's participants.
+
+With **Settings → Meetings → Remember speakers** on, naming a voice this way also keeps a voiceprint of it on this computer. In later meetings Librelog names that voice for you:
+
+- When the meeting lists two or more other participants, it matches voices against them. When every voice but one is named and the counts match, the last voice gets the remaining name.
+- When the meeting lists no participants, it matches voices against everyone you have named before. A voice is named only when it clearly matches one person and nobody else, and that person is not added to the participants.
+- When exactly one other participant is listed, the far end is named from the participant list, not from a voiceprint.
+- When nothing matches clearly, the voice keeps its number for you to name.
+
+Correcting a selection with **Change speaker** fixes those words only and does not teach Librelog a voice. Voiceprints need the recording until the meeting is processed, so **Don't save** under **Audio file retention** also stops new voiceprints.
+
 ## Shape the summary
 
 Use the template picker beside **Summary** to change its structure. You can also set standing instructions, add names and specialized terms, and control how templates interact with your preferences.

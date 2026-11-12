@@ -64,7 +64,8 @@ import type {
   OnStoppedCallback,
 } from "~/store/zustand/listener/transcript";
 import {
-  isRealtimeLocalModel,
+  getSpeakerRefinementTarget,
+  getTranscriptionLanguages,
   requiresRetainedBatchAudio,
 } from "~/stt/capabilities";
 import {
@@ -79,6 +80,7 @@ import {
   getTranscriptRecord,
   createLiveTranscript,
   flushLiveTranscriptDeltasToDatabase,
+  getSessionParticipantHumanIds,
   softDeleteTranscript,
   transcriptExists,
   useSessionParticipantHumanIds,
@@ -187,6 +189,11 @@ export function useCaptureLifecycle(sessionId: string) {
     useConfigValue("audio_retention"),
   );
   const rememberSpeakers = useConfigValue("remember_speakers") === true;
+  const refineSpeakers = useConfigValue("refine_speakers") !== false;
+  const transcriptionLanguages = getTranscriptionLanguages(
+    useConfigValue("ai_language"),
+    useConfigValue("spoken_languages"),
+  );
   const {
     conn,
     isReady: connectionReady,
@@ -199,13 +206,19 @@ export function useCaptureLifecycle(sessionId: string) {
 
   const runBatchRef = useRef(runBatch);
   const canRunBatchRef = useRef(canRunBatchTranscription(conn));
-  const localBatchDiarizationAvailableRef = useRef(
-    localBatchDiarizationAvailable,
-  );
+  const speakerRefinementRef = useRef({
+    enabled: refineSpeakers,
+    parakeetBatchDownloaded: localBatchDiarizationAvailable,
+    languages: transcriptionLanguages,
+  });
   const stopMeetingChatCaptureRef = useRef<(() => Promise<void>) | null>(null);
   runBatchRef.current = runBatch;
   canRunBatchRef.current = canRunBatchTranscription(conn);
-  localBatchDiarizationAvailableRef.current = localBatchDiarizationAvailable;
+  speakerRefinementRef.current = {
+    enabled: refineSpeakers,
+    parakeetBatchDownloaded: localBatchDiarizationAvailable,
+    languages: transcriptionLanguages,
+  };
 
   const stopMeetingChatTasks = useCallback(async () => {
     const stop = stopMeetingChatCaptureRef.current;
@@ -298,16 +311,60 @@ export function useCaptureLifecycle(sessionId: string) {
       let batchFromRetainedAudio =
         retainAudio &&
         (requiresRetainedBatchAudio(provider, model) || postStopBatch);
-      const hasMultipleRemoteParticipants =
+      const remoteParticipantCount = (humanIds: string[]) =>
         new Set(
-          participantHumanIds.filter(
-            (humanId) => humanId && humanId !== ownerUserId,
+          humanIds.filter((humanId) => humanId && humanId !== ownerUserId),
+        ).size;
+      // A local live engine labels words by channel only, so every remote
+      // voice shares one speaker until a batch pass over the retained
+      // recording separates them. One known remote participant already names
+      // the far end, and splitting a single voice would only add noise.
+      const speakerRefinementTarget = () => {
+        const { enabled, parakeetBatchDownloaded, languages } =
+          speakerRefinementRef.current;
+        return enabled && retainAudio
+          ? getSpeakerRefinementTarget(
+              model,
+              parakeetBatchDownloaded,
+              languages,
+            )
+          : null;
+      };
+      const captureStartingOrActive = () => {
+        const { live } = listenerStore.getState();
+        return live.loading || live.status !== "inactive";
+      };
+      const planSpeakerRefinement = async (
+        details: Parameters<OnStoppedCallback>[1],
+      ) => {
+        const target = speakerRefinementTarget();
+        if (
+          !target ||
+          !details.audioPath ||
+          !details.liveTranscriptionActive ||
+          details.needsBatchRepair ||
+          transcriptWriteError ||
+          captureStartingOrActive()
+        ) {
+          return null;
+        }
+        const remoteParticipants = remoteParticipantCount(
+          await getSessionParticipantHumanIds(sessionId).catch(
+            () => participantHumanIds,
           ),
-        ).size > 1;
-      const shouldUseLocalBatchForSpeakerDiarization = () =>
-        hasMultipleRemoteParticipants &&
-        localBatchDiarizationAvailableRef.current &&
-        isRealtimeLocalModel(model);
+        );
+        if (remoteParticipants === 1) return null;
+        const words =
+          (await getTranscriptRecord(transcriptId).catch(() => null))?.words ??
+          [];
+        // Without listed participants only speech on the system-audio channel
+        // shows there was a far end to separate; a memo has none.
+        const hasSpeech =
+          remoteParticipants > 1
+            ? words.length > 0
+            : words.some((word) => word.channel === 1);
+        return hasSpeech ? target : null;
+      };
       let pendingSummaryMode = recoveredMarker?.summaryMode;
       const refreshSummaryAfterRepair =
         recoveredMarker?.refreshSummaryAfterRepair ?? false;
@@ -766,10 +823,10 @@ export function useCaptureLifecycle(sessionId: string) {
           }
         }
         transcriptCreated ??= await transcriptExists(transcriptId);
-        const useLocalBatchForSpeakerDiarization =
-          shouldUseLocalBatchForSpeakerDiarization();
-        const refineSpeakerDiarization =
-          !usesChunkedAudio && useLocalBatchForSpeakerDiarization;
+        const speakerRefinement = pendingSummaryMode
+          ? null
+          : await planSpeakerRefinement(details);
+        const refineSpeakerDiarization = speakerRefinement !== null;
         if (transcriptCreated) {
           try {
             await waitForSessionSearchIndex(sessionId);
@@ -781,7 +838,10 @@ export function useCaptureLifecycle(sessionId: string) {
           }
         }
 
-        const postCaptureAction = pendingSummaryMode
+        // Recovery chunks already repaired a chunked capture, so only a
+        // provider that needs the whole recording or speaker refinement reads
+        // the retained file again.
+        let postCaptureAction = pendingSummaryMode
           ? ("enhance_only" as const)
           : getPostCaptureAction(
               {
@@ -790,7 +850,9 @@ export function useCaptureLifecycle(sessionId: string) {
                 transcriptWriteFailed: Boolean(transcriptWriteError),
               },
               canRunBatchRef.current &&
-                (!usesChunkedAudio || batchFromRetainedAudio),
+                (!usesChunkedAudio ||
+                  batchFromRetainedAudio ||
+                  refineSpeakerDiarization),
             );
         const repairReasons = pendingSummaryMode
           ? []
@@ -807,6 +869,19 @@ export function useCaptureLifecycle(sessionId: string) {
             sessionId,
             reasons: repairReasons,
           });
+          // Refinement yields to a recording that starts while it runs.
+          const refinementAbort = new AbortController();
+          const stopWatchingCaptures = refineSpeakerDiarization
+            ? listenerStore.subscribe((state) => {
+                if (
+                  refinementAbort.signal.aborted ||
+                  !captureStartingOrActive()
+                )
+                  return;
+                refinementAbort.abort();
+                void state.stopTranscription(sessionId);
+              })
+            : undefined;
           try {
             const existingAudioDurationMs = await existingAudioDurationPromise;
             const finalAudioDurationMs = preserveExistingTranscript
@@ -823,13 +898,13 @@ export function useCaptureLifecycle(sessionId: string) {
               ...(stoppedAtMs !== null
                 ? { captureInterval: { startedAtMs: startedAt, stoppedAtMs } }
                 : {}),
-              notifyOnCompletion: !details.liveTranscriptionActive,
-              ...(useLocalBatchForSpeakerDiarization
+              notifyOnCompletion:
+                !details.liveTranscriptionActive || refineSpeakerDiarization,
+              ...(speakerRefinement
                 ? {
-                    provider: "soniqo",
-                    model: "soniqo-parakeet-batch",
-                    baseUrl: "soniqo://local",
-                    apiKey: "",
+                    ...speakerRefinement,
+                    signal: refinementAbort.signal,
+                    phase: "refining_speakers" as const,
                   }
                 : {}),
               promotion:
@@ -850,46 +925,68 @@ export function useCaptureLifecycle(sessionId: string) {
               reasons: repairReasons,
             });
           } catch (error) {
-            if (isStoppedTranscriptionError(error)) {
+            if (refineSpeakerDiarization) {
+              // The live transcript is complete and was not replaced, so a
+              // failed or stopped refinement finishes the meeting with it.
+              console.warn("[listener] speaker refinement did not finish", {
+                sessionId,
+                error,
+              });
+              listenerStore.getState().clearBatchSession(sessionId);
+              postCaptureAction = "enhance_only";
+              if (
+                requestRecoveryOnFailure &&
+                !refinementAbort.signal.aborted &&
+                !isStoppedTranscriptionError(error)
+              ) {
+                toast.warning(t`Speakers could not be separated`, {
+                  id: `speaker-refinement-${sessionId}`,
+                  description: t`The live transcript was kept. Re-transcribe the meeting to try again.`,
+                });
+              }
+            } else if (isStoppedTranscriptionError(error)) {
               await persistTranscriptWrite(() =>
                 clearCaptureLifecycleMarker(sessionId, transcriptId),
               );
               recoveryPending = false;
               recoveryStateCleared = true;
               return;
-            }
-            console.error("[listener] post-stop transcript repair failed", {
-              sessionId,
-              reasons: repairReasons,
-              error,
-            });
-            if (transcriptWriteError || !details.liveTranscriptionActive) {
-              await notifyFailure(
-                t`Librelog could not finish saving the transcript. The recording was kept so you can try again.`,
-                "post-capture-transcript-incomplete",
-              );
             } else {
-              await notifyFailure(
-                t`Post-meeting transcription failed. The recording was kept so you can try again.`,
-                "post-capture-batch-failed",
-              );
-            }
-            if (isTerminalTranscriptionError(error)) {
-              try {
-                await clearCaptureLifecycleMarker(sessionId, transcriptId);
-                recoveryPending = false;
-                recoveryStateCleared = true;
-              } catch (clearError) {
-                console.error(
-                  "[listener] failed to stop automatic capture recovery",
-                  clearError,
+              console.error("[listener] post-stop transcript repair failed", {
+                sessionId,
+                reasons: repairReasons,
+                error,
+              });
+              if (transcriptWriteError || !details.liveTranscriptionActive) {
+                await notifyFailure(
+                  t`Librelog could not finish saving the transcript. The recording was kept so you can try again.`,
+                  "post-capture-transcript-incomplete",
                 );
-                await requestRecovery();
+              } else {
+                await notifyFailure(
+                  t`Post-meeting transcription failed. The recording was kept so you can try again.`,
+                  "post-capture-batch-failed",
+                );
               }
+              if (isTerminalTranscriptionError(error)) {
+                try {
+                  await clearCaptureLifecycleMarker(sessionId, transcriptId);
+                  recoveryPending = false;
+                  recoveryStateCleared = true;
+                } catch (clearError) {
+                  console.error(
+                    "[listener] failed to stop automatic capture recovery",
+                    clearError,
+                  );
+                  await requestRecovery();
+                }
+                return;
+              }
+              await requestRecovery();
               return;
             }
-            await requestRecovery();
-            return;
+          } finally {
+            stopWatchingCaptures?.();
           }
         }
 
@@ -1158,14 +1255,19 @@ export function useCaptureLifecycle(sessionId: string) {
       const markExpectedPostStopBatch = (
         details: Parameters<OnStoppedCallback>[1],
       ) => {
+        const mayRefineSpeakers =
+          details.liveTranscriptionActive &&
+          !details.needsBatchRepair &&
+          remoteParticipantCount(participantHumanIds) !== 1 &&
+          speakerRefinementTarget() !== null;
         if (
-          (!usesChunkedAudio || batchFromRetainedAudio) &&
+          (!usesChunkedAudio || batchFromRetainedAudio || mayRefineSpeakers) &&
           !pendingSummaryMode &&
           details.audioPath &&
           canRunBatchRef.current &&
           (!details.liveTranscriptionActive ||
             details.needsBatchRepair ||
-            shouldUseLocalBatchForSpeakerDiarization())
+            mayRefineSpeakers)
         ) {
           updateBatchTranscriptionPending(true);
         }

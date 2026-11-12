@@ -40,6 +40,7 @@ struct FloatingBarLabels: Codable, Equatable {
   var barOpacity = "Bar opacity"
   var showTranscript = "Show transcript"
   var hideTranscript = "Hide transcript"
+  var hideFloatingBar = "Hide floating bar"
 }
 
 struct FloatingBarStatePayload: Codable {

@@ -22,6 +22,7 @@ import {
 } from "./useStartListening";
 
 import { enqueueSessionAudioOperation } from "~/session/audio-operations";
+import { listenerStore } from "~/store/zustand/listener/instance";
 
 vi.mock("./capture-completion", () => ({
   completeCaptureTranscript: vi.fn().mockResolvedValue(undefined),
@@ -50,6 +51,7 @@ const {
   useSessionHasTranscriptMock,
   useSessionParticipantHumanIdsMock,
   getSessionParticipantHumanIdsMock,
+  getTranscriptRecordMock,
   createLiveTranscriptMock,
   appendRecoveredTranscriptWordsMock,
   createNativeTranscriptPersistenceMock,
@@ -112,6 +114,7 @@ const {
   useSessionHasTranscriptMock: vi.fn(),
   useSessionParticipantHumanIdsMock: vi.fn(),
   getSessionParticipantHumanIdsMock: vi.fn(),
+  getTranscriptRecordMock: vi.fn(),
   createLiveTranscriptMock: vi.fn(),
   appendRecoveredTranscriptWordsMock: vi.fn(),
   createNativeTranscriptPersistenceMock: vi.fn(),
@@ -174,6 +177,7 @@ vi.mock("@anlg/plugin-transcription", () => ({
     deleteTranscribedCaptureAudio: deleteTranscribedCaptureAudioMock,
     getCaptureSnapshot: getCaptureSnapshotMock,
     listStoppedCaptures: vi.fn(async () => ({ status: "ok", data: [] })),
+    stopTranscription: vi.fn(async () => ({ status: "ok", data: null })),
   },
   events: {
     captureLifecycleEvent: { listen: vi.fn(async () => () => {}) },
@@ -360,7 +364,7 @@ vi.mock("~/stt/queries", () => ({
   appendRecoveredTranscriptWords: appendRecoveredTranscriptWordsMock,
   createLiveTranscript: createLiveTranscriptMock,
   flushLiveTranscriptDeltasToDatabase: flushLiveTranscriptDeltasToDatabaseMock,
-  getTranscriptRecord: vi.fn(async () => null),
+  getTranscriptRecord: getTranscriptRecordMock,
   softDeleteTranscript: softDeleteTranscriptMock,
   transcriptExists: transcriptExistsMock,
   useSessionParticipantHumanIds: useSessionParticipantHumanIdsMock,
@@ -594,6 +598,7 @@ describe("useStartListening", () => {
     getSessionParticipantHumanIdsMock.mockImplementation(async () =>
       useSessionParticipantHumanIdsMock(),
     );
+    getTranscriptRecordMock.mockResolvedValue(null);
     createLiveTranscriptMock.mockResolvedValue(undefined);
     createNativeTranscriptPersistenceMock.mockImplementation(
       ({ afterFlush }) => ({
@@ -1509,64 +1514,129 @@ describe("useStartListening", () => {
     );
   });
 
-  test.each([
-    { provider: "soniqo", model: "soniqo-parakeet-streaming" },
-    { provider: "apple_speech", model: "apple-speech" },
-  ])(
-    "refines complete multi-speaker $model transcripts with the installed local batch model",
-    async ({ provider, model }) => {
-      succeedNextNativePersistenceFlush();
-      useSTTConnectionMock.mockReturnValue({
-        conn: {
-          provider,
-          model,
-          baseUrl: "soniqo://local",
-          apiKey: "",
-        },
-        localBatchDiarizationAvailable: true,
-      });
-      useSessionParticipantHumanIdsMock.mockReturnValue([
-        "user-1",
-        "lex",
-        "george",
-      ]);
-      const { result } = renderHook(() => useStartListening("session-1"));
+  const parakeetBatch = {
+    provider: "soniqo",
+    model: "soniqo-parakeet-batch",
+    baseUrl: "soniqo://local",
+    apiKey: "",
+  };
+  const appleSpeechBatch = {
+    provider: "apple_speech",
+    model: "apple-speech",
+    baseUrl: "apple-speech://local",
+    apiKey: "",
+  };
 
-      await act(async () => {
-        await result.current();
-      });
-
-      const callbacks = startMock.mock.calls[0]?.[1];
-      callbacks?.handlePersist?.({
-        new_words: [
-          {
-            id: "live-word",
-            text: "hello",
-            start_ms: 0,
-            end_ms: 500,
-            channel: 1,
-          },
-        ],
-        replaced_ids: [],
-        partials: [],
-      });
-      await act(async () => {
-        await callbacks?.onStopped?.("session-1", {
-          durationSeconds: 42,
-          audioPath: "/tmp/session.wav",
-          requestedLiveTranscription: true,
-          liveTranscriptionActive: true,
-          needsBatchRepair: false,
-        });
-      });
-
-      expect(runBatchMock).toHaveBeenCalledWith("/tmp/session.wav", {
-        deferAudioFinalization: true,
-        notifyOnCompletion: false,
-        provider: "soniqo",
-        model: "soniqo-parakeet-batch",
+  async function stopChunkedLiveCapture({
+    model,
+    parakeetBatchDownloaded = true,
+    participants = [],
+    wordChannels = [0, 1],
+  }: {
+    model: string;
+    parakeetBatchDownloaded?: boolean;
+    participants?: string[];
+    wordChannels?: number[];
+  }) {
+    succeedNextNativePersistenceFlush();
+    useSTTConnectionMock.mockReturnValue({
+      conn: {
+        provider: model === "apple-speech" ? "apple_speech" : "soniqo",
+        model,
         baseUrl: "soniqo://local",
         apiKey: "",
+      },
+      localBatchDiarizationAvailable: parakeetBatchDownloaded,
+    });
+    useSessionParticipantHumanIdsMock.mockReturnValue(participants);
+    getTranscriptRecordMock.mockResolvedValue({
+      id: "generated-id",
+      words: wordChannels.map((channel, index) => ({
+        id: `live-word-${index}`,
+        text: "hello",
+        start_ms: index * 500,
+        end_ms: index * 500 + 400,
+        channel,
+      })),
+      speakerHints: [],
+    });
+    const { result } = renderHook(() => useStartListening("session-1"));
+    await act(async () => {
+      await result.current();
+    });
+    const callbacks = startMock.mock.calls[0]?.[1];
+    callbacks?.handlePersist?.({
+      new_words: [
+        {
+          id: "live-word",
+          text: "hello",
+          start_ms: 0,
+          end_ms: 500,
+          channel: 1,
+        },
+      ],
+      replaced_ids: [],
+      partials: [],
+    });
+    await act(async () => {
+      await callbacks?.onStopped?.("session-1", {
+        chunkedAudio: true,
+        durationSeconds: 42,
+        audioPath: "/tmp/session.mp3",
+        requestedLiveTranscription: true,
+        liveTranscriptionActive: true,
+        needsBatchRepair: false,
+      });
+    });
+  }
+
+  // Native capture always reports chunked audio; refinement was gated off it.
+  test.each([
+    {
+      name: "separates an ad-hoc call's remote voices with Parakeet Batch",
+      model: "soniqo-parakeet-streaming",
+      expected: parakeetBatch,
+    },
+    {
+      name: "refines a call with several remote participants",
+      model: "soniqo-parakeet-streaming",
+      participants: ["user-1", "lex", "george"],
+      expected: parakeetBatch,
+    },
+    {
+      name: "re-reads an Apple Speech recording without downloading Parakeet Batch",
+      model: "apple-speech",
+      parakeetBatchDownloaded: false,
+      expected: appleSpeechBatch,
+    },
+    {
+      name: "never downloads Parakeet Batch for Parakeet Streaming",
+      model: "soniqo-parakeet-streaming",
+      parakeetBatchDownloaded: false,
+      expected: null,
+    },
+    {
+      name: "keeps a 1:1 call's far end as one speaker",
+      model: "soniqo-parakeet-streaming",
+      participants: ["user-1", "lex"],
+      expected: null,
+    },
+    {
+      name: "skips a memo with no system audio",
+      model: "soniqo-parakeet-streaming",
+      wordChannels: [0],
+      expected: null,
+    },
+  ])("$name after a chunked live capture", async ({ expected, ...capture }) => {
+    await stopChunkedLiveCapture(capture);
+
+    if (expected) {
+      expect(runBatchMock).toHaveBeenCalledWith("/tmp/session.mp3", {
+        deferAudioFinalization: true,
+        notifyOnCompletion: true,
+        ...expected,
+        signal: expect.any(AbortSignal),
+        phase: "refining_speakers",
         promotion: {
           scope: "current_capture",
           audioOffsetMs: 0,
@@ -1574,11 +1644,74 @@ describe("useStartListening", () => {
           startedAt: expect.any(Number),
         },
       });
-      expect(queueAutoEnhanceIfSummaryEmptyMock).toHaveBeenCalledWith(
+    } else {
+      expect(runBatchMock).not.toHaveBeenCalled();
+    }
+    expect(queueAutoEnhanceIfSummaryEmptyMock).toHaveBeenCalledWith(
+      "session-1",
+    );
+    expect(clearCaptureLifecycleMarkerMock).toHaveBeenCalled();
+  });
+
+  test.each(["Soniqo transcription task failed.", "Transcription stopped."])(
+    "keeps the live transcript and still summarizes when speaker refinement ends with %s",
+    async (message) => {
+      const consoleWarn = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
+      runBatchMock.mockRejectedValueOnce(new Error(message));
+
+      await stopChunkedLiveCapture({ model: "soniqo-parakeet-streaming" });
+
+      expect(runBatchMock).toHaveBeenCalledOnce();
+      expect(requestAutoEnhanceMock.mock.calls).toEqual([
+        ["session-1", "if_empty"],
+      ]);
+      expect(requestCaptureRecoveryMock).not.toHaveBeenCalled();
+      expect(toastErrorMock).not.toHaveBeenCalled();
+      expect(toastWarningMock).toHaveBeenCalledTimes(
+        message === "Transcription stopped." ? 0 : 1,
+      );
+      expect(markSessionAudioTranscriptionCompleteMock).toHaveBeenCalledWith(
         "session-1",
       );
+      expect(clearCaptureLifecycleMarkerMock).toHaveBeenCalled();
+      consoleWarn.mockRestore();
     },
   );
+
+  test("stops speaker refinement when another recording starts", async () => {
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    runBatchMock.mockImplementationOnce(
+      (_path: string, { signal }: { signal: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          signal.addEventListener("abort", () => reject(signal.reason));
+          listenerStore.setState((state) => ({
+            ...state,
+            live: { ...state.live, loading: true },
+          }));
+        }),
+    );
+
+    try {
+      await stopChunkedLiveCapture({ model: "soniqo-parakeet-streaming" });
+    } finally {
+      listenerStore.setState((state) => ({
+        ...state,
+        live: { ...state.live, loading: false },
+      }));
+    }
+
+    expect(requestAutoEnhanceMock).toHaveBeenCalledWith(
+      "session-1",
+      "if_empty",
+    );
+    expect(transcriptionCommands.stopTranscription).toHaveBeenCalledWith(
+      "session-1",
+    );
+    expect(requestCaptureRecoveryMock).not.toHaveBeenCalled();
+    consoleWarn.mockRestore();
+  });
 
   test("retains the marker until a failed editor flush recovers", async () => {
     flushCanonicalSessionEditorChangesMock.mockRejectedValueOnce(
@@ -2990,6 +3123,11 @@ describe("useStartListening", () => {
         "speaker-1",
         "speaker-2",
       ]);
+      getTranscriptRecordMock.mockResolvedValue({
+        id: "generated-id",
+        words: [{ id: "word-1", text: "Meeting notes", channel: 0 }],
+        speakerHints: [],
+      });
       let finishBatch: (() => void) | undefined;
       runBatchMock.mockImplementationOnce(
         () =>

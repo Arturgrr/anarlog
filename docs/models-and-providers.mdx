@@ -39,11 +39,22 @@ You can also keep audio on your network by pointing **Custom**, or Deepgram's **
   Compatibility code still recognizes some older local model IDs, but they are not offered as new choices. The table above is the current user-facing model list.
 </Note>
 
-If you select Parakeet Streaming and also download Parakeet Batch, Librelog can refine speaker labels on-device after a meeting with multiple remote participants.
-
 For local summaries and chat, connect **LM Studio**, **Ollama**, or **Unsloth** and choose any compatible model they serve. Librelog does not silently substitute another model. **Apple Intelligence** is also available as an experimental, text-only Intelligence provider on eligible Macs running macOS 26 or later.
 
 If a selected local model or server is unavailable, Librelog reports a connection error instead of sending the request to another provider.
+
+### Speakers after a live on-device meeting
+
+During the meeting, Parakeet Streaming and Apple Speech label words only by where they came from: your microphone, or your computer's audio. Everyone you hear through the computer shares one speaker until the meeting ends. When you stop, Librelog transcribes the saved recording again on this Mac and separates the voices on the computer-audio channel:
+
+- If **Parakeet Batch** is downloaded and supports the meeting's language, Librelog uses it. With Apple Speech and no usable Parakeet Batch, Apple Speech transcribes the recording again.
+- Parakeet Streaming cannot separate speakers by itself. Librelog never downloads Parakeet Batch for this on its own; it shows a hint next to the transcript instead.
+- The recording must be kept. With **Audio file retention** set to **Don't save**, voices are not separated.
+- It runs when the meeting lists no participants besides you, or two or more. With exactly one other participant, the far end stays one speaker named after that person. Without listed participants, a recording with no speech from the computer's audio, such as a memo, is skipped.
+- The transcript shows **Separating speakers...** while it runs, and the summary is written from the result. If you stop it, start another recording, or it fails, the live transcript stays as it was.
+- Your microphone channel is only split for an in-person meeting that has no computer audio and lists two or more other participants.
+
+The new transcript replaces the live one for that recording. Speakers you named during the meeting keep their names where the words line up. Turn this off under **Settings → Meetings → Separate speakers after meetings** if you prefer not to spend the extra minutes and processing after each meeting.
 
 ## Other model-backed features
 

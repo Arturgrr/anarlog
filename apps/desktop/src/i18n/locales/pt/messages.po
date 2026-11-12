@@ -2778,6 +2778,12 @@ msgstr "Ocultar {app}"
 msgid "Hide all notification panels, Dock alerts, and completion sounds."
 msgstr "Oculta todos os painéis de notificação, alertas do Dock e sons de conclusão."
 
+#: src/meeting-float/labels.ts
+#: src/meeting-float/overlay/bar.tsx
+#: src/session/components/outer-header/overflow/index.tsx
+msgid "Hide floating bar"
+msgstr "Ocultar barra flutuante"
+
 #: src/i18n/native-labels.tsx
 msgid "Hide Others"
 msgstr "Ocultar Outros"
@@ -4181,10 +4187,6 @@ msgid "Open file"
 msgstr "Abrir arquivo"
 
 #: src/session/components/outer-header/overflow/index.tsx
-msgid "Open floating panel"
-msgstr "Abrir painel flutuante"
-
-#: src/session/components/outer-header/overflow/index.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Open in New Window"
 msgstr "Abrir em Nova Janela"
@@ -5220,6 +5222,18 @@ msgstr "enviada"
 msgid "Seoul"
 msgstr "Seul"
 
+#: src/settings/general/audio-settings.tsx
+msgid "Separate speakers after meetings"
+msgstr "Separar falantes após as reuniões"
+
+#: src/sidebar/toast/registry.tsx
+msgid "Separating speakers after meetings needs Parakeet Batch"
+msgstr "Separar falantes após as reuniões requer o Parakeet Batch"
+
+#: src/session/components/note-input/transcript/screens/empty.tsx
+msgid "Separating speakers..."
+msgstr "Separando falantes..."
+
 #: src/onboarding/model-status.ts
 #: src/settings/ai/llm/index.tsx
 msgid "Server stopped"
@@ -5323,6 +5337,7 @@ msgstr "Mostrar Áudio na Pasta"
 msgid "Show fewer"
 msgstr "Mostrar menos"
 
+#: src/session/components/outer-header/overflow/index.tsx
 #: src/settings/general/meeting-settings.tsx
 msgid "Show floating bar"
 msgstr "Mostrar barra flutuante"
@@ -5528,6 +5543,10 @@ msgstr "Falante"
 #: src/stt/live-segment.ts
 msgid "Speaker {speakerNumber}"
 msgstr "Falante {speakerNumber}"
+
+#: src/stt/capture-lifecycle.ts
+msgid "Speakers could not be separated"
+msgstr "Não foi possível separar os falantes"
 
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "SQLite migration verification is incomplete"
@@ -5879,6 +5898,10 @@ msgstr "O campo de texto em foco mudou. Copie seu último ditado em Configuraç�
 #: src/settings/ai/llm/models.tsx
 msgid "The key was rejected. Check it above."
 msgstr "A chave foi recusada. Confira acima."
+
+#: src/stt/capture-lifecycle.ts
+msgid "The live transcript was kept. Re-transcribe the meeting to try again."
+msgstr "A transcrição ao vivo foi mantida. Transcreva a reunião novamente para tentar outra vez."
 
 #: src/settings/ai/stt/model-rows.tsx
 msgid "The model files are removed from this Mac. You can download them again later."
@@ -6300,6 +6323,10 @@ msgstr "Desafixar organização"
 msgid "Unpin Organization"
 msgstr "Desafixar Organização"
 
+#: src/sidebar/toast/registry.tsx
+msgid "Until it is downloaded, everyone heard through your computer stays one speaker."
+msgstr "Até que ele seja baixado, todos que você ouve pelo computador continuam como um único falante."
+
 #: src/chat/components/message/tool/search-meetings.tsx
 #: src/chat/context/session-drag.ts
 #: src/services/tray-recording.tsx
@@ -6700,6 +6727,10 @@ msgstr "Quais foram as principais decisões tomadas?"
 #: src/changelog/index.tsx
 msgid "What's new in {version}?"
 msgstr "O que há de novo na versão {version}?"
+
+#: src/settings/general/audio-settings.tsx
+msgid "When a meeting is transcribed live on this Mac, transcribe the saved recording again after it ends to tell apart the people heard through your computer. Needs saved audio and Parakeet Batch or Apple Speech, and takes a few minutes after each meeting."
+msgstr "Quando uma reunião é transcrita ao vivo neste Mac, transcreve novamente a gravação salva ao final para distinguir as pessoas ouvidas pelo seu computador. Requer áudio salvo e o Parakeet Batch ou o Apple Speech, e leva alguns minutos após cada reunião."
 
 #: src/settings/ai/stt/index.tsx
 msgid "When it transcribes"

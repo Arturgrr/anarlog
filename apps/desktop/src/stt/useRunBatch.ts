@@ -27,6 +27,7 @@ import { maybeExtractVoiceprintCandidates } from "~/services/voiceprint";
 import { useSession, useSessionParticipants } from "~/session/queries";
 import { useConfigValue } from "~/shared/config";
 import { id } from "~/shared/utils";
+import type { BatchPhase } from "~/store/zustand/listener/batch";
 import {
   acknowledgeCompletedBatch,
   notifyBatchCompleted,
@@ -51,6 +52,7 @@ type RunOptions = {
   deferAudioFinalization?: boolean;
   handlePersist?: BatchPersistCallback;
   notifyOnCompletion?: boolean;
+  phase?: BatchPhase;
   resume?: { provider: BatchProvider; model: string };
   provider?: string;
   model?: string;
@@ -510,6 +512,7 @@ export const useRunBatch = (sessionId: string) => {
             },
             notifyOnCompletion: false,
             recovery: Boolean(options?.recovery),
+            phase: options?.phase,
           });
           options?.signal?.throwIfAborted();
         } finally {

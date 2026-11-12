@@ -35,6 +35,7 @@ export function ToastNotifications() {
     activeDownloads,
     localSttStatus,
     isLocalSttModel,
+    speakerSeparationModelMissing,
   } = useNotifications();
   const update = useDesktopUpdateControl();
   const [observedUpdateStatus, setObservedUpdateStatus] = useState(
@@ -110,6 +111,9 @@ export function ToastNotifications() {
       : null,
   );
   const isLiveMeetingActive = activeLiveSessionId !== null;
+  // Shown beside a transcript, where the unseparated speakers are visible.
+  const needsSpeakerSeparationModel =
+    speakerSeparationModelMissing && activeTranscriptSessionId !== null;
 
   const openNew = useTabs((state) => state.openNew);
   const updateSettingsTabState = useTabs(
@@ -149,6 +153,7 @@ export function ToastNotifications() {
         activeDownloads,
         localSttStatus,
         isLocalSttModel,
+        needsSpeakerSeparationModel,
         update,
         onOpenLLMSettings: handleOpenLLMSettings,
         onOpenSTTSettings: handleOpenSTTSettings,
@@ -165,6 +170,7 @@ export function ToastNotifications() {
       activeDownloads,
       localSttStatus,
       isLocalSttModel,
+      needsSpeakerSeparationModel,
       update,
       handleOpenLLMSettings,
       handleOpenSTTSettings,
