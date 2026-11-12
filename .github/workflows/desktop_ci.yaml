@@ -18,8 +18,9 @@
 # macOS is one job on purpose: hosted macOS runners are scarce here and a job
 # left waiting for one is cancelled, so a run asks for a single runner. Its
 # checks keep going after a failure, so that one run reports all of them.
-# Each job builds its tests in one cargo invocation: a different set of
-# packages resolves different features and rebuilds the crates they share.
+# Each job builds its tests in one cargo invocation where it can: a different
+# set of packages resolves different features and rebuilds the crates they
+# share. windows_ci says why it cannot.
 #
 # Only main saves Rust caches (rust_install), one per platform; everything else
 # restores them, so a pull request can neither evict nor replace them. A cache
@@ -244,11 +245,16 @@ jobs:
       - uses: $/.github/actions/rust_install
         with:
           platform: windows
-          cache-key: desktop-v2
-      # One build for every desktop test target, which also covers `cargo check
-      # -p desktop`, and the notification plugin's test; it runs the bindings
-      # export of both, which is all the notification plugin tests.
-      - run: cargo test --locked -p desktop -p tauri-plugin-notification --lib --bins export_types
+          cache-key: desktop
+      # Builds every desktop test target, so it also covers `cargo check -p
+      # desktop`, but runs none: the desktop test executables fail to load on
+      # the Windows runner (STATUS_ENTRYPOINT_NOT_FOUND, 0xc0000139) before any
+      # test starts. The notification plugin's test therefore gets its own
+      # build. Built with the desktop's features it would link tauri's tray
+      # icon support, which may fail to load the same way; its own build costs
+      # about 4.5 minutes on a cold cache and seconds on a warm one.
+      - run: cargo test --locked -p desktop --no-run
+      - run: cargo test --locked -p tauri-plugin-notification --lib
 
   linux_ci:
     needs: changes
