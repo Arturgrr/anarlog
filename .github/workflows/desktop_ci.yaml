@@ -20,9 +20,10 @@
 # left waiting for one is cancelled, so a run asks for a single runner. Its
 # checks keep going after a failure, so that one run reports all of them.
 # Last, it builds the llama-server the release bundles, with the release's own
-# `cargo xtask prepare-binaries`, which nothing else here runs. That build is
-# long, so it runs on schedule and manual runs, and on pull requests and
-# pushes only when crates/xtask changes (`changes` decides that too).
+# `cargo xtask prepare-binaries`, which nothing else here runs, and runs the
+# built-in model end-to-end tests against that build. That build is long, so
+# it runs on schedule and manual runs, and on pull requests and pushes only
+# when crates/xtask changes (`changes` decides that too).
 # Each job builds its tests in one cargo invocation where it can: a different
 # set of packages resolves different features and rebuilds the crates they
 # share. windows_ci says why it cannot.
@@ -100,8 +101,9 @@ env:
   # Tested by both macos_ci and linux_ci: transcribe-gguf builds transcribe.cpp
   # with Metal on macOS, and with Vulkan and a driver fingerprint on Linux.
   # macos_ci builds that Metal engine for the app anyway, so its tests add
-  # little there.
-  MACOS_AND_LINUX_TESTS: transcribe-gguf
+  # little there. local-llm starts, stops and reaps server processes, which
+  # macOS and Linux handle differently.
+  MACOS_AND_LINUX_TESTS: transcribe-gguf local-llm
   # Tested by cli_ci, whose paths cover them and their workspace dependencies.
   CLI_TESTS: agent-access db-app db-migrate librelog-cli tiptap
   # Built here but never tested here, as before.
@@ -251,7 +253,8 @@ jobs:
       # The release job's sidecar step, as release.yaml runs it. The xtask
       # builds llama-server from source and fails if it links anything outside
       # the system; this then checks that the bundled file starts.
-      - if: ${{ !cancelled() && steps.setup.outcome == 'success' && needs.changes.outputs.xtask == 'true' }}
+      - id: sidecar
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' && needs.changes.outputs.xtask == 'true' }}
         env:
           TAURI_ENV_TARGET_TRIPLE: aarch64-apple-darwin
         run: |
@@ -260,6 +263,24 @@ jobs:
           [[ -x "$server" ]] || { echo "::error::$server was not built"; exit 1; }
           otool -L "$server"
           "$server" --version
+      # That build end to end (crates/local-llm/tests/llama_server.rs): start,
+      # chat, idle stop, start again and stale-server reaping, with the pinned
+      # 1 MB model. A failed download skips with a warning; a hash mismatch
+      # fails.
+      - if: ${{ !cancelled() && steps.sidecar.outcome == 'success' }}
+        env:
+          MODEL_URL: https://huggingface.co/ggml-org/test-model-stories260K/resolve/479896ec924af6d40fd419ab8f4d1eb2101de00d/stories260K-f32.gguf
+          MODEL_SHA256: 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
+        run: |
+          model="$RUNNER_TEMP/stories260K-f32.gguf"
+          if ! curl -fsSL --retry 3 -o "$model" "$MODEL_URL"; then
+            echo "::warning::Could not download the test model; the built server's end-to-end tests skip."
+            exit 0
+          fi
+          echo "$MODEL_SHA256  $model" | shasum -a 256 -c -
+          export LIBRELOG_LLAMA_SERVER="$PWD/apps/desktop/src-tauri/binaries/librelog-llama-server-aarch64-apple-darwin"
+          export LIBRELOG_LLAMA_TEST_MODEL="$model"
+          cargo test --locked -p local-llm --test llama_server
 
   windows_ci:
     needs: changes

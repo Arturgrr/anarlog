@@ -9,9 +9,15 @@ use std::time::Duration;
 use local_llm::{LaunchRequest, ServerConfig, ServerError, ServerManager, ServerState};
 
 // argv: -c <mode> <count file> <llama-server args...>
+// It logs its startup to stderr, as llama-server does, so a failed start
+// quotes how far it got.
 const STAND_IN: &str = r#"
-import http.server, json, sys
+import http.server, json, os, socketserver, sys, time
+started = time.monotonic()
+def log(message):
+    print(f"stand-in {os.getpid()} +{time.monotonic() - started:.2f}s: {message}", file=sys.stderr, flush=True)
 mode, count = sys.argv[1], sys.argv[2]
+log(f"{sys.executable} in {mode} mode")
 with open(count, "a") as f:
     f.write("start\n")
 if mode == "crash":
@@ -36,7 +42,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
-http.server.HTTPServer(("127.0.0.1", port), Handler).serve_forever()
+class Server(http.server.HTTPServer):
+    # HTTPServer looks up its address's host name between binding and
+    # listening, which can stall for many seconds on macOS. llama-server
+    # makes no such lookup.
+    def server_bind(self):
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = "127.0.0.1", port
+server = Server(("127.0.0.1", port), Handler, bind_and_activate=False)
+server.server_bind()
+server.server_activate()
+log(f"listening on {port}")
+server.serve_forever()
 "#;
 
 struct StandIn {
@@ -130,7 +147,10 @@ async fn three_failed_starts_stop_retries_until_stopped() {
 async fn idle_server_stops_but_a_busy_one_keeps_running() {
     let stand_in = StandIn::new();
     let idle = stand_in.manager("ok", Duration::from_millis(300));
-    let endpoint = idle.ensure(request("qwen3-4b")).await.unwrap();
+    let endpoint = idle
+        .ensure(request("qwen3-4b"))
+        .await
+        .unwrap_or_else(|error| panic!("{error} (stand-in: {})", python3().display()));
     assert!(endpoint.base_url.starts_with("http://127.0.0.1:"));
     assert_eq!(endpoint.api_key.len(), 64);
     assert!(matches!(
@@ -149,7 +169,9 @@ async fn idle_server_stops_but_a_busy_one_keeps_running() {
     );
 
     let busy = stand_in.manager("busy", Duration::from_millis(300));
-    busy.ensure(request("qwen3-4b")).await.unwrap();
+    busy.ensure(request("qwen3-4b"))
+        .await
+        .unwrap_or_else(|error| panic!("{error} (stand-in: {})", python3().display()));
     tokio::time::sleep(Duration::from_millis(1_500)).await;
     assert!(matches!(busy.state(), ServerState::Ready { .. }));
     busy.stop().await;

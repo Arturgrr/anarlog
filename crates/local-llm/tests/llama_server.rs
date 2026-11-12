@@ -240,6 +240,16 @@ async fn real_server_serves_the_app_and_stops_when_idle() {
     assert!(!alive(pid));
     assert!(server_pid(dir.path()).is_none());
     eprintln!("idle stop after {:?}", idle_since.elapsed());
+
+    // The next summary after an idle stop starts the server again.
+    let started = Instant::now();
+    let restarted = manager.ensure(request(&model)).await.unwrap();
+    assert_ne!(restarted.api_key, endpoint.api_key);
+    let pid = server_pid(dir.path()).expect("pidfile written");
+    assert!(alive(pid));
+    eprintln!("restarted in {:?}", started.elapsed());
+    manager.stop().await;
+    assert!(!alive(pid));
 }
 
 // A server left behind by a killed app is stopped at the next launch, but
