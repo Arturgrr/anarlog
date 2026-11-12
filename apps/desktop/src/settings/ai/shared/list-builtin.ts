@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { commands } from "@anlg/plugin-local-llm";
 
@@ -49,6 +49,17 @@ async function builtinRuntimeStatus() {
     reason: "unsupported_platform" as const,
     totalMemoryBytes: 0,
   };
+}
+
+// Windows, Linux and the App Store build can never run built-in models, so
+// they do not list them. A Mac build without the server, such as a dev
+// build, lists them with the reason.
+export function useBuiltinProviderListed(): boolean {
+  const runtime = useQuery(builtinQueries.runtime());
+  return (
+    runtime.data?.available === true ||
+    runtime.data?.reason === "missing_binary"
+  );
 }
 
 export async function checkBuiltinAvailability(): Promise<boolean> {

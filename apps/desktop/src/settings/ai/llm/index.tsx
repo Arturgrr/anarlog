@@ -30,6 +30,7 @@ import {
   FilterDivider,
   FilterGroup,
 } from "~/settings/ai/shared/filter-chips";
+import { useBuiltinProviderListed } from "~/settings/ai/shared/list-builtin";
 import { providerDisplayName } from "~/settings/ai/shared/provider-labels";
 import {
   ProviderList,
@@ -53,7 +54,13 @@ export function LlmModelPicker({ variant }: { variant: ModelPickerVariant }) {
   const [connectingId, setConnectingId] =
     useState<SubscriptionProviderId | null>(null);
 
-  const visibleEntries = browseLlmEntries(PROVIDERS, lists, search, filters);
+  const builtinListed = useBuiltinProviderListed();
+  const visibleEntries = browseLlmEntries(
+    builtinListed ? PROVIDERS : PROVIDERS.filter(({ id }) => id !== "builtin"),
+    lists,
+    search,
+    filters,
+  );
   const current = selection.current;
   const focused =
     visibleEntries.find(({ provider }) => provider.id === focusedId) ??
