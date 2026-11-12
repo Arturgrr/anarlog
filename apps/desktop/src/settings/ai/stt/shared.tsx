@@ -77,7 +77,7 @@ const displayModelId = (model: string): string => {
   if (model === "qwen3-asr") return "Qwen3 ASR";
 
   if (model === "local-file") {
-    return "whisper.cpp .bin";
+    return "whisper.cpp .bin / .gguf";
   }
 
   if (model === "nova-3" || model === "nova-3-general") {

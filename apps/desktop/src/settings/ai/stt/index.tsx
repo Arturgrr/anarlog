@@ -304,7 +304,7 @@ function describeSttProvider(
       <Trans>Built into macOS</Trans>
     ) : provider.id === "local_file" ? (
       (localModelPath.split(/[/\\]/).filter(Boolean).pop() ?? (
-        <Trans>A whisper.cpp file from your disk</Trans>
+        <Trans>A .bin or .gguf file from your disk</Trans>
       ))
     ) : provider.id === "custom" || provider.id === "nvidia" ? (
       <Trans>Uses the model ID you enter</Trans>
