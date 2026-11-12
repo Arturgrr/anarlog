@@ -13,13 +13,19 @@ on:
       - agent-plugins/**
       - apps/cli/**
       - crates/agent-access/**
+      - crates/askama-utils/**
       - crates/cli-docs/**
       - crates/db-app/**
       - crates/db-change/**
       - crates/db-core/**
       - crates/db-migrate/**
       - crates/db-reactive/**
+      - crates/language/**
+      - crates/owhisper-interface/**
+      - crates/template-app/**
       - crates/tiptap/**
+      - crates/transcript/**
+      - crates/whisper/**
       - docs/**
       - skills/**
       - Cargo.lock
@@ -36,13 +42,19 @@ on:
       - agent-plugins/**
       - apps/cli/**
       - crates/agent-access/**
+      - crates/askama-utils/**
       - crates/cli-docs/**
       - crates/db-app/**
       - crates/db-change/**
       - crates/db-core/**
       - crates/db-migrate/**
       - crates/db-reactive/**
+      - crates/language/**
+      - crates/owhisper-interface/**
+      - crates/template-app/**
       - crates/tiptap/**
+      - crates/transcript/**
+      - crates/whisper/**
       - docs/**
       - skills/**
       - Cargo.lock
@@ -79,7 +91,7 @@ jobs:
           cargo test --locked -p librelog-cli
           cargo test --locked -p db-app
           cargo test --locked -p db-core --lib
-          cargo test --locked -p db-migrate --lib
+          cargo test --locked -p db-migrate
           cargo test --locked -p tiptap
       - run: |
           cargo clippy --locked \

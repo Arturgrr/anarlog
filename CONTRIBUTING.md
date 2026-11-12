@@ -92,7 +92,7 @@ npx mint validate
 npx mint broken-links
 ```
 
-Check the affected workflow under `.github/workflows/` for stricter package-specific commands. Pull requests that change Rust, Swift or Cargo files also run the macOS, Windows and Linux desktop checks in `desktop_ci.yaml`; to get them for a branch they skip, run that workflow from the Actions tab. macOS runs them as one job on purpose, because hosted macOS runners are scarce and a run that waits for a second one can be cancelled.
+Check the affected workflow under `.github/workflows/` for stricter package-specific commands. Pull requests that change Rust, Swift or Cargo files also run the macOS, Windows and Linux desktop checks in `desktop_ci.yaml`; to get them for a branch they skip, run that workflow from the Actions tab. Crate tests run on Linux unless the crate is listed in that workflow's `MACOS_TESTS`; list a crate there when it has macOS-specific code or tests. macOS runs its checks as one job on purpose, because hosted macOS runners are scarce and a run that waits for a second one can be cancelled. The daily scheduled run, and a manual run, also tests the whole workspace on macOS, so a crate tested on Linux that fails only on macOS is caught within a day.
 
 ## Open a pull request
 
