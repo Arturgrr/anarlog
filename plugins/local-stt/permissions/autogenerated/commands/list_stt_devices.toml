@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-list-stt-devices"
+description = "Enables the list_stt_devices command without any pre-configured scope."
+commands.allow = ["list_stt_devices"]
+
+[[permission]]
+identifier = "deny-list-stt-devices"
+description = "Denies the list_stt_devices command without any pre-configured scope."
+commands.deny = ["list_stt_devices"]

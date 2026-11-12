@@ -1,7 +1,10 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub enum CustomSttModelFormat {
+    /// A whisper.cpp `.bin` file.
     Ggml,
+    /// A transcribe.cpp `.gguf` file.
+    Gguf,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]

@@ -107,8 +107,16 @@ app-store = ["tauri-plugin-icon/app-store"]
 dev = ["dep:anlg-audio-mock"]
 devtools = ["tauri/devtools", "dep:anlg-audio-mock"]
 
+# On-device transcription with transcribe.cpp: Metal on Apple silicon, Vulkan
+# (with the CPU as fallback) on x86_64 Windows and on Linux.
 [target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
-tauri-plugin-local-stt = { workspace = true, features = ["metal"] }
+tauri-plugin-local-stt = { workspace = true, features = ["gguf-metal"] }
+
+[target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
+tauri-plugin-local-stt = { workspace = true, features = ["gguf-vulkan"] }
+
+[target.'cfg(all(target_os = "linux", any(target_arch = "x86_64", target_arch = "aarch64")))'.dependencies]
+tauri-plugin-local-stt = { workspace = true, features = ["gguf-vulkan"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { workspace = true, features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }

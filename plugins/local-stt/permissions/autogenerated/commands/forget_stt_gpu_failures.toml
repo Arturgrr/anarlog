@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-forget-stt-gpu-failures"
+description = "Enables the forget_stt_gpu_failures command without any pre-configured scope."
+commands.allow = ["forget_stt_gpu_failures"]
+
+[[permission]]
+identifier = "deny-forget-stt-gpu-failures"
+description = "Denies the forget_stt_gpu_failures command without any pre-configured scope."
+commands.deny = ["forget_stt_gpu_failures"]

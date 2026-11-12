@@ -182,6 +182,34 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
+  /**
+   * The devices on-device transcription can run on, GPUs first.
+   */
+  async listSttDevices(): Promise<Result<SttDevice[], string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:local-stt|list_stt_devices"),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
+  /**
+   * Forgets every GPU that failed, so Auto tries each one again.
+   */
+  async forgetSttGpuFailures(): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:local-stt|forget_stt_gpu_failures"),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
 };
 
 /** user-defined events **/
@@ -201,7 +229,15 @@ export const events = __makeEvents__<{
  * selected by locale rather than by model, so this carries one variant.
  */
 export type AppleSpeechModel = "apple-speech";
-export type CustomSttModelFormat = "ggml";
+export type CustomSttModelFormat =
+  /**
+   * A whisper.cpp `.bin` file.
+   */
+  | "ggml"
+  /**
+   * A transcribe.cpp `.gguf` file.
+   */
+  | "gguf";
 export type CustomSttModelInfo = {
   path: string;
   name: string;
@@ -216,7 +252,21 @@ export type DownloadStatus =
   | { downloading: number }
   | "completed"
   | { failed: string };
-export type LocalModel = SoniqoModel | AppleSpeechModel | WhisperModel;
+export type GgufModel =
+  | "gguf-whisper-large-v3-turbo"
+  | "gguf-parakeet-tdt-0.6b-v3"
+  | "gguf-parakeet-ultra"
+  | "gguf-qwen3-asr-0.6b"
+  | "gguf-cohere-transcribe"
+  | "gguf-gigaam-v3"
+  | "gguf-nb-whisper-medium"
+  | "gguf-ivrit-whisper-large-v3-turbo"
+  | "gguf-nemotron-3.5-asr";
+export type LocalModel =
+  | SoniqoModel
+  | AppleSpeechModel
+  | WhisperModel
+  | GgufModel;
 export type ServerInfo = {
   url: string | null;
   status: ServerStatus;
@@ -231,6 +281,26 @@ export type SoniqoModel =
   | "soniqo-omnilingual"
   | "soniqo-qwen3-small"
   | "soniqo-qwen3-large";
+/**
+ * One device on-device transcription can run on, for Settings.
+ */
+export type SttDevice = {
+  /**
+   * Stable within a machine and driver: description, backend and hardware id.
+   */
+  id: string;
+  name: string;
+  kind: SttDeviceKind;
+  /**
+   * "cpu", "metal", "vulkan", ...
+   */
+  backend: string;
+  /**
+   * It failed before under its current driver, so Auto skips it.
+   */
+  failed: boolean;
+};
+export type SttDeviceKind = "gpu" | "cpu";
 export type SttModelInfo = {
   key: LocalModel;
   display_name: string;
@@ -239,8 +309,50 @@ export type SttModelInfo = {
   model_type: SttModelType;
   supports_realtime: boolean;
   recommended_memory_bytes: number;
+  /**
+   * BCP-47 primary language codes; `["*"]` for multilingual with detection.
+   * Empty when the runtime decides (Soniqo, Apple Speech).
+   */
+  languages: string[];
+  /**
+   * Set for downloadable GGUF models.
+   */
+  license: SttModelLicense | null;
+  /**
+   * The repository the model file comes from, at its pinned revision.
+   */
+  source_url: string | null;
+  /**
+   * Set for GGUF models.
+   */
+  timestamps: TimestampGranularity | null;
 };
-export type SttModelType = "soniqo" | "appleSpeech" | "whispercpp";
+/**
+ * The licence a downloadable model is published under.
+ */
+export type SttModelLicense = {
+  spdx: string | null;
+  name: string;
+  url: string;
+  attribution: string | null;
+};
+export type SttModelType = "soniqo" | "appleSpeech" | "whispercpp" | "gguf";
+/**
+ * The finest word timing a model gives.
+ */
+export type TimestampGranularity =
+  /**
+   * Times for each word (token-level alignment).
+   */
+  | "word"
+  /**
+   * Times for each segment; word times are spread across the segment.
+   */
+  | "segment"
+  /**
+   * Text only; word times are spread across the speech chunk.
+   */
+  | "none";
 export type WhisperModel =
   | "QuantizedTiny"
   | "QuantizedTinyEn"

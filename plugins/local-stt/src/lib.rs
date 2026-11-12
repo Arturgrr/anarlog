@@ -54,6 +54,8 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::list_supported_models,
             commands::inspect_custom_model_path::<Wry>,
             commands::start_server_for_path::<Wry>,
+            commands::list_stt_devices::<Wry>,
+            commands::forget_stt_gpu_failures::<Wry>,
         ])
         .events(tauri_specta::collect_events![
             types::DownloadProgressPayload,
@@ -71,6 +73,15 @@ pub fn init<R: tauri::Runtime>(options: InitOptions) -> tauri::plugin::TauriPlug
             specta_builder.mount_events(app);
 
             let model_downloader = ext::create_model_downloader(app.app_handle());
+            #[cfg(feature = "gguf")]
+            {
+                use tauri_plugin_settings::SettingsPluginExt;
+                let state_dir = app.settings().global_base().ok();
+                anlg_transcribe_gguf::configure(
+                    state_dir.as_ref().map(|dir| dir.as_std_path()),
+                    &app.package_info().version.to_string(),
+                );
+            }
 
             let state = std::sync::Arc::new(tokio::sync::Mutex::new(State {
                 stt_supervisor: None,

@@ -1,6 +1,7 @@
 use std::{
     net::{Ipv4Addr, SocketAddr},
     path::PathBuf,
+    sync::{Arc, Mutex},
 };
 
 use axum::{Router, error_handling::HandleError};
@@ -14,15 +15,21 @@ pub enum InternalSTTMessage {
     ServerError(String),
 }
 
+/// A model the caller already loaded (to check a picked file), handed to the
+/// first server so it isn't loaded twice. A restarted server loads its own.
+pub type Preloaded = Arc<Mutex<Option<anlg_transcribe_gguf_local::BoxedTranscriber>>>;
+
 #[derive(Clone)]
 pub struct InternalSTTArgs {
-    pub model: Option<anlg_whisper_local_model::WhisperModel>,
+    /// The catalog model served; `None` for a file the user picked.
+    pub model: Option<crate::LocalModel>,
     pub model_path: PathBuf,
+    pub preloaded: Preloaded,
 }
 
 pub struct InternalSTTState {
     base_url: String,
-    model: Option<anlg_whisper_local_model::WhisperModel>,
+    model: Option<crate::LocalModel>,
     model_path: PathBuf,
     shutdown: tokio::sync::watch::Sender<()>,
     server_task: tokio::task::JoinHandle<()>,
@@ -36,6 +43,36 @@ impl InternalSTTActor {
     }
 }
 
+fn transcribe_service(args: &InternalSTTArgs) -> anlg_transcribe_gguf_local::TranscribeService {
+    let catalog = match &args.model {
+        Some(crate::LocalModel::Gguf(model)) => Some(*model),
+        _ => None,
+    };
+    let path = args.model_path.clone();
+    let mut builder = anlg_transcribe_gguf_local::TranscribeService::builder().loader(Arc::new(
+        move || {
+            anlg_transcribe_gguf::Engine::load(
+                &path,
+                &anlg_transcribe_gguf::LoadOptions {
+                    catalog,
+                    device: anlg_transcribe_gguf::device_preference(),
+                },
+            )
+            .map(|engine| Box::new(engine) as anlg_transcribe_gguf_local::BoxedTranscriber)
+            .map_err(|error| error.to_string())
+        },
+    ));
+    let preloaded = args
+        .preloaded
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .take();
+    if let Some(engine) = preloaded {
+        builder = builder.preloaded(engine);
+    }
+    builder.build()
+}
+
 #[ractor::async_trait]
 impl Actor for InternalSTTActor {
     type Msg = InternalSTTMessage;
@@ -47,20 +84,16 @@ impl Actor for InternalSTTActor {
         myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        let InternalSTTArgs { model, model_path } = args;
-
-        let whisper_service = HandleError::new(
-            anlg_transcribe_whisper_local::TranscribeService::builder()
-                .model_path(model_path.clone())
-                .build(),
-            move |err: String| async move {
-                let _ = myself.send_message(InternalSTTMessage::ServerError(err.clone()));
-                (StatusCode::INTERNAL_SERVER_ERROR, err)
-            },
-        );
+        let service = HandleError::new(transcribe_service(&args), move |err: String| async move {
+            let _ = myself.send_message(InternalSTTMessage::ServerError(err.clone()));
+            (StatusCode::INTERNAL_SERVER_ERROR, err)
+        });
+        let InternalSTTArgs {
+            model, model_path, ..
+        } = args;
 
         let router = Router::new()
-            .route_service("/v1/listen", whisper_service)
+            .route_service(anlg_transcribe_gguf_local::LISTEN_PATH, service)
             .layer(
                 CorsLayer::new()
                     .allow_origin(cors::Any)
@@ -116,7 +149,7 @@ impl Actor for InternalSTTActor {
                 let info = ServerInfo {
                     url: Some(state.base_url.clone()),
                     status: ServerStatus::Ready,
-                    model: state.model.clone().map(crate::LocalModel::Whisper),
+                    model: state.model.clone(),
                     custom_model_path: state
                         .model
                         .is_none()

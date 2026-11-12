@@ -1,4 +1,4 @@
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 pub mod internal;
 pub mod supervisor;
 

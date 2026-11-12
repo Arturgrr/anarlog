@@ -1102,8 +1102,6 @@ dependencies = [
  "cexpr",
  "clang-sys",
  "itertools 0.13.0",
- "log",
- "prettyplease",
  "proc-macro2",
  "quote",
  "regex",
@@ -4273,6 +4271,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "gguf-model"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "specta",
+]
+
+[[package]]
 name = "gif"
 version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6966,6 +6973,7 @@ dependencies = [
  "data",
  "embedding",
  "futures-util",
+ "gguf-model",
  "hound",
  "language",
  "mp3",
@@ -7016,8 +7024,10 @@ checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
 name = "local-model"
 version = "0.1.0"
 dependencies = [
+ "gguf-model",
  "model-downloader",
  "serde",
+ "serde_json",
  "specta",
  "transcribe-soniqo",
  "transcribe-speechanalyzer",
@@ -7030,6 +7040,7 @@ version = "0.1.0"
 dependencies = [
  "local-model",
  "serde",
+ "serde_json",
  "specta",
 ]
 
@@ -7361,6 +7372,7 @@ dependencies = [
  "download-interface",
  "file",
  "serde",
+ "sha2 0.11.0",
  "specta",
  "tempfile",
  "thiserror 2.0.18",
@@ -7369,16 +7381,6 @@ dependencies = [
  "tracing",
  "wiremock",
  "zip 2.4.2",
-]
-
-[[package]]
-name = "model-manager"
-version = "0.1.0"
-dependencies = [
- "thiserror 2.0.18",
- "tokio",
- "uuid",
- "whisper-local",
 ]
 
 [[package]]
@@ -12992,6 +12994,7 @@ dependencies = [
  "data",
  "dirs 6.0.0",
  "file",
+ "gguf-model",
  "host",
  "local-model",
  "local-stt-core",
@@ -13000,12 +13003,15 @@ dependencies = [
  "reqwest 0.13.2",
  "rodio",
  "serde",
+ "serde_json",
  "similar",
  "specta",
  "specta-typescript",
+ "sqlx",
  "supervisor",
  "tauri",
  "tauri-plugin",
+ "tauri-plugin-db",
  "tauri-plugin-settings",
  "tauri-specta",
  "tempfile",
@@ -13016,10 +13022,10 @@ dependencies = [
  "tower",
  "tower-http",
  "tracing",
+ "transcribe-gguf",
+ "transcribe-gguf-local",
  "transcribe-soniqo",
  "transcribe-speechanalyzer",
- "transcribe-whisper-local",
- "whisper-local",
  "whisper-local-model",
 ]
 
@@ -14429,6 +14435,67 @@ dependencies = [
 ]
 
 [[package]]
+name = "transcribe-cpp"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bab65d30f5a4c3ea0ab6f38236823389f3914b0605bbc0073a4ec88018c0714"
+dependencies = [
+ "log",
+ "thiserror 2.0.18",
+ "transcribe-cpp-sys",
+]
+
+[[package]]
+name = "transcribe-cpp-sys"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23a837974fdb873998a59a21ad2bf5a4b7bbf721c20d03d2a3ab8c221726a444"
+dependencies = [
+ "cmake",
+ "serde_json",
+]
+
+[[package]]
+name = "transcribe-gguf"
+version = "0.1.0"
+dependencies = [
+ "data",
+ "gguf-model",
+ "hound",
+ "serde",
+ "serde_json",
+ "specta",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tracing",
+ "transcribe-cpp",
+]
+
+[[package]]
+name = "transcribe-gguf-local"
+version = "0.1.0"
+dependencies = [
+ "audio-chunking",
+ "audio-utils",
+ "axum",
+ "data",
+ "futures-util",
+ "hound",
+ "owhisper-interface",
+ "reqwest 0.13.2",
+ "rodio",
+ "serde_html_form",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tower",
+ "tracing",
+ "transcribe-core",
+ "transcribe-gguf",
+]
+
+[[package]]
 name = "transcribe-soniqo"
 version = "0.1.0"
 dependencies = [
@@ -14454,39 +14521,6 @@ dependencies = [
  "swift-rs 1.0.9",
  "thiserror 2.0.18",
  "tracing",
-]
-
-[[package]]
-name = "transcribe-whisper-local"
-version = "0.1.0"
-dependencies = [
- "audio-chunking",
- "audio-interface",
- "audio-utils",
- "axum",
- "bytes",
- "data",
- "dirs 6.0.0",
- "futures-util",
- "hound",
- "model-manager",
- "owhisper-client",
- "owhisper-interface",
- "pyannote-local",
- "reqwest 0.13.2",
- "rodio",
- "serde_html_form",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "tokio-tungstenite 0.29.0",
- "tower",
- "tracing",
- "transcribe-core",
- "whisper",
- "whisper-local",
- "ws-utils",
 ]
 
 [[package]]
@@ -15926,28 +15960,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "whisper-local"
-version = "0.1.0"
-dependencies = [
- "data",
- "dirs 6.0.0",
- "futures-util",
- "hound",
- "lazy_static",
- "regex",
- "rodio",
- "serde",
- "serde_json",
- "specta",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
- "uuid",
- "whisper",
- "whisper-rs",
-]
-
-[[package]]
 name = "whisper-local-model"
 version = "0.1.0"
 dependencies = [
@@ -15955,28 +15967,6 @@ dependencies = [
  "serde",
  "specta",
  "strum 0.28.0",
-]
-
-[[package]]
-name = "whisper-rs"
-version = "0.16.0"
-source = "git+https://codeberg.org/tazz4843/whisper-rs?rev=129b982#129b9826dc8c385f6a28198bdc4f8a275385fe85"
-dependencies = [
- "libc",
- "tracing",
- "whisper-rs-sys",
-]
-
-[[package]]
-name = "whisper-rs-sys"
-version = "0.15.0"
-source = "git+https://codeberg.org/tazz4843/whisper-rs?rev=129b982#129b9826dc8c385f6a28198bdc4f8a275385fe85"
-dependencies = [
- "bindgen 0.72.1",
- "cfg-if",
- "cmake",
- "fs_extra",
- "semver",
 ]
 
 [[package]]

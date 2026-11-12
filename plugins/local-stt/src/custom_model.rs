@@ -43,15 +43,16 @@ pub fn inspect_custom_model_path(path: &str) -> Result<(PathBuf, CustomSttModelI
         .is_ok()
         && &magic == GGUF_MAGIC;
 
-    if extension.as_deref() == Some("gguf") || magic_is_gguf {
-        if extension.as_deref() == Some("gguf") && !magic_is_gguf {
-            return Err(Error::InvalidModelPath(
-                "The selected file is not a valid GGUF model".to_string(),
-            ));
-        }
-
-        return Err(Error::GgufModelUnsupported);
+    if extension.as_deref() == Some("gguf") && !magic_is_gguf {
+        return Err(Error::InvalidModelPath(
+            "The selected file is not a valid GGUF model".to_string(),
+        ));
     }
+    let format = if magic_is_gguf {
+        CustomSttModelFormat::Gguf
+    } else {
+        CustomSttModelFormat::Ggml
+    };
 
     let path_string = path
         .to_str()
@@ -69,7 +70,7 @@ pub fn inspect_custom_model_path(path: &str) -> Result<(PathBuf, CustomSttModelI
             path: path_string,
             name,
             size_bytes: metadata.len(),
-            format: CustomSttModelFormat::Ggml,
+            format,
         },
     ))
 }
@@ -79,16 +80,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn accepts_an_absolute_bin_path() {
-        let directory = tempfile::tempdir().unwrap();
-        let path = directory.path().join("ggml-small.bin");
-        std::fs::write(&path, b"ggml").unwrap();
+    fn accepts_absolute_whisper_cpp_and_gguf_paths() {
+        for (filename, contents, format) in [
+            ("ggml-small.bin", &b"ggml"[..], CustomSttModelFormat::Ggml),
+            ("parakeet.gguf", &b"GGUF\x03\0\0\0"[..], CustomSttModelFormat::Gguf),
+            // transcribe.cpp detects the format from the header, not the name.
+            ("renamed.bin", &b"GGUF\x03\0\0\0"[..], CustomSttModelFormat::Gguf),
+        ] {
+            let directory = tempfile::tempdir().unwrap();
+            let path = directory.path().join(filename);
+            std::fs::write(&path, contents).unwrap();
 
-        let (_, info) = inspect_custom_model_path(path.to_str().unwrap()).unwrap();
+            let (_, info) = inspect_custom_model_path(path.to_str().unwrap()).unwrap();
 
-        assert_eq!(info.name, "ggml-small.bin");
-        assert_eq!(info.size_bytes, 4);
-        assert_eq!(info.format, CustomSttModelFormat::Ggml);
+            assert_eq!(info.name, filename);
+            assert_eq!(info.size_bytes, contents.len() as u64);
+            assert_eq!(info.format, format, "{filename}");
+        }
     }
 
     #[test]
@@ -96,13 +104,7 @@ mod tests {
         for (filename, contents, is_relative, expected_substrings) in [
             ("ggml-small.bin", None, true, &["absolute"][..]),
             ("missing.bin", None, false, &["unavailable"][..]),
-            ("model.pt", Some(&b"model"[..]), false, &[".bin"][..]),
-            (
-                "whisper.gguf",
-                Some(&b"GGUF"[..]),
-                false,
-                &["transcribe.cpp", ".bin"][..],
-            ),
+            ("model.pt", Some(&b"model"[..]), false, &[".bin", ".gguf"][..]),
             (
                 "whisper.gguf",
                 Some(&b"nope"[..]),

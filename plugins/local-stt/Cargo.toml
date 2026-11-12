@@ -9,15 +9,11 @@ description = ""
 
 [features]
 default = []
-whisper-cpp = ["dep:anlg-transcribe-whisper-local", "dep:anlg-whisper-local"]
-coreml = ["whisper-cpp", "anlg-transcribe-whisper-local/coreml"]
-directml = ["whisper-cpp", "anlg-transcribe-whisper-local/directml"]
-cuda = ["whisper-cpp", "anlg-transcribe-whisper-local/cuda"]
-hipblas = ["whisper-cpp", "anlg-transcribe-whisper-local/hipblas"]
-openblas = ["whisper-cpp", "anlg-transcribe-whisper-local/openblas"]
-metal = ["whisper-cpp", "anlg-transcribe-whisper-local/metal"]
-vulkan = ["whisper-cpp", "anlg-transcribe-whisper-local/vulkan"]
-openmp = ["whisper-cpp", "anlg-transcribe-whisper-local/openmp"]
+# transcribe.cpp models (GGUF and whisper.cpp files) through the internal
+# /v1/listen server, on the CPU.
+gguf = ["dep:anlg-transcribe-gguf", "dep:anlg-transcribe-gguf-local"]
+gguf-metal = ["gguf", "anlg-transcribe-gguf/metal"]
+gguf-vulkan = ["gguf", "anlg-transcribe-gguf/vulkan"]
 [build-dependencies]
 tauri-plugin = { workspace = true, features = ["build"] }
 
@@ -35,23 +31,27 @@ tower = { workspace = true }
 
 [dependencies]
 anlg-file = { workspace = true }
+anlg-gguf-model = { workspace = true }
 anlg-host = { workspace = true }
 anlg-local-model = { workspace = true }
 anlg-local-stt-core = { workspace = true, features = ["specta"] }
 anlg-model-downloader = { workspace = true, features = ["specta"] }
 anlg-transcribe-soniqo = { workspace = true }
 anlg-transcribe-speechanalyzer = { workspace = true }
-anlg-transcribe-whisper-local = { workspace = true, optional = true }
-anlg-whisper-local = { workspace = true, optional = true }
+anlg-transcribe-gguf = { workspace = true, optional = true }
+anlg-transcribe-gguf-local = { workspace = true, optional = true }
 anlg-whisper-local-model = { workspace = true }
 
 tauri = { workspace = true, features = ["test"] }
 tauri-specta = { workspace = true, features = ["derive", "typescript"] }
 
+tauri-plugin-db = { workspace = true }
 tauri-plugin-settings = { workspace = true }
 
 dirs = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true, features = ["sqlite"] }
 specta = { workspace = true }
 thiserror = { workspace = true }
 

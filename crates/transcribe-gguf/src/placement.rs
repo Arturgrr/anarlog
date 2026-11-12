@@ -110,8 +110,8 @@ mod tests {
 
     struct FakeLoader {
         gpus: Vec<&'static str>,
-        /// GPUs that fail to load, with the error they fail with.
-        broken: Vec<(&'static str, fn() -> transcribe_cpp::Error)>,
+        /// GPUs that fail to load, and whether they ran out of memory.
+        broken: Vec<(&'static str, bool)>,
         cpu_only: bool,
         /// Where each load was asked to run.
         asked: RefCell<Vec<String>>,
@@ -155,7 +155,12 @@ mod tests {
             };
             self.asked.borrow_mut().push(target.clone());
             match self.broken.iter().find(|(key, _)| *key == target) {
-                Some((_, error)) => Err(Error::Native(error())),
+                Some((_, true)) => Err(Error::Native(transcribe_cpp::Error::OutOfMemory(
+                    "ErrorOutOfDeviceMemory".into(),
+                ))),
+                Some((_, false)) => Err(Error::Native(transcribe_cpp::Error::Backend(
+                    "device lost".into(),
+                ))),
                 None => Ok(target),
             }
         }
@@ -163,14 +168,6 @@ mod tests {
         fn gpu_of(&self, loaded: &String) -> Option<DeviceInfo> {
             (loaded != "cpu").then(|| info(loaded))
         }
-    }
-
-    fn lost() -> transcribe_cpp::Error {
-        transcribe_cpp::Error::Backend("device lost".into())
-    }
-
-    fn full() -> transcribe_cpp::Error {
-        transcribe_cpp::Error::OutOfMemory("ErrorOutOfDeviceMemory".into())
     }
 
     fn health() -> GpuHealth {
@@ -181,7 +178,7 @@ mod tests {
     fn a_failed_gpu_falls_back_to_the_cpu_and_is_remembered() {
         let health = health();
         let mut loader = FakeLoader::new(&["dgpu"]);
-        loader.broken.push(("dgpu", lost));
+        loader.broken.push(("dgpu", false));
 
         let loaded = load_where(&loader, &health, DevicePreference::Auto).unwrap();
         assert_eq!(loaded, "cpu");
@@ -210,7 +207,7 @@ mod tests {
     fn out_of_memory_is_not_remembered() {
         let health = health();
         let mut loader = FakeLoader::new(&["dgpu"]);
-        loader.broken.push(("dgpu", full));
+        loader.broken.push(("dgpu", true));
 
         assert_eq!(load_where(&loader, &health, DevicePreference::Auto).unwrap(), "cpu");
         assert!(!health.failed("dgpu"));
