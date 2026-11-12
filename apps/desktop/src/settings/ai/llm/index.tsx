@@ -78,7 +78,7 @@ export function LlmModelPicker({ variant }: { variant: ModelPickerVariant }) {
   });
   const groups = (
     [
-      ["local", t`On this Mac`],
+      ["local", t`On this computer`],
       ["subscription", t`Subscriptions`],
       ["api", t`API key`],
       ["custom", t`Custom`],
@@ -143,7 +143,7 @@ export function LlmModelPicker({ variant }: { variant: ModelPickerVariant }) {
               {(
                 [
                   ["all", t`All`],
-                  ["local", t`On this Mac`],
+                  ["local", t`On this computer`],
                   ["subscription", t`Subscription`],
                   ["api", t`API key`],
                 ] as const
