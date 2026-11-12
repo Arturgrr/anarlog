@@ -10,7 +10,8 @@ pub enum LlmErrorKind {
     NotDownloaded,
     /// The model needs more memory than this computer allows for it.
     TooLarge,
-    /// A small-memory Mac is recording; transcription needs the room.
+    /// A small-memory Mac is recording or transcribing a recording;
+    /// transcription needs the room.
     CaptureActive,
     StartFailed,
     /// The server failed to start three times in a row.

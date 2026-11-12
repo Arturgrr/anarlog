@@ -133,7 +133,8 @@ impl<'a, R: Runtime, M: Manager<R>> LocalLlm<'a, R, M> {
 
     /// Starts the server with `model` unless it already runs it, after the
     /// checks a request must pass: the platform, the managed intelligence
-    /// switch, the download, memory, and a recording on a small Mac.
+    /// switch, the download, memory, and a recording (or its after-meeting
+    /// transcription) on a small Mac.
     pub async fn ensure_server(&self, model: LlmModel) -> Result<Endpoint, LlmError> {
         let server = self.server()?;
         self.ensure_intelligence_enabled().await?;
@@ -159,7 +160,7 @@ impl<'a, R: Runtime, M: Manager<R>> LocalLlm<'a, R, M> {
         };
 
         // A model already loaded keeps serving; only loading one waits for
-        // the recording to end.
+        // the recording and its transcription to end.
         let loaded = matches!(
             server.state(),
             ServerState::Ready { model: ref running, context: ready } if running == model.as_str() && ready == context
@@ -167,7 +168,7 @@ impl<'a, R: Runtime, M: Manager<R>> LocalLlm<'a, R, M> {
         if !loaded && total_memory <= admission::SMALL_MEMORY_BYTES && self.capture_active().await {
             return Err(LlmError::new(
                 LlmErrorKind::CaptureActive,
-                "This Mac needs its memory for transcription while it records. The built-in model starts after the recording ends.",
+                "This Mac needs its memory for transcription while it records and transcribes a meeting. The built-in model starts once that is done.",
             ));
         }
 

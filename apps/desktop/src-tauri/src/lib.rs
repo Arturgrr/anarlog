@@ -241,9 +241,10 @@ pub fn main() {
                 capture_active: Some(|app| {
                     Box::pin(async move {
                         use tauri_plugin_transcription::ListenerPluginExt;
-                        matches!(
+                        // Finalizing still runs the after-meeting speech pass.
+                        !matches!(
                             app.listener().get_capture_state().await,
-                            tauri_plugin_transcription::CaptureState::Active
+                            tauri_plugin_transcription::CaptureState::Inactive
                         )
                     })
                 }),

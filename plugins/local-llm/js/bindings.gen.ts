@@ -183,7 +183,8 @@ export type LlmErrorKind =
    */
   | "too_large"
   /**
-   * A small-memory Mac is recording; transcription needs the room.
+   * A small-memory Mac is recording or transcribing a recording;
+   * transcription needs the room.
    */
   | "capture_active"
   | "start_failed"
