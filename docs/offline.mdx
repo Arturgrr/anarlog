@@ -10,7 +10,7 @@ Librelog can record meetings and manage notes without an internet connection. To
 - Create and edit notes.
 - Record and play meeting audio.
 - Export memos, summaries, and transcripts already on your computer.
-- Transcribe with Soniqo or a BYO-model whisper.cpp `.bin` on a supported Apple Silicon Mac, or Apple Speech when available on macOS 26.
+- Transcribe with a downloaded Local model or a BYO-model `.bin` or `.gguf` file on an Apple Silicon Mac, Windows x86_64, or Linux x86_64 or ARM64; with Soniqo on an Apple Silicon Mac; or with Apple Speech when available on macOS 26.
 - Generate summaries and chat with LM Studio, Ollama, Unsloth, or eligible Apple Intelligence.
 - Use the local CLI and MCP server.
 
@@ -19,12 +19,15 @@ Hosted Transcription and Intelligence providers, model downloads, webhooks to re
 ## Prepare offline transcription
 
 1. Open **Settings → Transcription**.
-2. Choose Soniqo, or choose Apple Speech if it appears. On Apple Silicon you can also choose **BYO-model**, then **Choose a .bin model**, for after-recording transcription from a downloaded whisper.cpp `.bin`.
-3. Download the Soniqo model. For Apple Speech, add the supported language in macOS System Settings.
-4. Select the model under **Model being used**.
-5. Run a short test recording before going offline.
+2. Choose a provider under **On this computer**:
+   - **Local models**: download the model marked **Best for your languages**, or another one that covers them.
+   - **Soniqo** on an Apple Silicon Mac: download a Soniqo model.
+   - **Apple Speech**, if it appears: add the supported language in macOS System Settings.
+   - **BYO-model**: choose **Choose a .bin or .gguf model** to use a whisper.cpp `.bin` or GGUF `.gguf` file you already downloaded.
+3. Select the model under **Model being used**.
+4. Run a short test recording before going offline.
 
-The model's **Live** or **After recording** label tells you when text will appear. On-device model availability depends on your Mac and the current Librelog release.
+The model's **Live** or **After recording** label tells you when text will appear. On-device model availability depends on your computer and the current Librelog release; on Windows and Linux, Librelog is [built from source](/desktop-installation#build-from-source). See [Local models](/models-and-providers#local-models) for each model's languages and license.
 
 ## Prepare offline summaries and chat
 
