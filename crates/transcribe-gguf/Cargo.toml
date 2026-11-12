@@ -1,0 +1,29 @@
+[package]
+name = "transcribe-gguf"
+version = "0.1.0"
+edition = "2024"
+description = "In-process transcription with transcribe.cpp (GGUF and whisper.cpp model files)"
+
+[features]
+default = []
+# Metal on Apple silicon; a no-op elsewhere.
+metal = ["transcribe-cpp/metal"]
+# Vulkan on Windows and Linux. Needs the Vulkan headers, loader and glslc to
+# build (see scripts/setup-linux-others.sh), and the Vulkan loader to run on a
+# GPU; without it the CPU still works.
+vulkan = ["transcribe-cpp/vulkan"]
+
+[dependencies]
+anlg-gguf-model = { workspace = true }
+
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+specta = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+transcribe-cpp = { version = "=0.4.1", default-features = false }
+
+[dev-dependencies]
+anlg-data = { workspace = true }
+hound = { workspace = true }
+tempfile = { workspace = true }
