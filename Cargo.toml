@@ -66,6 +66,7 @@ anlg-intercept = { path = "crates/intercept", package = "intercept" }
 anlg-language = { path = "crates/language", package = "language" }
 anlg-listener-core = { path = "crates/listener-core", package = "listener-core" }
 anlg-listener2-core = { path = "crates/listener2-core", package = "listener2-core" }
+anlg-local-llm = { path = "crates/local-llm", package = "local-llm" }
 anlg-local-model = { path = "crates/local-model", package = "local-model" }
 anlg-local-stt-core = { path = "crates/local-stt-core", package = "local-stt-core" }
 anlg-model-downloader = { path = "crates/model-downloader", package = "model-downloader" }
