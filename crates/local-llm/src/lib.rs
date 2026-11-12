@@ -7,6 +7,10 @@
 pub mod admission;
 pub mod args;
 mod catalog;
+mod process;
+mod server;
 
 pub use admission::{Admission, Fit};
 pub use catalog::{License, LlmArtifact, LlmModel, LlmModelInfo, UnknownLlmModel};
+pub use process::{reap_stale_server, stop_process};
+pub use server::{Endpoint, LaunchRequest, ServerConfig, ServerError, ServerManager, ServerState};

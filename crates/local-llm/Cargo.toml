@@ -17,9 +17,10 @@ tokio-util = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 
-[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
 [dev-dependencies]
+reqwest = { workspace = true, features = ["json"] }
 tempfile = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
