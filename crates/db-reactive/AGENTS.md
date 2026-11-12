@@ -17,6 +17,7 @@
 - Dependency tracking uses canonical targets, not raw table names. New virtual-table support must update both query resolution and raw-table/shadow-table canonicalization.
 - The first sink event is always the initial result or initial error. Refresh delivery must never overtake it.
 - Writes during subscription setup are handled by seq bookkeeping. Preserve the baseline-seq and catch-up-refresh flow so init does not miss committed changes.
+- Change notifications fire from SQLite's commit hook, before other connections can see the commit. Initial loads, catch-up refreshes, and dispatcher refreshes wait for notified commits (`CommitVisibility`) before reading; a read that skips it can deliver the pre-commit result with nothing left to correct it.
 - `unsubscribe()` is a hard delivery barrier. Once it resolves, no more sink callbacks may occur for that subscription.
 - Sink failures remove only the failing subscription. One dead transport must not poison the runtime.
 - Lagged change receivers or schema-catalog misses degrade by rerunning broadly. Preserve correctness first; precision is optional.

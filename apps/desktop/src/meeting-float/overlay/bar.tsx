@@ -1,5 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 
 import type {
   FloatingBarState,
@@ -45,6 +46,7 @@ export function FloatingBarOverlay({
   onHide: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const reduceMotion = useReducedMotion();
   const isExpanded =
     state.liveCaptionToggleVisible && !state.liveCaptionMinimized;
   const showsHoverHandle = hovered && !isExpanded;
@@ -68,7 +70,12 @@ export function FloatingBarOverlay({
           }}
         />
       )}
-      <div
+      {/* The window is reused across meetings; each one enters like the HUD. */}
+      <motion.div
+        key={state.sessionId ?? undefined}
+        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={reduceMotion ? { duration: 0.16 } : HUD_TRANSITION}
         className="absolute overflow-hidden"
         style={{
           left: FLOATING_BAR_INSET,
@@ -82,7 +89,7 @@ export function FloatingBarOverlay({
             : FLOATING_BAR_COMPACT_RADIUS,
           background:
             hovered && !isExpanded ? colors.envelopeSurface : colors.surface,
-          boxShadow: `inset 0 0 0 0.5px ${colors.rim}`,
+          boxShadow: `inset 0 0 0 0.5px ${colors.rim}, 0 1px 2px ${colors.shadow}`,
         }}
       >
         {showsHoverHandle && <HoverHandle color={colors.handle} />}
@@ -131,7 +138,7 @@ export function FloatingBarOverlay({
             />
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -156,7 +163,12 @@ function FloatingControls({
   return (
     <div
       className="flex items-center"
-      style={{ gap: FLOATING_BAR_COMPACT_GAP }}
+      style={
+        {
+          gap: FLOATING_BAR_COMPACT_GAP,
+          "--control-fill": colors.controlFill,
+        } as CSSProperties
+      }
     >
       <StopControl state={state} colors={colors} onStop={onStop} />
       {state.liveCaptionToggleVisible ? (
@@ -167,7 +179,7 @@ function FloatingControls({
             isExpanded ? t`Collapse live transcript` : t`Expand live transcript`
           }
           onClick={() => onToggleExpanded(!isExpanded)}
-          className="flex items-center justify-center"
+          className={CONTROL_CLASS_NAME}
           style={{
             width: FLOATING_BAR_COMPACT_ICON_SIZE,
             height: FLOATING_BAR_COMPACT_ICON_SIZE,
@@ -188,7 +200,7 @@ function FloatingControls({
         aria-label={t`Hide floating bar`}
         title={t`Hide floating bar`}
         onClick={onHide}
-        className="flex items-center justify-center"
+        className={CONTROL_CLASS_NAME}
         style={{
           width: FLOATING_BAR_COMPACT_ICON_SIZE,
           height: FLOATING_BAR_COMPACT_ICON_SIZE,
@@ -235,17 +247,17 @@ function StopControl({
       onClick={onStop}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex items-center justify-center"
+      className="flex items-center justify-center transition-colors"
       style={{
         width,
         height: FLOATING_BAR_COMPACT_ICON_SIZE,
         borderRadius: FLOATING_BAR_CONTROL_RADIUS,
-        background: hovered ? colors.dangerFill : colors.controlFill,
+        background: hovered ? colors.dangerFill : "transparent",
         color: colors.danger,
       }}
     >
       {hovered ? (
-        <span className="flex items-center gap-1.5 text-xs font-semibold">
+        <span className="flex items-center gap-1.5 text-[13px] font-medium">
           <Square size={9} />
           <Trans>Stop</Trans>
         </span>
@@ -330,7 +342,7 @@ function TranscriptList({
               behavior: "smooth",
             });
           }}
-          className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[11px] font-medium"
+          className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium"
           style={{
             background: colors.chip,
             boxShadow: `inset 0 0 0 0.5px ${colors.rim}`,
@@ -370,7 +382,7 @@ function TranscriptBubble({
           </p>
         )}
         <p
-          className="rounded-[11px] px-2.5 py-2 text-[13px] leading-5"
+          className="rounded-[11px] px-2.5 py-2 text-[13px] leading-5 font-[440]"
           style={{
             color: colors.content,
             background: bubble.isSelf ? colors.selfBubble : colors.bubble,
@@ -411,20 +423,34 @@ function HoverHandle({ color }: { color: string }) {
   );
 }
 
+const CONTROL_CLASS_NAME =
+  "flex items-center justify-center transition-colors hover:bg-(--control-fill)";
+
+/**
+ * The dictation HUD's springs. Motion's `visualDuration` is 1/1.2 of
+ * SwiftUI's spring duration, so 0.25 here is the HUD's 0.3 s.
+ */
+const HUD_TRANSITION = {
+  scale: { type: "spring", visualDuration: 0.25, bounce: 0.15 },
+  opacity: { type: "spring", visualDuration: 0.25, bounce: 0 },
+} as const;
+
 type BarColors = ReturnType<typeof barColors>;
 
-/** The opacity setting's default, which draws Hex's HUD plate. */
+/** The opacity setting's default, which draws the dictation HUD's plate. */
 const DEFAULT_OPACITY = 0.78;
 
 /**
- * Hex's HUD plate: graphite in the dark appearance, white in the light one,
- * with its hairline rim. Red is the only hue, for recording and errors.
+ * The dictation HUD's plate, rim, shadow and ink from the graphite tokens:
+ * white in the light appearance, #191919 in the dark one. The shadow is the
+ * HUD's colour pulled in to fit the window's 4 px inset. Red is the only hue,
+ * for recording and errors, which is what tells this bar from the HUD.
  */
 function barColors(state: FloatingBarState) {
   const opacity = Math.min(Math.max(state.opacity, 0.35), 0.95);
   const dark = state.colorScheme === "dark";
-  const plate = dark ? "17, 17, 20" : "252, 251, 249";
-  const ink = dark ? "255, 255, 255" : "23, 23, 23";
+  const plate = dark ? "25, 25, 25" : "255, 255, 255";
+  const ink = dark ? "250, 250, 250" : "22, 22, 22";
   const surface = Math.min(
     (opacity / DEFAULT_OPACITY) * (dark ? 0.94 : 0.96),
     0.98,
@@ -433,15 +459,16 @@ function barColors(state: FloatingBarState) {
   return {
     surface: `rgba(${plate}, ${surface})`,
     envelopeSurface: `rgba(${plate}, ${Math.min(surface + 0.04, 0.98)})`,
-    rim: dark ? "rgba(255, 255, 255, 0.11)" : "rgba(0, 0, 0, 0.09)",
+    rim: dark ? "rgba(255, 255, 255, 0.16)" : "rgba(0, 0, 0, 0.12)",
+    shadow: dark ? "rgba(0, 0, 0, 0.45)" : "rgba(0, 0, 0, 0.12)",
     content: `rgb(${ink})`,
-    muted: `rgba(${ink}, ${dark ? 0.5 : 0.45})`,
+    muted: "#808080",
     handle: `rgba(${ink}, ${dark ? 0.48 : 0.36})`,
     controlFill: `rgba(${ink}, ${dark ? 0.08 : 0.07})`,
     bubble: `rgba(${ink}, ${dark ? 0.07 : 0.045})`,
     selfBubble: `rgba(${ink}, ${dark ? 0.12 : 0.08})`,
     overlap: `rgba(${ink}, ${dark ? 0.26 : 0.2})`,
-    chip: dark ? "rgb(31, 31, 35)" : "rgb(242, 242, 242)",
+    chip: dark ? "#232323" : "#F3F3F3",
     danger: dark ? "#F17471" : "#B82D35",
     dangerFill: dark ? "rgba(241, 116, 113, 0.18)" : "rgba(184, 45, 53, 0.14)",
   };

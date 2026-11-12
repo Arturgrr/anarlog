@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use tokio::sync::broadcast::error::{RecvError, TryRecvError};
 use tokio::sync::watch as tokio_watch;
@@ -18,6 +19,7 @@ pub struct LiveQueryRuntime<S> {
     db: Arc<Db>,
     executor: DbExecutor,
     change_notifier: ChangeNotifier,
+    commit_visibility: CommitVisibility,
     catalog: CatalogStore,
     subscriptions: Registry<S>,
     shutdown_tx: tokio_watch::Sender<bool>,
@@ -32,6 +34,7 @@ impl<S: QueryEventSink> LiveQueryRuntime<S> {
 
     fn new_with_notifier(db: Arc<Db>, change_notifier: ChangeNotifier) -> Self {
         let executor = DbExecutor::new(Arc::clone(&db));
+        let commit_visibility = CommitVisibility::new(Arc::clone(&db), change_notifier.clone());
         let catalog = CatalogStore::default();
         let subscriptions = Registry::default();
         let (shutdown_tx, mut shutdown_rx) = tokio_watch::channel(false);
@@ -41,6 +44,7 @@ impl<S: QueryEventSink> LiveQueryRuntime<S> {
         let dispatcher_db = Arc::clone(&db);
         let dispatcher_executor = executor.clone();
         let dispatcher_notifier = change_notifier.clone();
+        let dispatcher_visibility = commit_visibility.clone();
 
         let dispatcher = tokio::spawn(async move {
             loop {
@@ -64,6 +68,7 @@ impl<S: QueryEventSink> LiveQueryRuntime<S> {
                             continue;
                         }
 
+                        dispatcher_visibility.wait_for_notified_commits().await;
                         for job in jobs {
                             dispatcher_subscriptions
                                 .refresh(&dispatcher_executor, job, None)
@@ -78,6 +83,7 @@ impl<S: QueryEventSink> LiveQueryRuntime<S> {
             db,
             executor,
             change_notifier,
+            commit_visibility,
             catalog,
             subscriptions,
             shutdown_tx,
@@ -101,6 +107,7 @@ impl<S: QueryEventSink> LiveQueryRuntime<S> {
         #[cfg(test)]
         test_support::before_initial_payload_load().await;
 
+        self.commit_visibility.wait_for_notified_commits().await;
         let initial_payload = self
             .deliver_initial_payload(&registered.registration.id, &sql, &params, &sink)
             .await?;
@@ -197,6 +204,7 @@ impl<S: QueryEventSink> LiveQueryRuntime<S> {
             .await;
 
         if latest_dependency_seq > baseline_seq {
+            self.commit_visibility.wait_for_notified_commits().await;
             self.subscriptions
                 .refresh(
                     &self.executor,
@@ -208,6 +216,44 @@ impl<S: QueryEventSink> LiveQueryRuntime<S> {
                     Some(initial_payload),
                 )
                 .await;
+        }
+    }
+}
+
+/// Change notifications come from SQLite's commit hook, which runs before the
+/// commit is written. Until the writer finishes, a WAL reader on another pooled
+/// connection still sees the old snapshot, and no later notification corrects a
+/// result read in that window. The writer keeps the write lock until its commit is
+/// visible, so taking the lock once orders reads after every commit notified so far.
+#[derive(Clone)]
+struct CommitVisibility {
+    db: Arc<Db>,
+    change_notifier: ChangeNotifier,
+    visible_through_seq: Arc<AtomicU64>,
+}
+
+impl CommitVisibility {
+    fn new(db: Arc<Db>, change_notifier: ChangeNotifier) -> Self {
+        Self {
+            db,
+            change_notifier,
+            visible_through_seq: Arc::default(),
+        }
+    }
+
+    async fn wait_for_notified_commits(&self) {
+        let notified_seq = self.change_notifier.current_seq();
+        if self.visible_through_seq.load(Ordering::SeqCst) >= notified_seq {
+            return;
+        }
+
+        // Without the lock (busy timeout, read-only database) reads proceed unordered.
+        let Ok(write_lock) = self.db.pool().begin_with("BEGIN IMMEDIATE").await else {
+            return;
+        };
+        if write_lock.rollback().await.is_ok() {
+            self.visible_through_seq
+                .fetch_max(notified_seq, Ordering::SeqCst);
         }
     }
 }
@@ -528,12 +574,7 @@ mod tests {
         }
     }
 
-    async fn setup_runtime() -> (
-        tempfile::TempDir,
-        sqlx::SqlitePool,
-        LiveQueryRuntime<TestSink>,
-    ) {
-        let dir = tempfile::tempdir().unwrap();
+    async fn open_test_db(dir: &tempfile::TempDir) -> Db {
         let db_path = dir.path().join("app.db");
         let db = anlg_db_core::Db::open(DbOpenOptions {
             storage: DbStorage::Local(&db_path),
@@ -546,7 +587,16 @@ mod tests {
         anlg_db_migrate::migrate(&db, live_query_test_schema())
             .await
             .unwrap();
+        db
+    }
 
+    async fn setup_runtime() -> (
+        tempfile::TempDir,
+        sqlx::SqlitePool,
+        LiveQueryRuntime<TestSink>,
+    ) {
+        let dir = tempfile::tempdir().unwrap();
+        let db = open_test_db(&dir).await;
         let pool = db.pool().clone();
         (dir, pool, LiveQueryRuntime::new(Arc::new(db)))
     }
@@ -713,5 +763,69 @@ mod tests {
             TestEvent::Result(vec![json!({ "id": "note-stale-after-activation" })])
         );
         assert_no_event(&events, 1, Duration::from_millis(150)).await;
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn refresh_does_not_read_before_the_notified_commit_is_visible() {
+        let _guard = hook_test_lock().lock().await;
+        let dir = tempfile::tempdir().unwrap();
+        let db = open_test_db(&dir).await;
+        let pool = db.pool().clone();
+
+        // SQLite fires the commit hook before it writes the commit. To hold that window
+        // open, a write to a same-named table in another database sends the
+        // notification while the real writer's transaction is still uncommitted.
+        let (notifier, notifying_pool_options) = ChangeNotifier::new();
+        let notifying_pool = notifying_pool_options
+            .connect_with(
+                sqlx::sqlite::SqliteConnectOptions::new()
+                    .filename(dir.path().join("notifying.db"))
+                    .create_if_missing(true),
+            )
+            .await
+            .unwrap();
+        sqlx::query("CREATE TABLE daily_notes (id TEXT PRIMARY KEY NOT NULL)")
+            .execute(&notifying_pool)
+            .await
+            .unwrap();
+
+        let runtime = LiveQueryRuntime::new_with_notifier(Arc::new(db), notifier);
+        let (sink, events) = TestSink::capture();
+        runtime
+            .subscribe(
+                "SELECT id FROM daily_notes ORDER BY id".to_string(),
+                vec![],
+                sink,
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            next_event(&events, 0, Duration::from_secs(1)).await,
+            TestEvent::Result(Vec::new())
+        );
+
+        let mut writer = pool.begin_with("BEGIN IMMEDIATE").await.unwrap();
+        sqlx::query("INSERT INTO daily_notes (id, date, body, user_id) VALUES (?, ?, ?, ?)")
+            .bind("note-slow-commit")
+            .bind("2026-04-26")
+            .bind("{}")
+            .bind("user-slow-commit")
+            .execute(&mut *writer)
+            .await
+            .unwrap();
+        sqlx::query("INSERT INTO daily_notes (id) VALUES (?)")
+            .bind("note-slow-commit")
+            .execute(&notifying_pool)
+            .await
+            .unwrap();
+
+        // Outlast the dispatcher's coalescing delay, like a commit stuck in fsync.
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        writer.commit().await.unwrap();
+
+        assert_eq!(
+            next_event(&events, 1, Duration::from_secs(1)).await,
+            TestEvent::Result(vec![json!({ "id": "note-slow-commit" })])
+        );
     }
 }

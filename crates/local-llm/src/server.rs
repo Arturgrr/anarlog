@@ -132,7 +132,8 @@ struct Running {
     generation: u64,
     endpoint: Endpoint,
     stop_tx: Option<oneshot::Sender<()>>,
-    exited: watch::Receiver<bool>,
+    /// How the process ended, once it has.
+    exited: watch::Receiver<Option<String>>,
     activity: Arc<AtomicU64>,
     stop_idle: CancellationToken,
 }
@@ -195,7 +196,7 @@ impl ServerManager {
         if let Some(current) = running.as_ref()
             && current.endpoint.model == request.model
             && current.endpoint.context == request.context
-            && !*current.exited.borrow()
+            && current.exited.borrow().is_none()
         {
             current.touch(inner.now_ms());
             return Ok(current.endpoint.clone());
@@ -279,9 +280,14 @@ impl Running {
 
 enum Readiness {
     Ready,
-    Exited,
-    TimedOut,
+    /// How the process ended.
+    Exited(String),
+    /// What the last health check got.
+    TimedOut(String),
 }
+
+/// How many lines of the server's own output a start failure quotes.
+const QUOTED_LINES: usize = 3;
 
 const PORT_ATTEMPTS: usize = 3;
 const LOG_LINES: usize = 64;
@@ -382,7 +388,7 @@ impl Inner {
             }
 
             let generation = this.generation.fetch_add(1, Ordering::Relaxed) + 1;
-            let (exited_tx, exited) = watch::channel(false);
+            let (exited_tx, exited) = watch::channel(None);
             let (stop_tx, stop_rx) = oneshot::channel();
             tokio::spawn(supervise(
                 Arc::downgrade(this),
@@ -420,7 +426,7 @@ impl Inner {
                     tracing::info!(model = %request.model, context = request.context, "llama_server_ready");
                     return Ok(running);
                 }
-                Readiness::Exited => {
+                Readiness::Exited(status) => {
                     this.set_pid(None);
                     let lines = log_lines(&log);
                     if lines.iter().any(|line| line.contains("couldn't bind")) {
@@ -430,13 +436,18 @@ impl Inner {
                     for line in &lines {
                         tracing::warn!(target: "llama_server", "{line}");
                     }
-                    return Err(start_failure_message(&lines));
+                    return Err(start_failure_message(&status, &lines));
                 }
-                Readiness::TimedOut => {
+                Readiness::TimedOut(health) => {
                     this.shut_down(running).await;
+                    let lines = log_lines(&log);
+                    for line in &lines {
+                        tracing::warn!(target: "llama_server", "{line}");
+                    }
                     return Err(format!(
-                        "The built-in model did not finish loading within {} seconds.",
-                        config.start_timeout.as_secs()
+                        "The built-in model did not finish loading within {} seconds (port {port}: {health}). {}",
+                        config.start_timeout.as_secs(),
+                        quote_output(&lines)
                     ));
                 }
             }
@@ -451,7 +462,7 @@ impl Inner {
         }
         let _ = tokio::time::timeout(
             Duration::from_secs(10),
-            running.exited.wait_for(|exited| *exited),
+            running.exited.wait_for(Option::is_some),
         )
         .await;
         self.set_pid(None);
@@ -513,27 +524,22 @@ async fn supervise(
     mut child: Child,
     pid: u32,
     stop_rx: oneshot::Receiver<()>,
-    exited_tx: watch::Sender<bool>,
+    exited_tx: watch::Sender<Option<String>>,
 ) {
-    let unexpected = tokio::select! {
-        status = child.wait() => Some(status),
-        _ = stop_rx => {
-            terminate(&mut child).await;
-            None
-        }
+    let (status, requested) = tokio::select! {
+        status = child.wait() => (status, false),
+        _ = stop_rx => (terminate(&mut child).await, true),
+    };
+    let status = match status {
+        Ok(status) => status.to_string(),
+        Err(error) => error.to_string(),
     };
     if let Some(inner) = inner.upgrade() {
         process::clear_pidfile(&inner.config.state_dir, pid);
     }
-    let _ = exited_tx.send(true);
+    let _ = exited_tx.send(Some(status.clone()));
 
-    if let Some(status) = unexpected
-        && let Some(inner) = inner.upgrade()
-    {
-        let status = match status {
-            Ok(status) => status.to_string(),
-            Err(error) => error.to_string(),
-        };
+    if !requested && let Some(inner) = inner.upgrade() {
         inner
             .on_unexpected_exit(
                 generation,
@@ -543,7 +549,7 @@ async fn supervise(
     }
 }
 
-async fn terminate(child: &mut Child) {
+async fn terminate(child: &mut Child) -> std::io::Result<std::process::ExitStatus> {
     #[cfg(unix)]
     if let Some(pid) = child.id() {
         // SAFETY: kill(2) on our own child's pid; it cannot have been
@@ -555,11 +561,12 @@ async fn terminate(child: &mut Child) {
     #[cfg(not(unix))]
     let _ = child.start_kill();
 
-    if tokio::time::timeout(Duration::from_secs(5), child.wait())
-        .await
-        .is_err()
-    {
-        let _ = child.kill().await;
+    match tokio::time::timeout(Duration::from_secs(5), child.wait()).await {
+        Ok(status) => status,
+        Err(_) => {
+            let _ = child.kill().await;
+            child.wait().await
+        }
     }
 }
 
@@ -603,21 +610,26 @@ async fn stop_when_idle(
 async fn wait_ready(
     http: &reqwest::Client,
     base_url: &str,
-    mut exited: watch::Receiver<bool>,
+    mut exited: watch::Receiver<Option<String>>,
     timeout: Duration,
 ) -> Readiness {
     let url = format!("{base_url}/health");
     let deadline = Instant::now() + timeout;
     loop {
-        if *exited.borrow() {
-            return Readiness::Exited;
+        if let Some(status) = exited.borrow().clone() {
+            return Readiness::Exited(status);
         }
-        let response = http.get(&url).timeout(Duration::from_secs(2)).send().await;
-        if response.is_ok_and(|response| response.status() == reqwest::StatusCode::OK) {
-            return Readiness::Ready;
-        }
+        let health = match http.get(&url).timeout(Duration::from_secs(2)).send().await {
+            Ok(response) if response.status() == reqwest::StatusCode::OK => {
+                return Readiness::Ready;
+            }
+            Ok(response) => format!("health check answered {}", response.status()),
+            Err(error) if error.is_connect() => "nothing accepted connections".to_string(),
+            Err(error) if error.is_timeout() => "health check got no answer".to_string(),
+            Err(error) => format!("health check failed: {error}"),
+        };
         if Instant::now() >= deadline {
-            return Readiness::TimedOut;
+            return Readiness::TimedOut(health);
         }
         tokio::select! {
             _ = tokio::time::sleep(Duration::from_millis(200)) => {}
@@ -663,16 +675,26 @@ fn log_lines(log: &StdMutex<VecDeque<String>>) -> Vec<String> {
         .collect()
 }
 
-fn start_failure_message(lines: &[String]) -> String {
+fn start_failure_message(status: &str, lines: &[String]) -> String {
     let detail = lines
         .iter()
         .rev()
         .find(|line| line.to_ascii_lowercase().contains("error"))
         .or_else(|| lines.last());
     match detail {
-        Some(detail) => format!("The built-in model server stopped while starting: {detail}"),
-        None => "The built-in model server stopped while starting.".to_string(),
+        Some(detail) => {
+            format!("The built-in model server stopped while starting ({status}): {detail}")
+        }
+        None => format!("The built-in model server stopped while starting ({status})."),
     }
+}
+
+fn quote_output(lines: &[String]) -> String {
+    if lines.is_empty() {
+        return "It printed nothing.".to_string();
+    }
+    let tail = &lines[lines.len().saturating_sub(QUOTED_LINES)..];
+    format!("Its last output: {}", tail.join(" | "))
 }
 
 fn free_port() -> std::io::Result<u16> {
