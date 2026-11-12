@@ -8,8 +8,8 @@ use std::sync::{
 use std::time::Duration;
 
 use anlg_transcribe_core::{
-    BatchEventSender, ProgressTracker, TARGET_SAMPLE_RATE, batch_event_channel,
-    batch_sse_response, chunk_channel_audio, json_error_response,
+    BatchEventSender, ProgressTracker, TARGET_SAMPLE_RATE, batch_event_channel, batch_sse_response,
+    chunk_channel_audio, json_error_response,
 };
 use anlg_transcribe_gguf::{CancelToken, Request, TimedWord};
 use axum::{
@@ -793,7 +793,10 @@ mod tests {
         let rate = TARGET_SAMPLE_RATE as usize;
         let window = (0..rate * 60).map(|index| index as f32).collect::<Vec<_>>();
         let chunk = |start_s: f64, end_s: f64| {
-            let (start, end) = ((start_s * rate as f64) as usize, (end_s * rate as f64) as usize);
+            let (start, end) = (
+                (start_s * rate as f64) as usize,
+                (end_s * rate as f64) as usize,
+            );
             anlg_audio_chunking::AudioChunk {
                 samples: window[start..end].to_vec(),
                 sample_start: start,

@@ -49,24 +49,23 @@ pub(crate) fn load_where<L: Loader>(
         return loader.load(&Placement::Cpu);
     }
     let gpus = loader.gpus();
-    let placement = if preference == DevicePreference::Gpu
-        || !gpus.iter().any(|gpu| health.failed(&gpu.key))
-    {
-        Placement::Auto
-    } else {
-        match gpus
-            .iter()
-            .find(|gpu| !health.failed(&gpu.key) && gpu.backend.is_some())
-        {
-            Some(gpu) => Placement::Gpu(gpu.clone()),
-            None => {
-                tracing::info!(
-                    "every GPU failed before under its current driver; transcribing on the CPU"
-                );
-                return loader.load(&Placement::Cpu);
+    let placement =
+        if preference == DevicePreference::Gpu || !gpus.iter().any(|gpu| health.failed(&gpu.key)) {
+            Placement::Auto
+        } else {
+            match gpus
+                .iter()
+                .find(|gpu| !health.failed(&gpu.key) && gpu.backend.is_some())
+            {
+                Some(gpu) => Placement::Gpu(gpu.clone()),
+                None => {
+                    tracing::info!(
+                        "every GPU failed before under its current driver; transcribing on the CPU"
+                    );
+                    return loader.load(&Placement::Cpu);
+                }
             }
-        }
-    };
+        };
     // The GPU this load runs on: the one chosen, else the one Auto picks.
     let expected = match &placement {
         Placement::Gpu(gpu) => Some(gpu.clone()),
@@ -197,10 +196,16 @@ mod tests {
         health.record("dgpu", "hung");
         let loader = FakeLoader::new(&["dgpu", "igpu"]);
 
-        assert_eq!(load_where(&loader, &health, DevicePreference::Auto).unwrap(), "igpu");
+        assert_eq!(
+            load_where(&loader, &health, DevicePreference::Auto).unwrap(),
+            "igpu"
+        );
 
         health.record("igpu", "hung");
-        assert_eq!(load_where(&loader, &health, DevicePreference::Auto).unwrap(), "cpu");
+        assert_eq!(
+            load_where(&loader, &health, DevicePreference::Auto).unwrap(),
+            "cpu"
+        );
     }
 
     #[test]
@@ -209,7 +214,10 @@ mod tests {
         let mut loader = FakeLoader::new(&["dgpu"]);
         loader.broken.push(("dgpu", true));
 
-        assert_eq!(load_where(&loader, &health, DevicePreference::Auto).unwrap(), "cpu");
+        assert_eq!(
+            load_where(&loader, &health, DevicePreference::Auto).unwrap(),
+            "cpu"
+        );
         assert!(!health.failed("dgpu"));
     }
 
@@ -219,7 +227,10 @@ mod tests {
         health.record("dgpu", "hung");
         let loader = FakeLoader::new(&["dgpu"]);
 
-        assert_eq!(load_where(&loader, &health, DevicePreference::Gpu).unwrap(), "dgpu");
+        assert_eq!(
+            load_where(&loader, &health, DevicePreference::Gpu).unwrap(),
+            "dgpu"
+        );
         assert!(!health.failed("dgpu"));
     }
 
@@ -227,9 +238,15 @@ mod tests {
     fn cpu_preference_and_cpu_only_processes_never_touch_a_gpu() {
         let health = health();
         let mut loader = FakeLoader::new(&["dgpu"]);
-        assert_eq!(load_where(&loader, &health, DevicePreference::Cpu).unwrap(), "cpu");
+        assert_eq!(
+            load_where(&loader, &health, DevicePreference::Cpu).unwrap(),
+            "cpu"
+        );
         loader.cpu_only = true;
-        assert_eq!(load_where(&loader, &health, DevicePreference::Gpu).unwrap(), "cpu");
+        assert_eq!(
+            load_where(&loader, &health, DevicePreference::Gpu).unwrap(),
+            "cpu"
+        );
         assert_eq!(*loader.asked.borrow(), ["cpu", "cpu"]);
     }
 }

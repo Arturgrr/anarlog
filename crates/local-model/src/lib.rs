@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
-use anlg_model_downloader::{DownloadableModel, Error};
 pub use anlg_gguf_model::{GgufModel, TimestampGranularity};
+use anlg_model_downloader::{DownloadableModel, Error};
 pub use anlg_transcribe_soniqo::SoniqoModel;
 pub use anlg_transcribe_speechanalyzer::AppleSpeechModel;
 pub use anlg_whisper_local_model::WhisperModel;
@@ -23,7 +23,10 @@ pub const fn gguf_platform() -> bool {
     cfg!(any(
         all(target_os = "macos", target_arch = "aarch64"),
         all(target_os = "windows", target_arch = "x86_64"),
-        all(target_os = "linux", any(target_arch = "x86_64", target_arch = "aarch64")),
+        all(
+            target_os = "linux",
+            any(target_arch = "x86_64", target_arch = "aarch64")
+        ),
     ))
 }
 
@@ -263,15 +266,25 @@ mod tests {
         for model in LocalModel::all() {
             let json = serde_json::to_string(&model).unwrap();
             assert!(ids.insert(json.clone()), "{json} is not unique");
-            assert_eq!(serde_json::from_str::<LocalModel>(&json).unwrap(), model, "{json}");
+            assert_eq!(
+                serde_json::from_str::<LocalModel>(&json).unwrap(),
+                model,
+                "{json}"
+            );
         }
         for (json, expected) in [
             (
                 r#""soniqo-parakeet-batch""#,
                 LocalModel::Soniqo(SoniqoModel::ParakeetBatch),
             ),
-            (r#""apple-speech""#, LocalModel::AppleSpeech(AppleSpeechModel::Default)),
-            (r#""QuantizedSmall""#, LocalModel::Whisper(WhisperModel::QuantizedSmall)),
+            (
+                r#""apple-speech""#,
+                LocalModel::AppleSpeech(AppleSpeechModel::Default),
+            ),
+            (
+                r#""QuantizedSmall""#,
+                LocalModel::Whisper(WhisperModel::QuantizedSmall),
+            ),
             (
                 r#""gguf-parakeet-tdt-0.6b-v3""#,
                 LocalModel::Gguf(GgufModel::ParakeetTdtV3),

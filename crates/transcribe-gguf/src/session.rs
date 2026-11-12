@@ -63,13 +63,14 @@ impl OfflineSession {
         if let Some(cancel) = cancel {
             session.set_cancel_token(cancel);
         }
-        let result = keep_repetition_partial(session.run(samples, options)).map(|mut transcript| {
-            if let Some(prompt) = &options.prompt {
-                drop_prompt_echo(&mut transcript, prompt);
-            }
-            drop_subtitle_credit(&mut transcript);
-            transcript
-        });
+        let result =
+            keep_repetition_partial(session.run(samples, options)).map(|mut transcript| {
+                if let Some(prompt) = &options.prompt {
+                    drop_prompt_echo(&mut transcript, prompt);
+                }
+                drop_subtitle_credit(&mut transcript);
+                transcript
+            });
         drop(session);
         match self.model.session_with(&self.options) {
             Ok(session) => {

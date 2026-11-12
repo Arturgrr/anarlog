@@ -272,7 +272,11 @@ mod tests {
         health.forget("gpu-19");
         assert!(!health.failed("gpu-19"));
         health.forget_all();
-        assert!(GpuHealth::new(Some(path), "driver-1".into()).failures().is_empty());
+        assert!(
+            GpuHealth::new(Some(path), "driver-1".into())
+                .failures()
+                .is_empty()
+        );
     }
 
     #[test]

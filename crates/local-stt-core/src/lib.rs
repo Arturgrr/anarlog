@@ -194,16 +194,20 @@ mod tests {
 
     #[test]
     fn gguf_model_info_serializes_with_the_frontend_contract() {
-        let value = serde_json::to_value(stt_model_info(&LocalModel::Gguf(
-            GgufModel::ParakeetTdtV3,
-        )))
-        .unwrap();
+        let value =
+            serde_json::to_value(stt_model_info(&LocalModel::Gguf(GgufModel::ParakeetTdtV3)))
+                .unwrap();
 
         assert_eq!(value["key"], "gguf-parakeet-tdt-0.6b-v3");
         assert_eq!(value["model_type"], "gguf");
         assert_eq!(value["timestamps"], "word");
         assert_eq!(value["size_bytes"], 739_508_576);
         assert_eq!(value["license"]["spdx"], "CC-BY-4.0");
-        assert!(value["languages"].as_array().unwrap().contains(&"pt".into()));
+        assert!(
+            value["languages"]
+                .as_array()
+                .unwrap()
+                .contains(&"pt".into())
+        );
     }
 }

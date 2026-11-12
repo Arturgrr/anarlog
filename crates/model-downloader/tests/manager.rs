@@ -416,13 +416,21 @@ async fn sha256_or_size_mismatch_is_rejected_and_a_match_is_installed() {
     let url = format!("{}/pinned.gguf", server.uri());
 
     for (model, installed) in [
-        (TestModel::with_url_and_sha256("wrong_sha", url.clone(), &sha256, size), false),
+        (
+            TestModel::with_url_and_sha256("wrong_sha", url.clone(), &sha256, size),
+            false,
+        ),
         (
             TestModel::with_url_and_sha256("wrong_size", url.clone(), &actual_sha256, size + 1),
             false,
         ),
         (
-            TestModel::with_url_and_sha256("pinned", url.clone(), &actual_sha256.to_uppercase(), size),
+            TestModel::with_url_and_sha256(
+                "pinned",
+                url.clone(),
+                &actual_sha256.to_uppercase(),
+                size,
+            ),
             true,
         ),
     ] {
@@ -431,15 +439,26 @@ async fn sha256_or_size_mismatch_is_rejected_and_a_match_is_installed() {
         manager.download(&model).await.unwrap();
         wait_until_done(&manager, &model).await;
 
-        assert_eq!(manager.is_downloaded(&model).await.unwrap(), installed, "{}", model.key);
+        assert_eq!(
+            manager.is_downloaded(&model).await.unwrap(),
+            installed,
+            "{}",
+            model.key
+        );
         let statuses = runtime.progress_statuses();
         assert_eq!(
-            statuses.iter().any(|s| matches!(s, DownloadStatus::Failed(_))),
+            statuses
+                .iter()
+                .any(|s| matches!(s, DownloadStatus::Failed(_))),
             !installed,
             "{}: {statuses:?}",
             model.key
         );
-        assert!(part_files_in(runtime.temp_dir.path()).is_empty(), "{}", model.key);
+        assert!(
+            part_files_in(runtime.temp_dir.path()).is_empty(),
+            "{}",
+            model.key
+        );
     }
 }
 

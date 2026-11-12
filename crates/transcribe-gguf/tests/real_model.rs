@@ -79,7 +79,9 @@ fn a_real_model_transcribes_english_with_ordered_word_times() {
     assert!(transcript.text.split_whitespace().count() > 50);
     let lower = transcript.text.to_lowercase();
     assert!(
-        ["the", "and", "you"].iter().any(|word| lower.contains(word)),
+        ["the", "and", "you"]
+            .iter()
+            .any(|word| lower.contains(word)),
         "not English: {}",
         transcript.text
     );
@@ -88,6 +90,9 @@ fn a_real_model_transcribes_english_with_ordered_word_times() {
         assert!(pair[0].start <= pair[1].start, "{pair:?}");
     }
     for word in &transcript.words {
-        assert!(word.start <= word.end && word.end <= duration + 0.01, "{word:?}");
+        assert!(
+            word.start <= word.end && word.end <= duration + 0.01,
+            "{word:?}"
+        );
     }
 }

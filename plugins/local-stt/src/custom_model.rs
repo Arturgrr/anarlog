@@ -83,9 +83,17 @@ mod tests {
     fn accepts_absolute_whisper_cpp_and_gguf_paths() {
         for (filename, contents, format) in [
             ("ggml-small.bin", &b"ggml"[..], CustomSttModelFormat::Ggml),
-            ("parakeet.gguf", &b"GGUF\x03\0\0\0"[..], CustomSttModelFormat::Gguf),
+            (
+                "parakeet.gguf",
+                &b"GGUF\x03\0\0\0"[..],
+                CustomSttModelFormat::Gguf,
+            ),
             // transcribe.cpp detects the format from the header, not the name.
-            ("renamed.bin", &b"GGUF\x03\0\0\0"[..], CustomSttModelFormat::Gguf),
+            (
+                "renamed.bin",
+                &b"GGUF\x03\0\0\0"[..],
+                CustomSttModelFormat::Gguf,
+            ),
         ] {
             let directory = tempfile::tempdir().unwrap();
             let path = directory.path().join(filename);
@@ -104,7 +112,12 @@ mod tests {
         for (filename, contents, is_relative, expected_substrings) in [
             ("ggml-small.bin", None, true, &["absolute"][..]),
             ("missing.bin", None, false, &["unavailable"][..]),
-            ("model.pt", Some(&b"model"[..]), false, &[".bin", ".gguf"][..]),
+            (
+                "model.pt",
+                Some(&b"model"[..]),
+                false,
+                &[".bin", ".gguf"][..],
+            ),
             (
                 "whisper.gguf",
                 Some(&b"nope"[..]),

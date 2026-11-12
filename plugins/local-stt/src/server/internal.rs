@@ -49,8 +49,8 @@ fn transcribe_service(args: &InternalSTTArgs) -> anlg_transcribe_gguf_local::Tra
         _ => None,
     };
     let path = args.model_path.clone();
-    let mut builder = anlg_transcribe_gguf_local::TranscribeService::builder().loader(Arc::new(
-        move || {
+    let mut builder =
+        anlg_transcribe_gguf_local::TranscribeService::builder().loader(Arc::new(move || {
             anlg_transcribe_gguf::Engine::load(
                 &path,
                 &anlg_transcribe_gguf::LoadOptions {
@@ -60,8 +60,7 @@ fn transcribe_service(args: &InternalSTTArgs) -> anlg_transcribe_gguf_local::Tra
             )
             .map(|engine| Box::new(engine) as anlg_transcribe_gguf_local::BoxedTranscriber)
             .map_err(|error| error.to_string())
-        },
-    ));
+        }));
     let preloaded = args
         .preloaded
         .lock()

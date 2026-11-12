@@ -78,6 +78,9 @@ async fn a_real_model_answers_the_listen_contract() {
         assert!(pair[0].start <= pair[1].start, "{pair:?}");
     }
     for word in &alternative.words {
-        assert!(word.start <= word.end && word.end <= duration + 0.01, "{word:?}");
+        assert!(
+            word.start <= word.end && word.end <= duration + 0.01,
+            "{word:?}"
+        );
     }
 }

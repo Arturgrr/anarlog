@@ -331,11 +331,10 @@ mod tests {
             assert!(info.license.url.starts_with("https://"), "{model}");
             assert!(!info.license.attribution.is_empty(), "{model}");
             assert!(!info.languages.is_empty(), "{model}");
-            assert!(
-                artifact
-                    .download_url()
-                    .ends_with(&format!("/resolve/{}/{}", artifact.revision, artifact.filename))
-            );
+            assert!(artifact.download_url().ends_with(&format!(
+                "/resolve/{}/{}",
+                artifact.revision, artifact.filename
+            )));
         }
     }
 

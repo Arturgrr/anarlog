@@ -191,11 +191,9 @@ impl Service<Request<Body>> for TranscribeService {
                 }
             };
 
-            let Some(permit) = batch::acquire_http_batch_permit(
-                batch_admission,
-                batch::HTTP_BATCH_ADMISSION_WAIT,
-            )
-            .await
+            let Some(permit) =
+                batch::acquire_http_batch_permit(batch_admission, batch::HTTP_BATCH_ADMISSION_WAIT)
+                    .await
             else {
                 return Ok(
                     match batch::drain_rejected_batch_audio(req.into_body()).await {
@@ -207,8 +205,7 @@ impl Service<Request<Body>> for TranscribeService {
             let content_type = header(&req, "content-type")
                 .unwrap_or_else(|| "application/octet-stream".to_string());
             let accept = header(&req, "accept").unwrap_or_default();
-            let audio_file = match batch::spool_batch_audio(req.into_body(), &content_type).await
-            {
+            let audio_file = match batch::spool_batch_audio(req.into_body(), &content_type).await {
                 Ok(audio_file) => audio_file,
                 Err(response) => return Ok(response),
             };
@@ -278,9 +275,8 @@ mod tests {
     }
 
     async fn serve(service: TranscribeService) -> SocketAddr {
-        let app = service.into_router(|err: String| async move {
-            (StatusCode::INTERNAL_SERVER_ERROR, err)
-        });
+        let app = service
+            .into_router(|err: String| async move { (StatusCode::INTERNAL_SERVER_ERROR, err) });
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });

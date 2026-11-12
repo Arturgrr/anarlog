@@ -892,17 +892,18 @@ async fn stored_device_preference<R: Runtime>(
     let Some(db) = app.try_state::<tauri_plugin_db::ManagedState>() else {
         return crate::SttDevicePreference::default();
     };
-    let stored: Option<String> =
-        match sqlx::query_scalar("SELECT value_json FROM app_settings WHERE id = 'local_stt_device'")
-            .fetch_optional(db.pool())
-            .await
-        {
-            Ok(value) => value,
-            Err(error) => {
-                tracing::warn!(%error, "could not read local_stt_device");
-                None
-            }
-        };
+    let stored: Option<String> = match sqlx::query_scalar(
+        "SELECT value_json FROM app_settings WHERE id = 'local_stt_device'",
+    )
+    .fetch_optional(db.pool())
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => {
+            tracing::warn!(%error, "could not read local_stt_device");
+            None
+        }
+    };
     parse_device_preference(stored.as_deref())
 }
 

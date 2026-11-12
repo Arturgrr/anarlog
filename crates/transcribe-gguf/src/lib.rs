@@ -234,7 +234,9 @@ impl Engine {
         let run_samples = usize::try_from(max_ms)
             .ok()
             .filter(|ms| *ms > 0)
-            .map_or(MAX_RUN_SAMPLES, |ms| (ms * SAMPLE_RATE / 1_000).min(MAX_RUN_SAMPLES));
+            .map_or(MAX_RUN_SAMPLES, |ms| {
+                (ms * SAMPLE_RATE / 1_000).min(MAX_RUN_SAMPLES)
+            });
         tracing::info!(
             arch = model.arch(),
             variant = model.variant(),
@@ -261,7 +263,10 @@ impl Engine {
     /// graph.
     fn warm(&mut self) -> Result<(), Error> {
         let options = self.run_options(None, None);
-        match self.session.run(&vec![0.0; MIN_RUN_SAMPLES], &options, None) {
+        match self
+            .session
+            .run(&vec![0.0; MIN_RUN_SAMPLES], &options, None)
+        {
             Ok(_) | Err(transcribe_cpp::Error::OutputTruncated { .. }) => Ok(()),
             Err(error) => Err(error.into()),
         }
@@ -367,7 +372,11 @@ impl Engine {
         let mut detected = None;
         let mut timestamps: Option<TimestampSource> = None;
         for (index, part) in samples.chunks(self.run_samples.max(1)).enumerate() {
-            if request.cancel.as_ref().is_some_and(CancelToken::is_cancelled) {
+            if request
+                .cancel
+                .as_ref()
+                .is_some_and(CancelToken::is_cancelled)
+            {
                 return Err(Error::Cancelled);
             }
             let mut padded = part.to_vec();
