@@ -17,7 +17,25 @@ fn main() {
         build_check_permissions();
     }
 
+    delay_load_vulkan();
+
     tauri_build::build()
+}
+
+/// On-device transcription links the Vulkan loader on x86_64 Windows
+/// (`tauri-plugin-local-stt/gguf-vulkan`), but `vulkan-1.dll` comes with GPU
+/// drivers, not with Windows. Loading it on first use lets the app start
+/// without it; transcribe-gguf checks for it before ggml touches Vulkan and
+/// stays on the CPU otherwise.
+fn delay_load_vulkan() {
+    let target = |key: &str| std::env::var(key).unwrap_or_default();
+    if target("CARGO_CFG_TARGET_OS") == "windows"
+        && target("CARGO_CFG_TARGET_ARCH") == "x86_64"
+        && target("CARGO_CFG_TARGET_ENV") == "msvc"
+    {
+        println!("cargo:rustc-link-arg=/DELAYLOAD:vulkan-1.dll");
+        println!("cargo:rustc-link-arg=delayimp.lib");
+    }
 }
 
 #[cfg(target_os = "macos")]

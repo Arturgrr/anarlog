@@ -22,4 +22,6 @@ sudo apt-get install -y \
   curl \
   jq \
   libcurl4-openssl-dev \
-  unzip
+  unzip \
+  libvulkan-dev \
+  glslc
