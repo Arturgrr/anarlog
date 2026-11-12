@@ -24,4 +24,5 @@ sudo apt-get install -y \
   libcurl4-openssl-dev \
   unzip \
   libvulkan-dev \
-  glslc
+  glslc \
+  spirv-headers
