@@ -94,7 +94,8 @@ test("lists only the GGUF models the engine reports and hides Mac-only engines o
     arch: "x86_64",
     totalMemoryBytes: 16e9,
   });
-  // This build withholds Parakeet Unified English.
+  // Linux lists only the GGUF models; Cohere, English's first pick, is not
+  // in this list.
   client.setQueryData(localSttQueries.supportedModels().queryKey, {
     status: "ok",
     data: [
@@ -110,7 +111,6 @@ test("lists only the GGUF models the engine reports and hides Mac-only engines o
   const { result } = renderCatalog(client);
   const { gguf: ggufStatus, soniqo, local_file } = result.current.providers;
 
-  // English's first pick is the withheld model, so the next one leads.
   expect(ggufStatus.models.map(({ id }) => id)).toEqual([
     "gguf-whisper-large-v3-turbo",
     "gguf-parakeet-tdt-0.6b-v3",

@@ -1,5 +1,3 @@
-import { catalogLanguageCode, modelCoversLanguages } from "~/stt/capabilities";
-
 export type OnDeviceModelCandidate = {
   id: string;
   recommendedMemoryBytes: number;
@@ -37,21 +35,21 @@ export function recommendOnDeviceModel(
 
 const WHISPER_TURBO = "gguf-whisper-large-v3-turbo";
 const PARAKEET_V3 = "gguf-parakeet-tdt-0.6b-v3";
-const PARAKEET_ENGLISH = "gguf-parakeet-unified-en";
 const QWEN3_ASR = "gguf-qwen3-asr-0.6b";
 const COHERE = "gguf-cohere-transcribe";
-const SENSEVOICE = "gguf-sensevoice-small";
 const GIGAAM = "gguf-gigaam-v3";
 const NB_WHISPER = "gguf-nb-whisper-medium";
 const IVRIT_WHISPER = "gguf-ivrit-whisper-large-v3-turbo";
 
-// Hex's picks per spoken language (src/transcription/models.rs), best first.
+// Hex's picks per spoken language (src/transcription/models.rs), best first,
+// without the models Librelog does not offer (Parakeet Unified English and
+// SenseVoice Small).
 const GGUF_CHOICES_BY_LANGUAGE = new Map<string, readonly string[]>([
-  ["en", [PARAKEET_ENGLISH, COHERE, WHISPER_TURBO]],
-  ["zh", [QWEN3_ASR, SENSEVOICE, WHISPER_TURBO]],
+  ["en", [COHERE, WHISPER_TURBO]],
+  ["zh", [QWEN3_ASR, WHISPER_TURBO]],
   ["yue", [QWEN3_ASR, WHISPER_TURBO]],
   ["ko", [QWEN3_ASR, WHISPER_TURBO]],
-  ["ja", [WHISPER_TURBO, SENSEVOICE]],
+  ["ja", [WHISPER_TURBO]],
   ["el", [COHERE, WHISPER_TURBO]],
   ["fi", [WHISPER_TURBO, PARAKEET_V3]],
   ["sv", [WHISPER_TURBO, PARAKEET_V3]],
@@ -70,6 +68,33 @@ const GGUF_CHOICES_BY_LANGUAGE = new Map<string, readonly string[]>([
 ]);
 
 type LanguageModelCandidate = { id: string; languages: readonly string[] };
+
+// Ranking only: whether a model can transcribe the languages is answered by
+// the transcription plugin from the same catalog. These are the spellings
+// that differ between Settings and the catalog, as the plugin maps them.
+const CATALOG_LANGUAGE_ALIASES = new Map([
+  ["nb", "no"],
+  ["fil", "tl"],
+]);
+
+function catalogLanguageCode(language: string) {
+  const code = language.split(/[-_]/)[0]?.toLowerCase() ?? "";
+  return CATALOG_LANGUAGE_ALIASES.get(code) ?? code;
+}
+
+function modelCoversLanguages(
+  modelLanguages: readonly string[],
+  languages: readonly string[],
+) {
+  if (modelLanguages.includes("*")) {
+    return true;
+  }
+
+  const covered = new Set(modelLanguages.map(catalogLanguageCode));
+  return languages.every((language) =>
+    covered.has(catalogLanguageCode(language)),
+  );
+}
 
 function choicesForLanguage(
   language: string | undefined,

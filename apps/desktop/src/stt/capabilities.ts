@@ -356,35 +356,6 @@ function baseLanguageCode(language: string) {
   return language.split(/[-_]/)[0]?.toLowerCase() ?? "";
 }
 
-// System locales and model catalogs spell some languages differently from
-// the codes Settings stores.
-const CATALOG_LANGUAGE_ALIASES = new Map([
-  ["nb", "no"],
-  ["nn", "no"],
-  ["fil", "tl"],
-]);
-
-export function catalogLanguageCode(language: string) {
-  const code = baseLanguageCode(language);
-  return CATALOG_LANGUAGE_ALIASES.get(code) ?? code;
-}
-
-/// Whether a model whose catalog lists `modelLanguages` ("*" for any language)
-/// transcribes every one of `languages`.
-export function modelCoversLanguages(
-  modelLanguages: readonly string[],
-  languages: readonly string[],
-) {
-  if (modelLanguages.includes("*")) {
-    return true;
-  }
-
-  const covered = new Set(modelLanguages.map(catalogLanguageCode));
-  return languages.every((language) =>
-    covered.has(catalogLanguageCode(language)),
-  );
-}
-
 function languageSupportProvider(provider: string) {
   if (provider === "custom" || provider === "cloudflare_workers_ai") {
     return "deepgram";

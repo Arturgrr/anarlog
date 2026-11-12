@@ -89,7 +89,6 @@ function SttPickerBody({ variant }: { variant: ModelPickerVariant }) {
         provider: provider.id,
         model: model.id,
         mode: model.mode,
-        modelLanguages: model.languages,
       })),
     ),
   );

@@ -11,7 +11,6 @@ import {
   getTranscriptionLanguages,
   isSupportedLanguagesBatch,
   isSupportedLanguagesLive,
-  modelCoversLanguages,
 } from "~/stt/capabilities";
 
 export type LanguageSupport = {
@@ -23,8 +22,6 @@ type LanguageSupportTarget = {
   provider: string;
   model: string;
   mode: SttMode;
-  // A catalog model's own language list, checked here instead of by provider.
-  modelLanguages?: readonly string[];
 };
 
 export function languageSupportKey(provider: string, model: string) {
@@ -49,7 +46,7 @@ export function useSttLanguageSupport(
   ] as const);
 
   return useQueries({
-    queries: targets.map(({ provider, model, mode, modelLanguages }) => ({
+    queries: targets.map(({ provider, model, mode }) => ({
       queryKey: [
         "stt-language-support",
         provider,
@@ -59,12 +56,10 @@ export function useSttLanguageSupport(
         spoken_languages,
       ],
       queryFn: async (): Promise<LanguageSupport> => {
-        const isSupported = async (languages: readonly string[]) =>
-          modelLanguages
-            ? modelCoversLanguages(modelLanguages, languages)
-            : mode === "live"
-              ? isSupportedLanguagesLive(provider, model || null, languages)
-              : isSupportedLanguagesBatch(provider, model || null, languages);
+        const isSupported = (languages: readonly string[]) =>
+          mode === "live"
+            ? isSupportedLanguagesLive(provider, model || null, languages)
+            : isSupportedLanguagesBatch(provider, model || null, languages);
         const issue = await getLanguageSupportIssue(
           ai_language,
           spoken_languages,

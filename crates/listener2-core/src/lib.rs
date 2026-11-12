@@ -228,6 +228,7 @@ mod tests {
             ("gguf", "gguf-parakeet-tdt-0.6b-v3", &["pt-BR", "en"], true),
             ("gguf", "gguf-parakeet-tdt-0.6b-v3", &["ko"], false),
             ("gguf", "gguf-whisper-large-v3-turbo", &["ko", "he"], true),
+            ("gguf", "gguf-qwen3-asr-0.6b", &["fil"], true),
             ("whispercpp", "gguf-gigaam-v3", &["ru"], true),
             ("whispercpp", "gguf-gigaam-v3", &["en"], false),
             ("mistral", "voxtral-mini-2602", &["de-DE", "en-US"], true),

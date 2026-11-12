@@ -4,6 +4,12 @@ import type { ReactNode } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 
 const DOWNLOADED = new Set(["gguf-parakeet-tdt-0.6b-v3", "gguf-gigaam-v3"]);
+// What the transcription plugin answers from the catalog, asked with the
+// models' batch provider.
+const SPEAKS: Record<string, string[]> = {
+  "gguf-parakeet-tdt-0.6b-v3": ["en", "pt", "de"],
+  "gguf-gigaam-v3": ["ru"],
+};
 
 vi.mock("@tauri-apps/plugin-os", () => ({
   platform: () => "linux",
@@ -15,10 +21,10 @@ vi.mock("@anlg/plugin-local-stt", () => ({
     listSupportedModels: async () => ({
       status: "ok",
       data: [
-        ["gguf-parakeet-tdt-0.6b-v3", ["en", "pt", "de"]],
-        ["gguf-whisper-large-v3-turbo", ["*"]],
-        ["gguf-gigaam-v3", ["ru"]],
-      ].map(([key, languages]) => ({
+        "gguf-parakeet-tdt-0.6b-v3",
+        "gguf-whisper-large-v3-turbo",
+        "gguf-gigaam-v3",
+      ].map((key) => ({
         key,
         display_name: key,
         description: "",
@@ -26,7 +32,6 @@ vi.mock("@anlg/plugin-local-stt", () => ({
         model_type: "gguf",
         supports_realtime: false,
         recommended_memory_bytes: 1,
-        languages,
       })),
     }),
     isModelDownloaded: async (model: string) => ({
@@ -34,6 +39,17 @@ vi.mock("@anlg/plugin-local-stt", () => ({
       data: DOWNLOADED.has(model),
     }),
   },
+}));
+
+vi.mock("~/stt/capabilities", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/stt/capabilities")>()),
+  isSupportedLanguagesBatch: async (
+    provider: string,
+    model: string,
+    languages: readonly string[],
+  ) =>
+    provider === "whispercpp" &&
+    languages.every((language) => SPEAKS[model]?.includes(language)),
 }));
 
 vi.mock("~/stt/useSTTConnection", () => ({

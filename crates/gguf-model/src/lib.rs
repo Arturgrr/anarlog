@@ -288,9 +288,12 @@ fn primary_subtag(language: &str) -> String {
         .unwrap_or_default()
         .to_ascii_lowercase();
     // Norwegian Bokmål goes by Whisper's `no`; `iw` is Hebrew's old code.
+    // Settings stores Filipino as ISO 639-1 `tl`, which the catalog lists
+    // as `fil`.
     match code.as_str() {
         "nb" => "no".to_string(),
         "iw" => "he".to_string(),
+        "tl" => "fil".to_string(),
         _ => code,
     }
 }
@@ -343,6 +346,7 @@ mod tests {
         let cases: &[(GgufModel, &[&str], Option<&str>)] = &[
             (GgufModel::WhisperLargeV3Turbo, &["pt-BR"], Some("pt")),
             (GgufModel::WhisperLargeV3Turbo, &["fil"], Some("tl")),
+            (GgufModel::Qwen3Asr06B, &["tl"], Some("fil")),
             (GgufModel::WhisperLargeV3Turbo, &["xx"], None),
             (GgufModel::WhisperLargeV3Turbo, &[], None),
             (GgufModel::ParakeetTdtV3, &["pt"], None),

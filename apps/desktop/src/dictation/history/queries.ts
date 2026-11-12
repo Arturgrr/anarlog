@@ -31,7 +31,6 @@ import {
   isLocalSttProviderAvailable,
   isOnDeviceSttModel,
   isSupportedLanguagesBatch,
-  modelCoversLanguages,
 } from "~/stt/capabilities";
 import { localSttQueries } from "~/stt/useLocalSttModel";
 import { getBatchProvider, useRunBatch } from "~/stt/useRunBatch";
@@ -74,7 +73,6 @@ type RetranscriptionModel = {
   label: string;
   baseUrl: string;
   apiKey: string;
-  languages?: string[];
 };
 
 const LOCAL_PROVIDERS: Partial<Record<SttModelType, string>> = {
@@ -108,14 +106,7 @@ export function useRetranscriptionModels() {
     ? (supported.data ?? []).flatMap((model) => {
         const provider = LOCAL_PROVIDERS[model.model_type];
         return provider
-          ? [
-              {
-                provider,
-                model: model.key,
-                label: model.display_name,
-                languages: provider === "gguf" ? model.languages : undefined,
-              },
-            ]
+          ? [{ provider, model: model.key, label: model.display_name }]
           : [];
       })
     : [];
@@ -134,10 +125,6 @@ export function useRetranscriptionModels() {
       label: displayModelLabel(conn.model),
       baseUrl: conn.baseUrl,
       apiKey: conn.apiKey,
-      languages: localModels.find(
-        (model) =>
-          model.provider === conn.provider && model.model === conn.model,
-      )?.languages,
     });
   }
   localModels.forEach((model, index) => {
@@ -159,13 +146,12 @@ export function useRetranscriptionModels() {
     ],
     queryFn: async () => {
       const checks = await Promise.all(
-        candidates.map(async ({ provider, model, languages: covered }) => {
+        candidates.map(async ({ provider, model }) => {
           const batch = getBatchProvider(provider, model);
-          const supported = covered
-            ? modelCoversLanguages(covered, languages)
-            : !!batch &&
-              (await isSupportedLanguagesBatch(batch, model, languages));
-          return batch && supported ? `${provider}:${model}` : null;
+          return batch &&
+            (await isSupportedLanguagesBatch(batch, model, languages))
+            ? `${provider}:${model}`
+            : null;
         }),
       );
       return checks.filter((key) => key !== null);
