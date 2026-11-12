@@ -25,11 +25,14 @@ pub use types::*;
 
 const PLUGIN_NAME: &str = "local-llm";
 
+/// A partial model download untouched this long is deleted at start.
+const STALE_PART_AGE: std::time::Duration = std::time::Duration::from_secs(7 * 24 * 60 * 60);
+
 pub type CaptureActiveFn<R> = fn(tauri::AppHandle<R>) -> Pin<Box<dyn Future<Output = bool> + Send>>;
 
 pub struct InitOptions<R: tauri::Runtime> {
-    /// Whether a meeting is being recorded right now; small-memory Macs do
-    /// not load a model then.
+    /// Whether a meeting is being recorded, or its recording transcribed,
+    /// right now; small-memory Macs do not load a model then.
     pub capture_active: Option<CaptureActiveFn<R>>,
 }
 
@@ -98,6 +101,12 @@ pub fn init<R: tauri::Runtime>(options: InitOptions<R>) -> tauri::plugin::TauriP
                 }
                 Err(reason) => tracing::info!(?reason, "built_in_models_unavailable"),
             }
+
+            // No download runs yet: a partial file this old was abandoned.
+            let parts = models_base.join("llm");
+            tauri::async_runtime::spawn_blocking(move || {
+                anlg_model_downloader::remove_stale_parts(&parts, STALE_PART_AGE)
+            });
 
             let downloader = ModelDownloadManager::new(Arc::new(ext::DownloadRuntime {
                 app: app.clone(),
