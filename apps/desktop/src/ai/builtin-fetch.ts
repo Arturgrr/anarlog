@@ -26,9 +26,16 @@ export class BuiltinModelError extends Error {
 export async function ensureBuiltinServer(model: string): Promise<Endpoint> {
   const result = await commands.ensureServer(model as LlmModel);
   if (result.status === "error") {
-    throw new BuiltinModelError(result.error);
+    throw new BuiltinModelError(asLlmError(result.error));
   }
   return result.data;
+}
+
+// A build without the plugin (the App Store's) rejects with a plain string.
+export function asLlmError(error: unknown): LlmError {
+  return typeof error === "object" && error !== null && "kind" in error
+    ? (error as LlmError)
+    : { kind: "unavailable", message: String(error) };
 }
 
 export function createBuiltinFetch(

@@ -4,7 +4,7 @@ import { commands } from "@anlg/plugin-local-llm";
 
 import type { ListModelsResult } from "./list-common";
 
-import { builtinErrorMessage } from "~/ai/builtin-fetch";
+import { asLlmError, builtinErrorMessage } from "~/ai/builtin-fetch";
 
 export const builtinQueries = {
   runtime: () =>
@@ -19,7 +19,7 @@ export const builtinQueries = {
       queryFn: async () => {
         const result = await commands.listModels();
         if (result.status === "error") {
-          throw new Error(builtinErrorMessage(result.error));
+          throw new Error(builtinErrorMessage(asLlmError(result.error)));
         }
         return result.data;
       },
@@ -60,11 +60,11 @@ export async function checkBuiltinAvailability(): Promise<boolean> {
 export async function listBuiltinModels(): Promise<ListModelsResult> {
   const result = await commands.listModels();
   if (result.status === "error") {
-    throw new Error(builtinErrorMessage(result.error));
+    throw new Error(builtinErrorMessage(asLlmError(result.error)));
   }
   const models = result.data
-    .filter(({ downloaded, admission }) =>
-      downloaded ? admission.fit !== "tooLarge" : false,
+    .filter(
+      ({ downloaded, admission }) => downloaded && admission.fit !== "tooLarge",
     )
     .map(({ id }) => id);
   return {

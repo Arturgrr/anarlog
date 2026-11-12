@@ -25,7 +25,7 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { startBuiltinDownload } from "./builtin-downloads";
 
-import { builtinErrorMessage } from "~/ai/builtin-fetch";
+import { asLlmError, builtinErrorMessage } from "~/ai/builtin-fetch";
 import { useNotifications } from "~/contexts/notifications";
 import { Chip } from "~/settings/ai/shared/chip";
 import { builtinQueries } from "~/settings/ai/shared/list-builtin";
@@ -286,7 +286,7 @@ function ShowModelsFolder() {
     mutationFn: async () => {
       const result = await commands.modelsDir();
       if (result.status === "error") {
-        throw new Error(builtinErrorMessage(result.error));
+        throw new Error(builtinErrorMessage(asLlmError(result.error)));
       }
       await openerCommands.openPath(result.data, null);
     },
@@ -338,7 +338,7 @@ function BuiltinModelActions({
     mutationFn: async () => {
       const result = await commands.cancelDownload(entry.id);
       if (result.status === "error") {
-        throw new Error(builtinErrorMessage(result.error));
+        throw new Error(builtinErrorMessage(asLlmError(result.error)));
       }
     },
     onSettled: () =>
@@ -350,7 +350,7 @@ function BuiltinModelActions({
     mutationFn: async () => {
       const result = await commands.deleteModel(entry.id);
       if (result.status === "error") {
-        throw new Error(builtinErrorMessage(result.error));
+        throw new Error(builtinErrorMessage(asLlmError(result.error)));
       }
     },
     onSuccess: async () => {

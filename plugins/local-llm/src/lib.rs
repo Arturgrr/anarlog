@@ -94,7 +94,7 @@ pub fn init<R: tauri::Runtime>(options: InitOptions<R>) -> tauri::plugin::TauriP
             match &server {
                 Ok(server) => {
                     let server = server.clone();
-                    tauri::async_runtime::spawn_blocking(move || server.reap_stale());
+                    tauri::async_runtime::spawn(async move { server.reap_stale().await });
                 }
                 Err(reason) => tracing::info!(?reason, "built_in_models_unavailable"),
             }

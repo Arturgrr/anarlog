@@ -169,9 +169,20 @@ impl ServerManager {
         self.inner.status().state.clone()
     }
 
-    /// Stops a server an earlier, killed run of the app left behind.
-    pub fn reap_stale(&self) -> Option<u32> {
-        process::reap_stale_server(&self.inner.config.state_dir, &self.inner.config.binary)
+    /// Stops a server an earlier, killed run of the app left behind. Holds
+    /// the start lock, so it never mistakes a server this run just started
+    /// for a stale one.
+    pub async fn reap_stale(&self) -> Option<u32> {
+        let running = self.inner.running.lock().await;
+        if running.is_some() {
+            return None;
+        }
+        let state_dir = self.inner.config.state_dir.clone();
+        let binary = self.inner.config.binary.clone();
+        tokio::task::spawn_blocking(move || process::reap_stale_server(&state_dir, &binary))
+            .await
+            .ok()
+            .flatten()
     }
 
     /// Returns the running server for `request`, starting it (and stopping
@@ -327,7 +338,10 @@ impl Inner {
 
     async fn start(this: &Arc<Self>, request: &LaunchRequest) -> Result<Running, String> {
         let config = &this.config;
-        process::reap_stale_server(&config.state_dir, &config.binary);
+        let (state_dir, binary) = (config.state_dir.clone(), config.binary.clone());
+        let _ =
+            tokio::task::spawn_blocking(move || process::reap_stale_server(&state_dir, &binary))
+                .await;
 
         let mut last_error = String::new();
         for _ in 0..PORT_ATTEMPTS {

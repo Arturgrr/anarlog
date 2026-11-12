@@ -281,7 +281,7 @@ async fn next_launch_reaps_a_stale_server() {
         dir.path(),
         Duration::from_secs(60),
     );
-    assert_eq!(other.reap_stale(), None);
+    assert_eq!(other.reap_stale().await, None);
     assert!(orphan.try_wait().unwrap().is_none());
     std::fs::write(
         dir.path().join("llama-server.pid"),
@@ -290,7 +290,7 @@ async fn next_launch_reaps_a_stale_server() {
     .unwrap();
 
     let next = manager(&binary, dir.path(), Duration::from_secs(60));
-    assert_eq!(next.reap_stale(), Some(orphan.id()));
+    assert_eq!(next.reap_stale().await, Some(orphan.id()));
     let status = orphan.wait().unwrap();
     eprintln!("stale server exited: {status}");
     assert!(!dir.path().join("llama-server.pid").exists());

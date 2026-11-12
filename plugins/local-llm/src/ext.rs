@@ -164,7 +164,7 @@ impl<'a, R: Runtime, M: Manager<R>> LocalLlm<'a, R, M> {
             server.state(),
             ServerState::Ready { model: ref running, context: ready } if running == model.as_str() && ready == context
         );
-        if !loaded && admission::blocked_by_capture(total_memory, self.capture_active().await) {
+        if !loaded && total_memory <= admission::SMALL_MEMORY_BYTES && self.capture_active().await {
             return Err(LlmError::new(
                 LlmErrorKind::CaptureActive,
                 "This Mac needs its memory for transcription while it records. The built-in model starts after the recording ends.",
@@ -248,4 +248,3 @@ impl<R: Runtime, T: Manager<R>> LocalLlmPluginExt<R> for T {
         }
     }
 }
-

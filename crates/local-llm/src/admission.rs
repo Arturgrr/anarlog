@@ -112,11 +112,6 @@ pub fn best_for(total_memory: u64) -> Option<LlmModel> {
     })
 }
 
-/// Whether a model may load now, given a recording in progress.
-pub fn blocked_by_capture(total_memory: u64, capture_active: bool) -> bool {
-    capture_active && total_memory <= SMALL_MEMORY_BYTES
-}
-
 pub fn total_memory_bytes() -> u64 {
     let mut system = sysinfo::System::new();
     system.refresh_memory();

@@ -8,7 +8,7 @@ import {
 } from "@anlg/plugin-local-llm";
 import { toast } from "@anlg/ui/components/ui/toast";
 
-import { builtinErrorMessage } from "~/ai/builtin-fetch";
+import { asLlmError, builtinErrorMessage } from "~/ai/builtin-fetch";
 import { builtinQueries } from "~/settings/ai/shared/list-builtin";
 import { displayLlmModelId } from "~/settings/ai/shared/model-display";
 import { setSettingValues } from "~/settings/queries";
@@ -25,7 +25,7 @@ export async function startBuiltinDownload(model: LlmModel) {
   });
   const result = await commands.downloadModel(model);
   if (result.status === "error") {
-    const message = builtinErrorMessage(result.error);
+    const message = builtinErrorMessage(asLlmError(result.error));
     usePendingLlmSelection.setState((state) => ({
       model: state.model === model ? null : state.model,
       failedDownloads: { ...state.failedDownloads, [model]: message },
