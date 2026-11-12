@@ -94,12 +94,11 @@ test("lists only the GGUF models the engine reports and hides Mac-only engines o
     arch: "x86_64",
     totalMemoryBytes: 16e9,
   });
-  // Linux lists only the GGUF models; Cohere, English's first pick, is not
-  // in this list.
   client.setQueryData(localSttQueries.supportedModels().queryKey, {
     status: "ok",
     data: [
       gguf("gguf-whisper-large-v3-turbo", ["*"]),
+      gguf("gguf-cohere-transcribe", ["en", "pt", "de"]),
       gguf("gguf-gigaam-v3", ["ru"]),
       gguf("gguf-parakeet-tdt-0.6b-v3", ["en", "pt", "de"]),
     ],
@@ -111,9 +110,11 @@ test("lists only the GGUF models the engine reports and hides Mac-only engines o
   const { result } = renderCatalog(client);
   const { gguf: ggufStatus, soniqo, local_file } = result.current.providers;
 
+  // English leads with word timing; Cohere stays listed, after the picks.
   expect(ggufStatus.models.map(({ id }) => id)).toEqual([
-    "gguf-whisper-large-v3-turbo",
     "gguf-parakeet-tdt-0.6b-v3",
+    "gguf-whisper-large-v3-turbo",
+    "gguf-cohere-transcribe",
     "gguf-gigaam-v3",
   ]);
   expect(ggufStatus.models[0]).toMatchObject({

@@ -40,12 +40,19 @@ const COHERE = "gguf-cohere-transcribe";
 const GIGAAM = "gguf-gigaam-v3";
 const NB_WHISPER = "gguf-nb-whisper-medium";
 const IVRIT_WHISPER = "gguf-ivrit-whisper-large-v3-turbo";
+const NEMOTRON = "gguf-nemotron-3.5-asr";
 
 // Hex's picks per spoken language (src/transcription/models.rs), best first,
 // without the models Librelog does not offer (Parakeet Unified English and
-// SenseVoice Small).
+// SenseVoice Small). Word timing keeps speaker separation after meetings
+// precise, so where a pick has no timestamps, a model with word timing for
+// that language leads instead when its FLEURS error rate in the transcribe.cpp
+// v0.4.1 catalog is lower or within about one point; otherwise the more
+// accurate model stays first. That puts Parakeet TDT v3 first for English
+// (4.8% WER against Cohere's 5.1%) and Nemotron 3.5 for Hindi (8.6% against
+// Qwen3-ASR's 12.7%); Chinese, Korean, Vietnamese and Greek keep their picks.
 const GGUF_CHOICES_BY_LANGUAGE = new Map<string, readonly string[]>([
-  ["en", [COHERE, WHISPER_TURBO]],
+  ["en", [PARAKEET_V3, WHISPER_TURBO]],
   ["zh", [QWEN3_ASR, WHISPER_TURBO]],
   ["yue", [QWEN3_ASR, WHISPER_TURBO]],
   ["ko", [QWEN3_ASR, WHISPER_TURBO]],
@@ -65,6 +72,7 @@ const GGUF_CHOICES_BY_LANGUAGE = new Map<string, readonly string[]>([
   ["ru", [GIGAAM, WHISPER_TURBO]],
   ["no", [NB_WHISPER, WHISPER_TURBO]],
   ["vi", [QWEN3_ASR, COHERE, WHISPER_TURBO]],
+  ["hi", [NEMOTRON, QWEN3_ASR, WHISPER_TURBO]],
 ]);
 
 type LanguageModelCandidate = { id: string; languages: readonly string[] };
