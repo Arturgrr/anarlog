@@ -31,7 +31,7 @@ pub async fn soniqo_model_dir<R: tauri::Runtime>(
 pub async fn list_supported_models() -> Result<Vec<SttModelInfo>, String> {
     Ok(SUPPORTED_MODELS
         .iter()
-        .filter(|m| m.is_available_on_current_platform())
+        .filter(|m| crate::is_model_available(m))
         .map(stt_model_info)
         .collect())
 }

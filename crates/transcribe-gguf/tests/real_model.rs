@@ -46,6 +46,7 @@ fn a_real_model_transcribes_english_with_ordered_word_times() {
     )
     .unwrap();
     let load = started.elapsed();
+    eprintln!("devices: {:?}", transcribe_gguf::devices().unwrap());
     let started = Instant::now();
     let transcript = engine
         .transcribe(

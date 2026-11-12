@@ -57,9 +57,7 @@ pub struct LocalStt<'a, R: Runtime, M: Manager<R>> {
 
 impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
     fn ensure_stt_model(model: &LocalModel) -> Result<(), crate::Error> {
-        let runtime_built = cfg!(feature = "gguf")
-            || !matches!(model, LocalModel::Gguf(_) | LocalModel::Whisper(_));
-        if runtime_built && model.is_available_on_current_platform() {
+        if is_model_available(model) {
             Ok(())
         } else {
             Err(crate::Error::UnsupportedPlatform)
@@ -841,6 +839,14 @@ fn spawn_soniqo_progress_poller<R: Runtime>(
         }
         .emit(&app_handle);
     });
+}
+
+/// Whether this build runs `model` here: its platform supports it and, for
+/// GGUF and whisper.cpp files, the app was built with transcribe.cpp.
+pub fn is_model_available(model: &LocalModel) -> bool {
+    let runtime_built =
+        cfg!(feature = "gguf") || !matches!(model, LocalModel::Gguf(_) | LocalModel::Whisper(_));
+    runtime_built && model.is_available_on_current_platform()
 }
 
 pub trait LocalSttPluginExt<R: Runtime> {
