@@ -22,8 +22,8 @@ import {
   getTranscriptionLanguages,
   getUnsupportedDesktopLocalSttRepair,
   isConfiguredSttModel,
-  isDesktopLocalSttAvailable,
   isLocalFileSttModel,
+  isLocalSttProviderAvailable,
   isOnDeviceSttModel,
   isSupportedLanguagesBatch,
   isSupportedLanguagesLive,
@@ -238,43 +238,67 @@ describe("isConfiguredSttModel", () => {
   });
 });
 
-describe("getUnsupportedDesktopLocalSttRepair", () => {
-  test("reports local STT only on Apple Silicon", () => {
-    expect(isDesktopLocalSttAvailable("macos", "aarch64")).toBe(true);
-    expect(isDesktopLocalSttAvailable("macos", "x86_64")).toBe(false);
-    expect(isDesktopLocalSttAvailable("windows", "aarch64")).toBe(false);
-  });
+describe("isLocalSttProviderAvailable", () => {
+  const targets = [
+    ["macos", "aarch64"],
+    ["macos", "x86_64"],
+    ["windows", "x86_64"],
+    ["windows", "aarch64"],
+    ["linux", "x86_64"],
+    ["linux", "aarch64"],
+  ] as const;
 
-  test.each(["windows", "linux"])(
-    "requires a new provider selection on %s",
-    (currentPlatform) => {
+  test.each([
+    ["soniqo", ["macos/aarch64"]],
+    ["apple_speech", ["macos/aarch64"]],
+    [
+      "gguf",
+      ["macos/aarch64", "windows/x86_64", "linux/x86_64", "linux/aarch64"],
+    ],
+    [
+      "local_file",
+      ["macos/aarch64", "windows/x86_64", "linux/x86_64", "linux/aarch64"],
+    ],
+    ["deepgram", []],
+  ])(
+    "offers %s on exactly the platforms its engine builds for",
+    (provider, expected) => {
       expect(
-        getUnsupportedDesktopLocalSttRepair(
-          currentPlatform,
-          "x86_64",
-          "soniqo",
-          "soniqo-parakeet-streaming",
-        ),
-      ).toEqual({ provider: "", model: "" });
+        targets
+          .filter(([platform, arch]) =>
+            isLocalSttProviderAvailable(provider, platform, arch),
+          )
+          .map(([platform, arch]) => `${platform}/${arch}`),
+      ).toEqual(expected);
     },
   );
+});
 
-  test("keeps supported Apple-local selections on Apple Silicon", () => {
-    expect(
-      getUnsupportedDesktopLocalSttRepair(
-        "macos",
-        "aarch64",
-        "soniqo",
-        "soniqo-parakeet-streaming",
-      ),
-    ).toBeNull();
-  });
-
-  test("repairs local model files on unsupported platforms", () => {
+describe("getUnsupportedDesktopLocalSttRepair", () => {
+  test("keeps a GGUF selection on Linux but clears a Soniqo one", () => {
     expect(
       getUnsupportedDesktopLocalSttRepair(
         "linux",
         "x86_64",
+        "gguf",
+        "gguf-parakeet-tdt-0.6b-v3",
+      ),
+    ).toBeNull();
+    expect(
+      getUnsupportedDesktopLocalSttRepair(
+        "linux",
+        "x86_64",
+        "soniqo",
+        "soniqo-parakeet-streaming",
+      ),
+    ).toEqual({ provider: "", model: "" });
+  });
+
+  test("repairs local model files where their engine does not build", () => {
+    expect(
+      getUnsupportedDesktopLocalSttRepair(
+        "windows",
+        "aarch64",
         "local_file",
         "local-file",
       ),

@@ -9,6 +9,7 @@ import { languageSupportKey, type LanguageSupport } from "./language-support";
 import { LocalFileModel } from "./local-file-model";
 import { LanguageSupportLine, ModeChip, SttModelRow } from "./model-rows";
 import { STT_PROVIDER_CONTEXT } from "./provider-context";
+import { SpeechEngineSection } from "./speech-engine";
 
 import { ProviderConnectionForm, StyledStreamdown } from "~/settings/ai/shared";
 import {
@@ -82,7 +83,7 @@ export function SttProviderDetail({
       <DetailSection title={<Trans>Models</Trans>}>
         {status.setup.kind === "unavailable" ? (
           <p className="text-muted-foreground">
-            <Trans>Not available on this Mac.</Trans>
+            <Trans>Not available on this computer.</Trans>
           </p>
         ) : null}
         {!selectable && !("builtIn" in provider) ? (
@@ -137,7 +138,22 @@ export function SttProviderDetail({
             ))}
           </ModelOptionList>
         ) : null}
+        {models.some(
+          (model) => model.timestamps && model.timestamps !== "word",
+        ) ? (
+          <p className="text-faint text-xs">
+            <Trans>
+              Models without word timing make speaker separation after meetings
+              less precise.
+            </Trans>
+          </p>
+        ) : null}
       </DetailSection>
+
+      {selectable &&
+      (provider.id === "gguf" || provider.id === "local_file") ? (
+        <SpeechEngineSection />
+      ) : null}
 
       <p className="text-faint text-xs">
         <Trans>

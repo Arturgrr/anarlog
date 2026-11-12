@@ -31,6 +31,7 @@ import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 import {
   getUnsupportedDesktopLocalSttRepair,
   isConfiguredSttModel,
+  isLocalSttProvider,
   isOnDeviceSttModel,
 } from "~/stt/capabilities";
 import {
@@ -514,14 +515,16 @@ function applySettingSideEffects(values: SettingValues): void {
   }
 }
 
-async function syncLocalSttServer(): Promise<void> {
+// Brings the local STT server in line with the selected model, starting it
+// for an on-device model. A local file starts lazily from its connection.
+export async function syncLocalSttServer(): Promise<void> {
   const { values } = await getStoredSettingValues();
   const provider = values.current_stt_provider;
   let model = values.current_stt_model;
   const localModelPath = values.local_stt_model_path?.trim();
 
   if (
-    ["soniqo", "apple_speech", "local_file"].includes(provider ?? "") &&
+    isLocalSttProvider(provider) &&
     model &&
     !isConfiguredSttModel(provider, model)
   ) {
@@ -552,6 +555,21 @@ async function syncLocalSttServer(): Promise<void> {
   } else {
     await localSttCommands.stopServer(null);
   }
+}
+
+// The engine reads the device preference and remembered GPU failures when it
+// loads a model, so the selected engine has to load again for a change to apply.
+export async function restartLocalSttEngine(): Promise<void> {
+  const { values } = await getStoredSettingValues();
+  if (
+    values.current_stt_provider !== "gguf" &&
+    values.current_stt_provider !== "local_file"
+  ) {
+    return;
+  }
+
+  await localSttCommands.stopServer(null);
+  await syncLocalSttServer();
 }
 
 function parseStringArray(value: string): string[] {

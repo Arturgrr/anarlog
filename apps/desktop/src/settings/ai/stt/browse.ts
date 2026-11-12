@@ -52,7 +52,7 @@ export function sttEntryModels(
       id: freeformModel,
       isDownloaded: true,
       isDeprecated: false,
-      isRecommended: false,
+      recommended: null,
       mode: sttModelMode(providerId, freeformModel),
     },
   ];

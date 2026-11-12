@@ -109,52 +109,10 @@ vi.mock("~/shared/utils", () => ({
   id: idMock,
 }));
 
-vi.mock("~/stt/capabilities", () => {
-  const baseLanguageCode = (language: string) =>
-    language.split(/[-_]/)[0]?.toLowerCase() ?? "";
-
-  return {
-    getTranscriptionLanguages: (
-      mainLanguage: string | null | undefined,
-      spokenLanguages: readonly string[] | null | undefined,
-    ) => {
-      const seen = new Set<string>();
-      const languages: string[] = [];
-
-      for (const language of [mainLanguage, ...(spokenLanguages ?? [])]) {
-        if (!language) {
-          continue;
-        }
-
-        const baseCode = baseLanguageCode(language);
-        if (!baseCode || seen.has(baseCode)) {
-          continue;
-        }
-
-        seen.add(baseCode);
-        languages.push(language);
-      }
-
-      return languages;
-    },
-    isDesktopLocalSttAvailable: (
-      currentPlatform: string,
-      currentArch: string,
-    ) => currentPlatform === "macos" && currentArch === "aarch64",
-    isLocalFileSttModel: (
-      provider: string | null | undefined,
-      model: string | null | undefined,
-    ) => provider === "local_file" && model === "local-file",
-    isOnDeviceSttModel: (
-      provider: string | null | undefined,
-      model: string | null | undefined,
-    ) =>
-      typeof model === "string" &&
-      ((provider === "soniqo" && model.startsWith("soniqo-")) ||
-        (provider === "apple_speech" && model === "apple-speech")),
-    isSupportedLanguagesBatch: isSupportedLanguagesBatchMock,
-  };
-});
+vi.mock("~/stt/capabilities", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/stt/capabilities")>()),
+  isSupportedLanguagesBatch: isSupportedLanguagesBatchMock,
+}));
 
 vi.mock("~/store/zustand/listener/general-batch", () => ({
   acknowledgeCompletedBatch: vi.fn(async () => {}),
@@ -187,6 +145,7 @@ describe("getBatchProvider", () => {
     ["soniqo", "soniqo-parakeet-batch", "soniqo"],
     ["apple_speech", "apple-speech", "applespeech"],
     ["local_file", "local-file", "whispercpp"],
+    ["gguf", "gguf-parakeet-tdt-0.6b-v3", "whispercpp"],
   ] as const)("maps %s/%s to %s", (provider, model, expected) => {
     expect(getBatchProvider(provider, model)).toBe(expected);
   });

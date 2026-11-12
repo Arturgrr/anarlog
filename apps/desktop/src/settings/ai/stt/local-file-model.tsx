@@ -35,7 +35,7 @@ export function LocalFileModel() {
         defaultPath: modelPath || undefined,
         filters: [
           {
-            name: t`whisper.cpp models`,
+            name: t`Speech models`,
             extensions: ["bin", "gguf"],
           },
         ],
@@ -94,11 +94,12 @@ export function LocalFileModel() {
           <FolderOpen className="size-4 shrink-0" aria-hidden />
         )}
         <span className="min-w-0 flex-1 truncate text-sm">
-          {filename || <Trans>Choose a .bin model</Trans>}
+          {filename || <Trans>Choose a .bin or .gguf model</Trans>}
         </span>
         {modelInfo.data ? (
           <span className="text-muted-foreground shrink-0 text-[11px]">
-            {formatModelSize(modelInfo.data.sizeBytes, i18n.locale)} · GGML ·{" "}
+            {formatModelSize(modelInfo.data.sizeBytes, i18n.locale)} ·{" "}
+            {modelInfo.data.format.toUpperCase()} ·{" "}
             <Trans>After recording</Trans>
           </span>
         ) : null}

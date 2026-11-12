@@ -87,7 +87,9 @@ Current builds apply the DMA-BUF workaround automatically. Set the variables you
 ## Platform differences
 
 - The Apple Reminders integration is available on macOS.
-- Soniqo, Apple Speech, and BYO-model on-device transcription require Apple Silicon. Apple Speech also appears only when a compatible Mac running macOS 26 reports the required system assets. On other systems, configure a local Deepgram-compatible server or a provider with your own API key. See [how to use on-device models](/help#use-on-device-models) and [local models for hour-long calls](/help#local-model-hour-long-calls).
+- **Local models** and **BYO-model** transcribe on Apple Silicon Macs, Windows x86_64, and Linux x86_64 or ARM64. On Windows and Linux they are part of a source build, and Settings shows them as not available when your build does not include the engine. Their models are downloaded on request; see [Local models](/models-and-providers#local-models).
+- GPU acceleration for local models depends on your build and graphics drivers and has not been checked on every graphics card. **Settings → Transcription → Speech engine** chooses **Auto**, **GPU**, or **CPU**, and Auto falls back to the CPU when a GPU fails.
+- Soniqo and Apple Speech require Apple Silicon. Apple Speech also appears only when a compatible Mac running macOS 26 reports the required system assets. Intel Macs and Windows on ARM have no on-device transcription; configure a local Deepgram-compatible server or a provider with your own API key. See [how to use on-device models](/help#use-on-device-models) and [local models for hour-long calls](/help#local-model-hour-long-calls).
 - Windows and Linux support are in beta. Include your operating system and Librelog version when you report a platform-specific problem.
 
 When installation is complete, continue to [Your first meeting](/quickstart). If the app does not open or cannot capture audio, see [Troubleshooting](/troubleshooting).

@@ -25,7 +25,7 @@ import {
 import type { ReactNode } from "react";
 
 import type { LocalModel } from "@anlg/plugin-local-stt";
-import { Cpu, Shuffle, Waveform } from "@anlg/ui/components/icons";
+import { Cpu, Package, Shuffle, Waveform } from "@anlg/ui/components/icons";
 
 import { ProviderBrandImage, ProviderLobeIcon } from "~/settings/ai/shared";
 import { type ProviderRequirement } from "~/settings/ai/shared/eligibility";
@@ -77,7 +77,7 @@ const displayModelId = (model: string): string => {
   if (model === "qwen3-asr") return "Qwen3 ASR";
 
   if (model === "local-file") {
-    return "whisper.cpp .bin";
+    return "whisper.cpp .bin / .gguf";
   }
 
   if (model === "nova-3" || model === "nova-3-general") {
@@ -398,6 +398,17 @@ const _PROVIDERS = [
     baseUrl: "",
     builtIn: true,
     icon: <ProviderLobeIcon icon={Apple} />,
+    models: [],
+    requirements: [],
+  },
+  {
+    disabled: false,
+    id: "gguf",
+    displayName: "transcribe.cpp",
+    badge: msg`On device`,
+    baseUrl: "",
+    builtIn: true,
+    icon: <Package />,
     models: [],
     requirements: [],
   },
@@ -1228,6 +1239,7 @@ const _PROVIDERS = [
 const PROVIDER_ORDER = [
   "soniqo",
   "apple_speech",
+  "gguf",
   "local_file",
   "deepgram",
   "assemblyai",

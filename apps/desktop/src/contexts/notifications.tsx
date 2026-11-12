@@ -1,5 +1,9 @@
 import { t } from "@lingui/core/macro";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  type QueryClient,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   createContext,
   type ReactNode,
@@ -50,6 +54,20 @@ const MODEL_DISPLAY_NAMES: Partial<Record<LocalModel, string>> = {
   QuantizedTinyEn: "Whisper Tiny (English)",
   QuantizedSmallEn: "Whisper Small (English)",
 };
+
+// Catalog models take their name from the model list Settings loaded.
+function modelDisplayName(queryClient: QueryClient, model: LocalModel) {
+  const supported = queryClient.getQueryData(
+    localSttQueries.supportedModels().queryKey,
+  );
+  return (
+    MODEL_DISPLAY_NAMES[model] ??
+    (supported?.status === "ok"
+      ? supported.data.find(({ key }) => key === model)?.display_name
+      : undefined) ??
+    model
+  );
+}
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -120,7 +138,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const unlisten = localSttEvents.downloadProgressPayload.listen((event) => {
       const { model: eventModel, status } = event.payload;
       const isFailed = typeof status === "object" && "failed" in status;
-      const modelName = MODEL_DISPLAY_NAMES[eventModel] ?? eventModel;
+      const modelName = modelDisplayName(queryClient, eventModel);
       usePendingSttSelection.setState((state) => {
         const { [eventModel]: _, ...failedDownloads } = state.failedDownloads;
         return {
@@ -222,14 +240,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       activeDownloads.entries(),
     ).map(([model, progress]) => ({
       model,
-      displayName: MODEL_DISPLAY_NAMES[model] ?? model,
+      displayName: modelDisplayName(queryClient, model),
       progress,
     }));
     for (const model of queuedDownloads) {
       if (!activeDownloads.has(model)) {
         downloadsArray.push({
           model,
-          displayName: MODEL_DISPLAY_NAMES[model] ?? model,
+          displayName: modelDisplayName(queryClient, model),
           progress: 0,
           isStarting: true,
         });
@@ -258,6 +276,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       dismissDownload,
     };
   }, [
+    queryClient,
     hasConfigBanner,
     hasActiveEnhancement,
     activeDownloads,
