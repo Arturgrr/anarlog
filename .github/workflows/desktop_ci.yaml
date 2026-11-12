@@ -1,17 +1,28 @@
 # https://github.com/tauri-apps/tauri-action/blob/3013cac/examples/test-build-only.yml
 #
-# The native jobs (macOS, Windows, Linux) take up to an hour each, so pull
-# requests and pushes get them only when they touch what those jobs build;
-# `changes` decides, and `ci` counts a native job it skipped as passing.
-# Schedule and manual runs always get them.
+# The native jobs (macOS, Windows, Linux) are the slow ones, so pull requests
+# and pushes get them only when they touch what those jobs build; `changes`
+# decides, and `ci` counts a native job it skipped as passing. Schedule and
+# manual runs always get them.
+#
+# Tests run on Linux unless they need macOS. MACOS_TESTS are the crates with
+# macOS-specific code, or tests that reach it through a dependency; macos_ci
+# tests them with the app. linux_ci tests the app and every other crate on
+# Linux, where runners are plentiful and the Swift builds are stubs, except
+# CLI_TESTS, which cli_ci tests, and SKIP_TESTS, which no job here tests. A
+# crate tested on Linux can still fail only on macOS (case-insensitive file
+# names, system behaviour outside `cfg`), so schedule and manual runs also test
+# the whole workspace on macOS, as every run did before; such a failure shows
+# up within a day.
 #
 # macOS is one job on purpose: hosted macOS runners are scarce here and a job
 # left waiting for one is cancelled, so a run asks for a single runner. Its
 # checks keep going after a failure, so that one run reports all of them.
-# Windows and Linux build their tests once instead of checking first.
 #
 # Only main saves Rust caches (rust_install), one per platform; everything else
-# restores them, so a pull request can neither evict nor replace them.
+# restores them, so a pull request can neither evict nor replace them. A cache
+# is saved only under a new key, and the key does not cover the cargo commands,
+# so bump a job's cache-key when you change what it builds.
 on:
   workflow_dispatch:
   schedule:
@@ -68,6 +79,31 @@ env:
   # only slows linking and fills the runner's disk here.
   CARGO_INCREMENTAL: "0"
   CARGO_PROFILE_DEV_DEBUG: "0"
+  # Crates whose tests need macOS: macOS code or `cfg` branches, Swift, or a
+  # dependency whose macOS behaviour the tests reach (local transcription,
+  # capture, the app's macOS plugins). macos_ci tests them; linux_ci skips them.
+  MACOS_TESTS: >-
+    afconvert apple-todo audio-actual audio-norm detect dictation-ui-macos
+    listener-core listener2-core local-model local-stt-core notification
+    overlay-kit owhisper-client recording-environment shortcut-macos
+    tauri-plugin-anlg-tray tauri-plugin-dictation tauri-plugin-dock
+    tauri-plugin-shortcut tauri-plugin-todo tauri-plugin-transcription
+    transcribe-soniqo transcribe-speechanalyzer transcription-core
+  # Tested by cli_ci, whose paths cover them and their workspace dependencies.
+  CLI_TESTS: agent-access db-app db-migrate librelog-cli tiptap
+  # Built here but never tested here, as before.
+  SKIP_TESTS: >-
+    aec audio audio-device bundle db-core device-monitor frontmatter host
+    intercept notification-linux notification-macos onnx pyannote-local
+    tauri-plugin-apple-foundation tauri-plugin-deeplink2 tauri-plugin-detect
+    tauri-plugin-fs-sync tauri-plugin-fs2 tauri-plugin-hooks tauri-plugin-icon
+    tauri-plugin-local-auth tauri-plugin-local-stt tauri-plugin-misc
+    tauri-plugin-notification tauri-plugin-notify tauri-plugin-opener2
+    tauri-plugin-permissions tauri-plugin-settings tauri-plugin-sfx
+    tauri-plugin-sidecar2 tauri-plugin-store2 tauri-plugin-tantivy
+    tauri-plugin-tracing tauri-plugin-updater2 tauri-plugin-windows tcc
+    transcribe-whisper-local vad vad-masking whisper whisper-local
+    whisper-local-model
 
 defaults:
   run:
@@ -138,19 +174,23 @@ jobs:
     needs: changes
     if: needs.changes.outputs.native == 'true'
     runs-on: macos-26
+    env:
+      FULL: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive
-          fetch-depth: 0
           persist-credentials: false
       - uses: $/.github/actions/install_desktop_deps
         with:
           target: macos
+      # Schedule and manual runs build more than pull requests do, so only
+      # pushes save the cache that pull requests restore.
       - uses: $/.github/actions/rust_install
         with:
           platform: macos
-          cache-key: desktop
+          cache-key: desktop-v2
+          save-cache: ${{ github.event_name == 'push' }}
       - id: setup
         run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
       # Every check after setup runs even when an earlier one failed.
@@ -158,82 +198,31 @@ jobs:
         run: swift build --package-path plugins/windows/swift-lib
       - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: swift test --package-path crates/dictation-ui-macos/swift-lib
+      # The test build goes first so the long Soniqo Swift build in its build
+      # script overlaps with compiling, not with waiting. Schedule and manual
+      # runs test the macOS crates with the rest of the workspace below.
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: |
+          packages=(-p desktop)
+          if [[ "$FULL" != true ]]; then
+            read -r -a crates <<<"$MACOS_TESTS"
+            for crate in "${crates[@]}"; do packages+=(-p "$crate"); done
+          fi
+          cargo test --locked "${packages[@]}"
       - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: cargo check --locked -p desktop --features direct-distribution
       - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: cargo check --locked -p desktop --features app-store
-      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
-        run: cargo test --locked -p desktop
-      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' && env.FULL == 'true' }}
         run: cargo test --locked -p tauri-plugin-template --lib
-      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' && env.FULL == 'true' }}
         run: |
-          cargo test --locked --workspace \
-            --exclude desktop \
-            --exclude control-tauri \
-            --exclude ai \
-            --exclude lago \
-            --exclude notch \
-            --exclude notification-macos \
-            --exclude tcc \
-            --exclude notification-linux \
-            --exclude am \
-            --exclude aec \
-            --exclude whisper \
-            --exclude whisper-local \
-            --exclude whisper-local-model \
-            --exclude vad2 \
-            --exclude vad \
-            --exclude vvad \
-            --exclude vad-masking \
-            --exclude vad-chunking \
-            --exclude onnx \
-            --exclude pyannote-local \
-            --exclude llama \
-            --exclude tools \
-            --exclude bundle \
-            --exclude host \
-            --exclude intercept \
-            --exclude frontmatter \
-            --exclude audio \
-            --exclude audio-device \
-            --exclude transcribe-whisper-local \
-            --exclude device-monitor \
-            --exclude tauri-plugin-analytics \
-            --exclude tauri-plugin-auth \
-            --exclude tauri-plugin-db2 \
-            --exclude tauri-plugin-deeplink2 \
-            --exclude tauri-plugin-detect \
-            --exclude tauri-plugin-fs-db \
-            --exclude tauri-plugin-fs-sync \
-            --exclude tauri-plugin-fs2 \
-            --exclude tauri-plugin-hooks \
-            --exclude tauri-plugin-icon \
-            --exclude tauri-plugin-listener \
-            --exclude tauri-plugin-listener2 \
-            --exclude tauri-plugin-local-auth \
-            --exclude tauri-plugin-apple-foundation \
-            --exclude tauri-plugin-local-stt \
-            --exclude tauri-plugin-misc \
-            --exclude tauri-plugin-notification \
-            --exclude tauri-plugin-notify \
-            --exclude tauri-plugin-opener2 \
-            --exclude tauri-plugin-pdf \
-            --exclude tauri-plugin-permissions \
-            --exclude tauri-plugin-settings \
-            --exclude tauri-plugin-sfx \
-            --exclude tauri-plugin-sidecar2 \
-            --exclude tauri-plugin-store2 \
-            --exclude tauri-plugin-tantivy \
-            --exclude tauri-plugin-template \
-            --exclude tauri-plugin-tracing \
-            --exclude tauri-plugin-tray \
-            --exclude tauri-plugin-updater2 \
-            --exclude tauri-plugin-windows \
-            --exclude db3 \
-            --exclude db-core \
-            --exclude activity-capture-macos \
-            --exclude tauri-plugin-activity-capture
+          read -r -a skip <<<"$SKIP_TESTS"
+          excludes=(--exclude desktop --exclude tauri-plugin-template)
+          for crate in "${skip[@]}"; do excludes+=(--exclude "$crate"); done
+          cargo test --locked --workspace "${excludes[@]}"
+      # The build scripts regenerate these on every run, the tests only when
+      # they run here (schedule and manual runs); linux_ci checks both.
       - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: |
           git diff --exit-code -- \
@@ -262,35 +251,58 @@ jobs:
   linux_ci:
     needs: changes
     if: needs.changes.outputs.native == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-24.04
-            target: x86_64-unknown-linux-gnu
-            rust_platform: linux-x86_64
-          - runner: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
-            rust_platform: linux-aarch64
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive
-          fetch-depth: 0
           persist-credentials: false
       - uses: $/.github/actions/install_desktop_deps
         with:
           target: linux
       - uses: $/.github/actions/rust_install
         with:
-          platform: ${{ matrix.rust_platform }}
+          platform: linux-x86_64
+          cache-key: desktop-v2
+      # The app and every crate outside MACOS_TESTS, CLI_TESTS and SKIP_TESTS.
+      # Binding exports format only when prettier runs, and the committed
+      # bindings are unformatted, so a stub hides any prettier on the image.
+      - run: |
+          mkdir -p "$RUNNER_TEMP/no-prettier"
+          printf '#!/bin/sh\nexit 1\n' >"$RUNNER_TEMP/no-prettier/prettier"
+          chmod +x "$RUNNER_TEMP/no-prettier/prettier"
+          export PATH="$RUNNER_TEMP/no-prettier:$PATH"
+          read -r -a skip <<<"$MACOS_TESTS $CLI_TESTS $SKIP_TESTS"
+          excludes=()
+          for crate in "${skip[@]}"; do excludes+=(--exclude "$crate"); done
+          cargo test --locked --workspace "${excludes[@]}"
+      # The tests and build scripts above regenerate these.
+      - if: ${{ !cancelled() }}
+        run: |
+          git diff --exit-code -- \
+            plugins/db/js/bindings.gen.ts \
+            plugins/db/permissions/autogenerated \
+            plugins/db/permissions/schemas/schema.json
+
+  linux_arm_ci:
+    needs: changes
+    if: needs.changes.outputs.native == 'true'
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: $/.github/actions/install_desktop_deps
+        with:
+          target: linux
+      - uses: $/.github/actions/rust_install
+        with:
+          platform: linux-aarch64
           cache-key: desktop
       # The binary's test harness builds the library as a normal crate, so this
       # also covers `cargo check -p desktop`; only the library has these tests.
-      - env:
-          TARGET: ${{ matrix.target }}
-        run: cargo test --locked --target "$TARGET" -p desktop --lib --bins embedded_cli
+      - run: cargo test --locked --target aarch64-unknown-linux-gnu -p desktop --lib --bins embedded_cli
 
   desktop_i18n:
     if: ${{ !startsWith(github.head_ref || '', 'blog/') }}
@@ -311,6 +323,7 @@ jobs:
       macos_ci,
       windows_ci,
       linux_ci,
+      linux_arm_ci,
       desktop_i18n,
     ]
     runs-on: ubuntu-latest
