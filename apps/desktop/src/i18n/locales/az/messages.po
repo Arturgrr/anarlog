@@ -55,6 +55,11 @@ msgstr ""
 msgid "(Unavailable — using current default)"
 msgstr ""
 
+#. placeholder {0}: modelLanguages.length
+#: src/settings/ai/stt/model-rows.tsx
+msgid "{0, plural, one {# language} other {# languages}}"
+msgstr ""
+
 #. placeholder {0}: list.result.models.length
 #: src/settings/ai/llm/index.tsx
 msgid "{0, plural, one {# model} other {# models}}"
@@ -298,6 +303,10 @@ msgstr ""
 msgid "7 days"
 msgstr ""
 
+#: src/settings/ai/stt/index.tsx
+msgid "A .bin or .gguf file from your disk"
+msgstr ""
+
 #: src/sidebar/folder-name-dialog.tsx
 msgid "A folder with this name already exists."
 msgstr ""
@@ -328,10 +337,6 @@ msgstr ""
 
 #: src/sidebar/timeline/utils/index.ts
 msgid "a week ago"
-msgstr ""
-
-#: src/settings/ai/stt/index.tsx
-msgid "A whisper.cpp file from your disk"
 msgstr ""
 
 #: src/settings/general/about.tsx
@@ -805,6 +810,7 @@ msgid "Authenticating…"
 msgstr ""
 
 #: src/session/components/note-input/template-picker.tsx
+#: src/settings/ai/stt/speech-engine.tsx
 #: src/templates/auto-form.tsx
 #: src/templates/template-sidebar.tsx
 msgid "Auto"
@@ -816,6 +822,14 @@ msgstr ""
 
 #: src/templates/auto-form.tsx
 msgid "Auto summary format"
+msgstr ""
+
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Auto uses a GPU that works and falls back to the CPU. Changes apply the next time the model loads."
+msgstr ""
+
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Auto uses the CPU because {setAsideName} stopped responding."
 msgstr ""
 
 #: src/settings/automations/index.tsx
@@ -913,6 +927,10 @@ msgstr ""
 
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Best for this Mac"
+msgstr ""
+
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Best for your languages"
 msgstr ""
 
 #: src/chat/components/body/empty.tsx
@@ -1131,7 +1149,7 @@ msgid "China"
 msgstr ""
 
 #: src/settings/ai/stt/local-file-model.tsx
-msgid "Choose a .bin model"
+msgid "Choose a .bin or .gguf model"
 msgstr ""
 
 #: src/session/components/outer-header/overflow/export-modal.tsx
@@ -1760,6 +1778,10 @@ msgstr ""
 msgid "Couldn't save your new badges."
 msgstr ""
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "CPU"
+msgstr ""
+
 #: src/folders/sidebar.tsx
 msgid "Create"
 msgstr ""
@@ -1979,6 +2001,10 @@ msgstr ""
 msgid "Device settings"
 msgstr ""
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Devices"
+msgstr ""
+
 #: src/settings/dictation.tsx
 #: src/sidebar/settings-nav-groups.ts
 msgid "Dictation"
@@ -2084,6 +2110,10 @@ msgstr ""
 
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Download {label}"
+msgstr ""
+
+#: src/settings/ai/stt/provider-context.ts
+msgid "Download an open speech model and run it with transcribe.cpp on this computer, so audio never leaves it. During a meeting, text appears a minute at a time; the full transcript follows after the recording. Models download from Hugging Face only when you ask, under the license shown with each."
 msgstr ""
 
 #: src/settings/ai/llm/shared.tsx
@@ -2678,6 +2708,10 @@ msgstr ""
 msgid "Good Listener"
 msgstr ""
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "GPU"
+msgstr ""
+
 #: src/settings/appearance/app-icon.tsx
 msgid "Graphite"
 msgstr ""
@@ -2950,7 +2984,7 @@ msgid "Install"
 msgstr ""
 
 #: src/onboarding/index.tsx
-msgid "Install a model on your Mac or connect a cloud provider. It’s the same list as Settings › Transcription."
+msgid "Install a model on this computer or connect a cloud provider. It’s the same list as Settings › Transcription."
 msgstr ""
 
 #: src/settings/developers/skills.tsx
@@ -3236,6 +3270,11 @@ msgstr ""
 msgid "Librelog will stop listening in {AUTO_STOP_CONFIRM_TIMEOUT_SECONDS} seconds."
 msgstr ""
 
+#. placeholder {0}: license.name
+#: src/settings/ai/stt/model-rows.tsx
+msgid "License: <0>{0}<1/></0>"
+msgstr ""
+
 #: src/settings/appearance/app-icon.tsx
 #: src/settings/appearance/theme.tsx
 msgid "Light"
@@ -3375,6 +3414,10 @@ msgstr ""
 #: src/changelog/index.tsx
 #: src/contacts/details.tsx
 msgid "Loading..."
+msgstr ""
+
+#: src/settings/ai/shared/provider-labels.ts
+msgid "Local models"
 msgstr ""
 
 #: src/settings/ai/stt/health.tsx
@@ -3669,6 +3712,10 @@ msgstr ""
 msgid "Models & Pricing"
 msgstr ""
 
+#: src/settings/ai/stt/detail.tsx
+msgid "Models without word timing make speaker separation after meetings less precise."
+msgstr ""
+
 #: src/settings/general/week-start.tsx
 msgid "Monday"
 msgstr ""
@@ -3696,6 +3743,10 @@ msgstr ""
 
 #: src/templates/sections-editor.tsx
 msgid "Move up"
+msgstr ""
+
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Multilingual"
 msgstr ""
 
 #: src/onboarding/index.tsx
@@ -3999,6 +4050,10 @@ msgstr ""
 msgid "No text input support"
 msgstr ""
 
+#: src/settings/ai/stt/model-rows.tsx
+msgid "No timing"
+msgstr ""
+
 #: src/settings/ai/llm/models.tsx
 msgid "No tool support"
 msgstr ""
@@ -4023,14 +4078,17 @@ msgstr ""
 msgid "Not available"
 msgstr ""
 
-#: src/settings/ai/llm/index.tsx
 #: src/settings/ai/stt/index.tsx
-msgid "Not available on this Mac"
+msgid "Not available on this computer"
 msgstr ""
 
 #: src/onboarding/model-status.ts
 #: src/settings/ai/stt/detail.tsx
-msgid "Not available on this Mac."
+msgid "Not available on this computer."
+msgstr ""
+
+#: src/settings/ai/llm/index.tsx
+msgid "Not available on this Mac"
 msgstr ""
 
 #: src/session/components/note-input/enhanced/index.tsx
@@ -4136,7 +4194,7 @@ msgstr ""
 
 #: src/settings/ai/llm/index.tsx
 #: src/settings/ai/stt/index.tsx
-msgid "On this Mac"
+msgid "On this computer"
 msgstr ""
 
 #: src/settings/dictation.tsx
@@ -4967,7 +5025,7 @@ msgid "Right Command"
 msgstr ""
 
 #: src/onboarding/index.tsx
-msgid "Run a model on your Mac, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
+msgid "Run a model on this computer, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
 msgstr ""
 
 #. placeholder {0}: formatToolName(toolName)
@@ -5142,6 +5200,10 @@ msgstr ""
 msgid "See all templates"
 msgstr ""
 
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Segment timing"
+msgstr ""
+
 #: src/contacts/details.tsx
 msgid "Select a person to view details"
 msgstr ""
@@ -5255,6 +5317,10 @@ msgstr ""
 msgid "Set as default"
 msgstr ""
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "set aside after a failure"
+msgstr ""
+
 #: src/session/components/note-input/enhanced/config-error.tsx
 msgid "Set up AI"
 msgstr ""
@@ -5341,6 +5407,7 @@ msgstr ""
 msgid "Show in Finder"
 msgstr ""
 
+#: src/settings/ai/stt/model-rows.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Show in folder"
 msgstr ""
@@ -5498,6 +5565,10 @@ msgstr ""
 msgid "Sound"
 msgstr ""
 
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Source"
+msgstr ""
+
 #: src/session/components/note-input/enhanced/enhance-error.tsx
 msgid "Source: {provider} (AI model provider)"
 msgstr ""
@@ -5536,6 +5607,14 @@ msgstr ""
 
 #: src/stt/capture-lifecycle.ts
 msgid "Speakers could not be separated"
+msgstr ""
+
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Speech engine"
+msgstr ""
+
+#: src/settings/ai/stt/local-file-model.tsx
+msgid "Speech models"
 msgstr ""
 
 #: src/settings/general/storage/legacy-cleanup.tsx
@@ -5894,7 +5973,7 @@ msgid "The live transcript was kept. Re-transcribe the meeting to try again."
 msgstr ""
 
 #: src/settings/ai/stt/model-rows.tsx
-msgid "The model files are removed from this Mac. You can download them again later."
+msgid "The model files are removed from this computer. You can download them again later."
 msgstr ""
 
 #: src/settings/ai/llm/index.tsx
@@ -6202,6 +6281,10 @@ msgstr ""
 msgid "Try dictation"
 msgstr ""
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Try GPU again"
+msgstr ""
+
 #: src/chat/components/input/use-dictation.ts
 msgid "Try speaking a little closer to the microphone."
 msgstr ""
@@ -6499,7 +6582,7 @@ msgid "Use a stable filename in the configured export directory."
 msgstr ""
 
 #: src/settings/ai/stt/provider-context.ts
-msgid "Use a whisper.cpp model file you already have. It runs on this Mac after each recording."
+msgid "Use a whisper.cpp `.bin` or GGUF `.gguf` model file you already have. It runs on this computer after each recording."
 msgstr ""
 
 #: src/settings/ai/stt/provider-context.ts
@@ -6737,10 +6820,6 @@ msgstr ""
 msgid "While dictating"
 msgstr ""
 
-#: src/settings/ai/stt/local-file-model.tsx
-msgid "whisper.cpp models"
-msgstr ""
-
 #: src/onboarding/index.tsx
 msgid "Who writes your summaries"
 msgstr ""
@@ -6751,6 +6830,10 @@ msgstr ""
 
 #: src/i18n/external-messages.ts
 msgid "Windows could not insert the entire dictation. Check the field before copying your last dictation. Elevated apps may block text insertion."
+msgstr ""
+
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Word timing"
 msgstr ""
 
 #: src/settings/automations/workflow-builder.tsx
