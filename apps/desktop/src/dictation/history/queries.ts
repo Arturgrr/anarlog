@@ -11,7 +11,7 @@ import { useRef } from "react";
 import { commands as dictation } from "@anlg/plugin-dictation";
 import {
   commands as localSttCommands,
-  type LocalModel,
+  type SttModelType,
 } from "@anlg/plugin-local-stt";
 
 import {
@@ -29,6 +29,7 @@ import { useConfigValues } from "~/shared/config";
 import {
   getTranscriptionLanguages,
   isLocalSttProviderAvailable,
+  isOnDeviceSttModel,
   isSupportedLanguagesBatch,
   modelCoversLanguages,
 } from "~/stt/capabilities";
@@ -76,7 +77,7 @@ type RetranscriptionModel = {
   languages?: string[];
 };
 
-const LOCAL_PROVIDERS = {
+const LOCAL_PROVIDERS: Partial<Record<SttModelType, string>> = {
   soniqo: "soniqo",
   appleSpeech: "apple_speech",
   gguf: "gguf",
@@ -105,18 +106,14 @@ export function useRetranscriptionModels() {
   });
   const localModels = onDevice
     ? (supported.data ?? []).flatMap((model) => {
-        const provider =
-          LOCAL_PROVIDERS[model.model_type as keyof typeof LOCAL_PROVIDERS];
+        const provider = LOCAL_PROVIDERS[model.model_type];
         return provider
           ? [
               {
                 provider,
                 model: model.key,
                 label: model.display_name,
-                languages:
-                  provider === "gguf"
-                    ? (model.languages ?? undefined)
-                    : undefined,
+                languages: provider === "gguf" ? model.languages : undefined,
               },
             ]
           : [];
@@ -198,15 +195,20 @@ function wordsToText(words: { text: string; start_ms: number }[]) {
 
 // A downloaded model that is not the selected one has no local server yet.
 // Starting one replaces the selected model's server, which is restored after.
-async function startLocalServerFor(model: RetranscriptionModel) {
+async function startLocalServerFor({
+  provider,
+  model,
+  baseUrl,
+}: RetranscriptionModel) {
   if (
-    model.baseUrl ||
-    getBatchProvider(model.provider, model.model) !== "whispercpp"
+    baseUrl ||
+    !isOnDeviceSttModel(provider, model) ||
+    getBatchProvider(provider, model) !== "whispercpp"
   ) {
     return null;
   }
 
-  const started = await localSttCommands.startServer(model.model as LocalModel);
+  const started = await localSttCommands.startServer(model);
   if (started.status === "error") {
     throw new Error(started.error);
   }

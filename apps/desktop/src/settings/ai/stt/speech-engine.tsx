@@ -1,6 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { commands as localSttCommands } from "@anlg/plugin-local-stt";
 import { Button } from "@anlg/ui/components/ui/button";
 import {
   Select,
@@ -13,21 +14,24 @@ import {
 import { DetailSection } from "~/settings/ai/shared/provider-detail";
 import { restartLocalSttEngine, setSettingValue } from "~/settings/queries";
 import { useConfigValue } from "~/shared/config";
-import { ggufCommands, type SttDevicePreference } from "~/stt/gguf";
 
 const STT_DEVICES_QUERY_KEY = ["local-stt", "devices"] as const;
+
+// The values of `local_stt_device`, which the local STT plugin reads when it
+// loads a model.
+type DevicePreference = "auto" | "gpu" | "cpu";
 
 export function SpeechEngineSection() {
   const { t } = useLingui();
   const queryClient = useQueryClient();
   const stored = useConfigValue("local_stt_device");
-  const preference: SttDevicePreference =
+  const preference: DevicePreference =
     stored === "gpu" || stored === "cpu" ? stored : "auto";
 
   const devices = useQuery({
     queryKey: STT_DEVICES_QUERY_KEY,
     queryFn: async () => {
-      const result = await ggufCommands.listSttDevices();
+      const result = await localSttCommands.listSttDevices();
       if (result.status === "error") {
         throw new Error(result.error);
       }
@@ -40,7 +44,7 @@ export function SpeechEngineSection() {
       queryClient.invalidateQueries({ queryKey: ["stt-connection"] }),
     ]);
   const choose = useMutation({
-    mutationFn: async (device: SttDevicePreference) => {
+    mutationFn: async (device: DevicePreference) => {
       await setSettingValue("local_stt_device", device);
       await restartLocalSttEngine();
     },
@@ -48,7 +52,7 @@ export function SpeechEngineSection() {
   });
   const retryGpu = useMutation({
     mutationFn: async () => {
-      const result = await ggufCommands.forgetSttGpuFailures();
+      const result = await localSttCommands.forgetSttGpuFailures();
       if (result.status === "error") {
         throw new Error(result.error);
       }
@@ -75,7 +79,7 @@ export function SpeechEngineSection() {
         <Select
           value={preference}
           disabled={choose.isPending}
-          onValueChange={(value) => choose.mutate(value as SttDevicePreference)}
+          onValueChange={(value) => choose.mutate(value as DevicePreference)}
         >
           <SelectTrigger aria-label={t`Speech engine`} className="w-28">
             <SelectValue />

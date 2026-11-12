@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   commands as localSttCommands,
   type LocalModel,
+  type SttModelLicense,
 } from "@anlg/plugin-local-stt";
 import { commands as openerCommands } from "@anlg/plugin-opener2";
 import {
@@ -37,9 +38,7 @@ import { DestructiveConfirmationDialog } from "~/shared/ui/destructive-confirmat
 import {
   canAppleSpeechTranscribe,
   isSupportedLocalSttModel,
-  modelCoversLanguages,
 } from "~/stt/capabilities";
-import type { SttModelLicense } from "~/stt/gguf";
 
 export function ModeChip({ mode }: { mode: SttMode }) {
   const { t } = useLingui();
@@ -108,7 +107,11 @@ export function SttModelRow({
       details={
         <>
           {model.languages ? (
-            <CatalogModelFacts model={model} languages={languages} />
+            <CatalogModelFacts
+              model={model}
+              covered={languages.length > 0 && !!support?.supported}
+              languages={languages}
+            />
           ) : null}
           {model.languages && support?.supported ? null : (
             <LanguageSupportLine
@@ -138,7 +141,9 @@ export function SttModelRow({
         ) : undefined
       }
       footer={
-        model.license ? <LicenseNote license={model.license} /> : undefined
+        model.license ? (
+          <LicenseNote license={model.license} sourceUrl={model.sourceUrl} />
+        ) : undefined
       }
     />
   );
@@ -146,15 +151,15 @@ export function SttModelRow({
 
 function CatalogModelFacts({
   model,
+  covered,
   languages,
 }: {
   model: SttModelEntry;
+  covered: boolean;
   languages: readonly string[];
 }) {
   const { i18n } = useLingui();
   const modelLanguages = model.languages ?? [];
-  const covered =
-    languages.length > 0 && modelCoversLanguages(modelLanguages, languages);
 
   return (
     <span className="text-muted-foreground flex flex-wrap items-center gap-x-1.5 text-xs">
@@ -198,22 +203,47 @@ function CatalogModelFacts({
   );
 }
 
-function LicenseNote({ license }: { license: SttModelLicense }) {
+const EXTERNAL_LINK_CLASS =
+  "hover:text-foreground inline-flex items-center gap-1 hover:underline";
+
+function LicenseNote({
+  license,
+  sourceUrl,
+}: {
+  license: SttModelLicense;
+  sourceUrl?: string | null;
+}) {
   return (
     <div className="text-faint flex flex-col gap-0.5 text-xs">
-      <span>
-        <Trans>
-          License:{" "}
-          <a
-            href={license.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground inline-flex items-center gap-1 hover:underline"
-          >
-            {license.name}
-            <ArrowSquareOut size={12} aria-hidden />
-          </a>
-        </Trans>
+      <span className="flex flex-wrap items-center gap-x-1.5">
+        <span>
+          <Trans>
+            License:{" "}
+            <a
+              href={license.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={EXTERNAL_LINK_CLASS}
+            >
+              {license.name}
+              <ArrowSquareOut size={12} aria-hidden />
+            </a>
+          </Trans>
+        </span>
+        {sourceUrl ? (
+          <>
+            <span aria-hidden>·</span>
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={EXTERNAL_LINK_CLASS}
+            >
+              <Trans>Source</Trans>
+              <ArrowSquareOut size={12} aria-hidden />
+            </a>
+          </>
+        ) : null}
       </span>
       {license.attribution ? <span>{license.attribution}</span> : null}
     </div>

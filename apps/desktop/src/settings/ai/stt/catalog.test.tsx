@@ -3,6 +3,8 @@ import { cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 
+import type { GgufModel, SttModelInfo } from "@anlg/plugin-local-stt";
+
 const { useProviderAvailabilityMock, config } = vi.hoisted(() => ({
   useProviderAvailabilityMock: vi.fn(),
   config: { local_stt_model_path: "" } as Record<string, unknown>,
@@ -28,10 +30,6 @@ vi.mock("~/shared/config", async (importOriginal) => ({
 import { useSttCatalog } from "./catalog";
 
 import { localSttQueries } from "~/stt/useLocalSttModel";
-
-// Untyped, so a fixture can carry catalog fields the generated bindings lack.
-const SUPPORTED_MODELS_KEY: readonly unknown[] =
-  localSttQueries.supportedModels().queryKey;
 
 afterEach(cleanup);
 
@@ -70,7 +68,7 @@ test.each([true, false])(
 );
 
 test("lists only the GGUF models the engine reports and hides Mac-only engines on Linux", () => {
-  const gguf = (key: string, languages: string[]) => ({
+  const gguf = (key: GgufModel, languages: string[]): SttModelInfo => ({
     key,
     display_name: key,
     description: "",
@@ -85,6 +83,7 @@ test("lists only the GGUF models the engine reports and hides Mac-only engines o
       url: "https://creativecommons.org/licenses/by/4.0/",
       attribution: null,
     },
+    source_url: `https://huggingface.co/example/${key}`,
     timestamps: "word",
   });
   const client = new QueryClient({
@@ -96,7 +95,7 @@ test("lists only the GGUF models the engine reports and hides Mac-only engines o
     totalMemoryBytes: 16e9,
   });
   // This build withholds Parakeet Unified English.
-  client.setQueryData(SUPPORTED_MODELS_KEY, {
+  client.setQueryData(localSttQueries.supportedModels().queryKey, {
     status: "ok",
     data: [
       gguf("gguf-whisper-large-v3-turbo", ["*"]),

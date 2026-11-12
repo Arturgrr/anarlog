@@ -5,8 +5,6 @@ import {
   type LocalModel,
 } from "@anlg/plugin-local-stt";
 
-import { asSttCatalogModels } from "./gguf";
-
 const localSttKeys = {
   all: ["local-stt"] as const,
   models: () => [...localSttKeys.all, "model"] as const,
@@ -27,7 +25,7 @@ export const localSttQueries = {
         if (result.status === "error") {
           throw new Error(result.error);
         }
-        return asSttCatalogModels(result.data);
+        return result.data;
       },
     }),
   isDownloaded: (model: LocalModel) =>

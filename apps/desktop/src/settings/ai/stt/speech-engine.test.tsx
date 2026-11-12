@@ -14,8 +14,8 @@ const mocks = vi.hoisted(() => ({
   restartLocalSttEngine: vi.fn(),
 }));
 
-vi.mock("~/stt/gguf", () => ({
-  ggufCommands: {
+vi.mock("@anlg/plugin-local-stt", () => ({
+  commands: {
     listSttDevices: mocks.listSttDevices,
     forgetSttGpuFailures: mocks.forgetSttGpuFailures,
   },

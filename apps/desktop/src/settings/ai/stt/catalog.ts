@@ -1,5 +1,10 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 
+import type {
+  SttModelInfo,
+  SttModelLicense,
+  TimestampGranularity,
+} from "@anlg/plugin-local-stt";
 import { commands as miscCommands } from "@anlg/plugin-misc";
 import type { AIProviderStorage } from "@anlg/store";
 
@@ -27,12 +32,6 @@ import {
   isLocalSttProvider,
   isLocalSttProviderAvailable,
 } from "~/stt/capabilities";
-import {
-  asSttCatalogModels,
-  type SttCatalogModel,
-  type SttModelLicense,
-  type SttModelTimestamps,
-} from "~/stt/gguf";
 import { localSttQueries } from "~/stt/useLocalSttModel";
 
 export type SttMode = "live" | "batch";
@@ -48,7 +47,8 @@ export type SttModelEntry = {
   mode: SttMode;
   languages?: string[];
   license?: SttModelLicense | null;
-  timestamps?: SttModelTimestamps | null;
+  timestamps?: TimestampGranularity | null;
+  sourceUrl?: string | null;
 };
 
 export type SttProviderStatus = {
@@ -105,8 +105,7 @@ export function useSttCatalog(): {
 
   const supportedModels = useQuery({
     ...localSttQueries.supportedModels(),
-    select: (result) =>
-      result.status === "ok" ? asSttCatalogModels(result.data) : [],
+    select: (result) => (result.status === "ok" ? result.data : []),
   });
 
   const localModels = supportedModels.data ?? [];
@@ -258,7 +257,7 @@ export function useSttCatalog(): {
 }
 
 function buildOnDeviceModelEntries(
-  models: SttCatalogModel[],
+  models: SttModelInfo[],
   downloads: Array<{ data?: boolean }>,
   totalMemoryBytes?: number,
 ): SttModelEntry[] {
@@ -285,14 +284,14 @@ function buildOnDeviceModelEntries(
 }
 
 function buildLanguageRankedModelEntries(
-  models: SttCatalogModel[],
+  models: SttModelInfo[],
   downloads: Array<{ data?: boolean }>,
   languages: readonly string[],
 ): SttModelEntry[] {
   const { order, recommended } = rankModelsForLanguages(
     models.map((model) => ({
       id: model.key,
-      languages: model.languages ?? [],
+      languages: model.languages,
     })),
     languages,
   );
@@ -307,9 +306,10 @@ function buildLanguageRankedModelEntries(
       isDeprecated: false,
       recommended: model.key === recommended ? ("languages" as const) : null,
       mode: model.supports_realtime ? ("live" as const) : ("batch" as const),
-      languages: model.languages ?? [],
+      languages: model.languages,
       license: model.license,
       timestamps: model.timestamps,
+      sourceUrl: model.source_url,
     }))
     .sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
 }
