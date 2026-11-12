@@ -16,4 +16,10 @@ pub enum Error {
     NoDownloadUrl(String),
     #[error("delete failed: {0}")]
     DeleteFailed(String),
+    #[error(
+        "Not enough disk space: the download needs {:.1} GB free and {:.1} GB is available.",
+        *needed as f64 / 1e9,
+        *available as f64 / 1e9
+    )]
+    InsufficientDiskSpace { needed: u64, available: u64 },
 }

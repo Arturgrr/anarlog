@@ -1,7 +1,7 @@
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
-use crate::download_task::failure::cleanup_for_failure;
+use crate::download_task::failure::{cleanup_for_failure, forget_task};
 use crate::download_task::steps::{ChecksumError, Expected, FinalizeError};
 use crate::download_task_progress::make_progress_callback;
 use crate::model::DownloadableModel;
@@ -18,7 +18,7 @@ pub(crate) fn spawn_download_task<M: DownloadableModel>(
 ) -> JoinHandle<()> {
     tokio::spawn(async move {
         if start_rx.await.is_err() {
-            cleanup_for_failure(&params).await;
+            forget_task(&params).await;
             return;
         }
 
@@ -26,8 +26,19 @@ pub(crate) fn spawn_download_task<M: DownloadableModel>(
             make_progress_callback(params.runtime.clone(), params.model.clone());
 
         if let Err(error) = steps::download(&params, progress_callback).await {
-            let reason = log_download_error(&error);
-            fail_task(&params, reason).await;
+            match log_download_error(&error) {
+                // Cancelled, by the user or by a download replacing this one.
+                None => fail_task(&params, None).await,
+                // A network or disk error: keep the part file so the next
+                // attempt resumes instead of starting over.
+                Some(reason) => {
+                    params.runtime.emit_progress(
+                        &params.model,
+                        crate::runtime::DownloadStatus::Failed(reason),
+                    );
+                    forget_task(&params).await;
+                }
+            }
             return;
         }
 
