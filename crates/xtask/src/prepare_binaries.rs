@@ -55,6 +55,8 @@ pub(crate) fn prepare_binaries() -> Result<()> {
     fs::copy(&src, &dst).with_context(|| format!("copy {} -> {}", src.display(), dst.display()))?;
 
     println!("prepare-binaries: resources/cli/librelog-cli-{triple}{ext}");
+
+    crate::llama_server::prepare(&sh, &triple, &target_dir, &binaries_dir)?;
     Ok(())
 }
 

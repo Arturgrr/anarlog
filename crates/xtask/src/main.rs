@@ -1,3 +1,4 @@
+mod llama_server;
 mod prepare_binaries;
 
 use anyhow::{Result, bail};
