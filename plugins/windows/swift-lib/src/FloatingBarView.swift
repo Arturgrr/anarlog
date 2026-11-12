@@ -5,8 +5,8 @@ enum FloatingBarLayout {
   static let inset: CGFloat = 4
   static let screenMargin: CGFloat = 8
   static let compactHeight: CGFloat = 38
-  static let compactCornerRadius: CGFloat = 14
-  static let controlCornerRadius: CGFloat = 10
+  static let compactCornerRadius: CGFloat = compactHeight / 2
+  static let controlCornerRadius: CGFloat = compactIconSize / 2
   static let compactStopWidth: CGFloat = 62
   static let compactSoloStopWidth: CGFloat = 68
   static let compactIconSize: CGFloat = 30
@@ -116,6 +116,8 @@ struct FloatingBarView: View {
     .background(shape.fill(isBarHovered && !model.isExpanded ? envelopeSurfaceColor : surfaceColor))
     .overlay(shape.strokeBorder(rimColor, lineWidth: 0.5))
     .clipShape(shape)
+    .compositingGroup()
+    .shadow(color: shadowColor, radius: 1, x: 0, y: 1)
     .padding(FloatingBarLayout.inset)
     .frame(width: containerSize.width, height: containerSize.height, alignment: .bottom)
     .contentShape(Rectangle())
@@ -143,7 +145,7 @@ struct FloatingBarView: View {
               if let notice = model.transcriptNotice {
                 Text(notice)
                   .font(.system(size: 12))
-                  .foregroundStyle(primaryContentColor.opacity(0.55))
+                  .foregroundStyle(mutedContentColor)
                   .multilineTextAlignment(.center)
                   .frame(maxWidth: .infinity)
                   .padding(.vertical, 6)
@@ -216,7 +218,7 @@ struct FloatingBarView: View {
       FloatingIconButton(
         systemName: "xmark",
         accessibilityLabel: model.labels.hideFloatingBar,
-        color: primaryContentColor.opacity(0.55),
+        color: mutedContentColor,
         hoverFill: controlHoverFill,
         size: FloatingBarLayout.compactIconSize,
         action: { performClick { settings.hideFloatingBar() } }
@@ -240,7 +242,7 @@ struct FloatingBarView: View {
             Image(systemName: "stop.fill")
               .font(.system(size: FloatingBarLayout.stopSquareSize, weight: .bold))
             Text(model.labels.stop)
-              .font(.system(size: 12, weight: .semibold))
+              .font(.system(size: 13, weight: .medium))
           }
           .foregroundStyle(dangerColor)
         } else if model.status == .reconnecting {
@@ -263,7 +265,7 @@ struct FloatingBarView: View {
       .frame(width: width, height: height)
       .background(
         shape
-          .fill(isStopHovered ? dangerColor.opacity(0.18) : controlHoverFill)
+          .fill(isStopHovered ? dangerColor.opacity(0.18) : Color.clear)
       )
       .contentShape(shape)
     }
@@ -293,14 +295,13 @@ struct FloatingBarView: View {
 
   private var isDark: Bool { model.colorScheme == .dark }
 
-  /// Hex's HUD plate: graphite in the dark appearance, white in the light one.
+  /// The dictation HUD's plate (`HudPalette`): #191919 in the dark appearance,
+  /// white in the light one.
   private var plateColor: Color {
-    isDark
-      ? Color(.sRGB, red: 17 / 255, green: 17 / 255, blue: 20 / 255)
-      : Color(.sRGB, red: 252 / 255, green: 251 / 255, blue: 249 / 255)
+    isDark ? Color(.sRGB, red: 0x19 / 255, green: 0x19 / 255, blue: 0x19 / 255) : .white
   }
 
-  /// The opacity setting, scaled so its default draws Hex's plate.
+  /// The opacity setting, scaled so its default draws the HUD's plate.
   private var surfaceOpacity: Double {
     min(
       settings.floatingBarOpacity / FloatingOverlayOpacity.defaultFloatingBar
@@ -316,11 +317,24 @@ struct FloatingBarView: View {
   }
 
   private var rimColor: Color {
-    isDark ? Color.white.opacity(0.11) : Color.black.opacity(0.09)
+    isDark ? Color.white.opacity(0.16) : Color.black.opacity(0.12)
   }
 
+  /// The HUD's shadow colour, pulled in to fit the panel's 4 pt inset.
+  private var shadowColor: Color {
+    Color.black.opacity(isDark ? 0.45 : 0.12)
+  }
+
+  /// `--text-base` from the graphite design tokens.
   private var primaryContentColor: Color {
-    isDark ? .white : Color(.sRGB, red: 23 / 255, green: 23 / 255, blue: 23 / 255)
+    isDark
+      ? Color(.sRGB, red: 0xFA / 255, green: 0xFA / 255, blue: 0xFA / 255)
+      : Color(.sRGB, red: 0x16 / 255, green: 0x16 / 255, blue: 0x16 / 255)
+  }
+
+  /// `--text-faint` from the graphite design tokens.
+  private var mutedContentColor: Color {
+    Color(.sRGB, red: 0x80 / 255, green: 0x80 / 255, blue: 0x80 / 255)
   }
 
   private var controlHoverFill: Color {
@@ -408,10 +422,7 @@ struct FloatingBarView: View {
   }
 
   private func transcriptBottomChip(action: @escaping () -> Void) -> some View {
-    let shape = RoundedRectangle(
-      cornerRadius: FloatingBarLayout.controlCornerRadius,
-      style: .continuous
-    )
+    let shape = Capsule(style: .continuous)
 
     return Button(action: action) {
       HStack(spacing: 6) {
@@ -436,10 +447,11 @@ struct FloatingBarView: View {
     .accessibilityLabel(model.labels.scrollTranscriptToBottom)
   }
 
+  /// `--surface-raised-base` from the graphite design tokens.
   private var transcriptChipFillColor: Color {
     isDark
-      ? Color(.sRGB, red: 31 / 255, green: 31 / 255, blue: 35 / 255)
-      : Color(.sRGB, red: 242 / 255, green: 242 / 255, blue: 242 / 255)
+      ? Color(.sRGB, red: 0x23 / 255, green: 0x23 / 255, blue: 0x23 / 255)
+      : Color(.sRGB, red: 0xF3 / 255, green: 0xF3 / 255, blue: 0xF3 / 255)
   }
 
   private var transcriptChipStrokeColor: Color {
@@ -641,7 +653,9 @@ private struct TranscriptBubbleView: View {
   }
 
   private var ink: Color {
-    colorScheme == .dark ? .white : Color(.sRGB, red: 23 / 255, green: 23 / 255, blue: 23 / 255)
+    colorScheme == .dark
+      ? Color(.sRGB, red: 0xFA / 255, green: 0xFA / 255, blue: 0xFA / 255)
+      : Color(.sRGB, red: 0x16 / 255, green: 0x16 / 255, blue: 0x16 / 255)
   }
 
   private var bubbleBackground: Color {
