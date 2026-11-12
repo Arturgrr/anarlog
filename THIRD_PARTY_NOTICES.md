@@ -86,7 +86,7 @@ Settings › Transcription offers these transcribe.cpp models. They are not ship
 | ivrit.ai Whisper large-v3-turbo | Apache-2.0 | [adolan/ivrit-whisper-large-v3-turbo-gguf](https://huggingface.co/adolan/ivrit-whisper-large-v3-turbo-gguf/tree/a12befaff80add995ac6a8fe10cbb7f38438c7b5) `ivrit-whisper-large-v3-turbo-Q8_0.gguf` | ivrit.ai Whisper large-v3-turbo by ivrit.ai, licensed under the Apache License 2.0, fine-tuned from OpenAI Whisper large-v3-turbo (MIT). GGUF conversion by adolan. |
 | Nemotron 3.5 ASR Streaming 0.6B | OpenMDW-1.1 (`LICENSE` in the repository) | [handy-computer/nemotron-3.5-asr-streaming-0.6b-gguf](https://huggingface.co/handy-computer/nemotron-3.5-asr-streaming-0.6b-gguf/tree/53ce288f69326b415aeef030cfcb02a08a8096dd) `nemotron-3.5-asr-streaming-0.6b-Q8_0.gguf` | Nemotron 3.5 ASR Streaming 0.6B by NVIDIA, licensed under OpenMDW-1.1. Converted to GGUF and quantized to Q8_0 by handy-computer; the weights were not retrained. |
 
-The catalog's data lives in `crates/gguf-model/src/catalog.rs`. SenseVoice Small (FunASR Model License) and Parakeet Unified English (NVIDIA Open Model License) are not offered.
+The catalog's data lives in `crates/gguf-model/src/catalog.rs`. SenseVoice Small and Parakeet Unified English are not offered because their licenses restrict how they may be used: SenseVoice Small's FunASR Model License limits it to reference and learning purposes, and Parakeet Unified English comes under the NVIDIA Open Model License, a custom license with its own conditions on use that the project has not been able to review.
 
 ## Other material
 
