@@ -20,7 +20,7 @@ Transcription and Intelligence API keys are stored in your operating system's se
 Librelog only contacts these destinations:
 
 - The **Transcription** and **Intelligence** providers you select. A hosted Transcription provider receives the audio needed to create a transcript. A hosted Intelligence provider receives the text and instructions needed to create a summary or chat response.
-- **Hugging Face**, to download on-device models you choose. No meeting content is sent.
+- **Hugging Face**, to download on-device transcription models and Built-in language models you choose. No meeting content is sent.
 - **GitHub Releases** for `Arturgrr/librelog`, to check for app updates. No meeting content is sent.
 
 These features also send data, but only after you configure them:
@@ -28,14 +28,14 @@ These features also send data, but only after you configure them:
 - [Chat](/chat) sends the prompt and required context to your selected Intelligence provider.
 - [Webhooks](/reference/webhooks) post meeting content, including transcripts, to the endpoints you add.
 
-Apple Reminders uses the accounts already on your Mac. Local providers, local Markdown exports, the CLI, and the local MCP server keep content on your computer.
+Built-in models run in a server Librelog starts on your Mac, reachable only from this computer with a key that changes on every start. Apple Reminders uses the accounts already on your Mac. Local providers, local Markdown exports, the CLI, and the local MCP server keep content on your computer.
 
 Review a hosted provider's own retention and training policies before sending sensitive content. See [Models and providers](/models-and-providers) for how direct provider requests work.
 
 ## Keep a meeting fully local
 
 1. Select an on-device model under **Settings → Transcription**.
-2. Select LM Studio, Ollama, Unsloth, or eligible Apple Intelligence under **Settings → Intelligence**.
+2. Select Built-in models, LM Studio, Ollama, Unsloth, or eligible Apple Intelligence under **Settings → Intelligence**.
 3. Avoid webhooks to remote endpoints for that content.
 
 See [Use Librelog offline](/offline) for the full setup.

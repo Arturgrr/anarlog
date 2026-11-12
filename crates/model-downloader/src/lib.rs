@@ -10,6 +10,7 @@ mod runtime;
 mod task_join;
 
 pub use archive::extract_zip;
+pub use download_paths::remove_stale_parts;
 pub use error::Error;
 pub use manager::ModelDownloadManager;
 pub use model::DownloadableModel;

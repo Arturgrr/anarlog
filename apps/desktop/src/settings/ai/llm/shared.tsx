@@ -31,11 +31,12 @@ import {
 } from "@lobehub/icons";
 import type { ReactNode } from "react";
 
-import { Shuffle } from "@anlg/ui/components/icons";
+import { Cpu, Shuffle } from "@anlg/ui/components/icons";
 
 import { ProviderBrandImage, ProviderLobeIcon } from "~/settings/ai/shared";
 import { type ProviderRequirement } from "~/settings/ai/shared/eligibility";
 import { checkAppleFoundationModelAvailability } from "~/settings/ai/shared/list-apple-foundation";
+import { checkBuiltinAvailability } from "~/settings/ai/shared/list-builtin";
 import {
   checkLMStudioAvailability,
   checkOllamaAvailability,
@@ -142,6 +143,16 @@ const _PROVIDERS = [
         url: "https://www.kimi.com/en/help/kimi-code/membership-guide",
       },
     },
+  },
+  {
+    id: "builtin",
+    displayName: "Built-in models",
+    badge: null,
+    icon: <Cpu />,
+    baseUrl: undefined,
+    requirements: [],
+    checkAvailability: checkBuiltinAvailability,
+    hideAdvanced: true,
   },
   {
     id: "apple_foundation",
@@ -694,6 +705,7 @@ const PROVIDER_ORDER = [
   "google_vertex_ai",
   "azure_ai",
   "groq",
+  "builtin",
   "ollama",
   "xai",
   "mistral",

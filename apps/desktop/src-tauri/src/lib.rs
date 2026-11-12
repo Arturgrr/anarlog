@@ -233,6 +233,25 @@ pub fn main() {
             },
         ));
 
+    // The App Store sandbox cannot run a listening child process.
+    #[cfg(not(feature = "app-store"))]
+    {
+        builder = builder.plugin(tauri_plugin_local_llm::init(
+            tauri_plugin_local_llm::InitOptions {
+                capture_active: Some(|app| {
+                    Box::pin(async move {
+                        use tauri_plugin_transcription::ListenerPluginExt;
+                        // Finalizing still runs the after-meeting speech pass.
+                        !matches!(
+                            app.listener().get_capture_state().await,
+                            tauri_plugin_transcription::CaptureState::Inactive
+                        )
+                    })
+                }),
+            },
+        ));
+    }
+
     #[cfg(not(feature = "app-store"))]
     {
         builder = builder.plugin(tauri_plugin_autostart::init(

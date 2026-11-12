@@ -40,7 +40,7 @@ You can also keep audio on your network by pointing **Custom**, or Deepgram's **
   Compatibility code still recognizes some older local model IDs, but they are not offered as new choices. The table above is the current user-facing model list.
 </Note>
 
-For local summaries and chat, connect **LM Studio**, **Ollama**, or **Unsloth** and choose any compatible model they serve. Librelog does not silently substitute another model. **Apple Intelligence** is also available as an experimental, text-only Intelligence provider on eligible Macs running macOS 26 or later.
+For local summaries and chat, download one of the [Built-in models](#built-in-models) on an Apple Silicon Mac, or connect **LM Studio**, **Ollama**, or **Unsloth** and choose any compatible model they serve. Librelog does not silently substitute another model. **Apple Intelligence** is also available as an experimental, text-only Intelligence provider on eligible Macs running macOS 26 or later.
 
 If a selected local model or server is unavailable, Librelog reports a connection error instead of sending the request to another provider.
 
@@ -77,6 +77,23 @@ On a computer with a supported GPU, the **Local models** and **BYO-model** pages
 The page lists the devices Librelog found. If a GPU fails to load or run a model, Librelog sets it aside and Auto uses the CPU; the page names that GPU, and **Try GPU again** clears the record. Changing the engine reloads the selected model.
 
 Local models use Metal on Apple Silicon and Vulkan on Windows and Linux. The project has not yet exercised these GPU paths on real hardware, so treat GPU acceleration as untested. If transcription fails or stops on a GPU, choose **CPU**.
+
+### Built-in models
+
+**Built-in models** run language models for summaries, titles, and chat with [llama.cpp](https://github.com/ggml-org/llama.cpp), which ships inside the Librelog release for Apple Silicon Macs. Each model is one Q4_K_M GGUF file downloaded on request from its publisher's own Hugging Face repository, pinned to one revision and checked against its size and SHA-256. Settings shows each model's download size, license, source, and whether it fits your Mac.
+
+| Model | Download | Most context in Librelog | License |
+| --- | --- | --- | --- |
+| Qwen3 4B | about 2.3 GB | 40,960 tokens | Apache 2.0 |
+| Qwen3 8B | about 4.7 GB | 40,960 tokens | Apache 2.0 |
+| Granite 4.0 Micro | about 2.0 GB | 65,536 tokens | Apache 2.0 |
+| Ministral 3 8B | about 4.8 GB | 65,536 tokens | Apache 2.0 |
+| Ministral 3 3B | about 2.0 GB | 65,536 tokens | Apache 2.0 |
+
+- **Memory.** Librelog estimates each model's memory from its file and the context it needs, and loads it with the longest of 8,192, 16,384, 32,768, and 65,536 tokens, or the model's own limit if lower, that stays within half of your Mac's memory. It never reserves more than 65,536 tokens, however much memory is free. **Tight** means only the shortest context, 8,192 tokens, fits, using up to 65% of memory. **Too large for this Mac** models cannot be selected. On a Mac with 8 GB of memory or less, a model does not start while a meeting is being recorded or its recording transcribed; it starts once that is done. A model that is already running keeps serving.
+- **Long meetings.** Librelog sends the whole transcript in one request. Each model shows about how many minutes of meeting it can read at once on your Mac. A meeting that leaves too little room for the summary fails with **This meeting is too long for this model**, before the model spends time on it; choose a model that reads more, or a hosted provider, for it. A summary that runs out of room while it is being written fails the same way and is not saved.
+- **Thinking.** Built-in models answer without a separate reasoning step, so there is no reasoning-effort setting for them.
+- **Lifecycle.** The model loads with the first request and unloads after five idle minutes. It listens only on `127.0.0.1` with a key that changes every time it starts, and Librelog stops it when you quit.
 
 ### Speakers after a live on-device meeting
 
@@ -138,7 +155,7 @@ Settings may still show older model IDs for compatibility. Prefer the current Ge
 
 | Goal | Transcription | Intelligence |
 | --- | --- | --- |
-| Keep meeting content on your computer | Select Soniqo, Apple Speech, Local models, or BYO-model when available, or a Deepgram-compatible local server | Use LM Studio, Ollama, Unsloth, or eligible Apple Intelligence |
+| Keep meeting content on your computer | Select Soniqo, Apple Speech, Local models, or BYO-model when available, or a Deepgram-compatible local server | Use Built-in models, LM Studio, Ollama, Unsloth, or eligible Apple Intelligence |
 | Avoid per-minute transcription bills | Use on-device models or a local Deepgram-compatible server | Use a local Intelligence provider or a connected subscription |
 | Pin exact model IDs | Configure your own provider | Configure your own provider |
 

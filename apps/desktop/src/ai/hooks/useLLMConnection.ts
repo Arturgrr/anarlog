@@ -14,6 +14,10 @@ import { useMemo } from "react";
 import type { AIProviderStorage } from "@anlg/store";
 
 import { createAppleFoundationModel } from "../apple-foundation-model";
+import {
+  BUILTIN_PLACEHOLDER_BASE_URL,
+  createBuiltinFetch,
+} from "../builtin-fetch";
 import { providerFetch } from "../provider-fetch";
 import {
   normalizeReasoningEffort,
@@ -365,6 +369,16 @@ const createProviderModel = (conn: LLMConnectionInfo): LanguageModelV3 => {
 
     case "apple_foundation":
       return createAppleFoundationModel(conn.modelId);
+
+    case "builtin": {
+      const provider = createOpenAICompatible({
+        fetch: createBuiltinFetch(conn.modelId),
+        name: conn.providerId,
+        baseURL: BUILTIN_PLACEHOLDER_BASE_URL,
+        supportsStructuredOutputs: true,
+      });
+      return wrapWithThinkingMiddleware(provider.chatModel(conn.modelId));
+    }
 
     default: {
       const config: Parameters<typeof createOpenAICompatible>[0] = {

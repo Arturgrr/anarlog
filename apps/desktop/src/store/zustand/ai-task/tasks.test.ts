@@ -493,6 +493,8 @@ describe("createTasksSlice", () => {
 describe("getTaskStreamStartTimeoutMs", () => {
   it.each([
     ["ollama.chat", TASK_STREAM_LOCAL_START_TIMEOUT_MS],
+    // Loading a built-in model and prefilling a meeting takes minutes.
+    ["builtin.chat", TASK_STREAM_LOCAL_START_TIMEOUT_MS],
     ["openai.chat", TASK_STREAM_START_TIMEOUT_MS],
   ])("uses the expected start timeout for %s", (provider, timeout) => {
     expect(getTaskStreamStartTimeoutMs({ provider } as any)).toBe(timeout);

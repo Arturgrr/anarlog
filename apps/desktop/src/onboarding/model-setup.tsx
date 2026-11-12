@@ -1,6 +1,8 @@
 import { Trans, useLingui } from "@lingui/react/macro";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
+import { DownloadSimple } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
 import { cn } from "@anlg/utils";
 
@@ -13,6 +15,9 @@ import {
 import { OnboardingButton } from "./shared";
 
 import { LlmModelPicker } from "~/settings/ai/llm";
+import { startBuiltinDownload } from "~/settings/ai/llm/builtin-downloads";
+import { builtinQueries } from "~/settings/ai/shared/list-builtin";
+import { displayLlmModelId } from "~/settings/ai/shared/model-display";
 import { SttModelPicker } from "~/settings/ai/stt";
 import { DownloadProgressBar } from "~/settings/ai/stt/model-rows";
 import {
@@ -51,14 +56,15 @@ export function IntelligenceStep({
 }) {
   const status = useIntelligenceSetup();
   const transcription = useTranscriptionSetup();
-  // A running transcription download keeps going in the background; the last
-  // step waits for it instead of this one.
+  // Running downloads keep going in the background, so neither holds up
+  // this step.
   const canContinue =
-    status.kind === "ready" &&
+    (status.kind === "ready" || status.kind === "installing") &&
     (transcription.kind === "ready" || transcription.kind === "installing");
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
+      {status.kind === "none" ? <BuiltinModelOffer /> : null}
       <SettingsHydrationBoundary>
         <LlmModelPicker variant="embedded" />
       </SettingsHydrationBoundary>
@@ -80,6 +86,65 @@ export function IntelligenceStep({
           </>
         }
       />
+    </div>
+  );
+}
+
+// On a Mac that can run built-in models, offer the default one; nothing is
+// downloaded until the person asks.
+function BuiltinModelOffer() {
+  const runtime = useQuery(builtinQueries.runtime());
+  const models = useQuery({
+    ...builtinQueries.models(),
+    enabled: runtime.data?.available === true,
+  });
+  const download = useMutation({
+    mutationFn: (model: Parameters<typeof startBuiltinDownload>[0]) =>
+      startBuiltinDownload(model),
+  });
+  const entries = models.data ?? [];
+  const offer =
+    entries.find(
+      (entry) => entry.default && entry.admission.fit !== "tooLarge",
+    ) ?? entries.find((entry) => entry.best);
+
+  if (!runtime.data?.available || !offer || offer.downloaded) {
+    return null;
+  }
+
+  const name = displayLlmModelId(offer.id);
+  const size = formatModelSize(offer.sizeBytes);
+
+  return (
+    <div className="bg-raised border-border-weak flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border p-3 text-sm">
+      <span className="min-w-0 flex-[1_1_16rem]">
+        <span className="font-medium">
+          <Trans>Run Intelligence on this Mac</Trans>
+        </span>{" "}
+        <span className="text-muted-foreground">
+          <Trans>
+            A built-in model writes summaries and titles without sending your
+            meetings anywhere.
+          </Trans>
+        </span>
+      </span>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={download.isPending}
+        onClick={() => download.mutate(offer.id)}
+      >
+        <DownloadSimple className="size-3.5" aria-hidden />
+        <Trans>
+          Download {name} ({size})
+        </Trans>
+      </Button>
+      {download.error ? (
+        <span role="alert" className="text-danger w-full text-xs">
+          {download.error.message}
+        </span>
+      ) : null}
     </div>
   );
 }

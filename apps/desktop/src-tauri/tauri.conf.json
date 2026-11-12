@@ -73,7 +73,16 @@
       "../../../crates/mp3/LICENSE-LAME.txt": "licenses/LICENSE-LAME.txt",
       "../../../crates/export-core/fonts/OFL.txt": "licenses/Pretendard-OFL.txt",
       "../../../licenses/OFL-1.1-Inter.txt": "licenses/OFL-1.1-Inter.txt",
-      "../../../licenses/OFL-1.1-IBM-Plex-Mono.txt": "licenses/OFL-1.1-IBM-Plex-Mono.txt"
+      "../../../licenses/OFL-1.1-IBM-Plex-Mono.txt": "licenses/OFL-1.1-IBM-Plex-Mono.txt",
+      "../../../licenses/llama.cpp/LICENSE": "licenses/llama.cpp/LICENSE",
+      "../../../licenses/llama.cpp/cpp-httplib-LICENSE": "licenses/llama.cpp/cpp-httplib-LICENSE",
+      "../../../licenses/llama.cpp/nlohmann-json-LICENSE": "licenses/llama.cpp/nlohmann-json-LICENSE",
+      "../../../licenses/llama.cpp/xxhash-LICENSE": "licenses/llama.cpp/xxhash-LICENSE",
+      "../../../licenses/llama.cpp/rotate-bits-LICENSE": "licenses/llama.cpp/rotate-bits-LICENSE",
+      "../../../licenses/llama.cpp/sha1-LICENSE": "licenses/llama.cpp/sha1-LICENSE",
+      "../../../licenses/llama.cpp/sha256-LICENSE": "licenses/llama.cpp/sha256-LICENSE",
+      "../../../licenses/llama.cpp/stb_image-LICENSE": "licenses/llama.cpp/stb_image-LICENSE",
+      "../../../licenses/llama.cpp/miniaudio-LICENSE": "licenses/llama.cpp/miniaudio-LICENSE"
     },
     "macOS": {
       "minimumSystemVersion": "15.0",

@@ -12,5 +12,6 @@ export function providerDisplayName(
   if (provider.id === "custom") return i18n._(msg`Custom`);
   if (provider.id === "local_file") return i18n._(msg`BYO-model`);
   if (provider.id === "gguf") return i18n._(msg`Local models`);
+  if (provider.id === "builtin") return i18n._(msg`Built-in models`);
   return provider.displayName;
 }

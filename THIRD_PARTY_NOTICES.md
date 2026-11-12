@@ -38,6 +38,23 @@ Packages fetched by Cargo or pnpm carry their own license metadata. They appear 
 
 transcribe.cpp's crates carry `THIRD-PARTY-LICENSES.md` with the ggml, miniz and Silero license texts; each is the MIT text in `licenses/MIT.txt` with the copyright line above.
 
+### llama.cpp server
+
+The macOS Apple silicon build outside the App Store bundles `librelog-llama-server`, the `llama-server` program of [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) at tag `b12110` (v0.9.0, `cd959bae`), built unmodified and statically linked by `cargo xtask prepare-binaries` (`crates/xtask/src/llama_server.rs`) without the web UI, RPC, HTTPS or subprocess support. It runs the built-in language models. It contains this code, whose license texts are in `licenses/llama.cpp/`:
+
+| Material | License | License file |
+| --- | --- | --- |
+| llama.cpp and ggml, Copyright (c) 2023-2026 The ggml authors | MIT | `licenses/llama.cpp/LICENSE` |
+| cpp-httplib 0.64.0, Copyright (c) 2017 yhirose | MIT | `licenses/llama.cpp/cpp-httplib-LICENSE` |
+| nlohmann/json 3.12.0, Copyright (c) 2013-2025 Niels Lohmann | MIT | `licenses/llama.cpp/nlohmann-json-LICENSE` |
+| xxHash, Copyright (c) 2012-2021 Yann Collet | BSD-2-Clause | `licenses/llama.cpp/xxhash-LICENSE` |
+| rotate-bits, Copyright (c) 2021 William Casarin | MIT | `licenses/llama.cpp/rotate-bits-LICENSE` |
+| SHA-1 in C by Steve Reid; SHA-256 by Igor Pavlov | Public domain | `licenses/llama.cpp/sha1-LICENSE`, `licenses/llama.cpp/sha256-LICENSE` |
+| stb_image 2.30, Copyright (c) 2017 Sean Barrett | MIT or public domain | `licenses/llama.cpp/stb_image-LICENSE` |
+| miniaudio 0.11.26, Copyright 2026 David Reid | Public domain or MIT-0 | `licenses/llama.cpp/miniaudio-LICENSE` |
+
+llama.cpp's `common/base64.hpp` is public domain (notice in the file).
+
 ### LAME
 
 `mp3lame-sys` builds LAME 3.100 from the sources it ships and links it statically into the desktop app. The LAME source is published in the `mp3lame-sys` crate on crates.io (`lame-3.100/`) and at [lame.sourceforge.io](https://lame.sourceforge.io/). Because the complete application source is in this repository, you can rebuild the app against a modified LAME, for example by replacing `mp3lame-sys` with a local copy through a Cargo `[patch]` section.
@@ -86,7 +103,17 @@ Settings › Transcription offers these transcribe.cpp models. They are not ship
 | ivrit.ai Whisper large-v3-turbo | Apache-2.0 | [adolan/ivrit-whisper-large-v3-turbo-gguf](https://huggingface.co/adolan/ivrit-whisper-large-v3-turbo-gguf/tree/a12befaff80add995ac6a8fe10cbb7f38438c7b5) `ivrit-whisper-large-v3-turbo-Q8_0.gguf` | ivrit.ai Whisper large-v3-turbo by ivrit.ai, licensed under the Apache License 2.0, fine-tuned from OpenAI Whisper large-v3-turbo (MIT). GGUF conversion by adolan. |
 | Nemotron 3.5 ASR Streaming 0.6B | OpenMDW-1.1 (`LICENSE` in the repository) | [handy-computer/nemotron-3.5-asr-streaming-0.6b-gguf](https://huggingface.co/handy-computer/nemotron-3.5-asr-streaming-0.6b-gguf/tree/53ce288f69326b415aeef030cfcb02a08a8096dd) `nemotron-3.5-asr-streaming-0.6b-Q8_0.gguf` | Nemotron 3.5 ASR Streaming 0.6B by NVIDIA, licensed under OpenMDW-1.1. Converted to GGUF and quantized to Q8_0 by handy-computer; the weights were not retrained. |
 
-The catalog's data lives in `crates/gguf-model/src/catalog.rs`. SenseVoice Small and Parakeet Unified English are not offered because their licenses restrict how they may be used: SenseVoice Small's FunASR Model License limits it to reference and learning purposes, and Parakeet Unified English comes under the NVIDIA Open Model License, a custom license with its own conditions on use that the project has not been able to review.
+Settings › Intelligence › Built-in models offers these language models, on the same terms: downloaded from the publisher's own repository only when you ask, pinned to the revision, size and SHA-256 below, and run unmodified by the bundled llama.cpp server.
+
+| Model | License | File (repository at revision) | Attribution |
+| --- | --- | --- | --- |
+| Qwen3 4B | Apache-2.0 (`LICENSE` in the repository) | [Qwen/Qwen3-4B-GGUF](https://huggingface.co/Qwen/Qwen3-4B-GGUF/tree/bc640142c66e1fdd12af0bd68f40445458f3869b) `Qwen3-4B-Q4_K_M.gguf` | Qwen3 4B by the Qwen team, Alibaba Cloud, licensed under the Apache License 2.0. GGUF file published by Qwen. |
+| Qwen3 8B | Apache-2.0 (`LICENSE` in the repository) | [Qwen/Qwen3-8B-GGUF](https://huggingface.co/Qwen/Qwen3-8B-GGUF/tree/7c41481f57cb95916b40956ab2f0b139b296d974) `Qwen3-8B-Q4_K_M.gguf` | Qwen3 8B by the Qwen team, Alibaba Cloud, licensed under the Apache License 2.0. GGUF file published by Qwen. |
+| Granite 4.0 Micro | Apache-2.0 | [ibm-granite/granite-4.0-micro-GGUF](https://huggingface.co/ibm-granite/granite-4.0-micro-GGUF/tree/ec48475f0c811d812fbfb61975717a9c36eeb652) `granite-4.0-micro-Q4_K_M.gguf` | Granite 4.0 Micro by IBM, licensed under the Apache License 2.0. GGUF file published by IBM Granite. |
+| Ministral 3 8B Instruct (2512) | Apache-2.0 | [mistralai/Ministral-3-8B-Instruct-2512-GGUF](https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512-GGUF/tree/0102285ad796bd99af90f58de616092e5630e970) `Ministral-3-8B-Instruct-2512-Q4_K_M.gguf` | Ministral 3 8B Instruct (2512) by Mistral AI, licensed under the Apache License 2.0. GGUF file published by Mistral AI. |
+| Ministral 3 3B Instruct (2512) | Apache-2.0 | [mistralai/Ministral-3-3B-Instruct-2512-GGUF](https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-GGUF/tree/eb599d408350ea2bb60452cb86be7c7b2fc28227) `Ministral-3-3B-Instruct-2512-Q4_K_M.gguf` | Ministral 3 3B Instruct (2512) by Mistral AI, licensed under the Apache License 2.0. GGUF file published by Mistral AI. |
+
+The catalogs' data lives in `crates/gguf-model/src/catalog.rs` and `crates/local-llm/src/catalog.rs`. SenseVoice Small and Parakeet Unified English are not offered because their licenses restrict how they may be used: SenseVoice Small's FunASR Model License limits it to reference and learning purposes, and Parakeet Unified English comes under the NVIDIA Open Model License, a custom license with its own conditions on use that the project has not been able to review.
 
 ## Other material
 
@@ -98,6 +125,7 @@ The catalog's data lives in `crates/gguf-model/src/catalog.rs`. SenseVoice Small
 The desktop app bundles this file, `LICENSE`, and the full license texts it requires under `licenses/` in its resources:
 
 - `licenses/MIT.txt`: applies to each MIT-licensed item above, with that item's copyright line.
+- `licenses/llama.cpp/`: llama.cpp, ggml and the code built into the bundled llama.cpp server.
 - `licenses/Apache-2.0.txt`: Tremor and the code adapted from vercel/ai.
 - `licenses/BSD-2-Clause-AudioCap.txt`: code adapted from AudioCap.
 - `crates/mp3/LICENSE-LAME.txt`: LAME.

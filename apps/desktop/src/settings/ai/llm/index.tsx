@@ -30,6 +30,7 @@ import {
   FilterDivider,
   FilterGroup,
 } from "~/settings/ai/shared/filter-chips";
+import { useBuiltinProviderListed } from "~/settings/ai/shared/list-builtin";
 import { providerDisplayName } from "~/settings/ai/shared/provider-labels";
 import {
   ProviderList,
@@ -53,7 +54,13 @@ export function LlmModelPicker({ variant }: { variant: ModelPickerVariant }) {
   const [connectingId, setConnectingId] =
     useState<SubscriptionProviderId | null>(null);
 
-  const visibleEntries = browseLlmEntries(PROVIDERS, lists, search, filters);
+  const builtinListed = useBuiltinProviderListed();
+  const visibleEntries = browseLlmEntries(
+    builtinListed ? PROVIDERS : PROVIDERS.filter(({ id }) => id !== "builtin"),
+    lists,
+    search,
+    filters,
+  );
   const current = selection.current;
   const focused =
     visibleEntries.find(({ provider }) => provider.id === focusedId) ??
@@ -266,6 +273,8 @@ function describeLlmSubtitle(
     case "stopped":
       return provider.id === "apple_foundation" ? (
         <Trans>Not available on this Mac</Trans>
+      ) : provider.id === "builtin" ? (
+        <Trans>Not available in this version</Trans>
       ) : (
         <Trans>Server stopped</Trans>
       );
@@ -281,6 +290,9 @@ function describeLlmSubtitle(
     case "ready":
       if (list?.error) {
         return <Trans>Couldn’t load models</Trans>;
+      }
+      if (provider.id === "builtin" && list?.result?.models.length === 0) {
+        return <Trans>Download a model to start</Trans>;
       }
       if (list?.result) {
         return (

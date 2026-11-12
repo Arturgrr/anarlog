@@ -16,6 +16,9 @@ export const LLM_PROVIDER_CONTEXT: Partial<
   grok: msg`Uses your **SuperGrok or X Premium+** plan through xAI's subscription login.`,
   github_copilot: msg`Uses your **GitHub Copilot** plan. Approve the device code in the browser to connect.`,
   kimi_code: msg`Uses your **Kimi Code** membership. Paste the coding API key from the Kimi Code console.`,
+  builtin: msg`- Runs a model on this Mac with llama.cpp. No Ollama or LM Studio needed, and nothing leaves your computer.
+- Download a model below. It loads with the first summary or chat, which can take a minute, and unloads after 5 idle minutes.
+- It reads a whole meeting at once, so very long meetings need more memory.`,
   apple_foundation: msg`- Uses Apple's on-device **System Language Model**.
 - Requires macOS 26 or later, a Mac that supports Apple Intelligence, and Apple Intelligence turned on.
 - This experiment is text-only and works best with shorter transcripts.`,

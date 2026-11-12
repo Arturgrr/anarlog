@@ -79,7 +79,7 @@ build() {
   TAURI_ENV_TARGET_TRIPLE=$target cargo xtask prepare-binaries
 
   jq --arg build "$build_number" '
-    .bundle.externalBin = ((.bundle.externalBin // []) + ["binaries/librelog-chrome-native-host", "binaries/check-permissions", "resources/cli/librelog-cli"] | unique)
+    .bundle.externalBin = ((.bundle.externalBin // []) + ["binaries/librelog-chrome-native-host", "binaries/check-permissions", "binaries/librelog-llama-server", "resources/cli/librelog-cli"] | unique)
     | .bundle.macOS.bundleVersion = $build
   ' "$config" > "$config.tmp"
   mv "$config.tmp" "$config"

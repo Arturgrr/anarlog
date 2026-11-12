@@ -131,7 +131,7 @@ jobs:
           cargo xtask prepare-binaries
           config=apps/desktop/src-tauri/tauri.conf.stable.json
           jq --arg build "$GITHUB_RUN_NUMBER" '
-            .bundle.externalBin = ((.bundle.externalBin // []) + ["binaries/librelog-chrome-native-host", "binaries/check-permissions", "resources/cli/librelog-cli"] | unique)
+            .bundle.externalBin = ((.bundle.externalBin // []) + ["binaries/librelog-chrome-native-host", "binaries/check-permissions", "binaries/librelog-llama-server", "resources/cli/librelog-cli"] | unique)
             | .bundle.macOS.bundleVersion = $build
           ' "$config" > "$RUNNER_TEMP/tauri.conf.stable.json"
           mv "$RUNNER_TEMP/tauri.conf.stable.json" "$config"

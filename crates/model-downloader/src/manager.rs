@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
@@ -6,7 +6,7 @@ use std::time::Duration;
 use tokio::fs;
 
 use crate::Error;
-use crate::download_paths::generation_download_path;
+use crate::download_paths::part_path;
 use crate::download_task::{DownloadTaskParams, spawn_download_task};
 use crate::downloads_registry::{DownloadEntry, DownloadsRegistry};
 use crate::model::DownloadableModel;
@@ -31,6 +31,8 @@ impl<M: DownloadableModel> Clone for ModelDownloadManager<M> {
 
 impl<M: DownloadableModel> ModelDownloadManager<M> {
     const TASK_JOIN_WARN_AFTER: Duration = Duration::from_secs(5);
+    /// Room left beyond the file itself, so a download never fills the disk.
+    const DISK_MARGIN_BYTES: u64 = 1_000_000_000;
 
     pub fn new(runtime: Arc<dyn ModelDownloaderRuntime<M>>) -> Self {
         Self {
@@ -67,7 +69,8 @@ impl<M: DownloadableModel> ModelDownloadManager<M> {
 
         let models_base = self.runtime.models_base()?;
         let final_destination = model.download_destination(&models_base);
-        let destination = generation_download_path(&final_destination, generation);
+        let destination = part_path(&final_destination);
+        self.check_disk_space(model, &destination).await?;
         if let Some(parent) = destination.parent() {
             fs::create_dir_all(parent).await?;
         }
@@ -117,6 +120,31 @@ impl<M: DownloadableModel> ModelDownloadManager<M> {
         let _ = start_tx.send(());
 
         Ok(())
+    }
+
+    /// Refuses a download of known size that would leave less than
+    /// `DISK_MARGIN_BYTES` free, counting what an earlier attempt already
+    /// wrote.
+    async fn check_disk_space(&self, model: &M, destination: &Path) -> Result<(), Error> {
+        let Some(size) = model.download_size() else {
+            return Ok(());
+        };
+        let written = fs::metadata(destination)
+            .await
+            .map(|meta| meta.len())
+            .unwrap_or(0);
+        let needed = size.saturating_sub(written) + Self::DISK_MARGIN_BYTES;
+        let runtime = self.runtime.clone();
+        let path = destination.to_path_buf();
+        let available = tokio::task::spawn_blocking(move || runtime.available_space(&path))
+            .await
+            .map_err(|e| Error::OperationFailed(e.to_string()))?;
+        match available {
+            Some(available) if available < needed => {
+                Err(Error::InsufficientDiskSpace { needed, available })
+            }
+            _ => Ok(()),
+        }
     }
 
     pub async fn cancel_download(&self, model: &M) -> Result<bool, Error> {

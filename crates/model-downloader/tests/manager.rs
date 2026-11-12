@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use wiremock::matchers::{method, path};
+use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 use model_downloader::{
@@ -14,6 +14,7 @@ use model_downloader::{
 struct TestRuntime {
     temp_dir: Arc<tempfile::TempDir>,
     progress_log: Arc<Mutex<Vec<(String, model_downloader::DownloadStatus)>>>,
+    available_space: Option<u64>,
 }
 
 impl TestRuntime {
@@ -21,6 +22,14 @@ impl TestRuntime {
         Arc::new(Self {
             temp_dir: Arc::new(tempfile::TempDir::new().unwrap()),
             progress_log: Arc::new(Mutex::new(Vec::new())),
+            available_space: None,
+        })
+    }
+
+    fn with_available_space(bytes: u64) -> Arc<Self> {
+        Arc::new(Self {
+            available_space: Some(bytes),
+            ..Arc::into_inner(Self::new()).unwrap()
         })
     }
 
@@ -44,6 +53,10 @@ impl ModelDownloaderRuntime<TestModel> for TestRuntime {
             .lock()
             .unwrap()
             .push((model.download_key(), status));
+    }
+
+    fn available_space(&self, _path: &Path) -> Option<u64> {
+        self.available_space
     }
 }
 
@@ -190,6 +203,15 @@ async fn wait_until_done(manager: &ModelDownloadManager<TestModel>, model: &Test
     .expect("download did not complete within 10s");
 }
 
+fn sha256_hex(bytes: &[u8]) -> String {
+    use std::fmt::Write;
+    let digest = <sha2::Sha256 as sha2::Digest>::digest(bytes);
+    digest.iter().fold(String::new(), |mut hex, byte| {
+        let _ = write!(hex, "{byte:02x}");
+        hex
+    })
+}
+
 fn part_files_in(dir: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     if let Ok(entries) = std::fs::read_dir(dir) {
@@ -198,7 +220,7 @@ fn part_files_in(dir: &Path) -> Vec<PathBuf> {
             let is_part = path
                 .file_name()
                 .and_then(|s| s.to_str())
-                .is_some_and(|s| s.contains(".part-"));
+                .is_some_and(|s| s.ends_with(".part"));
             if is_part {
                 out.push(path);
             }
@@ -257,7 +279,7 @@ async fn stale_cleanup_does_not_remove_replacement_download() {
     assert!(!manager.is_downloading(&second).await);
     assert!(
         part_files_in(runtime.temp_dir.path()).is_empty(),
-        "should not leave .part-* files behind"
+        "should not leave .part files behind"
     );
 }
 
@@ -327,12 +349,12 @@ async fn cancel_download_returns_true_and_cleans_up() {
     );
     assert!(
         part_files_in(runtime.temp_dir.path()).is_empty(),
-        "should not leave .part-* files behind"
+        "should not leave .part files behind"
     );
 }
 
 #[tokio::test]
-async fn download_failure_cleans_up_part_file() {
+async fn download_rejected_by_the_server_leaves_no_part_file() {
     let server = MockServer::start().await;
 
     Mock::given(method("HEAD"))
@@ -366,7 +388,7 @@ async fn download_failure_cleans_up_part_file() {
     );
     assert!(
         part_files_in(runtime.temp_dir.path()).is_empty(),
-        "should not leave .part-* files behind"
+        "should not leave .part files behind"
     );
 }
 
@@ -393,7 +415,7 @@ async fn checksum_mismatch_cleans_up_part_file() {
     );
     assert!(
         part_files_in(runtime.temp_dir.path()).is_empty(),
-        "should not leave .part-* files behind"
+        "should not leave .part files behind"
     );
 }
 
@@ -403,14 +425,7 @@ async fn checksum_mismatch_cleans_up_part_file() {
 async fn sha256_or_size_mismatch_is_rejected_and_a_match_is_installed() {
     let body = b"pinned model bytes".to_vec();
     let sha256 = "0".repeat(64);
-    let actual_sha256 = {
-        use std::fmt::Write;
-        let digest = <sha2::Sha256 as sha2::Digest>::digest(&body);
-        digest.iter().fold(String::new(), |mut hex, byte| {
-            let _ = write!(hex, "{byte:02x}");
-            hex
-        })
-    };
+    let actual_sha256 = sha256_hex(&body);
     let size = body.len() as u64;
     let server = start_mock_server("/pinned.gguf", body).await;
     let url = format!("{}/pinned.gguf", server.uri());
@@ -544,4 +559,94 @@ async fn delete_not_downloaded_returns_error() {
     let result = manager.delete(&model).await;
 
     assert!(matches!(result, Err(Error::ModelNotDownloaded(_))));
+}
+
+/// A multi-gigabyte model whose download broke off must continue from the
+/// bytes already on disk, not start over.
+#[tokio::test]
+async fn failed_download_keeps_its_part_and_the_next_attempt_resumes() {
+    let body: Vec<u8> = (0..64 * 1024u32).map(|i| (i % 251) as u8).collect();
+    let half = body.len() / 2;
+    let server = MockServer::start().await;
+    let len = body.len().to_string();
+    Mock::given(method("HEAD"))
+        .and(path("/big.gguf"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-length", len.as_str())
+                .insert_header("accept-ranges", "bytes"),
+        )
+        .mount(&server)
+        .await;
+    // The first attempt finds the server failing; the second gets the rest.
+    Mock::given(method("GET"))
+        .and(path("/big.gguf"))
+        .respond_with(ResponseTemplate::new(503))
+        .up_to_n_times(1)
+        .with_priority(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/big.gguf"))
+        .and(header("range", format!("bytes={half}-").as_str()))
+        .respond_with(
+            ResponseTemplate::new(206)
+                .set_body_bytes(body[half..].to_vec())
+                .insert_header("content-length", (body.len() - half).to_string().as_str()),
+        )
+        .with_priority(2)
+        .mount(&server)
+        .await;
+
+    let runtime = TestRuntime::new();
+    let manager = ModelDownloadManager::new(runtime.clone());
+    let model = TestModel::with_url_and_sha256(
+        "resumed",
+        format!("{}/big.gguf", server.uri()),
+        &sha256_hex(&body),
+        body.len() as u64,
+    );
+    let destination = manager.model_path(&model).unwrap();
+    let part = destination.with_file_name("resumed.bin.part");
+    std::fs::write(&part, &body[..half]).unwrap();
+
+    manager.download(&model).await.unwrap();
+    wait_until_done(&manager, &model).await;
+    assert!(!manager.is_downloaded(&model).await.unwrap());
+    assert_eq!(std::fs::read(&part).unwrap(), body[..half]);
+
+    manager.download(&model).await.unwrap();
+    wait_until_done(&manager, &model).await;
+    assert!(manager.is_downloaded(&model).await.unwrap());
+    assert_eq!(std::fs::read(&destination).unwrap(), body);
+    assert!(part_files_in(runtime.temp_dir.path()).is_empty());
+}
+
+/// A download of known size must not start when it would leave less than
+/// about 1 GB free.
+#[tokio::test]
+async fn download_without_room_for_the_file_and_a_margin_is_refused() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+    let size = 2_000_000_000;
+    let model = TestModel::with_url_and_sha256(
+        "large",
+        format!("{}/large.gguf", server.uri()),
+        &"0".repeat(64),
+        size,
+    );
+
+    let runtime = TestRuntime::with_available_space(size + 999_999_999);
+    let manager = ModelDownloadManager::new(runtime.clone());
+    let result = manager.download(&model).await;
+
+    assert!(
+        matches!(result, Err(Error::InsufficientDiskSpace { needed, .. }) if needed == size + 1_000_000_000),
+        "{result:?}"
+    );
+    assert!(!manager.is_downloading(&model).await);
 }

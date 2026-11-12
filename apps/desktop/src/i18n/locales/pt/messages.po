@@ -41,6 +41,16 @@ msgstr ""
 
 #: src/settings/ai/llm/provider-context.ts
 msgid ""
+"- Runs a model on this Mac with llama.cpp. No Ollama or LM Studio needed, and nothing leaves your computer.\n"
+"- Download a model below. It loads with the first summary or chat, which can take a minute, and unloads after 5 idle minutes.\n"
+"- It reads a whole meeting at once, so very long meetings need more memory."
+msgstr ""
+"- Executa um modelo neste Mac com o llama.cpp. Não precisa de Ollama nem de LM Studio, e nada sai do seu computador.\n"
+"- Baixe um modelo abaixo. Ele é carregado no primeiro resumo ou conversa, o que pode levar um minuto, e é descarregado depois de 5 minutos sem uso.\n"
+"- Ele lê a reunião inteira de uma vez, então reuniões muito longas precisam de mais memória."
+
+#: src/settings/ai/llm/provider-context.ts
+msgid ""
 "- Uses Apple's on-device **System Language Model**.\n"
 "- Requires macOS 26 or later, a Mac that supports Apple Intelligence, and Apple Intelligence turned on.\n"
 "- This experiment is text-only and works best with shorter transcripts."
@@ -179,6 +189,16 @@ msgstr "{modelCount, plural, one {# modelo} other {# modelos}} · baixados: {dow
 msgid "{months} months ago"
 msgstr "há {months} meses"
 
+#. placeholder {0}: state.message
+#: src/settings/ai/llm/builtin.tsx
+msgid "{name} failed to start three times: {0}"
+msgstr "{name} falhou ao iniciar três vezes: {0}"
+
+#. placeholder {0}: Math.round(state.context / 1024)
+#: src/settings/ai/llm/builtin.tsx
+msgid "{name} is running with {0}K tokens of context."
+msgstr "{name} está em execução com {0}K tokens de contexto."
+
 #: src/meeting-float/labels.ts
 #: src/meeting-float/overlay/bar.tsx
 msgid "{notice}; stop listening"
@@ -233,6 +253,7 @@ msgstr "{providerLabel} não está disponível para transcrição em lote com os
 msgid "{remainingCount} more"
 msgstr "mais {remainingCount}"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "{sizeLabel} · downloaded"
 msgstr "{sizeLabel} · baixado"
@@ -316,6 +337,10 @@ msgstr "7 dias"
 #: src/settings/ai/stt/index.tsx
 msgid "A .bin or .gguf file from your disk"
 msgstr "Um arquivo .bin ou .gguf do seu disco"
+
+#: src/onboarding/model-setup.tsx
+msgid "A built-in model writes summaries and titles without sending your meetings anywhere."
+msgstr "Um modelo integrado escreve resumos e títulos sem enviar suas reuniões para lugar nenhum."
 
 #: src/sidebar/folder-name-dialog.tsx
 msgid "A folder with this name already exists."
@@ -935,6 +960,7 @@ msgstr "Modo de transcrição em lote"
 msgid "Berlin"
 msgstr "Berlim"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Best for this Mac"
 msgstr "Ideal para este Mac"
@@ -968,6 +994,19 @@ msgstr "Crie impressões de voz a partir do áudio das reuniões para que os fal
 #: src/settings/ai/stt/index.tsx
 msgid "Built into macOS"
 msgstr "Embutido no macOS"
+
+#: src/settings/ai/llm/builtin.tsx
+#: src/settings/ai/shared/provider-labels.ts
+msgid "Built-in models"
+msgstr "Modelos integrados"
+
+#: src/ai/builtin-fetch.ts
+msgid "Built-in models aren’t available in this version of Librelog."
+msgstr "Os modelos integrados não estão disponíveis nesta versão do Librelog."
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Built-in models run in Librelog for Macs with Apple silicon, downloaded from its website. This version can’t run them."
+msgstr "Os modelos integrados funcionam no Librelog para Macs com Apple silicon, baixado do site. Esta versão não consegue executá-los."
 
 #: src/i18n/component-labels.tsx
 msgid "Bullet List"
@@ -1016,6 +1055,7 @@ msgstr "Cancelar edição da data"
 msgid "Cancel dictation"
 msgstr "Cancelar ditado"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Cancel download"
 msgstr "Cancelar download"
@@ -1759,6 +1799,10 @@ msgstr "Não foi possível usar o modelo selecionado"
 msgid "Couldn’t download {modelName}"
 msgstr "Não foi possível baixar {modelName}"
 
+#: src/settings/ai/llm/builtin-downloads.ts
+msgid "Couldn’t download {name}"
+msgstr "Não foi possível baixar {name}"
+
 #: src/onboarding/model-setup.tsx
 msgid "Couldn’t install"
 msgstr "Não foi possível instalar"
@@ -1917,6 +1961,7 @@ msgstr "Idioma padrão para transcrição e respostas da IA."
 #: src/folders/folder-editor.tsx
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
 #: src/session/components/outer-header/overflow/delete.tsx
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 #: src/sidebar/automations.tsx
 #: src/sidebar/timeline/index.tsx
@@ -1933,6 +1978,14 @@ msgstr "Excluir {label}"
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Delete {label}?"
 msgstr "Excluir {label}?"
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Delete {name}"
+msgstr "Excluir {name}"
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Delete {name}?"
+msgstr "Excluir {name}?"
 
 #: src/sidebar/timeline/index.tsx
 msgid "Delete {pendingDeleteCount} selected notes?"
@@ -1959,6 +2012,7 @@ msgstr "Excluir ditado"
 msgid "Delete folder"
 msgstr "Excluir pasta"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Delete model"
 msgstr "Excluir modelo"
@@ -2113,6 +2167,7 @@ msgid "Double-tap shortcuts are only available on macOS."
 msgstr "Atalhos de toque duplo só estão disponíveis no macOS."
 
 #: src/i18n/native-labels.tsx
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 #: src/sidebar/toast/registry.tsx
 msgid "Download"
@@ -2121,6 +2176,18 @@ msgstr "Baixar"
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Download {label}"
 msgstr "Baixar {label}"
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Download {name}"
+msgstr "Baixar {name}"
+
+#: src/onboarding/model-setup.tsx
+msgid "Download {name} ({size})"
+msgstr "Baixar {name} ({size})"
+
+#: src/settings/ai/llm/index.tsx
+msgid "Download a model to start"
+msgstr "Baixe um modelo para começar"
 
 #: src/settings/ai/stt/provider-context.ts
 msgid "Download an open speech model and run it with transcribe.cpp on this computer, so audio never leaves it. During a meeting, text appears a minute at a time; the full transcript follows after the recording. Models download from Hugging Face only when you ask, under the license shown with each."
@@ -2142,6 +2209,7 @@ msgstr "Download interrompido"
 msgid "Download Unsloth"
 msgstr "Baixar Unsloth"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Downloaded"
 msgstr "Baixado"
@@ -2150,6 +2218,7 @@ msgstr "Baixado"
 msgid "Downloading"
 msgstr "Baixando"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Downloading · {progressLabel}"
 msgstr "Baixando · {progressLabel}"
@@ -2166,6 +2235,10 @@ msgstr "Baixando {downloadingModel}"
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Downloading {label}"
 msgstr "Baixando {label}"
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Downloading {name}"
+msgstr "Baixando {name}"
 
 #. placeholder {0}: update.version
 #: src/sidebar/toast/registry.tsx
@@ -2551,6 +2624,10 @@ msgstr "Finalizando conexão…"
 msgid "First Words"
 msgstr "Primeiras Palavras"
 
+#: src/settings/ai/llm/builtin.tsx
+msgid "Fits"
+msgstr "Cabe"
+
 #: src/templates/template-icon-picker.tsx
 msgid "Flags"
 msgstr "Bandeiras"
@@ -2887,6 +2964,10 @@ msgstr "Como suas reuniões viram texto"
 msgid "Human"
 msgstr "Humano"
 
+#: src/settings/ai/llm/builtin.tsx
+msgid "IBM's 3-billion-parameter model, which fits longer meetings into less memory."
+msgstr "Modelo de 3 bilhões de parâmetros da IBM, que lê reuniões mais longas com menos memória."
+
 #: src/templates/template-icon-picker.tsx
 msgid "Icons"
 msgstr "Ícones"
@@ -3022,6 +3103,10 @@ msgstr "Instalando todos os modelos"
 #: src/sidebar/settings-nav-groups.ts
 msgid "Intelligence"
 msgstr "Inteligência"
+
+#: src/ai/builtin-fetch.ts
+msgid "Intelligence is turned off by your organization."
+msgstr "A Inteligência foi desativada pela sua organização."
 
 #: src/onboarding/model-setup.tsx
 msgid "Intelligence: <0/>"
@@ -3268,6 +3353,7 @@ msgstr "Skill do Librelog adicionada a {0}"
 msgid "Librelog skill added to {0} agents"
 msgstr "Skill do Librelog adicionada a {0} agentes"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Librelog switches to this model when the download finishes."
 msgstr "O Librelog passa a usar este modelo quando o download terminar."
@@ -3391,6 +3477,10 @@ msgstr "Biblioteca Viva"
 msgid "Loading"
 msgstr "Carregando"
 
+#: src/settings/ai/llm/builtin.tsx
+msgid "Loading {name}…"
+msgstr "Carregando {name}…"
+
 #: src/templates/auto-form.tsx
 msgid "Loading Auto format..."
 msgstr "Carregando Formato automático..."
@@ -3399,6 +3489,7 @@ msgstr "Carregando Formato automático..."
 msgid "Loading edit…"
 msgstr "Carregando edição…"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/llm/index.tsx
 #: src/settings/ai/llm/models.tsx
 msgid "Loading models…"
@@ -3689,11 +3780,20 @@ msgstr "Status da migração indisponível"
 msgid "Minimize"
 msgstr "Minimizar"
 
+#: src/settings/ai/llm/builtin.tsx
+msgid "Mistral AI's 3-billion-parameter multilingual model, for Macs with less memory."
+msgstr "Modelo multilíngue de 3 bilhões de parâmetros da Mistral AI, para Macs com menos memória."
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Mistral AI's 8-billion-parameter multilingual model."
+msgstr "Modelo multilíngue de 8 bilhões de parâmetros da Mistral AI."
+
 #: src/settings/ai/stt/context.tsx
 msgid "Model download couldn’t start"
 msgstr "Não foi possível começar a baixar o modelo"
 
 #: src/contexts/notifications.tsx
+#: src/settings/ai/llm/builtin-downloads.ts
 msgid "Model downloaded"
 msgstr "Modelo baixado"
 
@@ -3709,10 +3809,15 @@ msgstr "Instalação dos modelos"
 msgid "Model is thinking..."
 msgstr "O modelo está pensando..."
 
+#: src/settings/ai/llm/builtin.tsx
+msgid "Model server"
+msgstr "Servidor do modelo"
+
 #: src/dictation/history/page.tsx
 msgid "Model to transcribe with"
 msgstr "Modelo para transcrever"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/llm/models.tsx
 #: src/settings/ai/stt/detail.tsx
 msgid "Models"
@@ -3780,6 +3885,11 @@ msgstr "Nome"
 #: src/settings/ai/shared/provider-setup-label.tsx
 msgid "Needs a server address"
 msgstr "Precisa do endereço do servidor"
+
+#. placeholder {0}: formatModelSize(entry.admission.estimateBytes)
+#: src/settings/ai/llm/builtin.tsx
+msgid "Needs about {0} of memory."
+msgstr "Precisa de cerca de {0} de memória."
 
 #: src/settings/ai/shared/provider-setup-label.tsx
 msgid "Needs an address and a key"
@@ -4088,6 +4198,14 @@ msgstr "Não é do tipo LLM"
 msgid "Not available"
 msgstr "Indisponível"
 
+#: src/settings/ai/llm/index.tsx
+msgid "Not available in this version"
+msgstr "Indisponível nesta versão"
+
+#: src/onboarding/model-status.ts
+msgid "Not available in this version."
+msgstr "Indisponível nesta versão."
+
 #: src/settings/ai/stt/index.tsx
 msgid "Not available on this computer"
 msgstr "Indisponível neste computador"
@@ -4124,6 +4242,10 @@ msgstr "Não instalado"
 #: src/settings/developers/webhooks.tsx
 msgid "not receiving events"
 msgstr "não está recebendo eventos"
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Not running. It starts with the first summary or chat and stops after 5 idle minutes to free memory."
+msgstr "Parado. Ele inicia no primeiro resumo ou conversa e para depois de 5 minutos sem uso para liberar memória."
 
 #: src/onboarding/model-setup.tsx
 msgid "not set up"
@@ -4643,6 +4765,14 @@ msgstr "Encerrar Completamente…"
 msgid "Quote"
 msgstr "Citação"
 
+#: src/settings/ai/llm/builtin.tsx
+msgid "Qwen's 4-billion-parameter model: good summaries at a size most Macs can run."
+msgstr "Modelo de 4 bilhões de parâmetros da Qwen: bons resumos num tamanho que a maioria dos Macs consegue executar."
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Qwen's 8-billion-parameter model: better summaries, for Macs with 16 GB of memory or more."
+msgstr "Modelo de 8 bilhões de parâmetros da Qwen: resumos melhores, para Macs com 16 GB de memória ou mais."
+
 #: src/session/components/note-input/header-transcript.tsx
 #: src/session/components/note-input/transcript/screens/empty.tsx
 #: src/session/components/outer-header/overflow/index.tsx
@@ -4664,6 +4794,11 @@ msgstr "Ler os controles da reunião e o chat visível"
 #: src/settings/general/permissions.tsx
 msgid "Read meeting controls and visible chat."
 msgstr "Ler os controles da reunião e o chat visível."
+
+#. placeholder {0}: meetingMinutes(context)
+#: src/settings/ai/llm/builtin.tsx
+msgid "Reads about {0} minutes of meeting at once on this Mac"
+msgstr "Lê cerca de {0} minutos de reunião de uma vez neste Mac"
 
 #: src/settings/ai/llm/in-use.tsx
 #: src/settings/ai/llm/index.tsx
@@ -4981,6 +5116,7 @@ msgid "Resume auto-dismiss"
 msgstr "Retomar fechamento automático"
 
 #: src/onboarding/model-setup.tsx
+#: src/settings/ai/llm/builtin.tsx
 msgid "Resume download"
 msgstr "Retomar download"
 
@@ -5038,6 +5174,10 @@ msgstr "Command direito"
 msgid "Run a model on this computer, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
 msgstr "Execute um modelo neste computador, entre com uma assinatura ou use uma chave de API. É a mesma lista de Configurações › Inteligência."
 
+#: src/onboarding/model-setup.tsx
+msgid "Run Intelligence on this Mac"
+msgstr "Execute a Inteligência neste Mac"
+
 #. placeholder {0}: formatToolName(toolName)
 #: src/chat/components/message/tool/generic.tsx
 msgid "Running {0}…"
@@ -5051,6 +5191,10 @@ msgstr "É executado após o fim da gravação, não durante a reunião."
 #: src/settings/ai/stt/provider-context.ts
 msgid "Runs entirely on your Mac. Audio never leaves this computer."
 msgstr "Roda inteiramente no seu Mac. O áudio nunca sai do computador."
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Runs with a short context and leaves little memory for other apps."
+msgstr "Funciona com um contexto curto e deixa pouca memória para outros apps."
 
 #: src/settings/general/timezone.tsx
 msgid "Sao Paulo"
@@ -5412,11 +5556,13 @@ msgstr "Mostrar barra flutuante"
 msgid "Show ignored models"
 msgstr "Mostrar modelos ignorados"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Show in Finder"
 msgstr "Mostrar no Finder"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Show in folder"
@@ -5679,6 +5825,7 @@ msgstr "Iniciando"
 msgid "starting download…"
 msgstr "iniciando download…"
 
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Starting download…"
 msgstr "Iniciando download…"
@@ -5712,6 +5859,7 @@ msgstr "As etapas são executadas de cima para baixo."
 #: src/meeting-float/labels.ts
 #: src/meeting-float/overlay/bar.tsx
 #: src/session/components/outer-header/index.tsx
+#: src/settings/ai/llm/builtin.tsx
 #: src/stt/auto-stop.ts
 msgid "Stop"
 msgstr "Parar"
@@ -5961,6 +6109,15 @@ msgstr "O modelo do Apple Intelligence ainda está sendo baixado."
 msgid "The audio of this dictation is no longer available."
 msgstr "O áudio deste ditado não está mais disponível."
 
+#. placeholder {0}: error.message
+#: src/ai/builtin-fetch.ts
+msgid "The built-in model couldn’t start: {0}"
+msgstr "O modelo integrado não conseguiu iniciar: {0}"
+
+#: src/ai/builtin-fetch.ts
+msgid "The built-in model failed to start three times in a row. Open Settings › Intelligence to try again."
+msgstr "O modelo integrado falhou ao iniciar três vezes seguidas. Abra Configurações › Inteligência para tentar novamente."
+
 #: src/onboarding/model-setup.tsx
 msgid "The download stopped before it finished."
 msgstr "O download parou antes de terminar."
@@ -5981,6 +6138,10 @@ msgstr "A chave foi recusada. Confira acima."
 #: src/stt/capture-lifecycle.ts
 msgid "The live transcript was kept. Re-transcribe the meeting to try again."
 msgstr "A transcrição ao vivo foi mantida. Transcreva a reunião novamente para tentar outra vez."
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "The model file is removed from this computer. You can download it again later."
+msgstr "O arquivo do modelo é removido deste computador. Você pode baixá-lo novamente depois."
 
 #: src/settings/ai/stt/model-rows.tsx
 msgid "The model files are removed from this computer. You can download them again later."
@@ -6043,6 +6204,10 @@ msgstr "Depois {0}"
 msgid "There are currently no updates available."
 msgstr "No momento, não há atualizações disponíveis."
 
+#: src/ai/builtin-fetch.ts
+msgid "There isn’t enough free disk space for this model."
+msgstr "Não há espaço livre em disco suficiente para este modelo."
+
 #: src/dictation/paste-last.tsx
 msgid "There's no dictation to paste yet."
 msgstr "Ainda não há ditado para colar."
@@ -6050,6 +6215,14 @@ msgstr "Ainda não há ditado para colar."
 #: src/chat/components/message/loading.tsx
 msgid "Thinking..."
 msgstr "Pensando..."
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "This build of Librelog doesn’t include the model server. The release for Macs with Apple silicon does."
+msgstr "Esta compilação do Librelog não inclui o servidor do modelo. A versão para Macs com Apple silicon inclui."
+
+#: src/ai/builtin-fetch.ts
+msgid "This built-in model isn’t downloaded. Download it in Settings › Intelligence."
+msgstr "Este modelo integrado não foi baixado. Baixe-o em Configurações › Inteligência."
 
 #: src/session/components/version-history-dialog.tsx
 msgid "This device"
@@ -6082,6 +6255,22 @@ msgstr "Esta é uma versão beta, então espere imperfeições. Os relatos abrem
 #: src/settings/ai/shared/list-apple-foundation.ts
 msgid "This Mac does not support Apple Intelligence."
 msgstr "Este Mac não é compatível com o Apple Intelligence."
+
+#: src/ai/builtin-fetch.ts
+msgid "This Mac needs its memory for transcription while it records and transcribes a meeting. The built-in model starts once that is done."
+msgstr "Este Mac precisa da memória para a transcrição enquanto grava e transcreve uma reunião. O modelo integrado inicia quando isso terminar."
+
+#: src/ai/builtin-fetch.ts
+msgid "This meeting is too long for this model: it needs {prompt} tokens and the model holds {context} on this computer. Built-in models read the whole meeting at once, so choose a cloud model or a computer with more memory for meetings this long."
+msgstr "Esta reunião é longa demais para este modelo: ela precisa de {prompt} tokens e o modelo comporta {context} neste computador. Os modelos integrados leem a reunião inteira de uma vez, então escolha um modelo na nuvem ou um computador com mais memória para reuniões tão longas."
+
+#: src/ai/builtin-fetch.ts
+msgid "This meeting is too long for this model. Built-in models read the whole meeting at once, so choose a cloud model or a computer with more memory for meetings this long."
+msgstr "Esta reunião é longa demais para este modelo. Os modelos integrados leem a reunião inteira de uma vez, então escolha um modelo na nuvem ou um computador com mais memória para reuniões tão longas."
+
+#: src/ai/builtin-fetch.ts
+msgid "This model needs more memory than this computer has. Choose a smaller built-in model."
+msgstr "Este modelo precisa de mais memória do que este computador tem. Escolha um modelo integrado menor."
 
 #: src/session/components/note-conflict-banner.tsx
 msgid "This note was edited on another device at the same time. The later edit was kept."
@@ -6146,6 +6335,10 @@ msgstr "Isso removerá {0} arquivos legados e liberará {1}. Os dados do app nã
 msgid "Ticket"
 msgstr "Tickets"
 
+#: src/settings/ai/llm/builtin.tsx
+msgid "Tight"
+msgstr "No limite"
+
 #: src/i18n/component-labels.tsx
 msgid "Timer paused {count} {seconds, plural, one {second} other {seconds}}"
 msgstr "Temporizador pausado: {count} {seconds, plural, one {segundo} other {segundos}}"
@@ -6177,6 +6370,10 @@ msgstr "Tóquio"
 #: src/sidebar/timeline/utils/index.ts
 msgid "Tomorrow"
 msgstr "Amanhã"
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Too large for this Mac"
+msgstr "Grande demais para este Mac"
 
 #: src/dictation/controller.ts
 msgid "Too many dictations are waiting to be transcribed. Try again when one finishes."
@@ -6279,6 +6476,7 @@ msgstr "Gatilho"
 #: src/contacts/details.tsx
 #: src/onboarding/model-setup.tsx
 #: src/onboarding/permissions.tsx
+#: src/settings/ai/llm/builtin.tsx
 #: src/settings/stats/badge-collection.tsx
 msgid "Try again"
 msgstr "Tentar novamente"
@@ -6634,6 +6832,10 @@ msgstr "Usado na transcrição e na detecção automática do idioma do resumo."
 #: src/settings/ai/llm/provider-context.ts
 msgid "Uses Alibaba Cloud Model Studio's **OpenAI-compatible API**. The default endpoint is the Singapore region; change the Base URL under Advanced when your API key belongs to another region."
 msgstr "Usa a **API compatível com OpenAI** do Alibaba Cloud Model Studio. O endpoint padrão é a região de Singapura; altere a URL base em Avançado quando sua chave de API pertencer a outra região."
+
+#: src/settings/ai/llm/builtin.tsx
+msgid "Uses at most half of this Mac’s memory."
+msgstr "Usa no máximo metade da memória deste Mac."
 
 #: src/settings/ai/llm/provider-context.ts
 msgid "Uses SiliconFlow's **OpenAI-compatible API**. The default endpoint is the international service; use `https://api.siliconflow.cn/v1` under Advanced for a China-region API key."

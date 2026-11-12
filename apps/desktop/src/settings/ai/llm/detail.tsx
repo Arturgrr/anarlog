@@ -3,6 +3,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@anlg/ui/components/ui/button";
 
 import type { LlmEntry } from "./browse";
+import { BuiltinModels } from "./builtin";
 import { LlmModels, ReasoningEffortControl } from "./models";
 import { LLM_PROVIDER_CONTEXT } from "./provider-context";
 import { type ProviderId, PROVIDERS } from "./shared";
@@ -87,26 +88,37 @@ export function LlmProviderDetail({
         ) : null}
       </ProviderDetailHeader>
 
-      <DetailSection title={<Trans>Connection</Trans>}>
-        <ProviderConnectionForm
-          key={provider.id}
-          config={provider}
-          providerType="llm"
-          currentProvider={current?.provider}
-          promptToSelect={promptToSelect}
-          onConnect={isSubscription ? () => onConnect(provider.id) : undefined}
+      {provider.id === "builtin" ? (
+        <BuiltinModels
+          checkedModel={checkedModel}
+          onSelect={(model) => onSelect(provider.id, model)}
         />
-      </DetailSection>
+      ) : (
+        <>
+          <DetailSection title={<Trans>Connection</Trans>}>
+            <ProviderConnectionForm
+              key={provider.id}
+              config={provider}
+              providerType="llm"
+              currentProvider={current?.provider}
+              promptToSelect={promptToSelect}
+              onConnect={
+                isSubscription ? () => onConnect(provider.id) : undefined
+              }
+            />
+          </DetailSection>
 
-      <LlmModels
-        entry={entry}
-        setup={setup}
-        isSubscription={isSubscription}
-        providerName={name}
-        checkedModel={checkedModel}
-        filtering={filtering}
-        onSelect={(model) => onSelect(provider.id, model)}
-      />
+          <LlmModels
+            entry={entry}
+            setup={setup}
+            isSubscription={isSubscription}
+            providerName={name}
+            checkedModel={checkedModel}
+            filtering={filtering}
+            onSelect={(model) => onSelect(provider.id, model)}
+          />
+        </>
+      )}
 
       {checkedModel ? (
         <ReasoningEffortControl

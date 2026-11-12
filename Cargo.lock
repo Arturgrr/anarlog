@@ -2936,6 +2936,7 @@ dependencies = [
  "tauri-plugin-icon",
  "tauri-plugin-local-api",
  "tauri-plugin-local-auth",
+ "tauri-plugin-local-llm",
  "tauri-plugin-local-stt",
  "tauri-plugin-misc",
  "tauri-plugin-notification",
@@ -7021,6 +7022,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
 
 [[package]]
+name = "local-llm"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "model-downloader",
+ "reqwest 0.13.2",
+ "serde",
+ "serde_json",
+ "specta",
+ "sysinfo",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "local-model"
 version = "0.1.0"
 dependencies = [
@@ -7374,6 +7394,7 @@ dependencies = [
  "serde",
  "sha2 0.11.0",
  "specta",
+ "sysinfo",
  "tempfile",
  "thiserror 2.0.18",
  "tokio",
@@ -12984,6 +13005,28 @@ dependencies = [
  "tauri-specta",
  "thiserror 2.0.18",
  "windows 0.62.2",
+]
+
+[[package]]
+name = "tauri-plugin-local-llm"
+version = "0.1.0"
+dependencies = [
+ "dirs 6.0.0",
+ "local-llm",
+ "model-downloader",
+ "serde",
+ "serde_json",
+ "specta",
+ "specta-typescript",
+ "sqlx",
+ "tauri",
+ "tauri-plugin",
+ "tauri-plugin-db",
+ "tauri-plugin-settings",
+ "tauri-specta",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

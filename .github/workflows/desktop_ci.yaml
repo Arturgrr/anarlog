@@ -316,6 +316,31 @@ jobs:
         with:
           platform: linux-x86_64
           cache-key: desktop-v2
+      # The built-in model server's end-to-end tests
+      # (crates/local-llm/tests/llama_server.rs) run in the next step against
+      # llama.cpp's own Ubuntu build and a 1 MB model, both pinned by SHA-256.
+      # If a download fails they skip themselves, with a warning here; a
+      # hash mismatch fails the job.
+      - env:
+          LLAMA_URL: https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-ubuntu-x64.tar.gz
+          LLAMA_SHA256: 368227edcc229be5f9bed16a2223d79b5e41d0ac2e19bcf5825e82291c060e55
+          MODEL_URL: https://huggingface.co/ggml-org/test-model-stories260K/resolve/479896ec924af6d40fd419ab8f4d1eb2101de00d/stories260K-f32.gguf
+          MODEL_SHA256: 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
+        run: |
+          dir="$RUNNER_TEMP/llama"
+          mkdir -p "$dir"
+          if ! curl -fsSL --retry 3 -o "$dir/llama.tar.gz" "$LLAMA_URL" ||
+            ! curl -fsSL --retry 3 -o "$dir/model.gguf" "$MODEL_URL"; then
+            echo "::warning::Could not download llama-server or its test model; the built-in model end-to-end tests skip."
+            exit 0
+          fi
+          echo "$LLAMA_SHA256  $dir/llama.tar.gz" | sha256sum --check --strict
+          echo "$MODEL_SHA256  $dir/model.gguf" | sha256sum --check --strict
+          tar -xzf "$dir/llama.tar.gz" -C "$dir"
+          {
+            echo "LIBRELOG_LLAMA_SERVER=$dir/llama-b12110/llama-server"
+            echo "LIBRELOG_LLAMA_TEST_MODEL=$dir/model.gguf"
+          } >>"$GITHUB_ENV"
       # The app and every crate outside MACOS_TESTS, CLI_TESTS and SKIP_TESTS.
       # Binding exports format only when prettier runs, and the committed
       # bindings are unformatted, so a stub hides any prettier on the image.

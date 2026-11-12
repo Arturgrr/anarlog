@@ -19,6 +19,7 @@ export type LlmFilters = {
 export const NO_LLM_FILTERS: LlmFilters = { where: "all", readsImages: false };
 
 const LOCAL_PROVIDERS: readonly string[] = [
+  "builtin",
   "apple_foundation",
   "ollama",
   "lmstudio",

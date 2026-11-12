@@ -11,7 +11,7 @@ Librelog can record meetings and manage notes without an internet connection. To
 - Record and play meeting audio.
 - Export memos, summaries, and transcripts already on your computer.
 - Transcribe with a downloaded Local model or a BYO-model `.bin` or `.gguf` file on an Apple Silicon Mac, Windows x86_64, or Linux x86_64 or ARM64; with Soniqo on an Apple Silicon Mac; or with Apple Speech when available on macOS 26.
-- Generate summaries and chat with LM Studio, Ollama, Unsloth, or eligible Apple Intelligence.
+- Generate summaries and chat with a downloaded Built-in model on an Apple Silicon Mac, LM Studio, Ollama, Unsloth, or eligible Apple Intelligence.
 - Use the local CLI and MCP server.
 
 Hosted Transcription and Intelligence providers, model downloads, webhooks to remote endpoints, and update checks need a network connection.
@@ -31,7 +31,9 @@ The model's **Live** or **After recording** label tells you when text will appea
 
 ## Prepare offline summaries and chat
 
-Use [LM Studio](https://lmstudio.ai/download), [Ollama](https://ollama.com/download), or [Unsloth](https://unsloth.ai/docs/desktop) as your local Intelligence provider. Download the model in advance, start the local server, and select that model in **Settings → Intelligence**.
+On an Apple Silicon Mac, open **Settings → Intelligence → Built-in models** and download a model before you disconnect. It runs inside Librelog and needs no network once downloaded. See [Built-in models](/ai-setup#built-in-models).
+
+Or use [LM Studio](https://lmstudio.ai/download), [Ollama](https://ollama.com/download), or [Unsloth](https://unsloth.ai/docs/desktop) as your local Intelligence provider. Download the model in advance, start the local server, and select that model in **Settings → Intelligence**.
 
 Librelog must be able to reach the local server while you work. The server can run on the same computer without internet access.
 
@@ -42,6 +44,6 @@ On an eligible Mac running macOS 26 or later, you can instead select the experim
 Before a sensitive meeting, confirm both selections:
 
 - **Settings → Transcription → Model being used** points to an on-device model.
-- **Settings → Intelligence → Model being used** points to LM Studio, Ollama, Unsloth, or Apple Intelligence.
+- **Settings → Intelligence → Model being used** points to Built-in models, LM Studio, Ollama, Unsloth, or Apple Intelligence.
 
 Choosing a local model for only one setting does not make the other setting local. See [How can I use on-device models?](/help#use-on-device-models) for each transcription path, [Models and providers](/models-and-providers) for the current model list, and [Data, privacy, and retention](/data-and-privacy) for what each provider receives.
