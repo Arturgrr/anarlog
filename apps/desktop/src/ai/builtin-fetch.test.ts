@@ -1,8 +1,14 @@
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { streamText } from "ai";
 import { describe, expect, it, vi } from "vitest";
 
 import type { Endpoint } from "@anlg/plugin-local-llm";
 
-import { BuiltinModelError, createBuiltinFetch } from "./builtin-fetch";
+import {
+  BUILTIN_PLACEHOLDER_BASE_URL,
+  BuiltinModelError,
+  createBuiltinFetch,
+} from "./builtin-fetch";
 
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
 
@@ -85,5 +91,82 @@ describe("createBuiltinFetch", () => {
     expect(body.error.type).toBe("exceed_context_size_error");
     expect(body.error.message).toMatch(/too long for this model/);
     expect(body.error.message).toMatch(/50000/);
+  });
+
+  // A summary cut off because the context filled up was saved as a finished
+  // note; it must fail the generation instead.
+  it("fails a summary that ran out of context instead of finishing it", async () => {
+    const sse = [
+      {
+        choices: [
+          { index: 0, delta: { role: "assistant", content: "## Decisions" } },
+        ],
+      },
+      {
+        choices: [{ index: 0, delta: {}, finish_reason: "length" }],
+        timings: { cache_n: 0, prompt_n: 31000, predicted_n: 1768 },
+      },
+    ]
+      .map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`)
+      .join("")
+      .concat("data: [DONE]\n\n");
+    const fetch = vi.fn<typeof globalThis.fetch>(async (url) => {
+      const path = new URL(String(url)).pathname;
+      if (path === "/apply-template") {
+        return Response.json({ prompt: "<|im_start|>user …" });
+      }
+      if (path === "/tokenize") {
+        return Response.json({ tokens: new Array(31000).fill(1) });
+      }
+      return new Response(sse, {
+        headers: { "content-type": "text/event-stream" },
+      });
+    });
+    const model = createOpenAICompatible({
+      name: "builtin",
+      baseURL: BUILTIN_PLACEHOLDER_BASE_URL,
+      fetch: createBuiltinFetch("qwen3-4b", {
+        ensureServer: vi.fn().mockResolvedValue(endpoint),
+        fetch,
+      }),
+    }).chatModel("qwen3-4b");
+
+    const parts = [];
+    for await (const part of streamText({ model, prompt: "Summarize" })
+      .fullStream) {
+      parts.push(part);
+    }
+
+    expect(parts.find(({ type }) => type === "finish")).toMatchObject({
+      finishReason: "error",
+    });
+    expect(parts.find(({ type }) => type === "error")).toMatchObject({
+      error: expect.stringMatching(/too long for this model/),
+    });
+  });
+
+  it("refuses a meeting that leaves no room for the summary before generating", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (url) => {
+      const path = new URL(String(url)).pathname;
+      if (path === "/apply-template") {
+        return Response.json({ prompt: "transcript" });
+      }
+      if (path === "/tokenize") {
+        return Response.json({ tokens: new Array(32000).fill(1) });
+      }
+      throw new Error(`unexpected request to ${path}`);
+    });
+
+    const response = await createBuiltinFetch("qwen3-4b", {
+      ensureServer: vi.fn().mockResolvedValue(endpoint),
+      fetch,
+    })("http://127.0.0.1/v1/chat/completions", {
+      method: "POST",
+      body: JSON.stringify({ model: "qwen3-4b", messages: [] }),
+    });
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).error.message).toMatch(/33024 tokens/);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });
