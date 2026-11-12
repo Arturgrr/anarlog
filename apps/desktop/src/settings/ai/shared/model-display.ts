@@ -1,6 +1,11 @@
 import { modelName } from "./model-id";
 
 const MODEL_NAME_OVERRIDES: Record<string, string> = {
+  "qwen3-4b": "Qwen3 4B",
+  "qwen3-8b": "Qwen3 8B",
+  "granite-4.0-micro": "Granite 4.0 Micro",
+  "ministral-3-8b": "Ministral 3 8B",
+  "ministral-3-3b": "Ministral 3 3B",
   "chat-latest": "Chat Latest",
   "gpt-chat-latest": "GPT Chat Latest",
   "claude-sonnet-latest": "Claude Sonnet 5",

@@ -206,11 +206,13 @@ function CatalogModelFacts({
 const EXTERNAL_LINK_CLASS =
   "hover:text-foreground inline-flex items-center gap-1 hover:underline";
 
-function LicenseNote({
+export function LicenseNote({
   license,
   sourceUrl,
 }: {
-  license: SttModelLicense;
+  license: Pick<SttModelLicense, "name" | "url"> & {
+    attribution?: string | null;
+  };
   sourceUrl?: string | null;
 }) {
   return (

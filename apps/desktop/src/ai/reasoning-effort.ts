@@ -8,9 +8,10 @@ export const normalizeReasoningEffort = (value: unknown): ReasoningEffort =>
     ? (value as ReasoningEffort)
     : "default";
 
-// Apple Foundation has no reasoning knob to turn.
+// Apple Foundation has no reasoning knob to turn, and built-in models run
+// with thinking off so short answers such as titles are not spent on it.
 export const supportsReasoningEffort = (providerId: string): boolean =>
-  providerId !== "apple_foundation";
+  providerId !== "apple_foundation" && providerId !== "builtin";
 
 type ProviderOptions = NonNullable<
   Parameters<typeof defaultSettingsMiddleware>[0]["settings"]["providerOptions"]

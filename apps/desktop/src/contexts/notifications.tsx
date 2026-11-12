@@ -14,6 +14,10 @@ import {
 } from "react";
 
 import {
+  events as localLlmEvents,
+  type LlmModel,
+} from "@anlg/plugin-local-llm";
+import {
   commands as localSttCommands,
   events as localSttEvents,
   type ServerStatus,
@@ -23,6 +27,8 @@ import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { normalizeAudioRetention } from "~/services/audio-retention-policy";
+import { handleBuiltinDownloadEvent } from "~/settings/ai/llm/builtin-downloads";
+import { displayLlmModelId } from "~/settings/ai/shared/model-display";
 import { setDownloadedSttSelection } from "~/settings/queries";
 import { useConfigValues } from "~/shared/config";
 import type { DownloadProgress } from "~/sidebar/toast/types";
@@ -42,7 +48,7 @@ interface NotificationState {
   localSttStatus: ServerStatus | null;
   isLocalSttModel: boolean;
   speakerSeparationModelMissing: boolean;
-  dismissDownload: (model: LocalModel) => void;
+  dismissDownload: (model: string) => void;
 }
 
 const NotificationContext = createContext<NotificationState | null>(null);
@@ -133,6 +139,30 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [activeDownloads, setActiveDownloads] = useState<
     Map<LocalModel, number>
   >(new Map());
+  // Built-in language models download through their own plugin.
+  const [llmDownloads, setLlmDownloads] = useState<Map<LlmModel, number>>(
+    new Map(),
+  );
+
+  useMountEffect(() => {
+    const unlisten = localLlmEvents.llmDownloadProgress.listen((event) => {
+      const { model, status } = event.payload;
+      handleBuiltinDownloadEvent(queryClient, event.payload);
+      setLlmDownloads((prev) => {
+        const next = new Map(prev);
+        if (typeof status === "object" && "downloading" in status) {
+          next.set(model, Math.max(0, Math.min(100, status.downloading)));
+        } else {
+          next.delete(model);
+        }
+        return next;
+      });
+    });
+
+    return () => {
+      void unlisten.then((fn) => fn());
+    };
+  });
 
   useMountEffect(() => {
     const unlisten = localSttEvents.downloadProgressPayload.listen((event) => {
@@ -209,13 +239,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   // Cancelling a poll-based download stops its progress events without a
   // final one, so the cancelled entry has to be dropped here.
-  const dismissDownload = useCallback((model: LocalModel) => {
+  const dismissDownload = useCallback((model: string) => {
     setActiveDownloads((prev) => {
-      if (!prev.has(model)) {
+      if (!prev.has(model as LocalModel)) {
         return prev;
       }
       const next = new Map(prev);
-      next.delete(model);
+      next.delete(model as LocalModel);
       return next;
     });
   }, []);
@@ -234,7 +264,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const value = useMemo<NotificationState>(() => {
     const hasActiveBanner = hasConfigBanner && !isAiTab;
     const hasActiveDownload =
-      activeDownloads.size > 0 || queuedDownloads.length > 0;
+      activeDownloads.size > 0 ||
+      queuedDownloads.length > 0 ||
+      llmDownloads.size > 0;
 
     const downloadsArray: DownloadProgress[] = Array.from(
       activeDownloads.entries(),
@@ -243,6 +275,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       displayName: modelDisplayName(queryClient, model),
       progress,
     }));
+    for (const [model, progress] of llmDownloads) {
+      downloadsArray.push({
+        model,
+        displayName: displayLlmModelId(model),
+        progress,
+      });
+    }
     for (const model of queuedDownloads) {
       if (!activeDownloads.has(model)) {
         downloadsArray.push({
@@ -280,6 +319,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     hasConfigBanner,
     hasActiveEnhancement,
     activeDownloads,
+    llmDownloads,
     queuedDownloads,
     isAiTab,
     localSttStatus,

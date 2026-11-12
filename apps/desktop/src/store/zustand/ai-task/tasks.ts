@@ -96,6 +96,7 @@ export const TASK_STREAM_LOCAL_START_TIMEOUT_MS = 5 * 60_000;
 
 const LOCAL_MODEL_PROVIDERS = new Set([
   "apple_foundation",
+  "builtin",
   "lmstudio",
   "ollama",
   "unsloth",

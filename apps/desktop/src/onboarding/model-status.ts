@@ -21,6 +21,7 @@ import {
 } from "~/settings/ai/stt/shared";
 import { useAiProviders } from "~/settings/providers";
 import { useConfigValues } from "~/shared/config";
+import { usePendingLlmSelection } from "~/store/zustand/pending-llm-selection";
 import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 import { isConfiguredSttModel, isOnDeviceSttModel } from "~/stt/capabilities";
 import { localSttQueries } from "~/stt/useLocalSttModel";
@@ -125,6 +126,22 @@ export function useIntelligenceSetup(): ModelSetupStatus {
   const provider = LLM_PROVIDERS.find(({ id }) => id === current_llm_provider);
   const setup = useCurrentProviderSetup("llm", provider);
   const describe = useDescribeSetup();
+  const pendingBuiltin = usePendingLlmSelection((state) => state.model);
+  const { activeDownloads } = useNotifications();
+
+  // A built-in model being downloaded becomes the choice when it finishes.
+  if (pendingBuiltin) {
+    const download = activeDownloads.find(
+      ({ model }) => model === pendingBuiltin,
+    );
+    const builtin = LLM_PROVIDERS.find(({ id }) => id === "builtin");
+    return {
+      kind: "installing",
+      model: displayLlmModelId(pendingBuiltin),
+      provider: builtin ? providerDisplayName(builtin, i18n) : "builtin",
+      progress: download && !download.isStarting ? download.progress : null,
+    };
+  }
 
   if (!provider || !setup || !current_llm_model) {
     return { kind: "none" };

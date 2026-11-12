@@ -266,6 +266,8 @@ function describeLlmSubtitle(
     case "stopped":
       return provider.id === "apple_foundation" ? (
         <Trans>Not available on this Mac</Trans>
+      ) : provider.id === "builtin" ? (
+        <Trans>Not available in this version</Trans>
       ) : (
         <Trans>Server stopped</Trans>
       );
@@ -281,6 +283,9 @@ function describeLlmSubtitle(
     case "ready":
       if (list?.error) {
         return <Trans>Couldn’t load models</Trans>;
+      }
+      if (provider.id === "builtin" && list?.result?.models.length === 0) {
+        return <Trans>Download a model to start</Trans>;
       }
       if (list?.result) {
         return (

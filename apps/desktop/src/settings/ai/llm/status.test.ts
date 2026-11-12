@@ -1,9 +1,45 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+
+import type { LlmModelEntry } from "@anlg/plugin-local-llm";
 
 import { PROVIDERS } from "./shared";
 import { getLlmProviderStatus } from "./status";
 
 import { SUBSCRIPTION_BADGE } from "~/settings/ai/shared/provider-labels";
+
+const builtinCatalog = vi.hoisted(() => ({
+  entries: [] as LlmModelEntry[],
+}));
+
+vi.mock("@anlg/plugin-local-llm", () => ({
+  commands: {
+    listModels: async () => ({ status: "ok", data: builtinCatalog.entries }),
+  },
+}));
+
+function catalogEntry(
+  id: LlmModelEntry["id"],
+  downloaded: boolean,
+  fit: LlmModelEntry["admission"]["fit"],
+): LlmModelEntry {
+  return {
+    id,
+    displayName: id,
+    sizeBytes: 1,
+    contextLength: 40960,
+    license: { name: "Apache License 2.0", url: "https://x", attribution: "" },
+    sourceUrl: "https://huggingface.co",
+    downloaded,
+    downloading: false,
+    admission: {
+      fit,
+      context: fit === "tooLarge" ? null : 8192,
+      estimateBytes: 1,
+    },
+    best: false,
+    default: false,
+  };
+}
 
 function provider(id: string) {
   const provider = PROVIDERS.find((p) => p.id === id);
@@ -147,7 +183,26 @@ describe("getLlmProviderStatus", () => {
     ]);
   });
 
-  test.each(["ollama", "lmstudio", "apple_foundation"])(
+  // A model not yet downloaded, or one this computer cannot load, must not
+  // become the selection.
+  test("offers only downloaded built-in models that fit this computer", async () => {
+    builtinCatalog.entries = [
+      catalogEntry("qwen3-4b", true, "fits"),
+      catalogEntry("qwen3-8b", false, "fits"),
+      catalogEntry("granite-4.0-micro", true, "tight"),
+      catalogEntry("ministral-3-8b", true, "tooLarge"),
+    ];
+    const status = getLlmProviderStatus({
+      provider: provider("builtin"),
+      isAvailable: true,
+    });
+
+    const result = await status.listModels?.();
+
+    expect(result?.models).toEqual(["qwen3-4b", "granite-4.0-micro"]);
+  });
+
+  test.each(["ollama", "lmstudio", "apple_foundation", "builtin"])(
     "only configures %s when its runtime is reachable, without an API key",
     (id) => {
       const pending = getLlmProviderStatus({

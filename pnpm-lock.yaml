@@ -199,6 +199,9 @@ importers:
       '@anlg/plugin-local-auth':
         specifier: workspace:*
         version: link:../../plugins/local-auth
+      '@anlg/plugin-local-llm':
+        specifier: workspace:*
+        version: link:../../plugins/local-llm
       '@anlg/plugin-local-stt':
         specifier: workspace:*
         version: link:../../plugins/local-stt
@@ -894,6 +897,12 @@ importers:
         version: 2.10.1
 
   plugins/local-auth:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: ^2.10.1
+        version: 2.10.1
+
+  plugins/local-llm:
     dependencies:
       '@tauri-apps/api':
         specifier: ^2.10.1
