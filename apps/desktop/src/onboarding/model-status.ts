@@ -1,3 +1,4 @@
+import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { useQueries, useQuery } from "@tanstack/react-query";
 
@@ -147,14 +148,20 @@ export function useIntelligenceSetup(): ModelSetupStatus {
     return { kind: "none" };
   }
 
-  return describe(
-    {
-      model: displayLlmModelId(current_llm_model),
-      provider: providerDisplayName(provider, i18n),
-    },
-    setup,
-    health,
-  );
+  const labels = {
+    model: displayLlmModelId(current_llm_model),
+    provider: providerDisplayName(provider, i18n),
+  };
+  // Built-in models have no server to start by hand.
+  if (provider.id === "builtin" && setup.kind === "stopped") {
+    return {
+      kind: "error",
+      ...labels,
+      message: i18n._(msg`Not available in this version.`),
+    };
+  }
+
+  return describe(labels, setup, health);
 }
 
 function useCurrentProviderSetup<
