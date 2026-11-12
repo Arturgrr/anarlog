@@ -16,7 +16,11 @@ pub const RUNTIME_OVERHEAD_BYTES: u64 = GIB / 2;
 /// The smallest context the built-in models run with; about 30 minutes of a
 /// meeting's transcript.
 pub const MIN_CONTEXT: u32 = 8_192;
-const CONTEXT_STEPS: [u32; 3] = [MIN_CONTEXT, 16_384, 32_768];
+/// The KV cache is reserved in full when the server starts, so a model never
+/// gets more context than about five hours of meeting, however much memory
+/// is free.
+pub const MAX_CONTEXT: u32 = 65_536;
+const CONTEXT_STEPS: [u32; 4] = [MIN_CONTEXT, 16_384, 32_768, MAX_CONTEXT];
 
 /// Share of total memory a model may use and still count as fitting.
 const FIT_PERCENT: u64 = 50;
@@ -24,7 +28,8 @@ const FIT_PERCENT: u64 = 50;
 const TIGHT_PERCENT: u64 = 65;
 
 /// On Macs with this much memory or less, a model does not load while a
-/// meeting is being recorded: transcription needs the room.
+/// meeting is being recorded or its recording transcribed: transcription
+/// needs the room.
 pub const SMALL_MEMORY_BYTES: u64 = 8 * GIB;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, specta::Type)]
@@ -50,17 +55,15 @@ pub fn estimate_bytes(model: LlmModel, context: u32) -> u64 {
     info.artifact.bytes + info.kv_bytes_per_token * u64::from(context) + RUNTIME_OVERHEAD_BYTES
 }
 
-/// The contexts tried for a model, smallest first: 8k, 16k, 32k and the
-/// model's own maximum.
+/// The contexts tried for a model, smallest first: 8k, 16k, 32k and 64k,
+/// each bounded by the model's own maximum.
 pub fn context_steps(model: LlmModel) -> Vec<u32> {
     let max = model.info().context_length;
     let mut steps: Vec<u32> = CONTEXT_STEPS
         .into_iter()
-        .filter(|step| *step <= max)
+        .map(|step| step.min(max))
         .collect();
-    if steps.last() != Some(&max) {
-        steps.push(max);
-    }
+    steps.dedup();
     steps
 }
 
@@ -122,8 +125,8 @@ pub fn total_memory_bytes() -> u64 {
 mod tests {
     use super::*;
 
-    // The table the owner reviewed: which context each model gets on 8, 16,
-    // 24 and 64 GB, and where it is tight or refused.
+    // The table the owner reviewed: which context each model gets on 6 to
+    // 64 GB, where it is tight or refused, and that it never exceeds 64k.
     #[test]
     fn contexts_follow_the_memory_policy() {
         use Fit::*;
@@ -134,12 +137,16 @@ mod tests {
             (LlmModel::Qwen3_8B, 8, TooLarge, None),
             (LlmModel::Qwen3_8B, 16, Fits, Some(16_384)),
             (LlmModel::Qwen3_8B, 24, Fits, Some(40_960)),
+            (LlmModel::Qwen3_4B, 64, Fits, Some(40_960)),
             (LlmModel::Granite4Micro, 8, Fits, Some(16_384)),
-            (LlmModel::Granite4Micro, 16, Fits, Some(32_768)),
+            (LlmModel::Granite4Micro, 16, Fits, Some(65_536)),
+            (LlmModel::Granite4Micro, 64, Fits, Some(65_536)),
             (LlmModel::Ministral3_8B, 8, TooLarge, None),
             (LlmModel::Ministral3_8B, 16, Fits, Some(16_384)),
-            (LlmModel::Ministral3_8B, 64, Fits, Some(32_768)),
+            (LlmModel::Ministral3_8B, 24, Fits, Some(32_768)),
+            (LlmModel::Ministral3_8B, 64, Fits, Some(65_536)),
             (LlmModel::Ministral3_3B, 8, Fits, Some(8_192)),
+            (LlmModel::Ministral3_3B, 128, Fits, Some(65_536)),
             (LlmModel::Ministral3_3B, 6, Tight, Some(8_192)),
             (LlmModel::Qwen3_4B, 7, Tight, Some(8_192)),
             (LlmModel::Qwen3_4B, 6, TooLarge, None),
