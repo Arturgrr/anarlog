@@ -6244,7 +6244,7 @@ msgid "This Mac does not support Apple Intelligence."
 msgstr ""
 
 #: src/ai/builtin-fetch.ts
-msgid "This Mac needs its memory for transcription while it records. The built-in model starts after the recording ends."
+msgid "This Mac needs its memory for transcription while it records and transcribes a meeting. The built-in model starts once that is done."
 msgstr ""
 
 #: src/ai/builtin-fetch.ts

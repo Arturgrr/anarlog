@@ -6257,8 +6257,8 @@ msgid "This Mac does not support Apple Intelligence."
 msgstr "This Mac does not support Apple Intelligence."
 
 #: src/ai/builtin-fetch.ts
-msgid "This Mac needs its memory for transcription while it records. The built-in model starts after the recording ends."
-msgstr "This Mac needs its memory for transcription while it records. The built-in model starts after the recording ends."
+msgid "This Mac needs its memory for transcription while it records and transcribes a meeting. The built-in model starts once that is done."
+msgstr "This Mac needs its memory for transcription while it records and transcribes a meeting. The built-in model starts once that is done."
 
 #: src/ai/builtin-fetch.ts
 msgid "This meeting is too long for this model: it needs {prompt} tokens and the model holds {context} on this computer. Built-in models read the whole meeting at once, so choose a cloud model or a computer with more memory for meetings this long."
