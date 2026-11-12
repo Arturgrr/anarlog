@@ -31,9 +31,31 @@ pub async fn soniqo_model_dir<R: tauri::Runtime>(
 pub async fn list_supported_models() -> Result<Vec<SttModelInfo>, String> {
     Ok(SUPPORTED_MODELS
         .iter()
-        .filter(|m| m.is_available_on_current_platform())
+        .filter(|m| crate::is_model_available(m))
         .map(stt_model_info)
         .collect())
+}
+
+/// The devices on-device transcription can run on, GPUs first.
+#[tauri::command]
+#[specta::specta]
+pub async fn list_stt_devices<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<Vec<crate::SttDevice>, String> {
+    app.local_stt()
+        .list_stt_devices()
+        .await
+        .map_err(|error| error.to_string())
+}
+
+/// Forgets every GPU that failed, so Auto tries each one again.
+#[tauri::command]
+#[specta::specta]
+pub async fn forget_stt_gpu_failures<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<(), String> {
+    app.local_stt().forget_stt_gpu_failures();
+    Ok(())
 }
 
 #[tauri::command]

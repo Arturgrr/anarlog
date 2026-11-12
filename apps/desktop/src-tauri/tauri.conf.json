@@ -43,7 +43,13 @@
           "ca-certificates",
           "desktop-file-utils",
           "xdg-utils",
-          "libayatana-appindicator3-1"
+          "libayatana-appindicator3-1",
+          "libvulkan1"
+        ]
+      },
+      "rpm": {
+        "depends": [
+          "vulkan-loader"
         ]
       }
     },

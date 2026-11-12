@@ -18,6 +18,8 @@ Default permissions for the plugin
 - `allow-list-supported-languages`
 - `allow-inspect-custom-model-path`
 - `allow-start-server-for-path`
+- `allow-list-stt-devices`
+- `allow-forget-stt-gpu-failures`
 
 ## Permission Table
 
@@ -102,6 +104,32 @@ Enables the download_model command without any pre-configured scope.
 <td>
 
 Denies the download_model command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`local-stt:allow-forget-stt-gpu-failures`
+
+</td>
+<td>
+
+Enables the forget_stt_gpu_failures command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`local-stt:deny-forget-stt-gpu-failures`
+
+</td>
+<td>
+
+Denies the forget_stt_gpu_failures command without any pre-configured scope.
 
 </td>
 </tr>
@@ -232,6 +260,32 @@ Enables the is_model_downloading command without any pre-configured scope.
 <td>
 
 Denies the is_model_downloading command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`local-stt:allow-list-stt-devices`
+
+</td>
+<td>
+
+Enables the list_stt_devices command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`local-stt:deny-list-stt-devices`
+
+</td>
+<td>
+
+Denies the list_stt_devices command without any pre-configured scope.
 
 </td>
 </tr>

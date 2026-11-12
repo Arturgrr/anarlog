@@ -36,8 +36,8 @@ import type { BatchPersistCallback } from "~/store/zustand/listener/transcript";
 import { serializeBatchResumeContext } from "~/stt/batch-resume-context";
 import {
   getTranscriptionLanguages,
-  isDesktopLocalSttAvailable,
   isLocalFileSttModel,
+  isLocalSttProviderAvailable,
   isOnDeviceSttModel,
   isSupportedLanguagesBatch,
 } from "~/stt/capabilities";
@@ -185,7 +185,10 @@ export function getBatchProvider(
     return "deepgram";
   }
 
-  if (isLocalFileSttModel(provider, model)) {
+  if (
+    isLocalFileSttModel(provider, model) ||
+    (provider === "gguf" && isOnDeviceSttModel(provider, model))
+  ) {
     return "whispercpp";
   }
 
@@ -213,7 +216,11 @@ export function getBatchFallbackTarget({
   currentPlatform?: ReturnType<typeof platform>;
   currentArch?: ReturnType<typeof arch>;
 } = {}): BatchTarget | null {
-  return isDesktopLocalSttAvailable(currentPlatform, currentArch)
+  return isLocalSttProviderAvailable(
+    LOCAL_SONIQO_BATCH_TARGET.provider,
+    currentPlatform,
+    currentArch,
+  )
     ? LOCAL_SONIQO_BATCH_TARGET
     : null;
 }
@@ -338,7 +345,11 @@ export const useRunBatch = (sessionId: string) => {
         selectedTarget &&
         (isOnDeviceSttModel(selectedProviderId, selectedModel) ||
           isLocalFileSttModel(selectedProviderId, selectedModel)) &&
-        !isDesktopLocalSttAvailable(currentPlatform, currentArch)
+        !isLocalSttProviderAvailable(
+          selectedProviderId,
+          currentPlatform,
+          currentArch,
+        )
       );
       const selectedTargetSupported =
         selectedTarget && !selectedOnDeviceUnsupported

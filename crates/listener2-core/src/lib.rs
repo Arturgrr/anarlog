@@ -20,6 +20,31 @@ use owhisper_client::AdapterKind;
 // whisper.cpp files have no remote adapter; their language support comes from the
 // on-device runtime.
 const LOCAL_FILE_PROVIDER: &str = "local_file";
+// transcribe.cpp catalog models run in the internal server, after recording only;
+// their languages come from the catalog, in either mode. Settings asks with the
+// `gguf` provider, batch callers with its `whispercpp` batch provider.
+const GGUF_PROVIDER: &str = "gguf";
+const WHISPERCPP_BATCH_PROVIDER: &str = "whispercpp";
+
+fn is_gguf_request(provider: &str, model: Option<&str>) -> bool {
+    provider == GGUF_PROVIDER
+        || (provider == WHISPERCPP_BATCH_PROVIDER
+            && model.is_some_and(|model| model.parse::<anlg_gguf_model::GgufModel>().is_ok()))
+}
+
+fn gguf_supports_languages(
+    model: Option<&str>,
+    languages: &[anlg_language::Language],
+) -> std::result::Result<bool, String> {
+    let model = model
+        .ok_or_else(|| "missing_model: gguf".to_string())?
+        .parse::<anlg_gguf_model::GgufModel>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(languages
+        .iter()
+        .all(|language| model.supports_language(language.iso639_code())))
+}
 
 pub fn is_supported_languages_live(
     provider: &str,
@@ -50,6 +75,10 @@ pub fn is_supported_languages_live(
 
     if provider == LOCAL_FILE_PROVIDER {
         return Ok(model.is_none_or(|model| !model.starts_with("whisper-")));
+    }
+
+    if is_gguf_request(provider, model) {
+        return gguf_supports_languages(model, languages);
     }
 
     let adapter_kind =
@@ -87,6 +116,10 @@ pub fn is_supported_languages_batch(
 
     if provider == LOCAL_FILE_PROVIDER {
         return Ok(true);
+    }
+
+    if is_gguf_request(provider, model) {
+        return gguf_supports_languages(model, languages);
     }
 
     let adapter_kind =
@@ -192,6 +225,12 @@ mod tests {
             ("soniqo", "soniqo-parakeet-batch", &["ko"], false),
             ("soniqo", "soniqo-omnilingual", &["fr"], true),
             ("local_file", "local-file", &["ko"], true),
+            ("gguf", "gguf-parakeet-tdt-0.6b-v3", &["pt-BR", "en"], true),
+            ("gguf", "gguf-parakeet-tdt-0.6b-v3", &["ko"], false),
+            ("gguf", "gguf-whisper-large-v3-turbo", &["ko", "he"], true),
+            ("gguf", "gguf-qwen3-asr-0.6b", &["fil"], true),
+            ("whispercpp", "gguf-gigaam-v3", &["ru"], true),
+            ("whispercpp", "gguf-gigaam-v3", &["en"], false),
             ("mistral", "voxtral-mini-2602", &["de-DE", "en-US"], true),
         ];
 

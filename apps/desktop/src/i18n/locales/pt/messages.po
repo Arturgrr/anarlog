@@ -65,6 +65,11 @@ msgstr "(padrão)"
 msgid "(Unavailable — using current default)"
 msgstr "(Indisponível — usando o padrão atual)"
 
+#. placeholder {0}: modelLanguages.length
+#: src/settings/ai/stt/model-rows.tsx
+msgid "{0, plural, one {# language} other {# languages}}"
+msgstr "{0, plural, one {# idioma} other {# idiomas}}"
+
 #. placeholder {0}: list.result.models.length
 #: src/settings/ai/llm/index.tsx
 msgid "{0, plural, one {# model} other {# models}}"
@@ -308,6 +313,10 @@ msgstr "30 dias"
 msgid "7 days"
 msgstr "7 dias"
 
+#: src/settings/ai/stt/index.tsx
+msgid "A .bin or .gguf file from your disk"
+msgstr "Um arquivo .bin ou .gguf do seu disco"
+
 #: src/sidebar/folder-name-dialog.tsx
 msgid "A folder with this name already exists."
 msgstr "Já existe uma pasta com este nome."
@@ -339,10 +348,6 @@ msgstr "A a Z"
 #: src/sidebar/timeline/utils/index.ts
 msgid "a week ago"
 msgstr "há uma semana"
-
-#: src/settings/ai/stt/index.tsx
-msgid "A whisper.cpp file from your disk"
-msgstr "Um arquivo whisper.cpp do seu disco"
 
 #: src/settings/general/about.tsx
 msgid "About"
@@ -815,6 +820,7 @@ msgid "Authenticating…"
 msgstr "Autenticando…"
 
 #: src/session/components/note-input/template-picker.tsx
+#: src/settings/ai/stt/speech-engine.tsx
 #: src/templates/auto-form.tsx
 #: src/templates/template-sidebar.tsx
 msgid "Auto"
@@ -827,6 +833,14 @@ msgstr "O formato automático não está disponível."
 #: src/templates/auto-form.tsx
 msgid "Auto summary format"
 msgstr "Formato automático de resumo"
+
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Auto uses a GPU that works and falls back to the CPU. Changes apply the next time the model loads."
+msgstr "O modo automático usa uma GPU que funcione e recorre à CPU se for preciso. As mudanças valem a partir da próxima vez que o modelo carregar."
+
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Auto uses the CPU because {setAsideName} stopped responding."
+msgstr "O modo automático usa a CPU porque {setAsideName} parou de responder."
 
 #: src/settings/automations/index.tsx
 msgid "Automate what happens before, during, or after meetings based on the conditions you choose."
@@ -924,6 +938,10 @@ msgstr "Berlim"
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Best for this Mac"
 msgstr "Ideal para este Mac"
+
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Best for your languages"
+msgstr "Ideal para os seus idiomas"
 
 #: src/chat/components/body/empty.tsx
 #: src/settings/general/about.tsx
@@ -1141,8 +1159,8 @@ msgid "China"
 msgstr "China"
 
 #: src/settings/ai/stt/local-file-model.tsx
-msgid "Choose a .bin model"
-msgstr "Escolher um modelo .bin"
+msgid "Choose a .bin or .gguf model"
+msgstr "Escolher um modelo .bin ou .gguf"
 
 #: src/session/components/outer-header/overflow/export-modal.tsx
 msgid "Choose a file format and what to include."
@@ -1770,6 +1788,10 @@ msgstr "Não foi possível abrir o Librelog. Tente novamente."
 msgid "Couldn't save your new badges."
 msgstr "Não foi possível salvar suas novas conquistas."
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "CPU"
+msgstr "CPU"
+
 #: src/folders/sidebar.tsx
 msgid "Create"
 msgstr "Criar"
@@ -1989,6 +2011,10 @@ msgstr "A autenticação do dispositivo não está disponível neste computador.
 msgid "Device settings"
 msgstr "Configurações do dispositivo"
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Devices"
+msgstr "Dispositivos"
+
 #: src/settings/dictation.tsx
 #: src/sidebar/settings-nav-groups.ts
 msgid "Dictation"
@@ -2095,6 +2121,10 @@ msgstr "Baixar"
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Download {label}"
 msgstr "Baixar {label}"
+
+#: src/settings/ai/stt/provider-context.ts
+msgid "Download an open speech model and run it with transcribe.cpp on this computer, so audio never leaves it. During a meeting, text appears a minute at a time; the full transcript follows after the recording. Models download from Hugging Face only when you ask, under the license shown with each."
+msgstr "Baixe um modelo de fala aberto e rode-o com o transcribe.cpp neste computador, para que o áudio nunca saia dele. Durante uma reunião, o texto aparece a cada minuto; a transcrição completa vem depois da gravação. Os modelos são baixados do Hugging Face só quando você pede, sob a licença mostrada com cada um."
 
 #: src/settings/ai/llm/shared.tsx
 msgid "Download LM Studio"
@@ -2688,6 +2718,10 @@ msgstr "Ir para o mais recente"
 msgid "Good Listener"
 msgstr "Bom Ouvinte"
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "GPU"
+msgstr "GPU"
+
 #: src/settings/appearance/app-icon.tsx
 msgid "Graphite"
 msgstr "Grafite"
@@ -2960,8 +2994,8 @@ msgid "Install"
 msgstr "Instalar"
 
 #: src/onboarding/index.tsx
-msgid "Install a model on your Mac or connect a cloud provider. It’s the same list as Settings › Transcription."
-msgstr "Instale um modelo no seu Mac ou conecte um provedor na nuvem. É a mesma lista de Configurações › Transcrição."
+msgid "Install a model on this computer or connect a cloud provider. It’s the same list as Settings › Transcription."
+msgstr "Instale um modelo neste computador ou conecte um provedor na nuvem. É a mesma lista de Configurações › Transcrição."
 
 #: src/settings/developers/skills.tsx
 msgid "Install to all agents"
@@ -3246,6 +3280,11 @@ msgstr "O Librelog tentará novamente de forma automática. Isso não afeta suas
 msgid "Librelog will stop listening in {AUTO_STOP_CONFIRM_TIMEOUT_SECONDS} seconds."
 msgstr "O Librelog vai parar de ouvir em {AUTO_STOP_CONFIRM_TIMEOUT_SECONDS} segundos."
 
+#. placeholder {0}: license.name
+#: src/settings/ai/stt/model-rows.tsx
+msgid "License: <0>{0}<1/></0>"
+msgstr "Licença: <0>{0}<1/></0>"
+
 #: src/settings/appearance/app-icon.tsx
 #: src/settings/appearance/theme.tsx
 msgid "Light"
@@ -3386,6 +3425,10 @@ msgstr "Carregando seu espaço de trabalho. Isso deve levar só um instante."
 #: src/contacts/details.tsx
 msgid "Loading..."
 msgstr "Carregando..."
+
+#: src/settings/ai/shared/provider-labels.ts
+msgid "Local models"
+msgstr "Modelos locais"
 
 #: src/settings/ai/stt/health.tsx
 msgid "Local STT server is starting up…"
@@ -3679,6 +3722,10 @@ msgstr "Modelos"
 msgid "Models & Pricing"
 msgstr "Modelos e Preços"
 
+#: src/settings/ai/stt/detail.tsx
+msgid "Models without word timing make speaker separation after meetings less precise."
+msgstr "Modelos sem marcação de tempo por palavra deixam a separação de falantes após as reuniões menos precisa."
+
 #: src/settings/general/week-start.tsx
 msgid "Monday"
 msgstr "Segunda-feira"
@@ -3707,6 +3754,10 @@ msgstr "Mover para baixo"
 #: src/templates/sections-editor.tsx
 msgid "Move up"
 msgstr "Mover para cima"
+
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Multilingual"
+msgstr "Multilíngue"
 
 #: src/onboarding/index.tsx
 #: src/settings/dictation-audio.tsx
@@ -4009,6 +4060,10 @@ msgstr "Nenhum modelo ainda"
 msgid "No text input support"
 msgstr "Sem suporte a entrada de texto"
 
+#: src/settings/ai/stt/model-rows.tsx
+msgid "No timing"
+msgstr "Sem marcação de tempo"
+
 #: src/settings/ai/llm/models.tsx
 msgid "No tool support"
 msgstr "Sem suporte a ferramentas"
@@ -4033,15 +4088,18 @@ msgstr "Não é do tipo LLM"
 msgid "Not available"
 msgstr "Indisponível"
 
-#: src/settings/ai/llm/index.tsx
 #: src/settings/ai/stt/index.tsx
-msgid "Not available on this Mac"
-msgstr "Indisponível neste Mac"
+msgid "Not available on this computer"
+msgstr "Indisponível neste computador"
 
 #: src/onboarding/model-status.ts
 #: src/settings/ai/stt/detail.tsx
-msgid "Not available on this Mac."
-msgstr "Indisponível neste Mac."
+msgid "Not available on this computer."
+msgstr "Indisponível neste computador."
+
+#: src/settings/ai/llm/index.tsx
+msgid "Not available on this Mac"
+msgstr "Indisponível neste Mac"
 
 #: src/session/components/note-input/enhanced/index.tsx
 msgid "Not enough transcript recorded to summarize."
@@ -4146,8 +4204,8 @@ msgstr "No dispositivo"
 
 #: src/settings/ai/llm/index.tsx
 #: src/settings/ai/stt/index.tsx
-msgid "On this Mac"
-msgstr "Neste Mac"
+msgid "On this computer"
+msgstr "Neste computador"
 
 #: src/settings/dictation.tsx
 msgid "On Wayland, approve the shortcuts in your desktop's prompt. Use Control + Alt + Escape to cancel. On X11, press Escape to cancel. The target app must expose an editable accessibility field."
@@ -4977,8 +5035,8 @@ msgid "Right Command"
 msgstr "Command direito"
 
 #: src/onboarding/index.tsx
-msgid "Run a model on your Mac, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
-msgstr "Execute um modelo no seu Mac, entre com uma assinatura ou use uma chave de API. É a mesma lista de Configurações › Inteligência."
+msgid "Run a model on this computer, sign in with a subscription or use an API key. It’s the same list as Settings › Intelligence."
+msgstr "Execute um modelo neste computador, entre com uma assinatura ou use uma chave de API. É a mesma lista de Configurações › Inteligência."
 
 #. placeholder {0}: formatToolName(toolName)
 #: src/chat/components/message/tool/generic.tsx
@@ -5152,6 +5210,10 @@ msgstr "Ver todas as pastas"
 msgid "See all templates"
 msgstr "Ver todos os modelos"
 
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Segment timing"
+msgstr "Tempo por trecho"
+
 #: src/contacts/details.tsx
 msgid "Select a person to view details"
 msgstr "Selecione uma pessoa para ver os detalhes"
@@ -5265,6 +5327,10 @@ msgstr "Definir como atual"
 msgid "Set as default"
 msgstr "Definir como padrão"
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "set aside after a failure"
+msgstr "deixada de lado após uma falha"
+
 #: src/session/components/note-input/enhanced/config-error.tsx
 msgid "Set up AI"
 msgstr "Configurar IA"
@@ -5351,6 +5417,7 @@ msgstr "Mostrar modelos ignorados"
 msgid "Show in Finder"
 msgstr "Mostrar no Finder"
 
+#: src/settings/ai/stt/model-rows.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Show in folder"
 msgstr "Mostrar na pasta"
@@ -5508,6 +5575,10 @@ msgstr "Opções de ordenação"
 msgid "Sound"
 msgstr "Som"
 
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Source"
+msgstr "Origem"
+
 #: src/session/components/note-input/enhanced/enhance-error.tsx
 msgid "Source: {provider} (AI model provider)"
 msgstr "Origem: {provider} (provedor do modelo de IA)"
@@ -5547,6 +5618,14 @@ msgstr "Falante {speakerNumber}"
 #: src/stt/capture-lifecycle.ts
 msgid "Speakers could not be separated"
 msgstr "Não foi possível separar os falantes"
+
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Speech engine"
+msgstr "Mecanismo de fala"
+
+#: src/settings/ai/stt/local-file-model.tsx
+msgid "Speech models"
+msgstr "Modelos de fala"
 
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "SQLite migration verification is incomplete"
@@ -5904,8 +5983,8 @@ msgid "The live transcript was kept. Re-transcribe the meeting to try again."
 msgstr "A transcrição ao vivo foi mantida. Transcreva a reunião novamente para tentar outra vez."
 
 #: src/settings/ai/stt/model-rows.tsx
-msgid "The model files are removed from this Mac. You can download them again later."
-msgstr "Os arquivos do modelo serão removidos deste Mac. Você pode baixá-los de novo depois."
+msgid "The model files are removed from this computer. You can download them again later."
+msgstr "Os arquivos do modelo serão removidos deste computador. Você pode baixá-los de novo depois."
 
 #: src/settings/ai/llm/index.tsx
 msgid "The model that writes summaries, answers in chat and titles your notes."
@@ -6212,6 +6291,10 @@ msgstr "Tentar novamente: {title}"
 msgid "Try dictation"
 msgstr "Experimentar o ditado"
 
+#: src/settings/ai/stt/speech-engine.tsx
+msgid "Try GPU again"
+msgstr "Tentar a GPU de novo"
+
 #: src/chat/components/input/use-dictation.ts
 msgid "Try speaking a little closer to the microphone."
 msgstr "Tente falar um pouco mais perto do microfone."
@@ -6509,8 +6592,8 @@ msgid "Use a stable filename in the configured export directory."
 msgstr "Use um nome de arquivo fixo no diretório de exportação configurado."
 
 #: src/settings/ai/stt/provider-context.ts
-msgid "Use a whisper.cpp model file you already have. It runs on this Mac after each recording."
-msgstr "Use um arquivo de modelo whisper.cpp que você já tem. Ele roda neste Mac depois de cada gravação."
+msgid "Use a whisper.cpp `.bin` or GGUF `.gguf` model file you already have. It runs on this computer after each recording."
+msgstr "Use um arquivo de modelo whisper.cpp `.bin` ou GGUF `.gguf` que você já tem. Ele roda neste computador depois de cada gravação."
 
 #: src/settings/ai/stt/provider-context.ts
 msgid "Use Alibaba Cloud Model Studio's Qwen ASR for **live transcription**. The default endpoint is the Singapore region; change it under Advanced when your API key belongs to another region."
@@ -6757,10 +6840,6 @@ msgstr "Onde roda"
 msgid "While dictating"
 msgstr "Durante o ditado"
 
-#: src/settings/ai/stt/local-file-model.tsx
-msgid "whisper.cpp models"
-msgstr "Modelos do whisper.cpp"
-
 #: src/onboarding/index.tsx
 msgid "Who writes your summaries"
 msgstr "Quem escreve seus resumos"
@@ -6772,6 +6851,10 @@ msgstr "Janela"
 #: src/i18n/external-messages.ts
 msgid "Windows could not insert the entire dictation. Check the field before copying your last dictation. Elevated apps may block text insertion."
 msgstr "O Windows não conseguiu inserir o ditado inteiro. Verifique o campo antes de copiar seu último ditado. Apps com privilégios elevados podem bloquear a inserção de texto."
+
+#: src/settings/ai/stt/model-rows.tsx
+msgid "Word timing"
+msgstr "Tempo por palavra"
 
 #: src/settings/automations/workflow-builder.tsx
 msgid "Workflow"

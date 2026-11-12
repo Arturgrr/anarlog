@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 
+pub use anlg_gguf_model::{GgufModel, TimestampGranularity};
 use anlg_model_downloader::{DownloadableModel, Error};
 pub use anlg_transcribe_soniqo::SoniqoModel;
 pub use anlg_transcribe_speechanalyzer::AppleSpeechModel;
@@ -13,6 +14,20 @@ pub enum LocalModel {
     Soniqo(SoniqoModel),
     AppleSpeech(AppleSpeechModel),
     Whisper(WhisperModel),
+    Gguf(GgufModel),
+}
+
+/// Whether this build's platform runs transcribe.cpp models: macOS on Apple
+/// silicon, Windows on x86_64, and Linux on x86_64 and aarch64.
+pub const fn gguf_platform() -> bool {
+    cfg!(any(
+        all(target_os = "macos", target_arch = "aarch64"),
+        all(target_os = "windows", target_arch = "x86_64"),
+        all(
+            target_os = "linux",
+            any(target_arch = "x86_64", target_arch = "aarch64")
+        ),
+    ))
 }
 
 impl std::fmt::Display for LocalModel {
@@ -21,6 +36,7 @@ impl std::fmt::Display for LocalModel {
             LocalModel::Soniqo(model) => write!(f, "{model}"),
             LocalModel::AppleSpeech(model) => write!(f, "{model}"),
             LocalModel::Whisper(model) => write!(f, "whisper-{model}"),
+            LocalModel::Gguf(model) => write!(f, "{model}"),
         }
     }
 }
@@ -50,6 +66,8 @@ impl LocalModel {
             LocalModel::Whisper(WhisperModel::QuantizedLargeTurbo),
         ]);
 
+        models.extend(GgufModel::ALL.iter().copied().map(LocalModel::Gguf));
+
         models
     }
 
@@ -58,6 +76,7 @@ impl LocalModel {
             LocalModel::Soniqo(_) => "stt-soniqo",
             LocalModel::AppleSpeech(_) => "stt-apple-speech",
             LocalModel::Whisper(_) => "stt-whisper",
+            LocalModel::Gguf(_) => "stt-gguf",
         }
     }
 
@@ -72,6 +91,7 @@ impl LocalModel {
             LocalModel::Whisper(WhisperModel::QuantizedSmall) => "whisper-small",
             LocalModel::Whisper(WhisperModel::QuantizedSmallEn) => "whisper-small-en",
             LocalModel::Whisper(WhisperModel::QuantizedLargeTurbo) => "whisper-large-turbo",
+            LocalModel::Gguf(model) => model.as_str(),
         }
     }
 
@@ -80,6 +100,7 @@ impl LocalModel {
             LocalModel::Soniqo(model) => models_base.join("soniqo").join(model.as_str()),
             LocalModel::AppleSpeech(model) => models_base.join("apple-speech").join(model.as_str()),
             LocalModel::Whisper(model) => models_base.join("stt").join(model.file_name()),
+            LocalModel::Gguf(model) => models_base.join(model.relative_path()),
         }
     }
 
@@ -88,6 +109,7 @@ impl LocalModel {
             LocalModel::Soniqo(model) => model.display_name().to_string(),
             LocalModel::AppleSpeech(model) => model.display_name().to_string(),
             LocalModel::Whisper(model) => model.display_name().to_string(),
+            LocalModel::Gguf(model) => model.info().display_name.to_string(),
         }
     }
 
@@ -96,6 +118,7 @@ impl LocalModel {
             LocalModel::Soniqo(model) => model.description().to_string(),
             LocalModel::AppleSpeech(model) => model.description().to_string(),
             LocalModel::Whisper(model) => model.description(),
+            LocalModel::Gguf(model) => model.info().description.to_string(),
         }
     }
 
@@ -106,6 +129,7 @@ impl LocalModel {
             LocalModel::Soniqo(model) => model.is_available_on_current_platform(),
             LocalModel::AppleSpeech(model) => model.is_available_on_current_platform(),
             LocalModel::Whisper(_) => is_apple_silicon,
+            LocalModel::Gguf(_) => gguf_platform(),
         }
     }
 }
@@ -116,6 +140,7 @@ impl DownloadableModel for LocalModel {
             LocalModel::Soniqo(model) => format!("soniqo:{}", model.as_str()),
             LocalModel::AppleSpeech(model) => format!("apple-speech:{}", model.as_str()),
             LocalModel::Whisper(model) => format!("whisper:{}", model.file_name()),
+            LocalModel::Gguf(model) => format!("gguf:{}", model.as_str()),
         }
     }
 
@@ -123,13 +148,28 @@ impl DownloadableModel for LocalModel {
         match self {
             LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) => None,
             LocalModel::Whisper(model) => Some(model.model_url().to_string()),
+            LocalModel::Gguf(model) => Some(model.artifact().download_url()),
         }
     }
 
     fn download_checksum(&self) -> Option<u32> {
         match self {
-            LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) => None,
+            LocalModel::Soniqo(_) | LocalModel::AppleSpeech(_) | LocalModel::Gguf(_) => None,
             LocalModel::Whisper(model) => Some(model.checksum()),
+        }
+    }
+
+    fn download_sha256(&self) -> Option<String> {
+        match self {
+            LocalModel::Gguf(model) => Some(model.artifact().sha256.to_string()),
+            _ => None,
+        }
+    }
+
+    fn download_size(&self) -> Option<u64> {
+        match self {
+            LocalModel::Gguf(model) => Some(model.artifact().bytes),
+            _ => None,
         }
     }
 
@@ -138,6 +178,7 @@ impl DownloadableModel for LocalModel {
             LocalModel::Soniqo(model) => models_base.join("soniqo").join(model.as_str()),
             LocalModel::AppleSpeech(model) => models_base.join("apple-speech").join(model.as_str()),
             LocalModel::Whisper(model) => models_base.join("stt").join(model.file_name()),
+            LocalModel::Gguf(model) => models_base.join(model.relative_path()),
         }
     }
 
@@ -155,6 +196,7 @@ impl DownloadableModel for LocalModel {
             LocalModel::Whisper(model) => {
                 Ok(models_base.join("stt").join(model.file_name()).exists())
             }
+            LocalModel::Gguf(model) => Ok(models_base.join(model.relative_path()).is_file()),
         }
     }
 
@@ -166,7 +208,7 @@ impl DownloadableModel for LocalModel {
             LocalModel::AppleSpeech(_) => Err(Error::FinalizeFailed(
                 "Apple Speech assets are installed by macOS".to_string(),
             )),
-            LocalModel::Whisper(_) => Ok(()),
+            LocalModel::Whisper(_) | LocalModel::Gguf(_) => Ok(()),
         }
     }
 
@@ -189,6 +231,14 @@ impl DownloadableModel for LocalModel {
                 }
                 Ok(())
             }
+            LocalModel::Gguf(model) => {
+                let model_path = models_base.join(model.relative_path());
+                match std::fs::remove_file(&model_path) {
+                    Ok(()) => Ok(()),
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+                    Err(error) => Err(Error::DeleteFailed(error.to_string())),
+                }
+            }
         }
     }
 }
@@ -206,5 +256,42 @@ mod tests {
             .unwrap_err();
 
         assert!(error.to_string().contains("Soniqo bridge"));
+    }
+
+    /// `LocalModel` is untagged, so a GGUF id that another inner enum also
+    /// accepted would deserialize as the wrong model.
+    #[test]
+    fn every_model_id_round_trips_to_itself() {
+        let mut ids = std::collections::HashSet::new();
+        for model in LocalModel::all() {
+            let json = serde_json::to_string(&model).unwrap();
+            assert!(ids.insert(json.clone()), "{json} is not unique");
+            assert_eq!(
+                serde_json::from_str::<LocalModel>(&json).unwrap(),
+                model,
+                "{json}"
+            );
+        }
+        for (json, expected) in [
+            (
+                r#""soniqo-parakeet-batch""#,
+                LocalModel::Soniqo(SoniqoModel::ParakeetBatch),
+            ),
+            (
+                r#""apple-speech""#,
+                LocalModel::AppleSpeech(AppleSpeechModel::Default),
+            ),
+            (
+                r#""QuantizedSmall""#,
+                LocalModel::Whisper(WhisperModel::QuantizedSmall),
+            ),
+            (
+                r#""gguf-parakeet-tdt-0.6b-v3""#,
+                LocalModel::Gguf(GgufModel::ParakeetTdtV3),
+            ),
+        ] {
+            assert_eq!(serde_json::from_str::<LocalModel>(json).unwrap(), expected);
+        }
+        assert!(serde_json::from_str::<LocalModel>(r#""gguf-unknown""#).is_err());
     }
 }

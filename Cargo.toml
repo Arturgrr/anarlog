@@ -59,6 +59,7 @@ anlg-frontmatter = { path = "crates/frontmatter", package = "frontmatter" }
 anlg-fs-format = { path = "crates/fs-format", package = "fs-format" }
 anlg-fs-sync-core = { path = "crates/fs-sync-core", package = "fs-sync-core" }
 anlg-gbnf = { path = "crates/gbnf", package = "gbnf" }
+anlg-gguf-model = { path = "crates/gguf-model", package = "gguf-model" }
 anlg-hooks = { path = "crates/hooks", package = "hooks" }
 anlg-host = { path = "crates/host", package = "host" }
 anlg-intercept = { path = "crates/intercept", package = "intercept" }
@@ -68,7 +69,6 @@ anlg-listener2-core = { path = "crates/listener2-core", package = "listener2-cor
 anlg-local-model = { path = "crates/local-model", package = "local-model" }
 anlg-local-stt-core = { path = "crates/local-stt-core", package = "local-stt-core" }
 anlg-model-downloader = { path = "crates/model-downloader", package = "model-downloader" }
-anlg-model-manager = { path = "crates/model-manager", package = "model-manager" }
 anlg-mp3 = { path = "crates/mp3", package = "mp3" }
 anlg-notification = { path = "crates/notification", package = "notification" }
 anlg-notification-interface = { path = "crates/notification-interface", package = "notification-interface" }
@@ -90,9 +90,10 @@ anlg-template-app-legacy = { path = "crates/template-app-legacy", package = "tem
 anlg-template-eval = { path = "crates/template-eval", package = "template-eval" }
 anlg-tiptap = { path = "crates/tiptap", package = "tiptap" }
 anlg-transcribe-core = { path = "crates/transcribe-core", package = "transcribe-core" }
+anlg-transcribe-gguf = { path = "crates/transcribe-gguf", package = "transcribe-gguf" }
+anlg-transcribe-gguf-local = { path = "crates/transcribe-gguf-local", package = "transcribe-gguf-local" }
 anlg-transcribe-soniqo = { path = "crates/transcribe-soniqo", package = "transcribe-soniqo" }
 anlg-transcribe-speechanalyzer = { path = "crates/transcribe-speechanalyzer", package = "transcribe-speechanalyzer" }
-anlg-transcribe-whisper-local = { path = "crates/transcribe-whisper-local", package = "transcribe-whisper-local" }
 anlg-transcript = { path = "crates/transcript", package = "transcript" }
 anlg-transcription-core = { path = "crates/transcription-core", package = "transcription-core" }
 anlg-user-error = { path = "crates/user-error", package = "user-error" }
@@ -100,7 +101,6 @@ anlg-vad = { path = "crates/vad", package = "vad" }
 anlg-vad-masking = { path = "crates/vad-masking", package = "vad-masking" }
 anlg-voiceprint = { path = "crates/voiceprint", package = "voiceprint" }
 anlg-whisper = { path = "crates/whisper", package = "whisper" }
-anlg-whisper-local = { path = "crates/whisper-local", package = "whisper-local" }
 anlg-whisper-local-model = { path = "crates/whisper-local-model", package = "whisper-local-model" }
 anlg-ws-client = { path = "crates/ws-client", package = "ws-client" }
 anlg-ws-utils = { path = "crates/ws-utils", package = "ws-utils" }

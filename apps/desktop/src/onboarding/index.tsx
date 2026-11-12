@@ -245,8 +245,8 @@ function OnboardingScreenContent({
             completedTitle={<TranscriptionSummary />}
             description={
               <Trans>
-                Install a model on your Mac or connect a cloud provider. It’s
-                the same list as Settings › Transcription.
+                Install a model on this computer or connect a cloud provider.
+                It’s the same list as Settings › Transcription.
               </Trans>
             }
             status={getStepStatus("transcription", currentStep)}
@@ -265,8 +265,8 @@ function OnboardingScreenContent({
             completedTitle={<IntelligenceSummary />}
             description={
               <Trans>
-                Run a model on your Mac, sign in with a subscription or use an
-                API key. It’s the same list as Settings › Intelligence.
+                Run a model on this computer, sign in with a subscription or use
+                an API key. It’s the same list as Settings › Intelligence.
               </Trans>
             }
             status={getStepStatus("intelligence", currentStep)}

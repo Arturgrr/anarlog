@@ -16,18 +16,14 @@ pub enum Error {
     ServerStopFailed(String),
     #[error("Supervisor not found")]
     SupervisorNotFound,
-    #[error("Internal server only supports Whisper models")]
+    #[error("Internal server only supports GGUF and whisper.cpp models")]
     UnsupportedModelType,
-    #[error("On-device transcription is only available on Apple Silicon")]
+    #[error("This on-device transcription model is not available on this platform")]
     UnsupportedPlatform,
     #[error("Invalid local transcription model: {0}")]
     InvalidModelPath(String),
-    #[error(
-        "transcribe.cpp GGUF models are not supported yet. Select a whisper.cpp .bin model instead"
-    )]
-    GgufModelUnsupported,
-    #[error("Could not load the whisper.cpp model: {0}")]
-    WhisperModelLoadFailed(String),
+    #[error("Could not load the transcription model: {0}")]
+    ModelLoadFailed(String),
     #[error("Model delete failed: {0}")]
     ModelDeleteFailed(String),
     #[error("Model unpack failed: {0}")]

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 use ractor::{ActorRef, call_t, registry};
 use tauri_specta::Event;
 
@@ -8,7 +8,7 @@ use tauri::{Manager, Runtime};
 
 use anlg_model_downloader::{DownloadStatus, ModelDownloadManager, ModelDownloaderRuntime};
 
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 use crate::server::internal;
 use crate::{
     download_pollers::{DownloadPoller, DownloadPollers},
@@ -57,10 +57,37 @@ pub struct LocalStt<'a, R: Runtime, M: Manager<R>> {
 
 impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
     fn ensure_stt_model(model: &LocalModel) -> Result<(), crate::Error> {
-        if model.is_available_on_current_platform() {
+        if is_model_available(model) {
             Ok(())
         } else {
             Err(crate::Error::UnsupportedPlatform)
+        }
+    }
+
+    /// Applies the `local_stt_device` setting (Settings › Speech engine) before
+    /// a model loads, and says whether it changed. The app stores it in
+    /// `app_settings` as a JSON string; no row means Auto.
+    async fn apply_stored_device_preference(&self) -> bool {
+        #[cfg(feature = "gguf")]
+        {
+            let stored = stored_device_preference(self.manager.app_handle()).await;
+            let changed = anlg_transcribe_gguf::device_preference() != stored;
+            anlg_transcribe_gguf::set_device_preference(stored);
+            changed
+        }
+        #[cfg(not(feature = "gguf"))]
+        false
+    }
+
+    /// Where a downloaded GGUF or whisper.cpp catalog model lives.
+    fn model_file(&self, model: &LocalModel) -> Option<PathBuf> {
+        match model {
+            LocalModel::Gguf(model) => self
+                .models_dir()
+                .parent()
+                .map(|models| models.join(model.relative_path())),
+            LocalModel::Whisper(model) => Some(self.models_dir().join(model.file_name())),
+            _ => None,
         }
     }
 
@@ -126,11 +153,7 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
     }
 
     fn ensure_custom_model_supported() -> Result<(), crate::Error> {
-        if cfg!(all(
-            target_os = "macos",
-            target_arch = "aarch64",
-            feature = "whisper-cpp"
-        )) {
+        if cfg!(feature = "gguf") && anlg_local_model::gguf_platform() {
             Ok(())
         } else {
             Err(crate::Error::UnsupportedPlatform)
@@ -149,11 +172,13 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
     pub async fn start_server_for_path(&self, path: &str) -> Result<String, crate::Error> {
         Self::ensure_custom_model_supported()?;
         let (_model_path, _) = crate::custom_model::inspect_custom_model_path(path)?;
+        let _device_changed = self.apply_stored_device_preference().await;
 
-        #[cfg(feature = "whisper-cpp")]
+        #[cfg(feature = "gguf")]
         {
             let canonical_path = _model_path.to_string_lossy().into_owned();
             if let Some(info) = internal_health().await
+                && !_device_changed
                 && info.custom_model_path.as_deref() == Some(canonical_path.as_str())
             {
                 return info.url.ok_or_else(|| {
@@ -161,26 +186,31 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
                 });
             }
 
+            // Loading is the only full check of a picked file; the server
+            // keeps the loaded model.
             let probe_path = _model_path.clone();
-            tokio::task::spawn_blocking(move || {
-                anlg_whisper_local::LoadedWhisper::builder()
-                    .model_path(probe_path.to_string_lossy().into_owned())
-                    .build()
-                    .map(|_| ())
-                    .map_err(|error| crate::Error::WhisperModelLoadFailed(error.to_string()))
+            let engine = tokio::task::spawn_blocking(move || {
+                anlg_transcribe_gguf::Engine::load(
+                    &probe_path,
+                    &anlg_transcribe_gguf::LoadOptions {
+                        catalog: None,
+                        device: anlg_transcribe_gguf::device_preference(),
+                    },
+                )
+                .map_err(|error| crate::Error::ModelLoadFailed(error.to_string()))
             })
             .await
-            .map_err(|error| crate::Error::WhisperModelLoadFailed(error.to_string()))??;
+            .map_err(|error| crate::Error::ModelLoadFailed(error.to_string()))??;
 
             let supervisor = self.get_supervisor().await?;
             supervisor::stop_all_stt_servers(&supervisor)
                 .await
                 .map_err(|error| crate::Error::ServerStopFailed(error.to_string()))?;
 
-            start_internal_server(&supervisor, _model_path, None).await
+            start_internal_server(&supervisor, _model_path, None, Some(Box::new(engine))).await
         }
 
-        #[cfg(not(feature = "whisper-cpp"))]
+        #[cfg(not(feature = "gguf"))]
         Err(crate::Error::UnsupportedPlatform)
     }
 
@@ -216,16 +246,22 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
             return Ok(anlg_transcribe_speechanalyzer::LOCAL_BASE_URL.to_string());
         }
 
-        let LocalModel::Whisper(whisper_model) = model.clone() else {
+        // GGUF files, and whisper.cpp files, which transcribe.cpp loads too.
+        let Some(model_path) = self.model_file(&model) else {
             return Err(crate::Error::UnsupportedModelType);
         };
+        if !model_path.is_file() {
+            return Err(crate::Error::ModelNotDownloaded);
+        }
+        let device_changed = self.apply_stored_device_preference().await;
 
-        #[cfg(feature = "whisper-cpp")]
+        #[cfg(feature = "gguf")]
         let current_info = internal_health().await;
-        #[cfg(not(feature = "whisper-cpp"))]
+        #[cfg(not(feature = "gguf"))]
         let current_info: Option<ServerInfo> = None;
 
         if let Some(info) = current_info.as_ref()
+            && !device_changed
             && info.model.as_ref() == Some(&model)
         {
             if let Some(url) = info.url.clone() {
@@ -243,14 +279,13 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
             .await
             .map_err(|e| crate::Error::ServerStopFailed(e.to_string()))?;
 
-        #[cfg(feature = "whisper-cpp")]
+        #[cfg(feature = "gguf")]
         {
-            let model_path = self.models_dir().join(whisper_model.file_name());
-            start_internal_server(&supervisor, model_path, Some(whisper_model)).await
+            start_internal_server(&supervisor, model_path, Some(model), None).await
         }
-        #[cfg(not(feature = "whisper-cpp"))]
+        #[cfg(not(feature = "gguf"))]
         {
-            let _ = whisper_model;
+            let _ = model_path;
             Err(crate::Error::UnsupportedModelType)
         }
     }
@@ -319,13 +354,15 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
             }));
         }
 
-        if !matches!(model, LocalModel::Whisper(_)) {
+        if !matches!(model, LocalModel::Whisper(_) | LocalModel::Gguf(_)) {
             return Err(crate::Error::UnsupportedModelType);
         }
 
-        #[cfg(feature = "whisper-cpp")]
-        let info = internal_health().await;
-        #[cfg(not(feature = "whisper-cpp"))]
+        #[cfg(feature = "gguf")]
+        let info = internal_health()
+            .await
+            .filter(|info| info.model.as_ref() == Some(model));
+        #[cfg(not(feature = "gguf"))]
         let info = None;
 
         Ok(info)
@@ -333,14 +370,14 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
 
     #[tracing::instrument(skip_all)]
     pub async fn get_servers(&self) -> Result<HashMap<ServerType, ServerInfo>, crate::Error> {
-        #[cfg(feature = "whisper-cpp")]
+        #[cfg(feature = "gguf")]
         let internal_info = internal_health().await.unwrap_or(ServerInfo {
             url: None,
             status: ServerStatus::Unreachable,
             model: None,
             custom_model_path: None,
         });
-        #[cfg(not(feature = "whisper-cpp"))]
+        #[cfg(not(feature = "gguf"))]
         let internal_info = ServerInfo {
             url: None,
             status: ServerStatus::Unreachable,
@@ -507,6 +544,16 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
             .await;
         }
 
+        // A loaded model file is memory-mapped, and Windows can't delete it
+        // while it is.
+        #[cfg(feature = "gguf")]
+        if internal_health()
+            .await
+            .is_some_and(|info| info.model.as_ref() == Some(model))
+        {
+            self.stop_server(Some(ServerType::Internal)).await?;
+        }
+
         let downloader = {
             let state = self.manager.state::<crate::SharedState>();
             let guard = state.lock().await;
@@ -514,6 +561,25 @@ impl<'a, R: Runtime, M: Manager<R>> LocalStt<'a, R, M> {
         };
         downloader.delete(model).await?;
         Ok(())
+    }
+
+    /// The devices on-device transcription can run on, GPUs first.
+    pub async fn list_stt_devices(&self) -> Result<Vec<crate::SttDevice>, crate::Error> {
+        #[cfg(feature = "gguf")]
+        {
+            tokio::task::spawn_blocking(anlg_transcribe_gguf::devices)
+                .await
+                .map_err(|error| crate::Error::ServerStartFailed(error.to_string()))?
+                .map_err(|error| crate::Error::ServerStartFailed(error.to_string()))
+        }
+        #[cfg(not(feature = "gguf"))]
+        Ok(Vec::new())
+    }
+
+    /// Forgets every GPU that failed, so Auto tries each one again.
+    pub fn forget_stt_gpu_failures(&self) {
+        #[cfg(feature = "gguf")]
+        anlg_transcribe_gguf::forget_gpu_failures();
     }
 }
 
@@ -775,6 +841,14 @@ fn spawn_soniqo_progress_poller<R: Runtime>(
     });
 }
 
+/// Whether this build runs `model` here: its platform supports it and, for
+/// GGUF and whisper.cpp files, the app was built with transcribe.cpp.
+pub fn is_model_available(model: &LocalModel) -> bool {
+    let runtime_built =
+        cfg!(feature = "gguf") || !matches!(model, LocalModel::Gguf(_) | LocalModel::Whisper(_));
+    runtime_built && model.is_available_on_current_platform()
+}
+
 pub trait LocalSttPluginExt<R: Runtime> {
     fn local_stt(&self) -> LocalStt<'_, R, Self>
     where
@@ -793,15 +867,23 @@ impl<R: Runtime, T: Manager<R>> LocalSttPluginExt<R> for T {
     }
 }
 
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 async fn start_internal_server(
     supervisor: &supervisor::SupervisorRef,
     model_path: PathBuf,
-    model: Option<anlg_whisper_local_model::WhisperModel>,
+    model: Option<LocalModel>,
+    preloaded: Option<anlg_transcribe_gguf_local::BoxedTranscriber>,
 ) -> Result<String, crate::Error> {
-    supervisor::start_internal_stt(supervisor, internal::InternalSTTArgs { model, model_path })
-        .await
-        .map_err(|e| crate::Error::ServerStartFailed(e.to_string()))?;
+    supervisor::start_internal_stt(
+        supervisor,
+        internal::InternalSTTArgs {
+            model,
+            model_path,
+            preloaded: std::sync::Arc::new(std::sync::Mutex::new(preloaded)),
+        },
+    )
+    .await
+    .map_err(|e| crate::Error::ServerStartFailed(e.to_string()))?;
 
     internal_health()
         .await
@@ -809,7 +891,38 @@ async fn start_internal_server(
         .ok_or_else(|| crate::Error::ServerStartFailed("empty_health".to_string()))
 }
 
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
+async fn stored_device_preference<R: Runtime>(
+    app: &tauri::AppHandle<R>,
+) -> crate::SttDevicePreference {
+    let Some(db) = app.try_state::<tauri_plugin_db::ManagedState>() else {
+        return crate::SttDevicePreference::default();
+    };
+    let stored: Option<String> = match sqlx::query_scalar(
+        "SELECT value_json FROM app_settings WHERE id = 'local_stt_device'",
+    )
+    .fetch_optional(db.pool())
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => {
+            tracing::warn!(%error, "could not read local_stt_device");
+            None
+        }
+    };
+    parse_device_preference(stored.as_deref())
+}
+
+/// `value_json` of the `local_stt_device` row: `"auto"`, `"gpu"` or `"cpu"`.
+/// Anything else, or no row, is Auto.
+#[cfg_attr(not(feature = "gguf"), allow(dead_code))]
+fn parse_device_preference(value_json: Option<&str>) -> crate::SttDevicePreference {
+    value_json
+        .and_then(|value| serde_json::from_str(value).ok())
+        .unwrap_or_default()
+}
+
+#[cfg(feature = "gguf")]
 async fn internal_health() -> Option<ServerInfo> {
     match registry::where_is(internal::InternalSTTActor::name()) {
         Some(cell) => {
@@ -817,5 +930,24 @@ async fn internal_health() -> Option<ServerInfo> {
             call_t!(actor, internal::InternalSTTMessage::GetHealth, 10 * 1000).ok()
         }
         None => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_stored_device_setting_is_read_as_the_app_writes_it() {
+        for (stored, expected) in [
+            (None, crate::SttDevicePreference::Auto),
+            (Some(r#""auto""#), crate::SttDevicePreference::Auto),
+            (Some(r#""gpu""#), crate::SttDevicePreference::Gpu),
+            (Some(r#""cpu""#), crate::SttDevicePreference::Cpu),
+            (Some(r#""vulkan""#), crate::SttDevicePreference::Auto),
+            (Some("not json"), crate::SttDevicePreference::Auto),
+        ] {
+            assert_eq!(parse_device_preference(stored), expected, "{stored:?}");
+        }
     }
 }

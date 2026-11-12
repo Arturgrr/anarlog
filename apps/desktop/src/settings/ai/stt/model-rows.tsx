@@ -1,13 +1,16 @@
-import { Trans, useLingui } from "@lingui/react/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { platform } from "@tauri-apps/plugin-os";
 import { useState } from "react";
 
 import {
   commands as localSttCommands,
   type LocalModel,
+  type SttModelLicense,
 } from "@anlg/plugin-local-stt";
 import { commands as openerCommands } from "@anlg/plugin-opener2";
 import {
+  ArrowSquareOut,
   Check,
   CircleNotch,
   DownloadSimple,
@@ -89,9 +92,13 @@ export function SttModelRow({
               <Trans>Deprecated</Trans>
             </Chip>
           ) : null}
-          {model.isRecommended ? (
+          {model.recommended === "device" ? (
             <Chip emphasis>
               <Trans>Best for this Mac</Trans>
+            </Chip>
+          ) : model.recommended === "languages" ? (
+            <Chip emphasis>
+              <Trans>Best for your languages</Trans>
             </Chip>
           ) : null}
         </>
@@ -99,11 +106,20 @@ export function SttModelRow({
       description={model.description}
       details={
         <>
-          <LanguageSupportLine
-            model={model.id}
-            support={support}
-            languages={languages}
-          />
+          {model.languages ? (
+            <CatalogModelFacts
+              model={model}
+              covered={languages.length > 0 && !!support?.supported}
+              languages={languages}
+            />
+          ) : null}
+          {model.languages && support?.supported ? null : (
+            <LanguageSupportLine
+              model={model.id}
+              support={support}
+              languages={languages}
+            />
+          )}
           {willBeUsedAfterDownload ? (
             <span className="text-muted-foreground text-xs">
               <Trans>
@@ -124,7 +140,113 @@ export function SttModelRow({
           />
         ) : undefined
       }
+      footer={
+        model.license ? (
+          <LicenseNote license={model.license} sourceUrl={model.sourceUrl} />
+        ) : undefined
+      }
     />
+  );
+}
+
+function CatalogModelFacts({
+  model,
+  covered,
+  languages,
+}: {
+  model: SttModelEntry;
+  covered: boolean;
+  languages: readonly string[];
+}) {
+  const { i18n } = useLingui();
+  const modelLanguages = model.languages ?? [];
+
+  return (
+    <span className="text-muted-foreground flex flex-wrap items-center gap-x-1.5 text-xs">
+      {covered ? (
+        <span className="text-foreground flex items-center gap-1 font-medium">
+          <Check className="size-3.5 shrink-0" aria-hidden />
+          {formatLanguageList(languages, i18n)}
+          <span aria-hidden className="text-faint font-normal">
+            ·
+          </span>
+        </span>
+      ) : null}
+      <span>
+        {modelLanguages.includes("*") ? (
+          <Trans>Multilingual</Trans>
+        ) : (
+          <Plural
+            value={modelLanguages.length}
+            one="# language"
+            other="# languages"
+          />
+        )}
+      </span>
+      {model.timestamps ? (
+        <>
+          <span aria-hidden className="text-faint">
+            ·
+          </span>
+          <span>
+            {model.timestamps === "word" ? (
+              <Trans>Word timing</Trans>
+            ) : model.timestamps === "segment" ? (
+              <Trans>Segment timing</Trans>
+            ) : (
+              <Trans>No timing</Trans>
+            )}
+          </span>
+        </>
+      ) : null}
+    </span>
+  );
+}
+
+const EXTERNAL_LINK_CLASS =
+  "hover:text-foreground inline-flex items-center gap-1 hover:underline";
+
+function LicenseNote({
+  license,
+  sourceUrl,
+}: {
+  license: SttModelLicense;
+  sourceUrl?: string | null;
+}) {
+  return (
+    <div className="text-faint flex flex-col gap-0.5 text-xs">
+      <span className="flex flex-wrap items-center gap-x-1.5">
+        <span>
+          <Trans>
+            License:{" "}
+            <a
+              href={license.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={EXTERNAL_LINK_CLASS}
+            >
+              {license.name}
+              <ArrowSquareOut size={12} aria-hidden />
+            </a>
+          </Trans>
+        </span>
+        {sourceUrl ? (
+          <>
+            <span aria-hidden>·</span>
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={EXTERNAL_LINK_CLASS}
+            >
+              <Trans>Source</Trans>
+              <ArrowSquareOut size={12} aria-hidden />
+            </a>
+          </>
+        ) : null}
+      </span>
+      {license.attribution ? <span>{license.attribution}</span> : null}
+    </div>
   );
 }
 
@@ -299,7 +421,11 @@ function LocalModelActions({
           onClick={() => showInFinder.mutate()}
         >
           <FolderOpen className="size-3.5" aria-hidden />
-          <Trans>Show in Finder</Trans>
+          {platform() === "macos" ? (
+            <Trans>Show in Finder</Trans>
+          ) : (
+            <Trans>Show in folder</Trans>
+          )}
         </Button>
         <Button
           type="button"
@@ -323,8 +449,8 @@ function LocalModelActions({
         title={<Trans>Delete {label}?</Trans>}
         description={
           <Trans>
-            The model files are removed from this Mac. You can download them
-            again later.
+            The model files are removed from this computer. You can download
+            them again later.
           </Trans>
         }
         confirmLabel={<Trans>Delete model</Trans>}

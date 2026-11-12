@@ -4,6 +4,11 @@ xtask = "run --package xtask --"
 [env]
 IPHONEOS_DEPLOYMENT_TARGET = { value = "16.4", force = true }
 MACOSX_DEPLOYMENT_TARGET = { value = "14.2", force = true }
+# transcribe.cpp (crates/transcribe-gguf): a portable CPU build that runs on
+# any x86-64 CPU with AVX2 rather than only on the build machine, and no
+# system BLAS, so the app gains no OpenBLAS runtime dependency. Not forced: a
+# local build can tune itself, e.g. TRANSCRIBE_CMAKE_ARGS=-DGGML_NATIVE=ON.
+TRANSCRIBE_CMAKE_ARGS = "-DGGML_NATIVE=OFF -DTRANSCRIBE_USE_SYSTEM_BLAS=OFF"
 
 [target.'cfg(all(windows, target_env = "msvc"))']
 rustflags = [

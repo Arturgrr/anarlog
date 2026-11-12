@@ -65,6 +65,7 @@ export function ModelOption({
   description,
   details,
   aside,
+  footer,
   compact = false,
 }: {
   name: ReactNode;
@@ -76,6 +77,8 @@ export function ModelOption({
   description?: ReactNode;
   details?: ReactNode;
   aside?: ReactNode;
+  // Rendered outside the radio button, so it can hold links.
+  footer?: ReactNode;
   compact?: boolean;
 }) {
   const nameId = useId();
@@ -145,6 +148,7 @@ export function ModelOption({
           {aside}
         </div>
       ) : null}
+      {footer ? <div className="basis-full pl-7">{footer}</div> : null}
     </div>
   );
 }

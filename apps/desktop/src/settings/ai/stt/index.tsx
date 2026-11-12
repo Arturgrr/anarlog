@@ -69,7 +69,9 @@ function SttPickerBody({ variant }: { variant: ModelPickerVariant }) {
   const [filters, setFilters] = useState<SttFilters>(NO_STT_FILTERS);
   const [focusedId, setFocusedId] = useState<string | null>(null);
 
-  const entries: SttEntry[] = PROVIDERS.map((provider) => {
+  const entries: SttEntry[] = PROVIDERS.filter(
+    (provider) => !catalog.providers[provider.id].unsupportedPlatform,
+  ).map((provider) => {
     const status = catalog.providers[provider.id];
     return {
       provider,
@@ -127,7 +129,7 @@ function SttPickerBody({ variant }: { variant: ModelPickerVariant }) {
   });
   const groups = (
     [
-      ["local", t`On this Mac`],
+      ["local", t`On this computer`],
       ["cloud", t`Cloud · your key`],
       ["self_hosted", t`Self-hosted`],
     ] as const satisfies ReadonlyArray<readonly [SttProviderGroup, string]>
@@ -189,7 +191,7 @@ function SttPickerBody({ variant }: { variant: ModelPickerVariant }) {
               {(
                 [
                   ["all", t`All`],
-                  ["local", t`On this Mac`],
+                  ["local", t`On this computer`],
                   ["cloud", t`Cloud`],
                   ["self_hosted", t`Self-hosted`],
                 ] as const
@@ -294,18 +296,18 @@ function describeSttProvider(
     ) : setup.kind === "rejected" ? (
       <Trans>Key rejected</Trans>
     ) : setup.kind === "unavailable" ? (
-      <Trans>Not available on this Mac</Trans>
+      <Trans>Not available on this computer</Trans>
     ) : setup.kind === "missing" ? (
       <MissingSetupLabel fields={setup.fields} />
     ) : provider.id === "apple_speech" ? (
       <Trans>Built into macOS</Trans>
     ) : provider.id === "local_file" ? (
       (localModelPath.split(/[/\\]/).filter(Boolean).pop() ?? (
-        <Trans>A whisper.cpp file from your disk</Trans>
+        <Trans>A .bin or .gguf file from your disk</Trans>
       ))
     ) : provider.id === "custom" || provider.id === "nvidia" ? (
       <Trans>Uses the model ID you enter</Trans>
-    ) : provider.id === "soniqo" ? (
+    ) : provider.id === "soniqo" || provider.id === "gguf" ? (
       <Trans>
         <Plural value={modelCount} one="# model" other="# models" /> ·{" "}
         {downloadedCount} downloaded

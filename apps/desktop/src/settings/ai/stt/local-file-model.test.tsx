@@ -79,7 +79,7 @@ describe("LocalFileModel", () => {
     renderWithQueryClient(<LocalFileModel />);
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Choose a .bin model" }),
+      screen.getByRole("button", { name: "Choose a .bin or .gguf model" }),
     );
 
     await waitFor(() =>
@@ -93,7 +93,7 @@ describe("LocalFileModel", () => {
       expect.objectContaining({
         filters: [
           {
-            name: "whisper.cpp models",
+            name: "Speech models",
             extensions: ["bin", "gguf"],
           },
         ],
@@ -107,13 +107,12 @@ describe("LocalFileModel", () => {
   test("does not persist a model rejected by the backend", async () => {
     inspectCustomModelPathMock.mockResolvedValue({
       status: "error",
-      error:
-        "transcribe.cpp GGUF models are not supported yet. Select a whisper.cpp .bin model instead",
+      error: "The selected file is not a speech model",
     });
 
     renderWithQueryClient(<LocalFileModel />);
     fireEvent.click(
-      screen.getByRole("button", { name: "Choose a .bin model" }),
+      screen.getByRole("button", { name: "Choose a .bin or .gguf model" }),
     );
 
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());

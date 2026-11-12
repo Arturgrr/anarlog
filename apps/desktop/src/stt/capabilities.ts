@@ -72,6 +72,7 @@ export function isSupportedLocalSttModel(
   return (
     typeof model === "string" &&
     (model.startsWith("soniqo-") ||
+      model.startsWith("gguf-") ||
       model === "apple-speech" ||
       model.startsWith("Quantized"))
   );
@@ -107,6 +108,10 @@ export function isOnDeviceSttModel(
     return model === "apple-speech";
   }
 
+  if (provider === "gguf") {
+    return model.startsWith("gguf-");
+  }
+
   return false;
 }
 
@@ -117,11 +122,39 @@ export function isLocalFileSttModel(
   return provider === "local_file" && model === "local-file";
 }
 
-export function isDesktopLocalSttAvailable(
+const APPLE_SILICON_TARGETS = ["macos/aarch64"];
+const GGUF_ENGINE_TARGETS = [
+  "macos/aarch64",
+  "windows/x86_64",
+  "linux/x86_64",
+  "linux/aarch64",
+];
+const LOCAL_STT_PROVIDER_TARGETS = new Map<string, readonly string[]>([
+  ["soniqo", APPLE_SILICON_TARGETS],
+  ["apple_speech", APPLE_SILICON_TARGETS],
+  ["gguf", GGUF_ENGINE_TARGETS],
+  ["local_file", GGUF_ENGINE_TARGETS],
+]);
+
+function localSttProviderId(provider: string) {
+  return provider === "apple-speech" ? "apple_speech" : provider;
+}
+
+export function isLocalSttProvider(provider?: string | null) {
+  return (
+    !!provider && LOCAL_STT_PROVIDER_TARGETS.has(localSttProviderId(provider))
+  );
+}
+
+export function isLocalSttProviderAvailable(
+  provider: string | null | undefined,
   currentPlatform: string,
   currentArch: string,
 ) {
-  return currentPlatform === "macos" && currentArch === "aarch64";
+  const targets = provider
+    ? LOCAL_STT_PROVIDER_TARGETS.get(localSttProviderId(provider))
+    : undefined;
+  return targets?.includes(`${currentPlatform}/${currentArch}`) ?? false;
 }
 
 export function getUnsupportedDesktopLocalSttRepair(
@@ -131,9 +164,9 @@ export function getUnsupportedDesktopLocalSttRepair(
   model: string | undefined,
 ) {
   if (
-    isDesktopLocalSttAvailable(currentPlatform, currentArch) ||
     (!isOnDeviceSttModel(provider, model) &&
-      !isLocalFileSttModel(provider, model))
+      !isLocalFileSttModel(provider, model)) ||
+    isLocalSttProviderAvailable(provider, currentPlatform, currentArch)
   ) {
     return null;
   }
@@ -159,6 +192,10 @@ export function isConfiguredSttModel(
 
   if (provider === "local_file") {
     return model === "local-file";
+  }
+
+  if (provider === "gguf") {
+    return model.startsWith("gguf-");
   }
 
   return true;

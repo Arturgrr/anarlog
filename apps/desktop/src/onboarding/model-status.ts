@@ -191,7 +191,7 @@ function useDescribeSetup() {
         return {
           kind: "error",
           ...labels,
-          message: t`Not available on this Mac.`,
+          message: t`Not available on this computer.`,
         };
     }
 

@@ -22,14 +22,15 @@ Recording, editing, and local storage do not require an AI model. A hosted Trans
 
 ## On-device models
 
-Librelog currently offers three built-in on-device Transcription providers. Settings shows each provider only when it is supported by your Mac and release. Soniqo models download directly from Hugging Face the first time you select them.
+Librelog offers four on-device Transcription providers. Settings lists a provider only on the platforms where its engine runs, and shows **Not available on this computer** when your build or system cannot run it. Models download directly from Hugging Face when you choose **Download**; none are bundled with the app.
 
 | Provider | Model | When it runs | Requirements |
 | --- | --- | --- | --- |
 | Soniqo | Parakeet Streaming | During the meeting | Apple Silicon; live transcription for 25 European languages |
 | Soniqo | Parakeet Batch | After recording | Apple Silicon; speaker-labeled transcription for 25 European languages. Prefer this for hour-long calls. |
 | Apple Speech | Apple Speech | During the meeting | macOS 26 with a supported language added in System Settings. Live transcription uses one language at a time from German, English, Spanish, French, Italian, Japanese, Korean, Portuguese, Cantonese, or Chinese. |
-| BYO-model | A whisper.cpp `.bin` you select | After recording | Apple Silicon. Settings marks this provider **On device** and offers **Choose a .bin model** for the file picker. transcribe.cpp `.gguf` files are not supported yet. |
+| Local models | A downloadable model from the [transcribe.cpp catalog](#local-models) | After recording | Apple Silicon Mac, Windows x86_64, or Linux x86_64 or ARM64. On Windows and Linux, [build Librelog from source](/desktop-installation#build-from-source). An x86_64 processor needs AVX2. |
+| BYO-model | A whisper.cpp `.bin` or GGUF `.gguf` file you select | After recording | The same platforms as Local models. Choose **Choose a .bin or .gguf model** to pick the file. |
 
 Parakeet Batch does not always provide word-level audio timestamps. When it returns text without a usable speech alignment, Librelog keeps the individual words editable and groups the display by audio channel and processing chunk. The order between channels within a chunk is uncertain, and those words cannot be used for precise audio seeking. Speech-aligned words retain their timing.
 
@@ -42,6 +43,40 @@ You can also keep audio on your network by pointing **Custom**, or Deepgram's **
 For local summaries and chat, connect **LM Studio**, **Ollama**, or **Unsloth** and choose any compatible model they serve. Librelog does not silently substitute another model. **Apple Intelligence** is also available as an experimental, text-only Intelligence provider on eligible Macs running macOS 26 or later.
 
 If a selected local model or server is unavailable, Librelog reports a connection error instead of sending the request to another provider.
+
+### Local models
+
+**Local models** run speech models with [transcribe.cpp](https://github.com/handy-computer/transcribe.cpp) on your computer. Each model is downloaded on request from its publisher's Hugging Face repository, pinned to one revision and checked against its size and SHA-256, under its own license; Librelog does not redistribute the weights. Each model in Settings shows its download size, how many languages it covers, whether it gives word timing, a link to its license and to the repository it comes from, and any attribution the license asks for.
+
+| Model | Download | Languages | Timing | License |
+| --- | --- | --- | --- | --- |
+| Whisper large-v3-turbo | about 845 MB | About 100, with language detection | Segment | MIT |
+| Parakeet TDT 0.6B v3 | about 705 MB | 25 European languages | Word | CC BY 4.0 |
+| Parakeet Ultra | about 706 MB | 25 European languages | Word | CC BY 4.0, with attribution |
+| Qwen3-ASR 0.6B | about 811 MB | 30, with language detection | None | Apache 2.0 |
+| Cohere Transcribe | about 2.2 GB | 14 | None | Apache 2.0 |
+| GigaAM v3 | about 261 MB | Russian | Word | MIT |
+| NB-Whisper Medium | about 514 MB | Norwegian | Segment | Apache 2.0 |
+| ivrit.ai Whisper large-v3-turbo | about 845 MB | Hebrew | Segment | Apache 2.0 |
+| Nemotron 3.5 ASR | about 716 MB | 27, with language detection | Word | OpenMDW 1.1 |
+
+SenseVoice Small and Parakeet Unified English, which transcribe.cpp also runs, are not offered because their licenses restrict how they may be used.
+
+- **Best for your languages** marks the model Librelog recommends for your main and spoken languages, and the list puts the next choices after it. For English and Portuguese, Parakeet TDT 0.6B v3 comes first and Whisper large-v3-turbo second; when two models are about as accurate, the one with word timing comes first. A model that cannot transcribe one of your languages is never recommended.
+- **Timing** affects speaker labels. Word timing places each word where it was spoken. With segment timing or none, word positions are estimated, so speaker separation after a meeting is less precise.
+- Local models work after recording. During a meeting, Librelog transcribes the recording a minute at a time; when you stop, it transcribes the whole recording again if the recording is kept. They do not show live captions, and dictation shows no live preview while you speak.
+
+#### Speech engine
+
+On a computer with a supported GPU, the **Local models** and **BYO-model** pages show **Speech engine**:
+
+- **Auto** uses a GPU that works and falls back to the CPU.
+- **GPU** uses the GPU, even one set aside after a failure.
+- **CPU** never uses the GPU.
+
+The page lists the devices Librelog found. If a GPU fails to load or run a model, Librelog sets it aside and Auto uses the CPU; the page names that GPU, and **Try GPU again** clears the record. Changing the engine reloads the selected model.
+
+Local models use Metal on Apple Silicon and Vulkan on Windows and Linux. The project has not yet exercised these GPU paths on real hardware, so treat GPU acceleration as untested. If transcription fails or stops on a GPU, choose **CPU**.
 
 ### Speakers after a live on-device meeting
 
@@ -103,7 +138,7 @@ Settings may still show older model IDs for compatibility. Prefer the current Ge
 
 | Goal | Transcription | Intelligence |
 | --- | --- | --- |
-| Keep meeting content on your computer | Select Soniqo, Apple Speech, or BYO-model when available, or a Deepgram-compatible local server | Use LM Studio, Ollama, Unsloth, or eligible Apple Intelligence |
+| Keep meeting content on your computer | Select Soniqo, Apple Speech, Local models, or BYO-model when available, or a Deepgram-compatible local server | Use LM Studio, Ollama, Unsloth, or eligible Apple Intelligence |
 | Avoid per-minute transcription bills | Use on-device models or a local Deepgram-compatible server | Use a local Intelligence provider or a connected subscription |
 | Pin exact model IDs | Configure your own provider | Configure your own provider |
 

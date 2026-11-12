@@ -1,17 +1,17 @@
 use anlg_supervisor::dynamic::{
     DynamicSupervisor, DynamicSupervisorMsg, DynamicSupervisorOptions, SupervisorError,
 };
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 use anlg_supervisor::{
     RestartPolicy,
     dynamic::{ChildBackoffFn, DynChildSpec, DynSpawnFn},
 };
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 use ractor::registry;
 use ractor::{ActorCell, ActorProcessingErr, ActorRef, concurrency::Duration};
 
 use super::ServerType;
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 use super::internal::{InternalSTTActor, InternalSTTArgs};
 
 pub type SupervisorRef = ActorRef<DynamicSupervisorMsg>;
@@ -43,7 +43,7 @@ pub async fn spawn_stt_supervisor(
     Ok((supervisor_ref, handle))
 }
 
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 pub async fn start_internal_stt(
     supervisor: &ActorRef<DynamicSupervisorMsg>,
     args: InternalSTTArgs,
@@ -52,7 +52,7 @@ pub async fn start_internal_stt(
     DynamicSupervisor::spawn_child(supervisor.clone(), child_spec).await
 }
 
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 fn create_internal_child_spec_with_args(args: InternalSTTArgs) -> DynChildSpec {
     let spawn_fn = DynSpawnFn::new(move |supervisor: ActorCell, child_id: String| {
         let args = args.clone();
@@ -81,11 +81,11 @@ pub async fn stop_stt_server(
 ) -> Result<(), ActorProcessingErr> {
     let child_ids: Vec<&str> = match server_type {
         ServerType::Internal => {
-            #[cfg(feature = "whisper-cpp")]
+            #[cfg(feature = "gguf")]
             {
                 vec![INTERNAL_STT_ACTOR_NAME]
             }
-            #[cfg(not(feature = "whisper-cpp"))]
+            #[cfg(not(feature = "gguf"))]
             {
                 Vec::new()
             }
@@ -108,7 +108,7 @@ pub async fn stop_stt_server(
 
     match server_type {
         ServerType::Internal => {
-            #[cfg(feature = "whisper-cpp")]
+            #[cfg(feature = "gguf")]
             wait_for_actor_shutdown(InternalSTTActor::name()).await;
         }
     }
@@ -123,7 +123,7 @@ pub async fn stop_all_stt_servers(
     Ok(())
 }
 
-#[cfg(feature = "whisper-cpp")]
+#[cfg(feature = "gguf")]
 async fn wait_for_actor_shutdown(actor_name: ractor::ActorName) {
     for _ in 0..50 {
         if registry::where_is(actor_name.clone()).is_none() {

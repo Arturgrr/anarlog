@@ -13,6 +13,8 @@ const COMMANDS: &[&str] = &[
     "list_supported_languages",
     "inspect_custom_model_path",
     "start_server_for_path",
+    "list_stt_devices",
+    "forget_stt_gpu_failures",
 ];
 
 fn main() {

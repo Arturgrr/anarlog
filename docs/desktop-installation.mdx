@@ -56,7 +56,13 @@ Because the builds are not notarized, macOS may ask again for microphone, screen
 
 ## Build from source
 
-Install Node.js 22, the pnpm version pinned in the repository's `package.json`, and the Rust toolchain pinned in `rust-toolchain.toml`. On Debian or Ubuntu, `scripts/setup-linux-tauri.sh` installs the system libraries Tauri needs.
+Install Node.js 22, the pnpm version pinned in the repository's `package.json`, and the Rust toolchain pinned in `rust-toolchain.toml`. On Debian or Ubuntu, `bash scripts/setup-linux.sh` installs the toolchains and the system packages, including the system libraries Tauri needs.
+
+On-device transcription ([Local models and BYO-model](/models-and-providers#local-models)) compiles transcribe.cpp with CMake, with Metal on Apple Silicon and Vulkan on Windows and Linux:
+
+- **Linux**: CMake, the Vulkan headers and loader, `glslc`, and the SPIR-V headers. On Debian or Ubuntu these are `cmake`, `libvulkan-dev`, `glslc`, and `spirv-headers`, which `scripts/setup-linux.sh` installs. A Linux build links the Vulkan loader, so the computer that runs it needs `libvulkan1` (or your distribution's Vulkan loader package) even without a GPU.
+- **Windows x86_64**: CMake, the [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows), and the SPIR-V headers, for example `vcpkg install spirv-headers:x64-windows` with that vcpkg prefix (`installed/x64-windows`) in `CMAKE_PREFIX_PATH`. The app starts on a computer without a Vulkan driver and then transcribes on the CPU.
+- **x86_64 processors**: the build targets AVX2, FMA, and F16C. On a processor without them, local models fail to load with an error; the rest of the app works.
 
 ```bash
 git clone https://github.com/Arturgrr/librelog.git
@@ -87,7 +93,9 @@ Current builds apply the DMA-BUF workaround automatically. Set the variables you
 ## Platform differences
 
 - The Apple Reminders integration is available on macOS.
-- Soniqo, Apple Speech, and BYO-model on-device transcription require Apple Silicon. Apple Speech also appears only when a compatible Mac running macOS 26 reports the required system assets. On other systems, configure a local Deepgram-compatible server or a provider with your own API key. See [how to use on-device models](/help#use-on-device-models) and [local models for hour-long calls](/help#local-model-hour-long-calls).
+- **Local models** and **BYO-model** transcribe on Apple Silicon Macs, Windows x86_64, and Linux x86_64 or ARM64. Windows and Linux have no prebuilt packages: these providers come with a [source build](#build-from-source). Their models are downloaded on request; see [Local models](/models-and-providers#local-models).
+- The project has not yet exercised the GPU paths of local models (Metal on Apple Silicon, Vulkan on Windows and Linux) on real hardware, so treat GPU acceleration as untested. **Settings → Transcription → Speech engine** chooses **Auto**, **GPU**, or **CPU**, and Auto falls back to the CPU when a GPU fails.
+- Soniqo and Apple Speech require Apple Silicon. Apple Speech also appears only when a compatible Mac running macOS 26 reports the required system assets. Intel Macs and Windows on ARM have no on-device transcription; configure a local Deepgram-compatible server or a provider with your own API key. See [how to use on-device models](/help#use-on-device-models) and [local models for hour-long calls](/help#local-model-hour-long-calls).
 - Windows and Linux support are in beta. Include your operating system and Librelog version when you report a platform-specific problem.
 
 When installation is complete, continue to [Your first meeting](/quickstart). If the app does not open or cannot capture audio, see [Troubleshooting](/troubleshooting).

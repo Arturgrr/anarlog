@@ -1,13 +1,17 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 
-import {
-  commands as localSttCommands,
-  type LocalModel,
+import type {
+  SttModelInfo,
+  SttModelLicense,
+  TimestampGranularity,
 } from "@anlg/plugin-local-stt";
 import { commands as miscCommands } from "@anlg/plugin-misc";
 import type { AIProviderStorage } from "@anlg/store";
 
-import { recommendOnDeviceModel } from "./on-device-recommendation";
+import {
+  rankModelsForLanguages,
+  recommendOnDeviceModel,
+} from "./on-device-recommendation";
 import {
   isDeprecatedSttModel,
   type ProviderId,
@@ -24,8 +28,11 @@ import { useAiProvidersState } from "~/settings/providers";
 import { useConfigValues } from "~/shared/config";
 import {
   getSttModelTranscriptionMode,
-  isDesktopLocalSttAvailable,
+  getTranscriptionLanguages,
+  isLocalSttProvider,
+  isLocalSttProviderAvailable,
 } from "~/stt/capabilities";
+import { localSttQueries } from "~/stt/useLocalSttModel";
 
 export type SttMode = "live" | "batch";
 
@@ -35,28 +42,29 @@ export type SttModelEntry = {
   description?: string;
   isDownloaded: boolean;
   isDeprecated: boolean;
-  isRecommended: boolean;
+  recommended: "device" | "languages" | null;
   sizeBytes?: number | null;
   mode: SttMode;
+  languages?: string[];
+  license?: SttModelLicense | null;
+  timestamps?: TimestampGranularity | null;
+  sourceUrl?: string | null;
 };
 
 export type SttProviderStatus = {
   configured: boolean;
   setup: ProviderSetup;
   models: SttModelEntry[];
+  // An on-device engine this platform never runs; it is left out of the list.
+  unsupportedPlatform?: boolean;
 };
 
 export type SttProviderGroup = "local" | "cloud" | "self_hosted";
 
-const LOCAL_PROVIDERS: readonly string[] = [
-  "soniqo",
-  "apple_speech",
-  "local_file",
-];
 const SELF_HOSTED_PROVIDERS: readonly string[] = ["nvidia", "custom"];
 
 export function sttProviderGroup(providerId: string): SttProviderGroup {
-  if (LOCAL_PROVIDERS.includes(providerId)) return "local";
+  if (isLocalSttProvider(providerId)) return "local";
   if (SELF_HOSTED_PROVIDERS.includes(providerId)) return "self_hosted";
   return "cloud";
 }
@@ -78,9 +86,13 @@ export function useSttCatalog(): {
   const availability = useProviderAvailability("stt", PROVIDERS);
   const { providers: configuredProviders, isReady } =
     useAiProvidersState("stt");
-  const { local_stt_model_path } = useConfigValues([
-    "local_stt_model_path",
-  ] as const);
+  const { local_stt_model_path, ai_language, spoken_languages } =
+    useConfigValues([
+      "local_stt_model_path",
+      "ai_language",
+      "spoken_languages",
+    ] as const);
+  const languages = getTranscriptionLanguages(ai_language, spoken_languages);
 
   const deviceInfo = useQuery({
     queryKey: ["device-info"],
@@ -92,12 +104,8 @@ export function useSttCatalog(): {
   });
 
   const supportedModels = useQuery({
-    queryKey: ["list-supported-models"],
-    queryFn: async () => {
-      const result = await localSttCommands.listSupportedModels();
-      return result.status === "ok" ? result.data : [];
-    },
-    staleTime: Infinity,
+    ...localSttQueries.supportedModels(),
+    select: (result) => (result.status === "ok" ? result.data : []),
   });
 
   const localModels = supportedModels.data ?? [];
@@ -106,6 +114,7 @@ export function useSttCatalog(): {
   const appleSpeechModels = localModels.filter(
     (m) => m.model_type === "appleSpeech",
   );
+  const ggufModels = localModels.filter((m) => m.model_type === "gguf");
 
   const soniqoDownloaded = useQueries({
     queries: soniqoModels.map((m) => sttModelQueries.isDownloaded(m.key)),
@@ -113,8 +122,23 @@ export function useSttCatalog(): {
   const appleSpeechDownloaded = useQueries({
     queries: appleSpeechModels.map((m) => sttModelQueries.isDownloaded(m.key)),
   });
+  const ggufDownloaded = useQueries({
+    queries: ggufModels.map((m) => sttModelQueries.isDownloaded(m.key)),
+  });
 
-  const localStatus = (models: SttModelEntry[]): SttProviderStatus => ({
+  const runsOnThisPlatform = (providerId: string) =>
+    isLocalSttProviderAvailable(
+      providerId,
+      deviceInfo.data?.platform ?? "",
+      deviceInfo.data?.arch ?? "",
+    );
+  const unsupportedPlatform = (providerId: string) =>
+    !!deviceInfo.data && !runsOnThisPlatform(providerId);
+
+  const localStatus = (
+    providerId: string,
+    models: SttModelEntry[],
+  ): SttProviderStatus => ({
     configured: models.length > 0,
     setup: !supportedModels.isFetched
       ? { kind: "checking" }
@@ -122,6 +146,7 @@ export function useSttCatalog(): {
         ? { kind: "ready" }
         : { kind: "unavailable" },
     models,
+    unsupportedPlatform: unsupportedPlatform(providerId),
   });
 
   const providers = Object.fromEntries(
@@ -130,6 +155,7 @@ export function useSttCatalog(): {
         return [
           provider.id,
           localStatus(
+            provider.id,
             buildOnDeviceModelEntries(
               soniqoModels,
               soniqoDownloaded,
@@ -143,6 +169,7 @@ export function useSttCatalog(): {
         return [
           provider.id,
           localStatus(
+            provider.id,
             buildOnDeviceModelEntries(
               appleSpeechModels,
               appleSpeechDownloaded,
@@ -152,11 +179,22 @@ export function useSttCatalog(): {
         ];
       }
 
+      if (provider.id === "gguf") {
+        return [
+          provider.id,
+          localStatus(
+            provider.id,
+            buildLanguageRankedModelEntries(
+              ggufModels,
+              ggufDownloaded,
+              languages,
+            ),
+          ),
+        ];
+      }
+
       if (provider.id === "local_file") {
-        const available = isDesktopLocalSttAvailable(
-          deviceInfo.data?.platform ?? "",
-          deviceInfo.data?.arch ?? "",
-        );
+        const available = runsOnThisPlatform(provider.id);
         return [
           provider.id,
           {
@@ -171,10 +209,11 @@ export function useSttCatalog(): {
                 id: "local-file",
                 isDownloaded: !!local_stt_model_path?.trim(),
                 isDeprecated: false,
-                isRecommended: false,
+                recommended: null,
                 mode: "batch",
               },
             ],
+            unsupportedPlatform: unsupportedPlatform(provider.id),
           },
         ];
       }
@@ -199,7 +238,7 @@ export function useSttCatalog(): {
                 id: model,
                 isDownloaded: true,
                 isDeprecated: isDeprecatedSttModel(provider.id, model),
-                isRecommended: false,
+                recommended: null,
                 mode: sttModelMode(provider.id, model),
               })),
         },
@@ -218,14 +257,7 @@ export function useSttCatalog(): {
 }
 
 function buildOnDeviceModelEntries(
-  models: Array<{
-    key: LocalModel;
-    display_name: string;
-    description: string;
-    size_bytes: number | null;
-    supports_realtime: boolean;
-    recommended_memory_bytes: number;
-  }>,
+  models: SttModelInfo[],
   downloads: Array<{ data?: boolean }>,
   totalMemoryBytes?: number,
 ): SttModelEntry[] {
@@ -245,8 +277,39 @@ function buildOnDeviceModelEntries(
       description: model.description || undefined,
       sizeBytes: model.size_bytes,
       isDeprecated: false,
-      isRecommended: model.key === recommendedModel,
+      recommended: model.key === recommendedModel ? ("device" as const) : null,
       mode: model.supports_realtime ? ("live" as const) : ("batch" as const),
     }))
-    .sort((a, b) => Number(b.isRecommended) - Number(a.isRecommended));
+    .sort((a, b) => Number(!!b.recommended) - Number(!!a.recommended));
+}
+
+function buildLanguageRankedModelEntries(
+  models: SttModelInfo[],
+  downloads: Array<{ data?: boolean }>,
+  languages: readonly string[],
+): SttModelEntry[] {
+  const { order, recommended } = rankModelsForLanguages(
+    models.map((model) => ({
+      id: model.key,
+      languages: model.languages,
+    })),
+    languages,
+  );
+
+  return models
+    .map((model, index) => ({
+      id: model.key,
+      isDownloaded: downloads[index]?.data ?? false,
+      displayName: model.display_name,
+      description: model.description || undefined,
+      sizeBytes: model.size_bytes,
+      isDeprecated: false,
+      recommended: model.key === recommended ? ("languages" as const) : null,
+      mode: model.supports_realtime ? ("live" as const) : ("batch" as const),
+      languages: model.languages,
+      license: model.license,
+      timestamps: model.timestamps,
+      sourceUrl: model.source_url,
+    }))
+    .sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
 }

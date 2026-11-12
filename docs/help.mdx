@@ -13,7 +13,7 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
 
     | Option | What you pay | When to use it |
     | --- | --- | --- |
-    | On-device | Nothing extra after you download the model | Apple Silicon Mac, and you want no usage bill |
+    | On-device | Nothing extra after you download the model | An Apple Silicon Mac, or Windows or Linux built from source, and you want no usage bill |
     | Local server | Your own hardware | A Deepgram-compatible server on this computer or your network |
     | Your API key | The provider's own speech-to-text rates | You already have credits, a preferred vendor, or a required endpoint |
 
@@ -35,10 +35,11 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
     Other local choices on the same Mac:
 
     - **Soniqo → Parakeet Streaming** shows text during the meeting. Use Batch when you care more about finishing a long recording than seeing live captions.
-    - **BYO-model** runs a downloaded whisper.cpp `.bin` model after recording. transcribe.cpp `.gguf` files are not supported yet.
+    - **Local models** download a transcribe.cpp model, such as Parakeet TDT 0.6B v3 or Whisper large-v3-turbo, and transcribe after recording.
+    - **BYO-model** runs a whisper.cpp `.bin` or GGUF `.gguf` model you already have, after recording.
     - **Apple Speech** is live-only and available when macOS 26 reports compatible system assets. It transcribes one supported language at a time.
 
-    Built-in on-device transcription is not available on Windows, Linux, or Intel Macs. On those systems, use a Deepgram-compatible local server or a bring-your-own-key provider. After-recording hosted models handle hour-long audio. Some live models have short session limits — for example, Gemini 3.5 Transcribe Live preview sessions last up to 10 minutes.
+    On Windows x86_64 and Linux x86_64 or ARM64 built from source, use **Local models** or **BYO-model**. Parakeet TDT 0.6B v3 gives word timing for 25 European languages, which keeps speaker labels precise; a model without word timing makes speaker separation less precise. On Intel Macs and Windows on ARM, use a Deepgram-compatible local server or a bring-your-own-key provider. After-recording hosted models handle hour-long audio. Some live models have short session limits — for example, Gemini 3.5 Transcribe Live preview sessions last up to 10 minutes.
 
     Quality and speed depend on the computer. Run a short test recording before a long call. See [How can I use on-device models?](/help#use-on-device-models) and [Use Librelog offline](/offline).
   </Accordion>
@@ -48,7 +49,7 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
 
     Expect these differences from a Mac setup:
 
-    - Built-in on-device transcription is not available. Choose a Deepgram-compatible local server or another configured provider. See [How can I use on-device models?](/help#use-on-device-models).
+    - On-device transcription uses **Local models** or **BYO-model**, after recording only. Soniqo and Apple Speech are Mac-only. See [How can I use on-device models?](/help#use-on-device-models).
     - Microphone detection, auto-stop, and meeting-chat capture are macOS and Linux only.
 
     See [Install the desktop app](/desktop-installation).
@@ -93,10 +94,11 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
     | --- | --- | --- | --- |
     | Built-in Soniqo | **Soniqo**, then Parakeet Streaming, Parakeet Batch, or another listed Soniqo model | Live or after recording, depending on the model | Apple Silicon. Download the model first. Prefer **Parakeet Batch** for hour-long calls. |
     | Apple Speech | **Apple Speech** | During the meeting | macOS 26 with a supported language added in System Settings. One language at a time. |
-    | BYO-model | **BYO-model**, then **Choose a .bin model** | After recording | Apple Silicon. Use a whisper.cpp `.bin` you already have. transcribe.cpp `.gguf` files are not supported yet. |
+    | Local models | **Local models**, then download a model | After recording | Apple Silicon Mac, Windows x86_64, or Linux x86_64 or ARM64. Download the model first; each shows its languages and license. |
+    | BYO-model | **BYO-model**, then **Choose a .bin or .gguf model** | After recording | The same platforms as Local models. Use a whisper.cpp `.bin` or GGUF `.gguf` you already have. |
     | Local Deepgram-compatible server | **Custom**, or **Deepgram** with a custom **Base URL** under **Advanced** | Live or after recording, depending on the server | A Deepgram-compatible endpoint on this computer or your local network. Enter that URL and an API key if the server requires one. |
 
-    Soniqo, Apple Speech, and BYO-model appear only on a supported Apple Silicon Mac. On Windows, Linux, or Intel Macs, use a local Deepgram-compatible server or another configured provider.
+    Soniqo and Apple Speech appear only on a supported Apple Silicon Mac. On Windows and Linux, Local models and BYO-model need a [source build](/desktop-installation#build-from-source). On Intel Macs and Windows on ARM, use a local Deepgram-compatible server or another configured provider. See [Local models](/models-and-providers#local-models) for the catalog and the **Speech engine** choice.
 
     Summaries and chat are a separate setting. For those to stay local too, choose LM Studio, Ollama, Unsloth, or eligible Apple Intelligence under **Settings → Intelligence**.
 
@@ -104,7 +106,7 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
   </Accordion>
 
   <Accordion title="Can I use Librelog offline?" id="can-i-use-librelog-offline">
-    Yes, if you prepare local models before disconnecting. Soniqo, Apple Speech, and BYO-model transcription require a supported Apple Silicon Mac; Apple Speech also needs macOS 26 to report compatible system assets. LM Studio, Ollama, Unsloth, and eligible Apple Intelligence can provide local Intelligence models. See [Use Librelog offline](/offline) and [How can I use on-device models?](/help#use-on-device-models).
+    Yes, if you prepare local models before disconnecting. Local models and BYO-model transcribe on Apple Silicon Macs and on Windows and Linux built from source. Soniqo and Apple Speech require a supported Apple Silicon Mac; Apple Speech also needs macOS 26 to report compatible system assets. LM Studio, Ollama, Unsloth, and eligible Apple Intelligence can provide local Intelligence models. See [Use Librelog offline](/offline) and [How can I use on-device models?](/help#use-on-device-models).
   </Accordion>
 
   <Accordion title="What languages does Librelog support?" id="supported-languages">
@@ -118,7 +120,8 @@ Browse a topic, then expand the question. If something is not working, go to [Tr
     | --- | --- |
     | Soniqo | Bulgarian, Czech, Danish, German, Greek, English, Spanish, Estonian, Finnish, French, Croatian, Hungarian, Italian, Lithuanian, Latvian, Maltese, Dutch, Polish, Portuguese, Romanian, Russian, Slovak, Slovenian, Swedish, and Ukrainian |
     | Apple Speech | German, English, Spanish, French, Italian, Japanese, Korean, Portuguese, Cantonese, or Chinese — one language at a time |
-    | BYO-model | The whisper.cpp `.bin` you select. Check that model's language list. |
+    | Local models | Each model's own list, shown in Settings. Whisper large-v3-turbo covers about 100 languages. |
+    | BYO-model | The `.bin` or `.gguf` model you select. Check that model's language list. |
     | Your API key | The provider and model you configure. Check that model's language list before a multilingual meeting. |
 
     Chat uses the main language. When you configure additional spoken languages, summaries use the language used most in the transcript, falling back to the main language if detection is unavailable. See [Use multiple languages](/languages).

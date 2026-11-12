@@ -7,13 +7,14 @@
 #
 # Tests run on Linux unless they need macOS. MACOS_TESTS are the crates with
 # macOS-specific code, or tests that reach it through a dependency; macos_ci
-# tests them with the app. linux_ci tests the app and every other crate on
-# Linux, where runners are plentiful and the Swift builds are stubs, except
-# CLI_TESTS, which cli_ci tests, and SKIP_TESTS, which no job here tests. A
-# crate tested on Linux can still fail only on macOS (case-insensitive file
-# names, system behaviour outside `cfg`), so schedule and manual runs also test
-# the whole workspace on macOS, as every run did before; such a failure shows
-# up within a day.
+# tests them with the app. MACOS_AND_LINUX_TESTS have code for both systems,
+# so macos_ci tests them too while linux_ci keeps them. linux_ci tests the
+# app and every other crate on Linux, where runners are plentiful and the
+# Swift builds are stubs, except CLI_TESTS, which cli_ci tests, and
+# SKIP_TESTS, which no job here tests. A crate tested on Linux can still fail
+# only on macOS (case-insensitive file names, system behaviour outside `cfg`),
+# so schedule and manual runs also test the whole workspace on macOS, as
+# every run did before; such a failure shows up within a day.
 #
 # macOS is one job on purpose: hosted macOS runners are scarce here and a job
 # left waiting for one is cancelled, so a run asks for a single runner. Its
@@ -92,6 +93,11 @@ env:
     tauri-plugin-anlg-tray tauri-plugin-dictation tauri-plugin-dock
     tauri-plugin-shortcut tauri-plugin-todo tauri-plugin-transcription
     transcribe-soniqo transcribe-speechanalyzer transcription-core
+  # Tested by both macos_ci and linux_ci: transcribe-gguf builds transcribe.cpp
+  # with Metal on macOS, and with Vulkan and a driver fingerprint on Linux.
+  # macos_ci builds that Metal engine for the app anyway, so its tests add
+  # little there.
+  MACOS_AND_LINUX_TESTS: transcribe-gguf
   # Tested by cli_ci, whose paths cover them and their workspace dependencies.
   CLI_TESTS: agent-access db-app db-migrate librelog-cli tiptap
   # Built here but never tested here, as before.
@@ -100,12 +106,11 @@ env:
     intercept notification-linux notification-macos onnx pyannote-local
     tauri-plugin-apple-foundation tauri-plugin-deeplink2 tauri-plugin-detect
     tauri-plugin-fs-sync tauri-plugin-fs2 tauri-plugin-hooks tauri-plugin-icon
-    tauri-plugin-local-auth tauri-plugin-local-stt tauri-plugin-misc
-    tauri-plugin-notification tauri-plugin-notify tauri-plugin-opener2
-    tauri-plugin-permissions tauri-plugin-settings tauri-plugin-sfx
-    tauri-plugin-sidecar2 tauri-plugin-store2 tauri-plugin-tantivy
-    tauri-plugin-tracing tauri-plugin-updater2 tauri-plugin-windows tcc
-    transcribe-whisper-local vad vad-masking whisper whisper-local
+    tauri-plugin-local-auth tauri-plugin-misc tauri-plugin-notification
+    tauri-plugin-notify tauri-plugin-opener2 tauri-plugin-permissions
+    tauri-plugin-settings tauri-plugin-sfx tauri-plugin-sidecar2
+    tauri-plugin-store2 tauri-plugin-tantivy tauri-plugin-tracing
+    tauri-plugin-updater2 tauri-plugin-windows tcc vad vad-masking whisper
     whisper-local-model
 
 defaults:
@@ -208,7 +213,7 @@ jobs:
         run: |
           packages=(-p desktop)
           if [[ "$FULL" != true ]]; then
-            read -r -a crates <<<"$MACOS_TESTS"
+            read -r -a crates <<<"$MACOS_TESTS $MACOS_AND_LINUX_TESTS"
             for crate in "${crates[@]}"; do packages+=(-p "$crate"); done
           fi
           cargo test --locked "${packages[@]}"
@@ -246,6 +251,18 @@ jobs:
         with:
           platform: windows
           cache-key: desktop
+      # transcribe.cpp's Vulkan backend (tauri-plugin-local-stt/gguf-vulkan)
+      # builds against the Vulkan SDK (headers, loader import library, glslc)
+      # and the SPIR-V headers' CMake package. These come after rust_install,
+      # whose cache key would otherwise take in CMAKE_PREFIX_PATH.
+      - uses: humbletim/install-vulkan-sdk@30ba978f977e81b72d091fc8888feb1fb26f9aff # v1.2
+        with:
+          version: 1.4.309.0
+          cache: true
+      - run: |
+          vcpkg_root="$(cygpath -u "$VCPKG_INSTALLATION_ROOT")"
+          "$vcpkg_root/vcpkg" install spirv-headers:x64-windows
+          echo "CMAKE_PREFIX_PATH=$(cygpath -m "$VCPKG_INSTALLATION_ROOT")/installed/x64-windows" >>"$GITHUB_ENV"
       # Builds every desktop test target, so it also covers `cargo check -p
       # desktop`, but runs none: the desktop test executables fail to load on
       # the Windows runner (STATUS_ENTRYPOINT_NOT_FOUND, 0xc0000139) before any
@@ -253,7 +270,34 @@ jobs:
       # build. Built with the desktop's features it would link tauri's tray
       # icon support, which may fail to load the same way; its own build costs
       # about 4.5 minutes on a cold cache and seconds on a warm one.
-      - run: cargo test --locked -p desktop --no-run
+      - run: |
+          cargo test --locked -p desktop --no-run --message-format=json-render-diagnostics \
+            >"$(cygpath -u "$RUNNER_TEMP")/desktop-tests.jsonl"
+      # vulkan-1.dll comes with GPU drivers, not with Windows, so the app may
+      # only delay-load it (apps/desktop/src-tauri/build.rs): a direct import
+      # would keep it from starting on a computer without one. The desktop
+      # test executables link like the app.
+      - run: |
+          vswhere="/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe"
+          dumpbin="$("$vswhere" -latest -products '*' -find 'VC/Tools/MSVC/**/bin/Hostx64/x64/dumpbin.exe' | tr -d '\r' | sed -n 1p)"
+          [[ -n "$dumpbin" ]] || { echo "::error::dumpbin.exe not found"; exit 1; }
+          dumpbin="$(cygpath -u "$dumpbin")"
+          mapfile -t executables < <(
+            jq -r 'select(.executable != null) | .executable' \
+              <"$(cygpath -u "$RUNNER_TEMP")/desktop-tests.jsonl" | tr -d '\r'
+          )
+          [[ ${#executables[@]} -gt 0 ]] || { echo "::error::no desktop test executables"; exit 1; }
+          delay_loaded=false
+          for executable in "${executables[@]}"; do
+            dependents="$("$dumpbin" -nologo -dependents "$executable" | tr -d '\r')"
+            echo "$dependents"
+            if awk '/delay load dependencies/ { exit } tolower($0) ~ /vulkan-1\.dll/ { found = 1 } END { exit !found }' <<<"$dependents"; then
+              echo "::error::$executable imports vulkan-1.dll directly"
+              exit 1
+            fi
+            if grep -qi 'vulkan-1\.dll' <<<"$dependents"; then delay_loaded=true; fi
+          done
+          [[ "$delay_loaded" == true ]] || { echo "::error::no desktop test executable links vulkan-1.dll"; exit 1; }
       - run: cargo test --locked -p tauri-plugin-notification --lib
 
   linux_ci:
