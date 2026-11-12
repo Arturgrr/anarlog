@@ -82,7 +82,7 @@ export function SttProviderDetail({
       <DetailSection title={<Trans>Models</Trans>}>
         {status.setup.kind === "unavailable" ? (
           <p className="text-muted-foreground">
-            <Trans>Not available on this Mac.</Trans>
+            <Trans>Not available on this computer.</Trans>
           </p>
         ) : null}
         {!selectable && !("builtIn" in provider) ? (
@@ -136,6 +136,16 @@ export function SttProviderDetail({
               />
             ))}
           </ModelOptionList>
+        ) : null}
+        {models.some(
+          (model) => model.timestamps && model.timestamps !== "word",
+        ) ? (
+          <p className="text-faint text-xs">
+            <Trans>
+              Models without word timing make speaker separation after meetings
+              less precise.
+            </Trans>
+          </p>
         ) : null}
       </DetailSection>
 

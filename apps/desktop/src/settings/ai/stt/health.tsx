@@ -5,7 +5,11 @@ import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { usesDeferredProviderAuthentication } from "@anlg/provider-validation";
 
 import { useConfigValues } from "~/shared/config";
-import { isLocalFileSttModel, isOnDeviceSttModel } from "~/stt/capabilities";
+import {
+  isLocalFileSttModel,
+  isLocalSttProvider,
+  isOnDeviceSttModel,
+} from "~/stt/capabilities";
 import { useSTTConnection } from "~/stt/useSTTConnection";
 
 type HealthStatus = {
@@ -48,9 +52,7 @@ export function useConnectionHealth(): HealthStatus {
   const isLocalModel =
     isOnDeviceSttModel(current_stt_provider, current_stt_model) ||
     isLocalFileSttModel(current_stt_provider, current_stt_model);
-  const isManagedProvider = ["soniqo", "apple_speech", "local_file"].includes(
-    current_stt_provider ?? "",
-  );
+  const isManagedProvider = isLocalSttProvider(current_stt_provider);
   const isCloud = !isManagedProvider;
   const isDeepgram = current_stt_provider === "deepgram";
 

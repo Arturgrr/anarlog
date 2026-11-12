@@ -266,11 +266,11 @@ describe("Transcription settings", () => {
     });
   });
 
-  test("filters narrow the providers to those on this Mac that transcribe Portuguese", async () => {
+  test("filters narrow the providers to those on this computer that transcribe Portuguese", async () => {
     renderPage();
     await within(providerList()).findByRole("button", { name: /Soniqo/ });
 
-    fireEvent.click(screen.getByRole("button", { name: "On this Mac" }));
+    fireEvent.click(screen.getByRole("button", { name: "On this computer" }));
     const local = within(providerList());
     expect(local.queryByRole("button", { name: /Deepgram/ })).toBeNull();
     expect(local.getByRole("button", { name: /BYO-model/ })).toBeTruthy();

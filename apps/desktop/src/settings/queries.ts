@@ -31,6 +31,7 @@ import { usePendingSttSelection } from "~/store/zustand/pending-stt-selection";
 import {
   getUnsupportedDesktopLocalSttRepair,
   isConfiguredSttModel,
+  isLocalSttProvider,
   isOnDeviceSttModel,
 } from "~/stt/capabilities";
 import {
@@ -514,14 +515,16 @@ function applySettingSideEffects(values: SettingValues): void {
   }
 }
 
-async function syncLocalSttServer(): Promise<void> {
+// Brings the local STT server in line with the selected model, starting it
+// for an on-device model. A local file starts lazily from its connection.
+export async function syncLocalSttServer(): Promise<void> {
   const { values } = await getStoredSettingValues();
   const provider = values.current_stt_provider;
   let model = values.current_stt_model;
   const localModelPath = values.local_stt_model_path?.trim();
 
   if (
-    ["soniqo", "apple_speech", "local_file"].includes(provider ?? "") &&
+    isLocalSttProvider(provider) &&
     model &&
     !isConfiguredSttModel(provider, model)
   ) {

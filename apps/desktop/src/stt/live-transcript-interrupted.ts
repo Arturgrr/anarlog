@@ -3,8 +3,7 @@ import { t } from "@lingui/core/macro";
 import type { DegradedError } from "@anlg/plugin-transcription";
 
 import { PROVIDERS } from "~/settings/ai/stt/shared";
-
-const LOCAL_PROVIDER_IDS = new Set(["soniqo", "apple_speech", "local_file"]);
+import { isLocalSttProvider } from "~/stt/capabilities";
 
 function providerDisplayName(providerId: string | null | undefined) {
   if (!providerId) return null;
@@ -34,7 +33,7 @@ function getPausedSentence({
   const providerName =
     providerDisplayName(sttProvider) ?? t`the transcription service`;
 
-  const isLocal = !!sttProvider && LOCAL_PROVIDER_IDS.has(sttProvider);
+  const isLocal = isLocalSttProvider(sttProvider);
 
   if (!online && !isLocal) {
     return t`Live transcript paused because you're offline.`;

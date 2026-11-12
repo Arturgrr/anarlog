@@ -1,9 +1,18 @@
 import { t } from "@lingui/core/macro";
-import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { arch, platform } from "@tauri-apps/plugin-os";
 import { useRef } from "react";
 
 import { commands as dictation } from "@anlg/plugin-dictation";
+import {
+  commands as localSttCommands,
+  type LocalModel,
+} from "@anlg/plugin-local-stt";
 
 import {
   DICTATION_COLUMNS,
@@ -15,11 +24,13 @@ import {
 
 import { useLiveQuery } from "~/db";
 import { displayModelLabel } from "~/settings/ai/stt/shared";
+import { syncLocalSttServer } from "~/settings/queries";
 import { useConfigValues } from "~/shared/config";
 import {
   getTranscriptionLanguages,
-  isDesktopLocalSttAvailable,
+  isLocalSttProviderAvailable,
   isSupportedLanguagesBatch,
+  modelCoversLanguages,
 } from "~/stt/capabilities";
 import { localSttQueries } from "~/stt/useLocalSttModel";
 import { getBatchProvider, useRunBatch } from "~/stt/useRunBatch";
@@ -62,9 +73,14 @@ type RetranscriptionModel = {
   label: string;
   baseUrl: string;
   apiKey: string;
+  languages?: string[];
 };
 
-const LOCAL_PROVIDERS = { soniqo: "soniqo", appleSpeech: "apple_speech" };
+const LOCAL_PROVIDERS = {
+  soniqo: "soniqo",
+  appleSpeech: "apple_speech",
+  gguf: "gguf",
+};
 
 /**
  * The models a kept recording can be transcribed with: the selected one,
@@ -78,7 +94,11 @@ export function useRetranscriptionModels() {
     "spoken_languages",
   ] as const);
   const languages = getTranscriptionLanguages(ai_language, spoken_languages);
-  const onDevice = isDesktopLocalSttAvailable(platform(), arch());
+  const currentPlatform = platform();
+  const currentArch = arch();
+  const onDevice = Object.values(LOCAL_PROVIDERS).some((provider) =>
+    isLocalSttProviderAvailable(provider, currentPlatform, currentArch),
+  );
   const supported = useQuery({
     ...localSttQueries.supportedModels(),
     enabled: onDevice,
@@ -88,7 +108,17 @@ export function useRetranscriptionModels() {
         const provider =
           LOCAL_PROVIDERS[model.model_type as keyof typeof LOCAL_PROVIDERS];
         return provider
-          ? [{ provider, model: model.key, label: model.display_name }]
+          ? [
+              {
+                provider,
+                model: model.key,
+                label: model.display_name,
+                languages:
+                  provider === "gguf"
+                    ? (model.languages ?? undefined)
+                    : undefined,
+              },
+            ]
           : [];
       })
     : [];
@@ -107,6 +137,10 @@ export function useRetranscriptionModels() {
       label: displayModelLabel(conn.model),
       baseUrl: conn.baseUrl,
       apiKey: conn.apiKey,
+      languages: localModels.find(
+        (model) =>
+          model.provider === conn.provider && model.model === conn.model,
+      )?.languages,
     });
   }
   localModels.forEach((model, index) => {
@@ -128,12 +162,13 @@ export function useRetranscriptionModels() {
     ],
     queryFn: async () => {
       const checks = await Promise.all(
-        candidates.map(async ({ provider, model }) => {
+        candidates.map(async ({ provider, model, languages: covered }) => {
           const batch = getBatchProvider(provider, model);
-          return batch &&
-            (await isSupportedLanguagesBatch(batch, model, languages))
-            ? `${provider}:${model}`
-            : null;
+          const supported = covered
+            ? modelCoversLanguages(covered, languages)
+            : !!batch &&
+              (await isSupportedLanguagesBatch(batch, model, languages));
+          return batch && supported ? `${provider}:${model}` : null;
         }),
       );
       return checks.filter((key) => key !== null);
@@ -161,10 +196,28 @@ function wordsToText(words: { text: string; start_ms: number }[]) {
     .trim();
 }
 
+// A downloaded model that is not the selected one has no local server yet.
+// Starting one replaces the selected model's server, which is restored after.
+async function startLocalServerFor(model: RetranscriptionModel) {
+  if (
+    model.baseUrl ||
+    getBatchProvider(model.provider, model.model) !== "whispercpp"
+  ) {
+    return null;
+  }
+
+  const started = await localSttCommands.startServer(model.model as LocalModel);
+  if (started.status === "error") {
+    throw new Error(started.error);
+  }
+  return started.data;
+}
+
 /** Transcribes an entry's kept audio again with `model`, through the batch path dictation uses. */
 export function useRetranscribe() {
   const sessionId = useRef(`dictation-history-${crypto.randomUUID()}`).current;
   const runBatch = useRunBatch(sessionId);
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -180,10 +233,11 @@ export function useRetranscribe() {
         throw new Error(t`The audio of this dictation is no longer available.`);
       }
       let text = "";
+      const localServerUrl = await startLocalServerFor(model);
       const used = await runBatch(path.data, {
         provider: model.provider,
         model: model.model,
-        baseUrl: model.baseUrl,
+        baseUrl: localServerUrl ?? model.baseUrl,
         apiKey: model.apiKey,
         deferAudioFinalization: true,
         notifyOnCompletion: false,
@@ -191,6 +245,11 @@ export function useRetranscribe() {
         handlePersist: (words) => {
           text = wordsToText(words);
         },
+      }).finally(async () => {
+        if (localServerUrl !== null) {
+          await syncLocalSttServer();
+          await queryClient.invalidateQueries({ queryKey: ["stt-connection"] });
+        }
       });
       if (!text) throw new Error(t`No speech detected. Please try again.`);
       await replaceDictationText(entry.id, {

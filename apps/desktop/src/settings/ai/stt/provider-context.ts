@@ -8,6 +8,7 @@ export const STT_PROVIDER_CONTEXT: Partial<
 > = {
   soniqo: msg`Runs entirely on your Mac. Audio never leaves this computer.`,
   apple_speech: msg`Uses the speech recognition built into macOS. Audio stays on this Mac.`,
+  gguf: msg`Download an open speech model and run it with transcribe.cpp on this computer, so audio never leaves it. During a meeting, text appears a minute at a time; the full transcript follows after the recording. Models download from Hugging Face only when you ask, under the license shown with each.`,
   local_file: msg`Use a whisper.cpp model file you already have. It runs on this Mac after each recording.`,
   inworld: msg`Use [Inworld Realtime STT](https://docs.inworld.ai/stt/overview) for live transcription. Paste the Base64 API credentials from Inworld Portal as-is; do not encode them again.`,
   gradium: msg`Use [Gradium STT](https://docs.gradium.ai/guides/speech-to-text) for live transcription in English, French, Spanish, Portuguese, or German.`,

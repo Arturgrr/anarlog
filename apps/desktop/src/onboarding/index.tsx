@@ -245,8 +245,8 @@ function OnboardingScreenContent({
             completedTitle={<TranscriptionSummary />}
             description={
               <Trans>
-                Install a model on your Mac or connect a cloud provider. It’s
-                the same list as Settings › Transcription.
+                Install a model on this computer or connect a cloud provider.
+                It’s the same list as Settings › Transcription.
               </Trans>
             }
             status={getStepStatus("transcription", currentStep)}
