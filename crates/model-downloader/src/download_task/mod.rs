@@ -2,7 +2,7 @@ use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
 use crate::download_task::failure::cleanup_for_failure;
-use crate::download_task::steps::{ChecksumError, FinalizeError};
+use crate::download_task::steps::{ChecksumError, Expected, FinalizeError};
 use crate::download_task_progress::make_progress_callback;
 use crate::model::DownloadableModel;
 
@@ -31,8 +31,8 @@ pub(crate) fn spawn_download_task<M: DownloadableModel>(
             return;
         }
 
-        if let Some(expected_checksum) = params.model.download_checksum()
-            && let Err(error) = steps::verify_checksum(&params, expected_checksum).await
+        if let Some(expected) = Expected::of(&params.model)
+            && let Err(error) = steps::verify_checksum(&params, expected).await
         {
             let reason = log_checksum_error(&error);
             fail_task(&params, Some(reason)).await;
@@ -104,8 +104,13 @@ fn log_download_error(error: &anlg_file::Error) -> Option<String> {
 
 fn log_checksum_error(error: &ChecksumError) -> String {
     match error {
-        ChecksumError::Mismatch { actual, expected } => {
+        ChecksumError::Mismatch {
+            kind,
+            actual,
+            expected,
+        } => {
             tracing::error!(
+                kind,
                 actual_checksum = actual,
                 expected_checksum = expected,
                 "model_download_checksum_mismatch"

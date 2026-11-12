@@ -59,6 +59,7 @@ anlg-frontmatter = { path = "crates/frontmatter", package = "frontmatter" }
 anlg-fs-format = { path = "crates/fs-format", package = "fs-format" }
 anlg-fs-sync-core = { path = "crates/fs-sync-core", package = "fs-sync-core" }
 anlg-gbnf = { path = "crates/gbnf", package = "gbnf" }
+anlg-gguf-model = { path = "crates/gguf-model", package = "gguf-model" }
 anlg-hooks = { path = "crates/hooks", package = "hooks" }
 anlg-host = { path = "crates/host", package = "host" }
 anlg-intercept = { path = "crates/intercept", package = "intercept" }

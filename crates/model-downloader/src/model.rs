@@ -6,7 +6,16 @@ use crate::Error;
 pub trait DownloadableModel: Clone + Send + Sync + 'static {
     fn download_key(&self) -> String;
     fn download_url(&self) -> Option<String>;
+    /// CRC32 of the downloaded file.
     fn download_checksum(&self) -> Option<u32> {
+        None
+    }
+    /// Lowercase hex SHA-256 of the downloaded file.
+    fn download_sha256(&self) -> Option<String> {
+        None
+    }
+    /// Size of the downloaded file in bytes.
+    fn download_size(&self) -> Option<u64> {
         None
     }
     fn download_destination(&self, models_base: &Path) -> PathBuf;

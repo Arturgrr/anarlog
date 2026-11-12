@@ -52,6 +52,8 @@ struct TestModel {
     key: String,
     url: Option<String>,
     checksum: Option<u32>,
+    sha256: Option<String>,
+    size: Option<u64>,
 }
 
 impl TestModel {
@@ -60,22 +62,30 @@ impl TestModel {
             key: key.to_string(),
             url: Some(url),
             checksum: None,
+            sha256: None,
+            size: None,
         }
     }
 
     fn with_url_and_checksum(key: &str, url: String, checksum: u32) -> Self {
         Self {
-            key: key.to_string(),
-            url: Some(url),
             checksum: Some(checksum),
+            ..Self::with_url(key, url)
+        }
+    }
+
+    fn with_url_and_sha256(key: &str, url: String, sha256: &str, size: u64) -> Self {
+        Self {
+            sha256: Some(sha256.to_string()),
+            size: Some(size),
+            ..Self::with_url(key, url)
         }
     }
 
     fn without_url(key: &str) -> Self {
         Self {
-            key: key.to_string(),
             url: None,
-            checksum: None,
+            ..Self::with_url(key, String::new())
         }
     }
 }
@@ -91,6 +101,14 @@ impl DownloadableModel for TestModel {
 
     fn download_checksum(&self) -> Option<u32> {
         self.checksum
+    }
+
+    fn download_sha256(&self) -> Option<String> {
+        self.sha256.clone()
+    }
+
+    fn download_size(&self) -> Option<u64> {
+        self.size
     }
 
     fn download_destination(&self, models_base: &Path) -> PathBuf {
@@ -377,6 +395,52 @@ async fn checksum_mismatch_cleans_up_part_file() {
         part_files_in(runtime.temp_dir.path()).is_empty(),
         "should not leave .part-* files behind"
     );
+}
+
+/// A pinned model whose bytes differ from its SHA-256 or size must never be
+/// promoted to the models directory; one that matches is.
+#[tokio::test]
+async fn sha256_or_size_mismatch_is_rejected_and_a_match_is_installed() {
+    let body = b"pinned model bytes".to_vec();
+    let sha256 = "0".repeat(64);
+    let actual_sha256 = {
+        use std::fmt::Write;
+        let digest = <sha2::Sha256 as sha2::Digest>::digest(&body);
+        digest.iter().fold(String::new(), |mut hex, byte| {
+            let _ = write!(hex, "{byte:02x}");
+            hex
+        })
+    };
+    let size = body.len() as u64;
+    let server = start_mock_server("/pinned.gguf", body).await;
+    let url = format!("{}/pinned.gguf", server.uri());
+
+    for (model, installed) in [
+        (TestModel::with_url_and_sha256("wrong_sha", url.clone(), &sha256, size), false),
+        (
+            TestModel::with_url_and_sha256("wrong_size", url.clone(), &actual_sha256, size + 1),
+            false,
+        ),
+        (
+            TestModel::with_url_and_sha256("pinned", url.clone(), &actual_sha256.to_uppercase(), size),
+            true,
+        ),
+    ] {
+        let runtime = TestRuntime::new();
+        let manager = ModelDownloadManager::new(runtime.clone());
+        manager.download(&model).await.unwrap();
+        wait_until_done(&manager, &model).await;
+
+        assert_eq!(manager.is_downloaded(&model).await.unwrap(), installed, "{}", model.key);
+        let statuses = runtime.progress_statuses();
+        assert_eq!(
+            statuses.iter().any(|s| matches!(s, DownloadStatus::Failed(_))),
+            !installed,
+            "{}: {statuses:?}",
+            model.key
+        );
+        assert!(part_files_in(runtime.temp_dir.path()).is_empty(), "{}", model.key);
+    }
 }
 
 #[tokio::test]

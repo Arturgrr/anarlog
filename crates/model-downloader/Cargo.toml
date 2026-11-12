@@ -11,6 +11,7 @@ anlg-download-interface = { workspace = true }
 anlg-file = { workspace = true }
 
 serde = { workspace = true }
+sha2 = { workspace = true }
 specta = { workspace = true, optional = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros", "fs", "sync"] }
