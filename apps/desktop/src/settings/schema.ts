@@ -384,6 +384,13 @@ export const SETTING_DEFINITIONS = {
     path: ["ai", "local_stt_model_path"],
     default: "" as string,
   },
+  // Where the GGUF engine runs speech: "auto", "gpu" or "cpu". The local STT
+  // server reads it when it loads a model.
+  local_stt_device: {
+    type: "string",
+    path: ["ai", "local_stt_device"],
+    default: "auto" as string,
+  },
   timezone: {
     type: "string",
     path: ["general", "timezone"],

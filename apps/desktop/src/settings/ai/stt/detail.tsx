@@ -9,6 +9,7 @@ import { languageSupportKey, type LanguageSupport } from "./language-support";
 import { LocalFileModel } from "./local-file-model";
 import { LanguageSupportLine, ModeChip, SttModelRow } from "./model-rows";
 import { STT_PROVIDER_CONTEXT } from "./provider-context";
+import { SpeechEngineSection } from "./speech-engine";
 
 import { ProviderConnectionForm, StyledStreamdown } from "~/settings/ai/shared";
 import {
@@ -148,6 +149,11 @@ export function SttProviderDetail({
           </p>
         ) : null}
       </DetailSection>
+
+      {selectable &&
+      (provider.id === "gguf" || provider.id === "local_file") ? (
+        <SpeechEngineSection />
+      ) : null}
 
       <p className="text-faint text-xs">
         <Trans>

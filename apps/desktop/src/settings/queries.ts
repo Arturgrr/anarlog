@@ -557,6 +557,21 @@ export async function syncLocalSttServer(): Promise<void> {
   }
 }
 
+// The engine reads the device preference and remembered GPU failures when it
+// loads a model, so the selected engine has to load again for a change to apply.
+export async function restartLocalSttEngine(): Promise<void> {
+  const { values } = await getStoredSettingValues();
+  if (
+    values.current_stt_provider !== "gguf" &&
+    values.current_stt_provider !== "local_file"
+  ) {
+    return;
+  }
+
+  await localSttCommands.stopServer(null);
+  await syncLocalSttServer();
+}
+
 function parseStringArray(value: string): string[] {
   try {
     const parsed = JSON.parse(value);
