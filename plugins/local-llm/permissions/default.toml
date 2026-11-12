@@ -1,0 +1,14 @@
+[default]
+description = "Default permissions for the plugin"
+permissions = [
+    "allow-runtime-status",
+    "allow-list-models",
+    "allow-models-dir",
+    "allow-download-model",
+    "allow-cancel-download",
+    "allow-delete-model",
+    "allow-is-model-downloading",
+    "allow-ensure-server",
+    "allow-stop-server",
+    "allow-server-state",
+]

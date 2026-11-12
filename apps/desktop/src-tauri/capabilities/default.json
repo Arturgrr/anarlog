@@ -49,6 +49,7 @@
     "process:default",
     "apple-foundation:default",
     "local-stt:default",
+    "local-llm:default",
     "dialog:default",
     "hooks:default",
     "icon:default",
