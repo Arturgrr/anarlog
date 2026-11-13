@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod annotations;
 mod cli;
 mod commands;
 mod db;
@@ -69,7 +70,8 @@ pub async fn run(mut args: Args) -> Result<u8> {
         }
         cli::Command::Mcp => {
             let db = std::sync::Arc::new(db::open_write(&args).await?);
-            mcp::serve(db).await?
+            let annotations = annotations::root_for(&db::resolve_path(&args)?);
+            mcp::serve(db, annotations).await?
         }
     }
 

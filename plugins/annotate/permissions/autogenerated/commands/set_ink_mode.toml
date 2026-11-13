@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-set-ink-mode"
+description = "Enables the set_ink_mode command without any pre-configured scope."
+commands.allow = ["set_ink_mode"]
+
+[[permission]]
+identifier = "deny-set-ink-mode"
+description = "Denies the set_ink_mode command without any pre-configured scope."
+commands.deny = ["set_ink_mode"]

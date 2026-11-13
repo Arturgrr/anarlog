@@ -9,6 +9,7 @@ import {
   FileText,
   FolderSimple,
   Gear,
+  Highlighter,
   Lightning,
   ListBullets,
   type Icon,
@@ -22,6 +23,7 @@ import {
   Waveform,
 } from "@anlg/ui/components/icons";
 
+import { annotateAvailable } from "~/annotate/system";
 import { privacyMessages } from "~/settings/general/app-settings";
 import { type SettingsTab, type TabInput } from "~/store/zustand/tabs";
 
@@ -63,6 +65,9 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
           label: t`Dictation history`,
           icon: ClockCounterClockwise,
         },
+        ...(annotateAvailable()
+          ? [{ id: "annotate" as const, label: t`Annotate`, icon: Highlighter }]
+          : []),
         { id: "intelligence", label: t`Intelligence`, icon: Sparkle },
         { id: "dictionary", label: t`Dictionary`, icon: BookOpen },
       ],

@@ -233,6 +233,15 @@ pub fn main() {
             },
         ));
 
+    // Annotate posts keystrokes to paste and is experimental: left out of the
+    // sandboxed App Store build. Off macOS every command says it is unavailable.
+    #[cfg(not(feature = "app-store"))]
+    {
+        builder = builder.plugin(tauri_plugin_annotate::init(
+            db::desktop_db_dir(&identifier).map(|dir| dir.join("annotations")),
+        ));
+    }
+
     // The App Store sandbox cannot run a listening child process.
     #[cfg(not(feature = "app-store"))]
     {
@@ -444,10 +453,19 @@ pub fn main() {
             let first_request = !EXIT_FLUSH_REQUESTED.swap(true, Ordering::SeqCst);
             if first_request {
                 start_exit_hard_fallback();
+                // Discards an annotation in progress while the frontend flushes.
+                let app_handle = app.clone();
+                tauri::async_runtime::spawn(async move {
+                    tauri_plugin_annotate::shutdown(&app_handle).await;
+                });
             }
             if app.emit_to("main", APP_EXIT_REQUESTED_EVENT, ()).is_err() {
-                mark_exit_flush_complete();
-                app.exit(0);
+                let app_handle = app.clone();
+                tauri::async_runtime::spawn(async move {
+                    tauri_plugin_annotate::shutdown(&app_handle).await;
+                    mark_exit_flush_complete();
+                    app_handle.exit(0);
+                });
             } else if first_request {
                 let app_handle = app.clone();
                 tauri::async_runtime::spawn(async move {

@@ -1,0 +1,44 @@
+[package]
+name = "tauri-plugin-annotate"
+version = "0.1.0"
+edition = "2024"
+exclude = ["/js", "/node_modules"]
+links = "tauri-plugin-annotate"
+
+[build-dependencies]
+tauri-plugin = { workspace = true, features = ["build"] }
+
+[dev-dependencies]
+specta-typescript = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "test-util"] }
+
+[dependencies]
+anlg-annotate-core = { workspace = true }
+anlg-annotate-macos = { workspace = true }
+anlg-audio = { workspace = true }
+
+futures-util = { workspace = true }
+hound = { workspace = true }
+image = { workspace = true, features = ["jpeg"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+specta = { workspace = true }
+tempfile = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+tokio-util = { workspace = true }
+tracing = { workspace = true }
+
+tauri = { workspace = true, features = ["test"] }
+tauri-plugin-shortcut = { workspace = true }
+tauri-specta = { workspace = true, features = ["derive", "typescript"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+anlg-tcc = { workspace = true, optional = true }
+libc = "0.2"
+
+[features]
+default = []
+# Reads TCC's private Screen Recording answer, which tells never-asked from
+# denied; only for builds outside the App Store.
+private-tcc = ["dep:anlg-tcc"]

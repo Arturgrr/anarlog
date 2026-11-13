@@ -6,6 +6,8 @@ mod handoff;
 mod health;
 mod options;
 mod output_schema;
+#[cfg(all(test, unix))]
+mod test_support;
 mod thread;
 
 pub use config::{

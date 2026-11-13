@@ -1,3 +1,4 @@
+mod annotate;
 mod commands;
 mod error;
 mod events;
@@ -9,6 +10,7 @@ mod press;
 pub use error::*;
 pub use events::*;
 pub use ext::*;
+pub use global::set_annotate_escape;
 
 use handler::Handler;
 use tauri::Manager;
@@ -26,8 +28,16 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             global::set_active,
             global::configure_paste_last,
             global::validate_paste_last,
+            global::configure_annotate,
+            global::validate_annotate,
+            global::set_annotate_recording,
         ])
-        .events(tauri_specta::collect_events![ShortcutEvent, PasteLastEvent])
+        .events(tauri_specta::collect_events![
+            ShortcutEvent,
+            PasteLastEvent,
+            AnnotateShortcutEvent,
+            PasteLastAnnotationEvent
+        ])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }
 
@@ -42,6 +52,7 @@ pub fn init() -> tauri::plugin::TauriPlugin<tauri::Wry> {
             app.manage(handler);
             app.manage(global::GlobalState::default());
             app.manage(press::Presses::default());
+            app.manage(annotate::AnnotateGesture::default());
             Ok(())
         })
         .build()

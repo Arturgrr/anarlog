@@ -9,6 +9,9 @@ Default permissions for the plugin
 - `allow-set-active`
 - `allow-configure-paste-last`
 - `allow-validate-paste-last`
+- `allow-configure-annotate`
+- `allow-validate-annotate`
+- `allow-set-annotate-recording`
 - `allow-register-hotkey`
 - `allow-unregister-hotkey`
 
@@ -43,6 +46,32 @@ Enables the configure command without any pre-configured scope.
 <td>
 
 Denies the configure command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:allow-configure-annotate`
+
+</td>
+<td>
+
+Enables the configure_annotate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:deny-configure-annotate`
+
+</td>
+<td>
+
+Denies the configure_annotate command without any pre-configured scope.
 
 </td>
 </tr>
@@ -128,6 +157,32 @@ Denies the set_active command without any pre-configured scope.
 <tr>
 <td>
 
+`shortcut:allow-set-annotate-recording`
+
+</td>
+<td>
+
+Enables the set_annotate_recording command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:deny-set-annotate-recording`
+
+</td>
+<td>
+
+Denies the set_annotate_recording command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `shortcut:allow-unregister-hotkey`
 
 </td>
@@ -173,6 +228,32 @@ Enables the validate command without any pre-configured scope.
 <td>
 
 Denies the validate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:allow-validate-annotate`
+
+</td>
+<td>
+
+Enables the validate_annotate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:deny-validate-annotate`
+
+</td>
+<td>
+
+Denies the validate_annotate command without any pre-configured scope.
 
 </td>
 </tr>

@@ -6,6 +6,9 @@ permissions = [
   "allow-set-active",
   "allow-configure-paste-last",
   "allow-validate-paste-last",
+  "allow-configure-annotate",
+  "allow-validate-annotate",
+  "allow-set-annotate-recording",
   "allow-register-hotkey",
   "allow-unregister-hotkey",
 ]

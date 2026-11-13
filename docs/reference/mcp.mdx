@@ -116,6 +116,18 @@ Returns `meeting_id`, `job_id`, `processing_status`, `summary_status` and nullab
 
 Required parameter: `job_id`. Read the durable result without starting work. Processing states: `queued`, `importing`, `transcribing`, `summarizing`, `done`, `failed`. Summary states: `pending`, `done`, `skipped_no_model`, `skipped_too_short`, `failed`. A successful import can have a skipped summary. `get_meeting` also includes nullable `processing_status` and `recording_import`.
 
+### `list_annotations`
+
+| Parameter | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `limit` | integer | `20` | Clamped to `1..100`. |
+
+Lists the [annotations](/annotate) recorded on this computer, newest first. Each has `id`, `created_at_ms`, `duration_ms`, the `app` and `window_title` in front when it started, and its `folder`. Annotations live beside the database, in its folder's `annotations`.
+
+### `get_annotation`
+
+Optional parameter: `id`, from `list_annotations`; the newest annotation when omitted. Returns the `summary` (what was said and marked on each numbered key frame), the `transcript`, the paths of the `contact_sheet` and `key_frames`, and of the `video` and `audio` while retention keeps them (`null` once removed). The contact sheet also comes back as PNG image content beside the JSON.
+
 ## Resources
 
 | URI | MIME type | Content |

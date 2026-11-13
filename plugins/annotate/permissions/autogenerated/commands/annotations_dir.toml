@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-annotations-dir"
+description = "Enables the annotations_dir command without any pre-configured scope."
+commands.allow = ["annotations_dir"]
+
+[[permission]]
+identifier = "deny-annotations-dir"
+description = "Denies the annotations_dir command without any pre-configured scope."
+commands.deny = ["annotations_dir"]

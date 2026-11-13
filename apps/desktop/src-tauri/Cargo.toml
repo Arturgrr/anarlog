@@ -23,6 +23,7 @@ tauri-build = { workspace = true, features = [] }
 tauri = { workspace = true, features = ["specta", "protocol-asset"] }
 
 tauri-plugin-agent = { workspace = true }
+tauri-plugin-annotate = { workspace = true }
 tauri-plugin-apple-foundation = { workspace = true }
 tauri-plugin-autostart = { workspace = true }
 tauri-plugin-clipboard-manager = { workspace = true }
@@ -100,6 +101,7 @@ tracing = { workspace = true }
 [features]
 default = []
 direct-distribution = [
+  "tauri-plugin-annotate/private-tcc",
   "tauri-plugin-dictation/macos-private-api",
   "tauri-plugin-permissions/private-tcc",
   "tauri-plugin-windows/macos-private-api",

@@ -1,0 +1,66 @@
+---
+title: "Annotate your screen"
+description: "Record your screen while you draw on it and talk, then paste the result into a coding agent."
+---
+
+Annotate records the display under the pointer while you draw on it in red and talk. When you finish, Librelog turns the recording into numbered key frames with your marks, a contact sheet that shows them side by side, and a summary of what you said at each frame. Paste that into a coding agent such as Claude Code to show it what you mean instead of describing it.
+
+Annotate is experimental. It is available only in the macOS app downloaded from the website, not in the App Store version or on Windows and Linux.
+
+## Set up Annotate
+
+1. Open **Settings → Annotate** and turn on **Enable Annotate**. It is off by default.
+2. Choose the shortcuts, or keep the defaults: Option + Shift + S to annotate, and Option + Shift + A to paste the last annotation. Click a shortcut to change it, press the keys you want, then press Enter to save. They can't be the same as a dictation shortcut.
+3. Allow Screen Recording. macOS asks the first time you annotate. If you allowed it in System Settings while Librelog was open, quit and reopen Librelog. **Screen Recording** in **Settings → Annotate** shows whether it is allowed, and **Open System Settings** takes you there.
+4. Allow microphone access. Annotate uses the microphone and the transcription provider you chose for [dictation](/dictation).
+
+Keep Librelog running to use the shortcuts in other apps.
+
+## Record an annotation
+
+1. Press the Annotate shortcut. Librelog starts recording the display under the pointer, and a small capsule shows the elapsed time.
+2. Talk about what you see. Your narration is recorded with the screen.
+3. To draw, hold the shortcut: the pointer draws in red wherever it moves, with no click needed. Let go to stop drawing. Holding the shortcut never stops the recording.
+4. Press the shortcut again to finish.
+
+The capsule has three buttons:
+
+- **Pen** lets you draw by holding the mouse button and dragging. Click it again to stop drawing. While you draw, clicks don't reach the app underneath.
+- **Stop** finishes the annotation, like the shortcut.
+- **Discard** asks **Discard?**. Choose **Discard** to delete the recording, or **Keep** to go on recording. Without an answer, recording goes on after a few seconds.
+
+Press Escape to stop drawing; it never stops the recording. Drawing also turns off after 30 seconds without pointer movement. A recording stops by itself after 20 minutes.
+
+Turning off **Enable Annotate** while you record does not discard the recording: the shortcut still finishes it, and Annotate turns off once the annotation is written. Quitting Librelog while you record, or while an annotation is being finished, discards it.
+
+## Use the result
+
+When you finish, Librelog transcribes your narration, picks key frames where you drew, spoke or the screen changed, and writes the annotation. This can take a moment; **Settings → Annotate** shows **Finishing the annotation…** meanwhile. Then the summary is copied to your clipboard and **Annotation ready** appears, with **Show in Finder** to open its folder.
+
+To hand it to an agent, focus the agent's input and press the paste last annotation shortcut. Librelog pastes the contact sheet's file path, with spaces and special characters escaped as when you drag a file into Terminal, then the summary. In Claude Code and similar terminal agents, the path attaches the image. Paste last annotation uses the same text insertion as [dictation](/dictation#where-the-text-goes).
+
+The summary lists each numbered key frame with what you marked and what you said then. If no speech was heard, the annotation is written without a transcript. If transcription failed, it is written without one too, and Librelog tells you.
+
+Agents can also read annotations themselves through the [MCP server](/reference/mcp#list_annotations): `get_annotation` returns the newest one, with its summary, transcript and contact sheet.
+
+## Where annotations are kept
+
+Each annotation is a folder in Librelog's data folder, under `annotations`. **Show annotations folder** in **Settings → Annotate** opens it. A folder holds:
+
+- `recording.mp4`, the screen recording, and `audio.wav`, your narration.
+- `frames`, the full-size key frames.
+- `contact-sheet.png`, the key frames side by side with your marks.
+- `summary.md`, the summary.
+- `annotation.json`, which describes the rest.
+
+Choose how long they are kept under **Keep annotations for**:
+
+- **Week** (the default) deletes the video and audio after 7 days, and the rest of the annotation after 30.
+- **Month** deletes the video and audio after 30 days, and the rest after 90.
+- **Forever** deletes nothing automatically.
+
+Librelog applies this when it starts, when you change it, and every hour, but never while you record.
+
+## Privacy
+
+A recording holds everything shown on the display under the pointer, what your microphone hears, your red marks, and the name and title of the app in front when it started. It stays on this computer. Your narration is sent to your transcription provider, or stays on the computer with a local one. Nothing else leaves the computer until you paste the annotation somewhere: then it goes to that app and its AI provider.

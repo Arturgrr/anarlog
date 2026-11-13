@@ -6,6 +6,9 @@ const COMMANDS: &[&str] = &[
     "set_active",
     "configure_paste_last",
     "validate_paste_last",
+    "configure_annotate",
+    "validate_annotate",
+    "set_annotate_recording",
 ];
 
 fn main() {

@@ -101,6 +101,27 @@ export const SETTING_DEFINITIONS = {
     path: ["dictation", "history_keep_audio"],
     default: false as boolean,
   },
+  annotate_enabled: {
+    type: "boolean",
+    path: ["annotate", "enabled"],
+    default: false as boolean,
+  },
+  annotate_shortcut: {
+    type: "string",
+    path: ["annotate", "shortcut"],
+    default: "Alt+Shift+KeyS" as string,
+  },
+  annotate_paste_shortcut: {
+    type: "string",
+    path: ["annotate", "paste_shortcut"],
+    default: "Alt+Shift+KeyA" as string,
+  },
+  // "week" | "month" | "forever"; see `anlg_annotate_core::retention::Preset`.
+  annotate_retention: {
+    type: "string",
+    path: ["annotate", "retention"],
+    default: "week" as string,
+  },
   export_directory: {
     type: "string",
     path: ["general", "export_directory"],

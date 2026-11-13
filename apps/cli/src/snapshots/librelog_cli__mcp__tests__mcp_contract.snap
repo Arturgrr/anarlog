@@ -3,7 +3,7 @@ source: apps/cli/src/mcp.rs
 expression: "canonicalize_json(serde_json::json!({\n    \"protocol_version\": info.protocol_version, \"instructions\":\n    info.instructions, \"tools\": tools, \"resource_templates\": templates,\n}))"
 ---
 {
-  "instructions": "Local access to Librelog meeting data. Start with list_meetings to resolve a meeting_id; to scope work to a project or client, call list_folders and pass a returned path as folder_path. Then call get_meeting for notes, summaries, participants, and action items. Request transcript pages with get_meeting_transcript and continue with pagination.next_offset; each page is capped at 500 words. Use get_recurring_meeting_history for series context. Use export_meeting only when the task needs the complete record including transcripts. To persist an edit, call propose_summary_edit or propose_memo_edit; the result stays pending until a human applies it in the desktop app. List or inspect staged work with list_proposals and get_proposal. decline_proposal discards a pending proposal without changing the meeting. Never invent meeting titles, dates, or ids. If list_meetings returns no meetings, say so. Never access SQLite directly, or claim a proposal was applied. Documentation: https://github.com/Arturgrr/librelog/blob/main/docs/reference/mcp.mdx",
+  "instructions": "Local access to Librelog meeting data. Start with list_meetings to resolve a meeting_id; to scope work to a project or client, call list_folders and pass a returned path as folder_path. Then call get_meeting for notes, summaries, participants, and action items. Request transcript pages with get_meeting_transcript and continue with pagination.next_offset; each page is capped at 500 words. Use get_recurring_meeting_history for series context. Use export_meeting only when the task needs the complete record including transcripts. To persist an edit, call propose_summary_edit or propose_memo_edit; the result stays pending until a human applies it in the desktop app. List or inspect staged work with list_proposals and get_proposal. decline_proposal discards a pending proposal without changing the meeting. Never invent meeting titles, dates, or ids. If list_meetings returns no meetings, say so. Never access SQLite directly, or claim a proposal was applied. For screen annotations the user recorded (screen, red ink, narration), call get_annotation, or list_annotations to choose one. Documentation: https://github.com/Arturgrr/librelog/blob/main/docs/reference/mcp.mdx",
   "protocol_version": "2026-07-28",
   "resource_templates": [
     {
@@ -424,6 +424,111 @@ expression: "canonicalize_json(serde_json::json!({\n    \"protocol_version\": in
         "type": "object"
       },
       "title": "Export meeting"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Get one screen annotation, the newest when id is omitted: its summary (what was said and marked on each numbered key frame), the transcript, the contact sheet as an image, the key frame paths, and the video and audio paths while retention keeps them. Read the summary beside the image.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "id": {
+            "description": "An id from list_annotations; the newest annotation when omitted.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "name": "get_annotation",
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "app": {
+            "description": "The app in front when it started.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "audio": {
+            "description": "The narration audio, until retention removes it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contact_sheet": {
+            "description": "Every key frame on one image; also returned as image content.",
+            "type": "string"
+          },
+          "created_at_ms": {
+            "description": "When the recording started, in ms since the Unix epoch.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "duration_ms": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "folder": {
+            "description": "The annotation's folder on this computer.",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "key_frames": {
+            "description": "The numbered key frames at full size, with the ink drawn on them.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "summary": {
+            "description": "The summary.md text: what was said and marked, frame by frame.",
+            "type": "string"
+          },
+          "transcript": {
+            "description": "The narration's transcript.",
+            "type": "string"
+          },
+          "video": {
+            "description": "The screen recording, until retention removes it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "window_title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "created_at_ms",
+          "duration_ms",
+          "folder",
+          "summary",
+          "transcript",
+          "contact_sheet",
+          "key_frames"
+        ],
+        "title": "AnnotationDetail",
+        "type": "object"
+      },
+      "title": "Get annotation"
     },
     {
       "annotations": {
@@ -1173,6 +1278,92 @@ expression: "canonicalize_json(serde_json::json!({\n    \"protocol_version\": in
         "type": "object"
       },
       "title": "Import recording"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "List the screen annotations recorded with Librelog's Annotate shortcut (screen recording, red ink and narration), newest first, with id, created time, duration, the app and window in front, and the folder. Pass an id to get_annotation.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "limit": {
+            "description": "How many to return, newest first (default 20, at most 100).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "name": "list_annotations",
+      "outputSchema": {
+        "$defs": {
+          "AnnotationListItem": {
+            "properties": {
+              "app": {
+                "description": "The app in front when it started.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "created_at_ms": {
+                "description": "When the recording started, in ms since the Unix epoch.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "duration_ms": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "folder": {
+                "description": "The annotation's folder on this computer.",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "window_title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "created_at_ms",
+              "duration_ms",
+              "folder"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "annotations": {
+            "items": {
+              "$ref": "#/$defs/AnnotationListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "annotations"
+        ],
+        "title": "AnnotationList",
+        "type": "object"
+      },
+      "title": "List annotations"
     },
     {
       "annotations": {

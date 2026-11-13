@@ -1,0 +1,16 @@
+[default]
+description = "Default permissions for the plugin"
+permissions = [
+  "allow-screen-recording",
+  "allow-request-screen-recording",
+  "allow-open-screen-recording-settings",
+  "allow-start",
+  "allow-stop",
+  "allow-finalize",
+  "allow-cancel",
+  "allow-set-ink-mode",
+  "allow-status",
+  "allow-set-retention",
+  "allow-annotations-dir",
+  "allow-latest",
+]

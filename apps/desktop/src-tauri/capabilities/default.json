@@ -82,6 +82,7 @@
     "relay:default",
     "shortcut:default",
     "dictation:default",
+    "annotate:default",
     {
       "identifier": "http:default",
       "deny": [],

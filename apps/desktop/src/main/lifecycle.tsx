@@ -2,6 +2,7 @@ import { useRouteContext } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 
 import { useLanguageModel } from "~/ai/hooks";
+import { AnnotateLifecycle, AnnotateRetention } from "~/annotate/lifecycle";
 import { useSessionTab } from "~/chat/components/use-session-tab";
 import { buildChatTools } from "~/chat/tools";
 import { searchContacts } from "~/contacts/queries";
@@ -52,6 +53,8 @@ export function ClassicMainServices() {
       <DictationLifecycle />
       <PasteLastLifecycle />
       <DictationHistoryRetention />
+      <AnnotateLifecycle />
+      <AnnotateRetention />
       <ToolRegistration />
       <EnhancerInit />
     </>

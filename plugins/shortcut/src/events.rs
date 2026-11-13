@@ -67,6 +67,25 @@ common_event_derives! {
 }
 
 common_event_derives! {
+    /// What the Annotate shortcut asks for, decided by its taps and holds.
+    #[serde(tag = "type", rename_all = "camelCase")]
+    pub enum AnnotateShortcutEvent {
+        Start,
+        Stop,
+        /// Held while recording: ink follows the pointer until release.
+        InkOn,
+        InkOff,
+        /// Escape while ink is on.
+        Escape,
+    }
+}
+
+common_event_derives! {
+    /// Paste the last annotation: its shortcut was pressed.
+    pub struct PasteLastAnnotationEvent {}
+}
+
+common_event_derives! {
     /// Paste the last dictation again: its shortcut was pressed, or its tray
     /// item chosen.
     pub struct PasteLastEvent {}

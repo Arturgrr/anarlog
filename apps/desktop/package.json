@@ -1,6 +1,6 @@
 {
   "name": "@anlg/desktop",
-  "version": "0.6.0-beta.1",
+  "version": "0.7.0-beta.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -30,6 +30,7 @@
     "@anlg/db-tauri": "workspace:*",
     "@anlg/design-system": "workspace:^",
     "@anlg/editor": "workspace:^",
+    "@anlg/plugin-annotate": "workspace:*",
     "@anlg/plugin-apple-foundation": "workspace:*",
     "@anlg/plugin-contacts": "workspace:*",
     "@anlg/plugin-db": "workspace:*",

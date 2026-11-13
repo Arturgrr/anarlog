@@ -160,6 +160,9 @@ importers:
       '@anlg/editor':
         specifier: workspace:^
         version: link:../../packages/editor
+      '@anlg/plugin-annotate':
+        specifier: workspace:*
+        version: link:../../plugins/annotate
       '@anlg/plugin-apple-foundation':
         specifier: workspace:*
         version: link:../../plugins/apple-foundation
@@ -819,6 +822,12 @@ importers:
         version: 2.6.1
 
   plugins/agent:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: ^2.10.1
+        version: 2.10.1
+
+  plugins/annotate:
     dependencies:
       '@tauri-apps/api':
         specifier: ^2.10.1
