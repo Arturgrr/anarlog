@@ -75,6 +75,11 @@ msgstr "(default)"
 msgid "(Unavailable — using current default)"
 msgstr "(Unavailable — using current default)"
 
+#. placeholder {0}: app.count
+#: src/settings/stats/dictation-section.tsx
+msgid "{0, plural, one {# dictation} other {# dictations}}"
+msgstr "{0, plural, one {# dictation} other {# dictations}}"
+
 #. placeholder {0}: modelLanguages.length
 #: src/settings/ai/stt/model-rows.tsx
 msgid "{0, plural, one {# language} other {# languages}}"
@@ -152,10 +157,6 @@ msgstr "{absDays} days ago"
 #: src/i18n/native-labels.tsx
 msgid "{app} will stop running in the background."
 msgstr "{app} will stop running in the background."
-
-#: src/settings/stats/badge-collection.tsx
-msgid "{count} of {total} collected"
-msgstr "{count} of {total} collected"
 
 #: src/settings/stats/index.tsx
 msgid "{date}. Conversations: {count}"
@@ -282,14 +283,6 @@ msgstr "{unavailableLabel} is not available for batch transcription. Using {fall
 #: src/templates/queries.ts
 msgid "{value} (Copy)"
 msgstr "{value} (Copy)"
-
-#: src/settings/stats/badge-collection.tsx
-msgid "{value} / {target} active weeks"
-msgstr "{value} / {target} active weeks"
-
-#: src/settings/stats/badge-collection.tsx
-msgid "{value} / {target} conversations"
-msgstr "{value} / {target} conversations"
 
 #: src/session/components/note-input/header-enhanced.tsx
 msgid "{viewTitle} copied to clipboard"
@@ -634,10 +627,6 @@ msgstr "All models"
 #: src/shared/open-note-dialog.tsx
 msgid "All Notes"
 msgstr "All Notes"
-
-#: src/settings/stats/badge-collection.tsx
-msgid "All Set"
-msgstr "All Set"
 
 #: src/settings/stats/date-range.tsx
 msgid "All time"
@@ -1032,6 +1021,10 @@ msgstr "Beta"
 msgid "Bloom"
 msgstr "Bloom"
 
+#: src/settings/dictation-indicator.tsx
+msgid "Bottom"
+msgstr "Bottom"
+
 #: src/settings/general/notification.tsx
 msgid "Bounce app icon"
 msgstr "Bounce app icon"
@@ -1117,33 +1110,9 @@ msgstr "Cancel dictation"
 msgid "Cancel download"
 msgstr "Cancel download"
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Capture 10 conversations. More moments you can return to."
-msgstr "Capture 10 conversations. More moments you can return to."
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Capture 100 conversations. A hundred stories, saved in your own words."
-msgstr "Capture 100 conversations. A hundred stories, saved in your own words."
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Capture 250 conversations. Your own library of shared knowledge."
-msgstr "Capture 250 conversations. Your own library of shared knowledge."
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Capture 50 conversations. A growing collection of ideas and decisions."
-msgstr "Capture 50 conversations. A growing collection of ideas and decisions."
-
 #: src/settings/stats/insights.tsx
 msgid "Capture at least 5 conversations in this period to see patterns."
 msgstr "Capture at least 5 conversations in this period to see patterns."
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Capture conversations in 12 different weeks. A little at a time, at your own pace."
-msgstr "Capture conversations in 12 different weeks. A little at a time, at your own pace."
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Capture conversations in 4 different weeks. They don't need to be consecutive."
-msgstr "Capture conversations in 4 different weeks. They don't need to be consecutive."
 
 #: src/settings/general/meeting-settings.tsx
 msgid "Capture meeting chat in Memos"
@@ -1152,10 +1121,6 @@ msgstr "Capture meeting chat in Memos"
 #: src/settings/general/meeting-settings.tsx
 msgid "Capture shared screens in Memos"
 msgstr "Capture shared screens in Memos"
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Capture your first conversation. Every collection starts somewhere."
-msgstr "Capture your first conversation. Every collection starts somewhere."
 
 #: src/settings/general/timezone.tsx
 msgid "Central Time"
@@ -1517,19 +1482,6 @@ msgstr "Collapse live transcript"
 msgid "Collect action items"
 msgstr "Collect action items"
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Collected"
-msgstr "Collected"
-
-#. placeholder {0}: new Intl.DateTimeFormat(i18n.locale, { dateStyle: "medium", }).format(new Date(selected.collectedAt))
-#: src/settings/stats/badge-collection.tsx
-msgid "Collected {0}"
-msgstr "Collected {0}"
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Collected badges stay yours on this device, even when you delete a note or take a break. Imported transcripts count; the welcome demo doesn't."
-msgstr "Collected badges stay yours on this device, even when you delete a note or take a break. Imported transcripts count; the welcome demo doesn't."
-
 #: src/settings/appearance/theme.tsx
 msgid "Color theme"
 msgstr "Color theme"
@@ -1549,14 +1501,6 @@ msgstr "Comment"
 #: src/contacts/details.tsx
 msgid "Company"
 msgstr "Company"
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Complete onboarding"
-msgstr "Complete onboarding"
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Complete onboarding. You're ready for your next conversation."
-msgstr "Complete onboarding. You're ready for your next conversation."
 
 #: src/settings/general/notification.tsx
 msgid "Completion sound"
@@ -1653,6 +1597,10 @@ msgstr "Continue to Intelligence"
 #: src/settings/general/meeting-settings.tsx
 msgid "Control listening without reopening Librelog."
 msgstr "Control listening without reopening Librelog."
+
+#: src/settings/stats/index.tsx
+msgid "Conversation figures include imported transcripts and exclude deleted conversations."
+msgstr "Conversation figures include imported transcripts and exclude deleted conversations."
 
 #: src/settings/stats/index.tsx
 msgid "Conversations"
@@ -1875,7 +1823,6 @@ msgstr "Could not save this chat message."
 msgid "Could not save this dictation to your history."
 msgstr "Could not save this dictation to your history."
 
-#: src/dictation/lifecycle.tsx
 #: src/i18n/external-messages.ts
 msgid "Could not show the dictation indicator. Please try again."
 msgstr "Could not show the dictation indicator. Please try again."
@@ -1939,9 +1886,9 @@ msgstr "Couldn’t load models"
 msgid "Couldn’t load the model list: {0}"
 msgstr "Couldn’t load the model list: {0}"
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Couldn't load your badges. Reopen this page to try again."
-msgstr "Couldn't load your badges. Reopen this page to try again."
+#: src/settings/stats/dictation-section.tsx
+msgid "Couldn't load your dictation statistics. Reopen this page to try again."
+msgstr "Couldn't load your dictation statistics. Reopen this page to try again."
 
 #: src/settings/stats/index.tsx
 msgid "Couldn't load your insights. Reopen this page to try again."
@@ -1950,10 +1897,6 @@ msgstr "Couldn't load your insights. Reopen this page to try again."
 #: src/onboarding/final.tsx
 msgid "Couldn't open Librelog. Please try again."
 msgstr "Couldn't open Librelog. Please try again."
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Couldn't save your new badges."
-msgstr "Couldn't save your new badges."
 
 #: src/settings/ai/stt/speech-engine.tsx
 msgid "CPU"
@@ -2073,6 +2016,14 @@ msgstr "Date-specific snapshot"
 #: src/chat/components/message/tool/search-meetings.tsx
 msgid "Date: {dateBounds}"
 msgstr "Date: {dateBounds}"
+
+#: src/settings/stats/dictation-section.tsx
+msgid "Day streak"
+msgstr "Day streak"
+
+#: src/settings/stats/dictation-section.tsx
+msgid "Days with dictations"
+msgstr "Days with dictations"
 
 #: src/chat/components/message/tool/edit-summary.tsx
 #: src/edit/tab-content.tsx
@@ -2225,6 +2176,7 @@ msgid "Devices"
 msgstr "Devices"
 
 #: src/settings/dictation.tsx
+#: src/settings/stats/dictation-section.tsx
 #: src/sidebar/settings-nav-groups.ts
 msgid "Dictation"
 msgstr "Dictation"
@@ -2241,6 +2193,14 @@ msgstr "Dictation history"
 #: src/dictation/history/page.tsx
 msgid "Dictation history is off. Choose how long to keep dictations to start saving them."
 msgstr "Dictation history is off. Choose how long to keep dictations to start saving them."
+
+#: src/settings/stats/dictation-section.tsx
+msgid "Dictation history is off. Turn it on in Settings > Dictation history to see statistics here."
+msgstr "Dictation history is off. Turn it on in Settings > Dictation history to see statistics here."
+
+#: src/settings/dictation-indicator.tsx
+msgid "Dictation indicator"
+msgstr "Dictation indicator"
 
 #: src/i18n/external-messages.ts
 msgid "Dictation is unavailable in password fields and while Secure Keyboard Entry is on."
@@ -2267,6 +2227,7 @@ msgid "Dictation uses your microphone, transcription provider, languages, and di
 msgstr "Dictation uses your microphone, transcription provider, languages, and dictionary. Your history keeps dictations on this computer for as long as you choose, and their recordings only if you turn on Keep dictation audio; otherwise each recording is deleted after transcription. With history off, only your last dictation is kept, in memory, until dictation is turned off or Librelog closes."
 
 #: src/dictation/history/page.tsx
+#: src/settings/stats/dictation-section.tsx
 msgid "Dictations"
 msgstr "Dictations"
 
@@ -2712,10 +2673,6 @@ msgstr "Failed to install update: {error}"
 msgid "Failed to update this proposal."
 msgstr "Failed to update this proposal."
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Familiar Face"
-msgstr "Familiar Face"
-
 #: src/templates/template-sidebar.tsx
 msgid "Favorite"
 msgstr "Favorite"
@@ -2758,10 +2715,6 @@ msgstr "Find key decisions."
 msgid "Finding the focused field timed out. Enable accessibility in the target app."
 msgstr "Finding the focused field timed out. Enable accessibility in the target app."
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Finding Your Rhythm"
-msgstr "Finding Your Rhythm"
-
 #: src/dictation/paste-last.tsx
 msgid "Finish dictating before pasting your last dictation."
 msgstr "Finish dictating before pasting your last dictation."
@@ -2782,10 +2735,6 @@ msgstr "Finish the connection above to use these models."
 #: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Finishing connection…"
 msgstr "Finishing connection…"
-
-#: src/settings/stats/badge-collection.tsx
-msgid "First Words"
-msgstr "First Words"
 
 #: src/settings/ai/llm/builtin.tsx
 msgid "Fits"
@@ -2962,10 +2911,6 @@ msgstr "Go to previous section"
 msgid "Go to recent"
 msgstr "Go to recent"
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Good Listener"
-msgstr "Good Listener"
-
 #: src/settings/ai/stt/speech-engine.tsx
 msgid "GPU"
 msgstr "GPU"
@@ -3050,6 +2995,10 @@ msgstr "Help Librelog read meeting activity"
 #: src/chat/components/body/empty.tsx
 msgid "Hi, I'm Librelog AI. Set up a language model and I'll be ready to help."
 msgstr "Hi, I'm Librelog AI. Set up a language model and I'll be ready to help."
+
+#: src/settings/dictation-indicator.tsx
+msgid "Hidden"
+msgstr "Hidden"
 
 #: src/i18n/native-labels.tsx
 #: src/meeting-float/overlay/live-caption.tsx
@@ -3224,10 +3173,6 @@ msgstr "Include"
 #: src/settings/automations/markdown-export-options.tsx
 msgid "Include meeting ID"
 msgstr "Include meeting ID"
-
-#: src/settings/stats/index.tsx
-msgid "Includes imported transcripts. Deleted conversations are excluded."
-msgstr "Includes imported transcripts. Deleted conversations are excluded."
 
 #: src/settings/general/timezone.tsx
 msgid "India"
@@ -3579,10 +3524,6 @@ msgstr "Listening..."
 msgid "Listening…"
 msgstr "Listening…"
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Little steps worth keeping. Collect them at your own pace."
-msgstr "Little steps worth keeping. Collect them at your own pace."
-
 #: src/settings/ai/stt/index.tsx
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Live"
@@ -3648,10 +3589,6 @@ msgstr "Live transcription stalled"
 msgid "Live transcription won't include {omittedLanguageNames}. Audio is still being saved."
 msgstr "Live transcription won't include {omittedLanguageNames}. Audio is still being saved."
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Living Library"
-msgstr "Living Library"
-
 #: src/shared/brand-loading-view.tsx
 msgid "Loading"
 msgstr "Loading"
@@ -3683,9 +3620,9 @@ msgstr "Loading settings"
 msgid "Loading speakers…"
 msgstr "Loading speakers…"
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Loading your badges…"
-msgstr "Loading your badges…"
+#: src/settings/stats/dictation-section.tsx
+msgid "Loading your dictation statistics…"
+msgstr "Loading your dictation statistics…"
 
 #: src/settings/stats/index.tsx
 msgid "Loading your insights…"
@@ -3890,10 +3827,6 @@ msgstr "Memo edit failed"
 msgid "Memo updated"
 msgstr "Memo updated"
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Memory Keeper"
-msgstr "Memory Keeper"
-
 #: src/session/components/note-input/header-raw.tsx
 msgid "Memos"
 msgstr "Memos"
@@ -4030,6 +3963,10 @@ msgstr "Moscow"
 #: src/settings/stats/insights.tsx
 msgid "Most conversations: {busiestDay}"
 msgstr "Most conversations: {busiestDay}"
+
+#: src/settings/stats/dictation-section.tsx
+msgid "Most-used apps"
+msgstr "Most-used apps"
 
 #: src/settings/general/timezone.tsx
 msgid "Mountain Time"
@@ -4352,6 +4289,10 @@ msgstr "No results found"
 msgid "No results found."
 msgstr "No results found."
 
+#: src/settings/stats/dictation-section.tsx
+msgid "No saved dictations yet. Statistics appear here once you dictate."
+msgstr "No saved dictations yet. Statistics appear here once you dictate."
+
 #: src/settings/stats/insights.tsx
 msgid "No single busiest day"
 msgstr "No single busiest day"
@@ -4484,6 +4425,10 @@ msgstr "Not signed in"
 msgid "Not supported on this platform."
 msgstr "Not supported on this platform."
 
+#: src/settings/dictation-indicator.tsx
+msgid "Notch"
+msgstr "Notch"
+
 #: src/lock/screen.tsx
 msgid "Note is Locked"
 msgstr "Note is Locked"
@@ -4518,6 +4463,10 @@ msgstr "Notes with this subtype will show no subtype."
 #: src/note-types/picker.tsx
 msgid "Nothing here yet."
 msgstr "Nothing here yet."
+
+#: src/settings/dictation-indicator.tsx
+msgid "Nothing is shown; the start and stop sounds, if on, are the only cue."
+msgstr "Nothing is shown; the start and stop sounds, if on, are the only cue."
 
 #: src/settings/general/index.tsx
 #: src/sidebar/settings-nav-groups.ts
@@ -4561,6 +4510,10 @@ msgstr "Older files that differ from your current data were kept as recovery cop
 #: src/sidebar/note-filter-menu.tsx
 msgid "Oldest"
 msgstr "Oldest"
+
+#: src/settings/dictation-indicator.tsx
+msgid "On a MacBook with a notch the indicator grows out of the notch; on other displays it sits at the top."
+msgstr "On a MacBook with a notch the indicator grows out of the notch; on other displays it sits at the top."
 
 #: src/settings/ai/stt/shared.tsx
 msgid "On device"
@@ -6194,10 +6147,6 @@ msgstr "Stop when meeting ends"
 msgid "Storage"
 msgstr "Storage"
 
-#: src/settings/stats/badge-collection.tsx
-msgid "Story Collector"
-msgstr "Story Collector"
-
 #: src/stt/useRunBatch.ts
 msgid "STT connection is not available. Please configure your speech-to-text provider."
 msgstr "STT connection is not available. Please configure your speech-to-text provider."
@@ -6526,6 +6475,26 @@ msgstr "There isn’t enough free disk space for this model."
 msgid "There's no dictation to paste yet."
 msgstr "There's no dictation to paste yet."
 
+#: src/settings/stats/dictation-section.tsx
+msgid "These figures cover every dictation Librelog keeps, until you delete it."
+msgstr "These figures cover every dictation Librelog keeps, until you delete it."
+
+#: src/settings/stats/dictation-section.tsx
+msgid "These figures cover only the dictations Librelog keeps: those from the last 30 days."
+msgstr "These figures cover only the dictations Librelog keeps: those from the last 30 days."
+
+#: src/settings/stats/dictation-section.tsx
+msgid "These figures cover only the dictations Librelog keeps: those from the last 7 days."
+msgstr "These figures cover only the dictations Librelog keeps: those from the last 7 days."
+
+#: src/settings/stats/dictation-section.tsx
+msgid "These figures cover only the dictations Librelog keeps: those from the last day."
+msgstr "These figures cover only the dictations Librelog keeps: those from the last day."
+
+#: src/settings/stats/dictation-section.tsx
+msgid "These figures cover only the dictations still saved. Dictation history is off, so new dictations are not counted."
+msgstr "These figures cover only the dictations still saved. Dictation history is off, so new dictations are not counted."
+
 #: src/chat/components/message/loading.tsx
 msgid "Thinking..."
 msgstr "Thinking..."
@@ -6709,6 +6678,10 @@ msgstr "Too large for this Mac"
 msgid "Too many dictations are waiting to be transcribed. Try again when one finishes."
 msgstr "Too many dictations are waiting to be transcribed. Try again when one finishes."
 
+#: src/settings/dictation-indicator.tsx
+msgid "Top"
+msgstr "Top"
+
 #: src/dictation/history/page.tsx
 msgid "Transcribe again"
 msgstr "Transcribe again"
@@ -6807,7 +6780,6 @@ msgstr "Trigger"
 #: src/onboarding/model-setup.tsx
 #: src/onboarding/permissions.tsx
 #: src/settings/ai/llm/builtin.tsx
-#: src/settings/stats/badge-collection.tsx
 msgid "Try again"
 msgstr "Try again"
 
@@ -7385,6 +7357,10 @@ msgstr "Where and how your meetings become text."
 msgid "Where it runs"
 msgstr "Where it runs"
 
+#: src/settings/dictation-indicator.tsx
+msgid "Where the indicator shows while you dictate."
+msgstr "Where the indicator shows while you dictate."
+
 #: src/settings/dictation-audio.tsx
 msgid "While dictating"
 msgstr "While dictating"
@@ -7404,6 +7380,14 @@ msgstr "Windows could not insert the entire dictation. Check the field before co
 #: src/settings/ai/stt/model-rows.tsx
 msgid "Word timing"
 msgstr "Word timing"
+
+#: src/settings/stats/dictation-section.tsx
+msgid "Words"
+msgstr "Words"
+
+#: src/settings/stats/dictation-section.tsx
+msgid "Words per minute"
+msgstr "Words per minute"
 
 #: src/settings/automations/workflow-builder.tsx
 msgid "Workflow"
@@ -7453,10 +7437,6 @@ msgstr "You can use up to three example summaries."
 #: src/stt/live-transcript-interrupted.ts
 msgid "Your audio is still being saved, and the missing part will be filled in from the recording."
 msgstr "Your audio is still being saved, and the missing part will be filled in from the recording."
-
-#: src/settings/stats/badge-collection.tsx
-msgid "Your badges"
-msgstr "Your badges"
 
 #: src/settings/stats/insights.tsx
 msgid "Your busiest weekdays are tied at {peakCount} conversations each in the selected period."
