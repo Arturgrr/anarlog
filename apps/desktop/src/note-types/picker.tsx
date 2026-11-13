@@ -28,8 +28,15 @@ import {
   useNoteTypes,
 } from "./queries";
 
+// Item values carry the id after a NUL so that equal names stay distinct;
+// only the name may match the search.
 const filterByName = (value: string, search: string) =>
-  value.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()) ? 1 : 0;
+  value
+    .split("\u0000")[0]!
+    .toLocaleLowerCase()
+    .includes(search.trim().toLocaleLowerCase())
+    ? 1
+    : 0;
 
 export function NoteTypePicker({
   value,
@@ -109,6 +116,7 @@ function NoteTypeField({
   const { t } = useLingui();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const selectedName = selected?.name;
   const name = query.trim();
   const canCreate =
     allowCreate &&
@@ -151,7 +159,7 @@ function NoteTypeField({
             type="button"
             role="combobox"
             aria-expanded={open}
-            aria-label={selected ? `${label}: ${selected.name}` : label}
+            aria-label={selected ? t`${label}: ${selectedName}` : label}
             className={cn([
               "flex h-7 min-w-0 flex-1 items-center gap-1 rounded-md px-2 text-left text-sm",
               "hover:bg-hover active:bg-pressed",
