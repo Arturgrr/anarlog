@@ -37,6 +37,7 @@ import { useConfigValue } from "~/shared/config";
 import type { MenuItemDef } from "~/shared/hooks/useNativeContextMenu";
 import { useTimeFormat } from "~/shared/hooks/useTimeFormat";
 import { InteractiveButton } from "~/shared/ui/interactive-button";
+import { openEditNote } from "~/shared/useEditNote";
 import {
   formatSidebarItemTags,
   resolveSidebarItemMeta,
@@ -453,6 +454,14 @@ const SessionItem = memo(
       }
     }, [noteLocked, sessionId]);
 
+    const storeTitle = item.data.title ?? "";
+    const handleEditDetails = useCallback(async () => {
+      if (noteLocked && !noteRevealed && !(await revealLockedNote(sessionId))) {
+        return;
+      }
+      openEditNote({ sessionId, storeTitle });
+    }, [noteLocked, noteRevealed, sessionId, storeTitle]);
+
     const contextMenu = useMemo(() => {
       const menu: MenuItemDef[] = [
         {
@@ -464,6 +473,11 @@ const SessionItem = memo(
           id: "show",
           text: platform() === "macos" ? t`Show in Finder` : t`Show in folder`,
           action: handleShowInFolder,
+        },
+        {
+          id: "edit-details",
+          text: t`Rename and Set Type…`,
+          action: () => void handleEditDetails(),
         },
       ];
       if (authAvailable) {
@@ -485,6 +499,7 @@ const SessionItem = memo(
     }, [
       authAvailable,
       handleDelete,
+      handleEditDetails,
       handleOpenStandaloneWindow,
       handleShowInFolder,
       handleToggleLock,

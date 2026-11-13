@@ -1097,7 +1097,7 @@ msgstr "Can’t transcribe all your languages together."
 #: src/settings/dictionary/index.tsx
 #: src/settings/general/storage/legacy-cleanup.tsx
 #: src/settings/note-types/index.tsx
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 #: src/shared/ui/destructive-confirmation-dialog.tsx
 #: src/sidebar/folder-name-dialog.tsx
 #: src/templates/auto-format-examples-dialog.tsx
@@ -1858,6 +1858,10 @@ msgstr "Could not restore deleted note"
 #: src/settings/automations/index.tsx
 msgid "Could not save the automation draft"
 msgstr "Could not save the automation draft"
+
+#: src/shared/edit-note-dialog.tsx
+msgid "Could not save the changes. Try again."
+msgstr "Could not save the changes. Try again."
 
 #: src/sidebar/folder-name-dialog.tsx
 msgid "Could not save the folder."
@@ -4066,9 +4070,13 @@ msgstr "My automations"
 
 #: src/contacts/details.tsx
 #: src/contacts/organization-details.tsx
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 msgid "Name"
 msgstr "Name"
+
+#: src/shared/edit-note-dialog.tsx
+msgid "Name and type"
+msgstr "Name and type"
 
 #: src/settings/ai/shared/provider-setup-label.tsx
 msgid "Needs a server address"
@@ -5260,6 +5268,10 @@ msgstr "Rename"
 msgid "Rename {0}"
 msgstr "Rename {0}"
 
+#: src/sidebar/timeline/item.tsx
+msgid "Rename and Set Type…"
+msgstr "Rename and Set Type…"
+
 #: src/sidebar/folder-materials.tsx
 msgid "Rename folder"
 msgstr "Rename folder"
@@ -5462,6 +5474,7 @@ msgstr "Sao Paulo"
 
 #: src/settings/dictionary/index.tsx
 #: src/settings/note-types/index.tsx
+#: src/shared/edit-note-dialog.tsx
 #: src/templates/auto-form.tsx
 msgid "Save"
 msgstr "Save"
@@ -6937,7 +6950,7 @@ msgstr "Until it is downloaded, everyone heard through your computer stays one s
 #: src/session/components/outer-header/overflow/export-modal.tsx
 #: src/session/components/title-input.tsx
 #: src/session/title-content.ts
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 #: src/shared/open-note-dialog.tsx
 #: src/sidebar/timeline/item.tsx
 #: src/sidebar/toast/undo-delete-toast.tsx
@@ -7425,7 +7438,7 @@ msgstr "You"
 msgid "You can"
 msgstr "You can"
 
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 msgid "You can leave the name empty and add it later."
 msgstr "You can leave the name empty and add it later."
 

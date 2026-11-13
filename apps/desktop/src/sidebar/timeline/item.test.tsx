@@ -122,6 +122,7 @@ vi.mock("~/shared/config", () => ({
 
 vi.mock("~/store/zustand/live-title", () => ({
   useSessionTitle: () => mocks.storeTitle,
+  hasLiveSessionTitleDraft: () => false,
 }));
 
 vi.mock("~/store/zustand/tabs", () => ({
@@ -172,6 +173,7 @@ vi.mock("~/stt/contexts", () => ({
 
 import { TimelineItemComponent } from "./item";
 
+import { useEditNoteDialog } from "~/shared/useEditNote";
 import { resetSidebarNotes } from "~/sidebar/note-filter";
 
 describe("TimelineItemComponent", () => {
@@ -305,6 +307,21 @@ describe("TimelineItemComponent", () => {
     expect(mocks.windowShow).toHaveBeenCalledWith({
       type: "note",
       value: "session-note-window",
+    });
+  });
+
+  it("opens the name and type dialog for the right-clicked note", async () => {
+    useEditNoteDialog.setState({ request: null });
+    renderSession("session-edit");
+
+    findMenuItem("edit-details")?.action?.();
+
+    await waitFor(() => {
+      expect(useEditNoteDialog.getState().request).toEqual({
+        sessionId: "session-edit",
+        storeTitle: "Note",
+        title: "Note",
+      });
     });
   });
 

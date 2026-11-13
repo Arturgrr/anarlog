@@ -4,8 +4,13 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { events as windowsEvents } from "@anlg/plugin-windows";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
+import { EditNoteDialog } from "./edit-note-dialog";
 import { NewNoteDialog } from "./new-note-dialog";
-import { openNewNote, openNewNoteAndListen } from "./useNewNote";
+import {
+  openNewNote,
+  openNewNoteAndListen,
+  takeTrayMeetingStart,
+} from "./useNewNote";
 
 import { openFoldersFromNavigation } from "~/shared/folders-navigation";
 import { leaveAllOverlayTabs } from "~/shared/leave-overlay-tab";
@@ -30,7 +35,12 @@ export default function MainAppLayout() {
     <>
       <Outlet />
       <UndoDeleteToast />
-      {isMainWindow() ? <NewNoteDialog /> : null}
+      {isMainWindow() ? (
+        <>
+          <NewNoteDialog />
+          <EditNoteDialog />
+        </>
+      ) : null}
     </>
   );
 }
@@ -106,7 +116,7 @@ const useNavigationEvents = () => {
           if (!isMainWindow()) {
             return;
           } else if (payload.tab.state?.autoStart) {
-            openNewNoteAndListen({ behavior: "new" });
+            void takeTrayMeetingStart({ fromClick: true });
           } else {
             openNewNote({ behavior: "new" });
           }
@@ -121,6 +131,9 @@ const useNavigationEvents = () => {
           fn();
         } else {
           unlistenOpenTab = fn;
+          // A menu bar start sent while this window was loading, rebuilding
+          // or behind the app lock had no listener to reach.
+          if (isMainWindow()) void takeTrayMeetingStart({ fromClick: false });
         }
       });
 

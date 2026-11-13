@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-take-pending-tray-start"
+description = "Enables the take_pending_tray_start command without any pre-configured scope."
+commands.allow = ["take_pending_tray_start"]
+
+[[permission]]
+identifier = "deny-take-pending-tray-start"
+description = "Denies the take_pending_tray_start command without any pre-configured scope."
+commands.deny = ["take_pending_tray_start"]

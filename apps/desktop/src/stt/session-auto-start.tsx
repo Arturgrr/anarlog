@@ -7,6 +7,10 @@ import { useAppLock } from "~/lock/store";
 import { useSession } from "~/session/queries";
 import { useLatestRef } from "~/shared/hooks/useLatestRef";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
+import {
+  AUTO_START_TIMEOUT_MS,
+  notifyAutoStartSettled,
+} from "~/stt/auto-start-events";
 import { useListener } from "~/stt/contexts";
 import { useStartListeningState } from "~/stt/useStartListening";
 
@@ -37,6 +41,7 @@ export function SessionAutoStart({ sessionId }: { sessionId: string }) {
 function AbandonedSessionAutoStart({ sessionId }: { sessionId: string }) {
   useMountEffect(() => {
     clearPendingAutoStart(sessionId);
+    notifyAutoStartSettled(sessionId);
   });
 
   return null;
@@ -44,7 +49,10 @@ function AbandonedSessionAutoStart({ sessionId }: { sessionId: string }) {
 
 function PendingSessionAutoStart({ sessionId }: { sessionId: string }) {
   useMountEffect(() => {
-    const timeout = setTimeout(() => clearPendingAutoStart(sessionId), 30_000);
+    const timeout = setTimeout(
+      () => clearPendingAutoStart(sessionId),
+      AUTO_START_TIMEOUT_MS,
+    );
     return () => clearTimeout(timeout);
   });
 
@@ -59,7 +67,10 @@ function ReadySessionAutoStart({ sessionId }: { sessionId: string }) {
   const attemptedRef = useRef(false);
 
   useMountEffect(() => {
-    const timeout = setTimeout(() => clearPendingAutoStart(sessionId), 30_000);
+    const timeout = setTimeout(
+      () => clearPendingAutoStart(sessionId),
+      AUTO_START_TIMEOUT_MS,
+    );
     return () => clearTimeout(timeout);
   });
 
@@ -102,6 +113,9 @@ function StartSessionAutoStart({
         if (cancelled) return;
         clearPendingAutoStart(sessionId);
         console.error("[listener] failed to auto-start session", error);
+      })
+      .finally(() => {
+        if (captureStarted) notifyAutoStartSettled(sessionId);
       });
 
     return () => {

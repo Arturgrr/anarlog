@@ -45,3 +45,11 @@ pub async fn set_tray_recording_title(
         .set_recording_title(title)
         .map_err(|error| error.to_string())
 }
+
+/// Claims a "Start a new meeting" click from the menu bar icon. Returns true
+/// once per click, so it starts one recording however many times it is asked.
+#[tauri::command]
+#[specta::specta]
+pub async fn take_pending_tray_start() -> Result<bool, String> {
+    Ok(crate::menu_items::TrayStart::take_pending_start())
+}

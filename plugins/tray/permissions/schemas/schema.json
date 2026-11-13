@@ -343,10 +343,22 @@
           "markdownDescription": "Denies the set_tray_recording_title command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-recording-title`",
+          "description": "Enables the take_pending_tray_start command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-take-pending-tray-start",
+          "markdownDescription": "Enables the take_pending_tray_start command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the take_pending_tray_start command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-take-pending-tray-start",
+          "markdownDescription": "Denies the take_pending_tray_start command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-recording-title`\n- `allow-take-pending-tray-start`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-recording-title`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-recording-title`\n- `allow-take-pending-tray-start`"
         }
       ]
     }
