@@ -4,10 +4,11 @@ import { useState } from "react";
 import { cn } from "@anlg/utils";
 
 import { summarizeActivity } from "./activity";
-import { BadgeCollection } from "./badge-collection";
 import { DateRangeFilter } from "./date-range";
+import { DictationSection } from "./dictation-section";
 import { ConversationPatterns } from "./insights";
 import { useActivity } from "./queries";
+import { StatCard } from "./stat-card";
 import { Tracker } from "./tremor/tracker";
 
 import { SettingsPageTitle } from "~/settings/page-title";
@@ -176,30 +177,15 @@ export function SettingsInsights() {
             </div>
           </section>
 
-          <BadgeCollection
-            records={activity.data ?? []}
-            now={now}
-            timezone={timezone}
-            weekStartsOn={weekStartsOn}
-          />
           <p className="text-muted-foreground text-xs">
             <Trans>
-              Includes imported transcripts. Deleted conversations are excluded.
+              Conversation figures include imported transcripts and exclude
+              deleted conversations.
             </Trans>
           </p>
         </>
       )}
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-card shadow-raised rounded-lg p-4">
-      <dt className="text-muted-foreground text-xs">{label}</dt>
-      <dd className="mt-2 text-3xl font-medium tracking-tight tabular-nums">
-        {value}
-      </dd>
+      <DictationSection />
     </div>
   );
 }

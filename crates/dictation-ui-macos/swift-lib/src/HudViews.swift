@@ -6,37 +6,20 @@ enum HudLayout {
   /// Hex's HUD window on macOS: room for the scope's widest plate and its
   /// drop shadow, with the plate in the middle.
   static let scopeSize = NSSize(width: 320, height: 128)
-  /// Wide enough for the live text plate under the HUD (Hex's live text
+  /// Wide enough for the live text plate beside the HUD (Hex's live text
   /// overlay is 560 pt wide).
   static let panelWidth: CGFloat = 560
-  /// The plate's gap under the menu bar: as close as it sits and still reads
-  /// as its own thing.
-  static let topOffset: CGFloat = 6
-  static let liveTextGap: CGFloat = 6
-  static let liveTextHeight: CGFloat = 32
+  static let liveTextHeight = HudPlacement.liveTextHeight
   static let liveTextPadding: CGFloat = 14
   static let liveTextMaxWidth = panelWidth - 8
   /// How often a shown HUD moves to the screen under the pointer.
   static let followInterval: TimeInterval = 0.25
-  /// `NSStatusWindowLevel`, as Hex's.
+  /// `NSStatusWindowLevel`, as Hex's; one above while the panel covers the
+  /// menu bar, over its status items and under their menus.
   static let level = NSWindow.Level(rawValue: 25)
+  static let overMenuBarLevel = NSWindow.Level(rawValue: 26)
 
   static var panelSize: NSSize { NSSize(width: panelWidth, height: scopeSize.height) }
-
-  /// Below the menu bar on `frame`'s screen, horizontally centred: the plate's
-  /// top 6 pt under the menu bar, or under the notch where a full-screen
-  /// space hides the menu bar.
-  static func panelOrigin(frame: NSRect, visibleFrame: NSRect, safeTop: CGFloat) -> NSPoint {
-    let plateTop = min(visibleFrame.maxY, frame.maxY - safeTop) - topOffset
-    let plateMiddle = plateTop - CGFloat(HudTuning.height) / 2
-    return NSPoint(x: frame.midX - panelWidth / 2, y: plateMiddle - scopeSize.height / 2)
-  }
-
-  /// The live text plate's top edge in the panel (y up), `liveTextGap` past
-  /// the HUD's plate.
-  static var liveTextTop: CGFloat {
-    scopeSize.height / 2 - CGFloat(HudTuning.height) / 2 - liveTextGap
-  }
 }
 
 /// A click-through panel that never takes focus, over other apps' windows
@@ -58,7 +41,9 @@ final class HudPanel: NSPanel {
     sharingType = .none
     isReleasedWhenClosed = false
     animationBehavior = .none
-    collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+    collectionBehavior = [
+      .canJoinAllSpaces, .canJoinAllApplications, .fullScreenAuxiliary, .stationary, .ignoresCycle,
+    ]
   }
 
   override var canBecomeKey: Bool { false }
@@ -117,7 +102,7 @@ final class HudMetalView: NSView {
   }
 }
 
-/// Hex's live text plate (Labs): one line under the HUD with what the
+/// Hex's live text plate (Labs): one line beside the HUD with what the
 /// dictation has said so far. The newest words stay in view; the start gives
 /// way with "…".
 final class HudLiveTextView: NSView {
@@ -140,9 +125,11 @@ final class HudLiveTextView: NSView {
     fatalError("init(coder:) has not been implemented")
   }
 
-  /// Shows `stable` then `tentative` centred on `centerX`, or hides the
-  /// plate when there are no words.
-  func show(stable: String, tentative: String, dark: Bool, centerX: CGFloat, scale: CGFloat) {
+  /// Shows `stable` then `tentative` centred on `centerX` with its bottom
+  /// edge at `y`, or hides the plate when there are no words.
+  func show(
+    stable: String, tentative: String, dark: Bool, centerX: CGFloat, y: CGFloat, scale: CGFloat
+  ) {
     let stable = stable.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !stable.isEmpty || !tentative.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     else {
@@ -166,9 +153,7 @@ final class HudLiveTextView: NSView {
     let padding = HudLayout.liveTextPadding
     let width = min(ceil(text.size().width) + 2 + padding * 2, HudLayout.liveTextMaxWidth)
     let height = HudLayout.liveTextHeight
-    frame = NSRect(
-      x: (centerX - width / 2).rounded(), y: HudLayout.liveTextTop - height, width: width,
-      height: height)
+    frame = NSRect(x: (centerX - width / 2).rounded(), y: y, width: width, height: height)
     let labelHeight = ceil(label.fittingSize.height)
     label.frame = NSRect(
       x: padding, y: ((height - labelHeight) / 2).rounded(), width: width - padding * 2,

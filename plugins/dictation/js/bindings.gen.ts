@@ -189,9 +189,10 @@ preventSleep: boolean }
  */
 export type HudEvent = 
 /**
- * A recording starts: the HUD appears and follows the microphone.
+ * A recording starts: the HUD appears where `position` says and follows
+ * the microphone. Builds that send no position mean the top.
  */
-{ type: "started" } | 
+{ type: "started"; position?: HudPosition } | 
 /**
  * The recording ended and its text is on the way.
  */
@@ -204,6 +205,27 @@ export type HudEvent =
  * The live preview's words so far, shown beside the HUD while recording.
  */
 { type: "preview"; stable: string; tentative: string }
+/**
+ * Where the dictation HUD shows, from the dictation settings.
+ */
+export type HudPosition = 
+/**
+ * Below the menu bar, or at the top of the work area.
+ */
+"top" | 
+/**
+ * Above the Dock, or at the bottom of the work area.
+ */
+"bottom" | 
+/**
+ * Nothing shows, not even the live text.
+ */
+"hidden" | 
+/**
+ * Out of a MacBook's notch; as `Top` on a screen without one and off
+ * macOS.
+ */
+"notch"
 export type ListenParams = { model?: string | null; channels?: number; sample_rate?: number; languages?: string[]; keywords?: string[]; num_speakers?: number | null; min_speakers?: number | null; max_speakers?: number | null; mic_num_speakers?: number | null; custom_query?: Partial<{ [key in string]: string }> | null }
 /**
  * Whether macOS lets this app pause and resume a media player, under

@@ -335,6 +335,9 @@ final class HudScope {
       fail: min(max(fail.x, 0), 1))
   }
 
+  /// The voice's smoothed level, 0 to 1, for the notch indicator's bars.
+  var voiceLevel: Float { min(max(voices[0].level, 0), 1) }
+
   /// Whether the scope has faded out after being hidden.
   var settled: Bool {
     opacity.target == 0 && opacity.x < 0.002

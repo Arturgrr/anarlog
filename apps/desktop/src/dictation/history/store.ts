@@ -83,9 +83,12 @@ export function normalizeRetention(value: unknown): DictationHistoryRetention {
 }
 
 /** Entries created before this are expired; null keeps every entry. */
-function retentionCutoff(retention: DictationHistoryRetention) {
+export function retentionCutoff(
+  retention: DictationHistoryRetention,
+  now = Date.now(),
+) {
   const age = RETENTION_MS[retention];
-  return age === undefined ? null : new Date(Date.now() - age).toISOString();
+  return age === undefined ? null : new Date(now - age).toISOString();
 }
 
 async function loadSettings() {
