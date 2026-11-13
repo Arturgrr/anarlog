@@ -21,6 +21,11 @@ const hoisted = vi.hoisted(() => ({
   setStoreTitle: vi.fn((_title?: string) => Promise.resolve()),
   setLiveTitle: vi.fn(),
   storeTitle: "Untitled" as string | undefined,
+  toastError: vi.fn(),
+}));
+
+vi.mock("@anlg/ui/components/ui/toast", () => ({
+  toast: { error: hoisted.toastError },
 }));
 
 vi.mock("usehooks-ts", () => ({
@@ -322,6 +327,20 @@ describe("TitleInput", () => {
       ).toBe("founders sync");
     },
   );
+
+  it("keeps the typed title and reports the failure when a rename fails", async () => {
+    hoisted.setStoreTitle.mockRejectedValueOnce(new Error("database locked"));
+    renderTitleInput();
+
+    const input = screen.getByPlaceholderText("Untitled") as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "Customer call" } });
+    fireEvent.blur(input);
+
+    await waitFor(() => expect(hoisted.toastError).toHaveBeenCalled());
+    expect(input.value).toBe("Customer call");
+    expect(hoisted.clearLiveTitle).not.toHaveBeenCalled();
+  });
 
   it("does not persist an unedited title on blur", () => {
     hoisted.storeTitle = "founders sync";

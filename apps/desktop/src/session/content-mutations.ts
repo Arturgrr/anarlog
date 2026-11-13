@@ -121,18 +121,38 @@ export function applyGeneratedSessionTitle({
   nextTitle: string;
   documents: SessionDocumentContentUpdate[];
 }): Promise<void> {
-  return enqueueDatabaseWrite(`session:${sessionId}`, async () => {
-    const result = await templateCommands.saveGeneratedTitle({
-      session_id: sessionId,
-      current_title: currentTitle,
-      next_title: nextTitle,
-      documents: documents.map((document) => ({
-        id: document.id,
-        current_body: document.currentContent,
-        current_body_format: document.currentContentFormat,
-        next_body: document.nextContent,
-      })),
-    });
-    if (result.status === "error") throw new Error(result.error);
+  return enqueueDatabaseWrite(`session:${sessionId}`, () =>
+    saveSessionTitleWithDocuments({
+      sessionId,
+      currentTitle,
+      nextTitle,
+      documents,
+    }),
+  );
+}
+
+// Callers must already hold the `session:<id>` write queue.
+export async function saveSessionTitleWithDocuments({
+  sessionId,
+  currentTitle,
+  nextTitle,
+  documents,
+}: {
+  sessionId: string;
+  currentTitle: string;
+  nextTitle: string;
+  documents: SessionDocumentContentUpdate[];
+}): Promise<void> {
+  const result = await templateCommands.saveGeneratedTitle({
+    session_id: sessionId,
+    current_title: currentTitle,
+    next_title: nextTitle,
+    documents: documents.map((document) => ({
+      id: document.id,
+      current_body: document.currentContent,
+      current_body_format: document.currentContentFormat,
+      next_body: document.nextContent,
+    })),
   });
+  if (result.status === "error") throw new Error(result.error);
 }

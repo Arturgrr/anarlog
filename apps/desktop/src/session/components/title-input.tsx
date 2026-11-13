@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useResizeObserver } from "usehooks-ts";
 
+import { toast } from "@anlg/ui/components/ui/toast";
 import { cn } from "@anlg/utils";
 
 import { useTitleGenerating } from "~/ai/hooks";
@@ -131,7 +132,6 @@ const TitleInputInner = memo(
       const editRevisionRef = useRef(0);
       const setLiveTitle = useLiveTitle((s) => s.setTitle);
       const markLiveTitlePersisted = useLiveTitle((s) => s.markTitlePersisted);
-      const clearLiveTitle = useLiveTitle((s) => s.clearTitle);
       const title = draftTitle ?? storeTitle ?? "";
 
       const updateOverflowState = useCallback(
@@ -255,28 +255,19 @@ const TitleInputInner = memo(
         (value: string) => {
           const editRevision = editRevisionRef.current;
           const previousTitle = storeTitle;
-          return setStoreTitle(value)
-            .then(() => {
+          return setStoreTitle(value).then(
+            () => {
               if (editRevisionRef.current !== editRevision) return;
               markLiveTitlePersisted(sessionId, value, previousTitle);
-            })
-            .catch((error) => {
-              console.error("[title-input] failed to persist title", error);
-              if (editRevisionRef.current !== editRevision) return;
-              clearLiveTitle(sessionId);
-            })
-            .finally(() => {
-              if (editRevisionRef.current !== editRevision) return;
               setDraftTitle(null);
-            });
+            },
+            (error) => {
+              console.error("[title-input] failed to persist title", error);
+              toast.error(t`Could not rename the note.`);
+            },
+          );
         },
-        [
-          clearLiveTitle,
-          markLiveTitlePersisted,
-          sessionId,
-          setStoreTitle,
-          storeTitle,
-        ],
+        [markLiveTitlePersisted, sessionId, setStoreTitle, storeTitle, t],
       );
 
       const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

@@ -142,6 +142,29 @@ export async function loadPendingAutoEnhanceJobs(): Promise<
   }));
 }
 
+export async function loadPendingAutoEnhanceNote(
+  sessionId: string,
+): Promise<{ noteId: string; body: string } | null> {
+  const rows = await liveQueryClient.execute<{
+    note_id: unknown;
+    body: unknown;
+  }>(
+    `
+      SELECT
+        json_extract(value_json, '$.noteId') AS note_id,
+        json_extract(value_json, '$.body') AS body
+      FROM app_settings
+      WHERE id = ? AND json_valid(value_json)
+      LIMIT 1
+    `,
+    [`${PENDING_AUTO_ENHANCE_SETTING_PREFIX}${sessionId}`],
+  );
+  const row = rows[0];
+  return row && typeof row.note_id === "string" && typeof row.body === "string"
+    ? { noteId: row.note_id, body: row.body }
+    : null;
+}
+
 export function discardPendingAutoEnhanceJob(
   job: PendingAutoEnhanceJob,
 ): Promise<void> {
