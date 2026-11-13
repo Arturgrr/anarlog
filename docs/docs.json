@@ -19,6 +19,7 @@
         "pages": [
           "meetings",
           "dictation",
+          "annotate",
           "automatic-capture",
           "import-recordings",
           "notes",
