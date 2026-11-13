@@ -15,6 +15,7 @@ import {
   updateSummaryDocumentTitleIfCurrent,
 } from "./storage";
 
+import { getWorkflowSummaryTemplateId } from "~/automations/summary-template";
 import { retryDatabaseLock } from "~/db/retry";
 import {
   loadSessionContentSnapshot,
@@ -92,7 +93,8 @@ function shouldHydrateTemplateTitle(
   );
 }
 
-function resolveTemplateId(
+async function resolveTemplateId(
+  sessionId: string,
   opts: EnhanceOpts | undefined,
   getSelectedTemplateId: () => string | undefined,
   memoTemplateId?: string,
@@ -105,7 +107,20 @@ function resolveTemplateId(
     return opts.templateId || undefined;
   }
 
-  return memoTemplateId || getSelectedTemplateId();
+  if (memoTemplateId) {
+    return memoTemplateId;
+  }
+
+  try {
+    const workflowTemplateId = await getWorkflowSummaryTemplateId(sessionId);
+    if (workflowTemplateId) {
+      return workflowTemplateId;
+    }
+  } catch (error) {
+    console.error("[enhancer] failed to read automation template", error);
+  }
+
+  return getSelectedTemplateId();
 }
 
 let instance: EnhancerService | null = null;
@@ -194,7 +209,8 @@ export class EnhancerService {
   ): Promise<QueueEmptySummaryResult> {
     return retryDatabaseLock(async () => {
       const snapshot = await this.loadSession(sessionId);
-      const templateId = resolveTemplateId(
+      const templateId = await resolveTemplateId(
+        sessionId,
         undefined,
         this.deps.getSelectedTemplateId,
         snapshot.rawTemplateId,
@@ -236,7 +252,8 @@ export class EnhancerService {
     if (mode !== "if_empty") {
       const pendingAutoEnhance = await retryDatabaseLock(async () => {
         const snapshot = await this.loadSession(sessionId);
-        const selectedTemplateId = resolveTemplateId(
+        const selectedTemplateId = await resolveTemplateId(
+          sessionId,
           undefined,
           this.deps.getSelectedTemplateId,
           snapshot.rawTemplateId,
@@ -477,7 +494,8 @@ export class EnhancerService {
       return { type: "too_short" };
     }
 
-    let templateId = resolveTemplateId(
+    let templateId = await resolveTemplateId(
+      sessionId,
       opts,
       getSelectedTemplateId,
       snapshot.rawTemplateId,

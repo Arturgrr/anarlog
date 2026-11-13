@@ -99,6 +99,28 @@ export function ensureFirstLineTitle(
   return { ...content, content: [titleBlock, ...blocks] };
 }
 
+export function replaceFirstLineTitle(
+  content: JSONContent,
+  previousTitle: string,
+  nextTitle: string,
+): JSONContent | null {
+  const [firstBlock, ...rest] = content.content ?? [];
+  const trimmedNext = nextTitle.trim();
+  if (
+    firstBlock?.type !== "heading" ||
+    firstBlock.attrs?.level !== 1 ||
+    collectText(firstBlock).trim() !== previousTitle.trim() ||
+    collectText(firstBlock).trim() === trimmedNext
+  ) {
+    return null;
+  }
+
+  const titleBlock = trimmedNext
+    ? buildTitleBlock(trimmedNext)
+    : { type: "heading", attrs: { level: 1 } };
+  return { ...content, content: [titleBlock, ...rest] };
+}
+
 function buildTitleBlock(title: string): JSONContent {
   return {
     type: "heading",

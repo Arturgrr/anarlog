@@ -10,6 +10,7 @@ import {
   FolderSimple,
   Gear,
   Lightning,
+  ListBullets,
   type Icon,
   Lock,
   Microphone,
@@ -94,6 +95,7 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
           icon: Lightning,
           destination: { type: "automations" },
         },
+        { id: "note-types", label: t`Note types`, icon: ListBullets },
       ],
     },
     {

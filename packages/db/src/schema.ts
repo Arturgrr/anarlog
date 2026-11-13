@@ -207,6 +207,8 @@ export const sessions = sqliteTable(
     metadataJson: text("metadata_json").notNull().default("{}"),
     shareActivationJson: text("share_activation_json").notNull().default("{}"),
     deletionContext: text("deletion_context").notNull().default(""),
+    noteTypeId: text("note_type_id").notNull().default(""),
+    noteSubtypeId: text("note_subtype_id").notNull().default(""),
     deletedAt: text("deleted_at"),
   },
   (table) => [
@@ -443,6 +445,22 @@ export const folders = sqliteTable(
     deletedAt: text("deleted_at"),
   },
   (table) => [index("idx_folders_path").on(table.path)],
+);
+
+export const noteTypes = sqliteTable(
+  "note_types",
+  {
+    id: text("id").primaryKey().notNull(),
+    parentId: text("parent_id").notNull().default(""),
+    name: text("name").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at").notNull().default(currentTimestamp),
+    updatedAt: text("updated_at").notNull().default(currentTimestamp),
+    deletedAt: text("deleted_at"),
+  },
+  (table) => [
+    index("idx_note_types_parent").on(table.parentId, table.sortOrder),
+  ],
 );
 
 export const folderAttachments = sqliteTable(

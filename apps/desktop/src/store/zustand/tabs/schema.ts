@@ -47,6 +47,7 @@ export type SettingsTab =
   | "dictionary"
   | "dictation"
   | "dictation-history"
+  | "note-types"
   | "transcription"
   | "intelligence"
   | "todo";
@@ -65,6 +66,7 @@ const normalizeSettingsTab = (tab: string | null | undefined): SettingsTab => {
     case "dictionary":
     case "dictation":
     case "dictation-history":
+    case "note-types":
     case "transcription":
     case "intelligence":
     case "todo":

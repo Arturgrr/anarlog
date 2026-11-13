@@ -11,11 +11,11 @@ vi.mock("~/session/queries", () => ({
 
 import {
   openSessionAndListen,
-  useNewNote,
   useNewNoteAndListen,
+  useNewNoteDialog,
 } from "./useNewNote";
 
-import { resetSidebarNotes, useSidebarNotes } from "~/sidebar/note-filter";
+import { resetSidebarNotes } from "~/sidebar/note-filter";
 import { listenerStore } from "~/store/zustand/listener/instance";
 import { useTabs } from "~/store/zustand/tabs";
 import { resetTabsStore } from "~/store/zustand/tabs/test-utils";
@@ -27,36 +27,7 @@ beforeEach(() => {
   listenerStore.setState(listenerStore.getInitialState(), true);
 });
 
-it("creates a note in the active sidebar folder", async () => {
-  mocks.createSession.mockResolvedValueOnce("folder-session");
-  useSidebarNotes.getState().setView("mine", "CS 101");
-  const { result } = renderHook(() => useNewNote());
-
-  act(() => result.current());
-
-  await vi.waitFor(() => {
-    expect(mocks.createSession).toHaveBeenCalledWith("", undefined, {
-      folder_id: "CS 101",
-    });
-  });
-});
-
-it("can open a listening note without a listener provider", async () => {
-  mocks.createSession.mockResolvedValueOnce("new-session");
-  const { result } = renderHook(() => useNewNoteAndListen());
-
-  act(() => result.current());
-
-  await vi.waitFor(() => {
-    expect(useTabs.getState().currentTab).toMatchObject({
-      type: "sessions",
-      id: "new-session",
-      state: { autoStart: true },
-    });
-  });
-});
-
-it("reads the current live session when the handler runs", () => {
+it("opens the live note instead of asking for a new one while recording", () => {
   const { result } = renderHook(() => useNewNoteAndListen());
 
   listenerStore.setState((state) => ({
@@ -73,6 +44,7 @@ it("reads the current live session when the handler runs", () => {
     type: "sessions",
     id: "live-session",
   });
+  expect(useNewNoteDialog.getState().request).toBeNull();
 });
 
 it("does not rearm auto-start when opening the active live session", () => {

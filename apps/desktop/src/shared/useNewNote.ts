@@ -1,17 +1,73 @@
 import { useCallback } from "react";
-import { useShallow } from "zustand/shallow";
+import { create } from "zustand";
 
-import { createSession } from "~/session/queries";
+import {
+  type NoteTypeSelection,
+  setSessionNoteType,
+} from "~/note-types/queries";
+import { createSessionReportingFolder } from "~/session/queries";
 import { folderIdForNewNote, useSidebarNotes } from "~/sidebar/note-filter";
 import { listenerStore } from "~/store/zustand/listener/instance";
 import { useTabs } from "~/store/zustand/tabs";
 
-function createNoteSession() {
+export type NewNoteRequest = {
+  record: boolean;
+  behavior: "new" | "current";
+  folderId: string | undefined;
+};
+
+export const useNewNoteDialog = create<{
+  request: NewNoteRequest | null;
+  close: () => void;
+}>((set) => ({
+  request: null,
+  close: () => set({ request: null }),
+}));
+
+function requestNewNote({
+  record,
+  behavior,
+}: {
+  record: boolean;
+  behavior: "new" | "current";
+}) {
   const { noteFilter, folderFilter } = useSidebarNotes.getState();
-  const folderId = folderIdForNewNote(noteFilter, folderFilter);
-  return folderId === undefined
-    ? createSession()
-    : createSession("", undefined, { folder_id: folderId });
+  useNewNoteDialog.setState({
+    request: {
+      record,
+      behavior,
+      folderId: folderIdForNewNote(noteFilter, folderFilter),
+    },
+  });
+}
+
+export async function createRequestedNote(
+  request: NewNoteRequest,
+  { title, noteType }: { title: string; noteType: NoteTypeSelection },
+) {
+  const { sessionId, folderError } =
+    request.folderId === undefined
+      ? await createSessionReportingFolder(title)
+      : await createSessionReportingFolder(title, undefined, {
+          folder_id: request.folderId,
+        });
+
+  const typeError = noteType.typeId
+    ? await setSessionNoteType(sessionId, noteType).then(
+        () => null,
+        (error: unknown) => error,
+      )
+    : null;
+
+  if (request.record) {
+    openSessionAndListen(sessionId, { behavior: request.behavior });
+  } else {
+    const { openNew, openCurrent } = useTabs.getState();
+    const open = request.behavior === "new" ? openNew : openCurrent;
+    open({ type: "sessions", id: sessionId });
+  }
+
+  return { sessionId, typeError, folderError };
 }
 
 export function useNewNote({
@@ -19,25 +75,10 @@ export function useNewNote({
 }: {
   behavior?: "new" | "current";
 } = {}) {
-  const { openNew, openCurrent } = useTabs(
-    useShallow((state) => ({
-      openNew: state.openNew,
-      openCurrent: state.openCurrent,
-    })),
+  return useCallback(
+    () => requestNewNote({ record: false, behavior }),
+    [behavior],
   );
-
-  const handler = useCallback(() => {
-    const ff = behavior === "new" ? openNew : openCurrent;
-    void createNoteSession()
-      .then((sessionId) => {
-        ff({ type: "sessions", id: sessionId });
-      })
-      .catch((error) => {
-        console.error("[session] failed to create note", error);
-      });
-  }, [openNew, openCurrent, behavior]);
-
-  return handler;
 }
 
 export function useNewNoteAndListen({
@@ -45,12 +86,15 @@ export function useNewNoteAndListen({
 }: {
   behavior?: "new" | "current";
 } = {}) {
-  const handler = useCallback(
-    () => openNewNoteAndListen({ behavior }),
-    [behavior],
-  );
+  return useCallback(() => openNewNoteAndListen({ behavior }), [behavior]);
+}
 
-  return handler;
+export function openNewNote({
+  behavior = "new",
+}: {
+  behavior?: "new" | "current";
+} = {}) {
+  requestNewNote({ record: false, behavior });
 }
 
 export function openNewNoteAndListen({
@@ -67,13 +111,7 @@ export function openNewNoteAndListen({
     return;
   }
 
-  void createNoteSession()
-    .then((sessionId) => {
-      openSessionAndListen(sessionId, { behavior });
-    })
-    .catch((error) => {
-      console.error("[session] failed to create listening note", error);
-    });
+  requestNewNote({ record: true, behavior });
 }
 
 export function openSessionAndListen(

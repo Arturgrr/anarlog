@@ -1,6 +1,10 @@
 import { useMemo } from "react";
 
-import type { RenderTranscriptRequest } from "@anlg/plugin-transcription";
+import type {
+  RenderTranscriptHuman,
+  RenderTranscriptRequest,
+  SpeakerContext,
+} from "@anlg/plugin-transcription";
 
 import {
   type TranscriptRecord,
@@ -68,19 +72,49 @@ export async function getSessionTranscriptRenderRequest(
     getSessionParticipantHumanIds(sessionId),
     getSpeakerContext(sessionId),
   ]);
-  const transcriptRows = toTranscriptRows(transcripts).map(({ row }) => row);
-  const selfHumanId = transcripts[0]?.ownerUserId;
   const humans = await getTranscriptHumans(
-    collectRenderHumanIds(
-      participantHumanIds,
-      collectAssignedHumanIdsFromTranscriptRows(transcriptRows),
-      selfHumanId,
+    getTranscriptRecordsRenderHumanIds(transcripts, participantHumanIds),
+  );
+
+  return buildTranscriptRecordsRenderRequest(
+    transcripts,
+    participantHumanIds,
+    humans,
+    speakerContext,
+  );
+}
+
+export function getTranscriptRecordsRenderHumanIds(
+  transcripts: readonly TranscriptRecord[],
+  participantHumanIds: readonly string[],
+): string[] {
+  return collectRenderHumanIds(
+    participantHumanIds,
+    collectAssignedHumanIdsFromTranscriptRows(
+      toTranscriptRows(transcripts).map(({ row }) => row),
     ),
+    transcripts[0]?.ownerUserId,
+  );
+}
+
+// `humans` may cover more people than these transcripts mention; keeping only
+// theirs makes the request match the one the transcript view renders.
+export function buildTranscriptRecordsRenderRequest(
+  transcripts: readonly TranscriptRecord[],
+  participantHumanIds: string[],
+  humans: readonly RenderTranscriptHuman[],
+  speakerContext?: SpeakerContext,
+): RenderTranscriptRequest | null {
+  const humanIds = new Set(
+    getTranscriptRecordsRenderHumanIds(transcripts, participantHumanIds),
   );
 
   return buildRenderTranscriptRequestFromRows(
-    transcriptRows,
-    { humans, selfHumanId },
+    toTranscriptRows(transcripts).map(({ row }) => row),
+    {
+      humans: humans.filter((human) => humanIds.has(human.human_id)),
+      selfHumanId: transcripts[0]?.ownerUserId,
+    },
     participantHumanIds,
     speakerContext,
   );

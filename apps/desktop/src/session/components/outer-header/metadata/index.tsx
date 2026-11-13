@@ -4,6 +4,7 @@ import {
 } from "@anlg/ui/components/ui/popover";
 
 import { DateEditor } from "./date";
+import { NoteTypeEditor } from "./note-type";
 import { ParticipantsDisplay } from "./participants";
 
 export function MetadataPopoverContent({ sessionId }: { sessionId: string }) {
@@ -26,6 +27,10 @@ function ContentInner({ sessionId }: { sessionId: string }) {
   return (
     <div className="flex min-w-0 flex-col gap-4 p-4">
       <DateEditor sessionId={sessionId} />
+      <div className="flex flex-col gap-2">
+        <div className="bg-accent h-px" />
+        <NoteTypeEditor sessionId={sessionId} />
+      </div>
       <ParticipantsDisplay sessionId={sessionId} />
     </div>
   );

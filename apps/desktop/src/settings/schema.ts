@@ -414,6 +414,11 @@ export const SETTING_DEFINITIONS = {
     path: ["automations", "workflows"],
     default: "[]" as string,
   },
+  automation_workflows_extended: {
+    type: "string",
+    path: ["automations", "workflows_extended"],
+    default: "" as string,
+  },
   automation_markdown_export_enabled: {
     type: "boolean",
     path: ["automations", "markdown_export_enabled"],

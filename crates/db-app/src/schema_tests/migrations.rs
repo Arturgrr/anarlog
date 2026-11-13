@@ -129,6 +129,7 @@ async fn migrations_apply_cleanly() {
             "migration_import_items",
             "migration_import_runs",
             "migration_import_targets",
+            "note_types",
             "organizations",
             "search_index_dirty",
             "search_index_state",

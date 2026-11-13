@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   replaceSummaryDocumentTemplate: vi.fn().mockResolvedValue(undefined),
   updateSummaryDocumentTitleIfCurrent: vi.fn().mockResolvedValue(undefined),
   getTemplateById: vi.fn().mockResolvedValue(null),
+  getWorkflowSummaryTemplateId: vi.fn().mockResolvedValue(undefined),
   listenerSubscribe: vi.fn(),
   listenerGetState: vi.fn(),
 }));
@@ -32,6 +33,10 @@ vi.mock("./storage", () => ({
 
 vi.mock("~/templates/queries", () => ({
   getTemplateById: mocks.getTemplateById,
+}));
+
+vi.mock("~/automations/summary-template", () => ({
+  getWorkflowSummaryTemplateId: mocks.getWorkflowSummaryTemplateId,
 }));
 
 vi.mock("~/store/zustand/listener/instance", () => ({
@@ -213,6 +218,7 @@ describe("EnhancerService", () => {
     mocks.replaceSummaryDocumentTemplate.mockResolvedValue(undefined);
     mocks.updateSummaryDocumentTitleIfCurrent.mockResolvedValue(undefined);
     mocks.getTemplateById.mockResolvedValue(null);
+    mocks.getWorkflowSummaryTemplateId.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -299,6 +305,27 @@ describe("EnhancerService", () => {
       }),
     );
   });
+
+  it.each([
+    { memo: "", expected: "workflow-template" },
+    { memo: "memo-template", expected: "memo-template" },
+  ])(
+    "ranks the automation template between the memo and the global default (memo $memo)",
+    async ({ memo, expected }) => {
+      snapshot = { ...createSnapshot(), rawTemplateId: memo };
+      mocks.getWorkflowSummaryTemplateId.mockResolvedValue("workflow-template");
+      const service = new EnhancerService(
+        createDeps({ getSelectedTemplateId: () => "global-template" }),
+      );
+
+      await service.enhance("session-1");
+
+      expect(mocks.ensureSummaryDocument).toHaveBeenCalledWith(
+        "session-1",
+        expected,
+      );
+    },
+  );
 
   it("returns already_active while the note task is generating", async () => {
     snapshot = createSnapshot({ notes: [createNote()] });

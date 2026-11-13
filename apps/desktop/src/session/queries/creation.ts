@@ -13,6 +13,24 @@ export async function createSession(
     event_json?: string;
   },
 ): Promise<string> {
+  const { sessionId, folderError } = await createSessionReportingFolder(
+    title,
+    userId,
+    initial,
+  );
+  if (folderError) throw folderError;
+  return sessionId;
+}
+
+// The note exists once the command commits, even if its folder then fails
+// to reach the folder catalog, so that failure is returned, not thrown.
+export async function createSessionReportingFolder(
+  title = "",
+  userId = DEFAULT_USER_ID,
+  initial?: Pick<SessionChanges, "folder_id" | "raw_md"> & {
+    event_json?: string;
+  },
+): Promise<{ sessionId: string; folderError: unknown }> {
   const folderPath = normalizeFolderPath(initial?.folder_id ?? "") ?? "";
 
   const result = await commands.createSession({
@@ -25,9 +43,12 @@ export async function createSession(
   if (result.status === "error") throw new Error(result.error);
   const sessionId = result.data;
 
-  if (folderPath) {
-    await ensureFolderCatalog(folderPath);
-  }
+  const folderError = folderPath
+    ? await ensureFolderCatalog(folderPath).then(
+        () => null,
+        (error: unknown) => error,
+      )
+    : null;
 
-  return sessionId;
+  return { sessionId, folderError };
 }

@@ -7,15 +7,26 @@ import {
 } from "@anlg/plugin-local-api";
 
 import { hasMarkdownExportContent } from "./markdown-export";
+import {
+  hasSpeakersNamedWorkflowRun,
+  markSpeakersNamedWorkflowRun,
+} from "./speakers-named";
 import { type AutomationRunRecord, parseAutomationRunRecord } from "./types";
 import {
   type AutomationWorkflow,
-  parseAutomationWorkflows,
+  isStepAllowedForTrigger,
+  readAutomationWorkflows,
   mutateAutomationWorkflows,
+  workflowMatchesNote,
   type WorkflowStep,
   type WorkflowTrigger,
 } from "./workflows";
 
+import {
+  getSessionNoteType,
+  type NoteTypeSelection,
+} from "~/note-types/queries";
+import { normalizeFolderPath } from "~/session/folders";
 import { getStoredSettingValues, setSettingValue } from "~/settings/queries";
 
 export type { AutomationRunRecord };
@@ -48,6 +59,16 @@ export async function runNoteEnhancedAutomations(
   }
 }
 
+export async function runSpeakersNamedAutomations(
+  sessionId: string,
+): Promise<void> {
+  try {
+    await runCustomWorkflows(sessionId, "speakers_named");
+  } catch (error) {
+    console.error("[automations] speakers.named workflows failed", error);
+  }
+}
+
 let workflowQueue: Promise<void> = Promise.resolve();
 function enqueueWorkflowRun(run: () => Promise<void>): Promise<void> {
   const next = workflowQueue.then(run);
@@ -67,73 +88,84 @@ async function runCustomWorkflowsNow(
   trigger: WorkflowTrigger,
 ): Promise<void> {
   const { values } = await getStoredSettingValues();
-  const workflows = parseAutomationWorkflows(values.automation_workflows);
+  const workflows = readAutomationWorkflows(values).filter(
+    (workflow) =>
+      workflow.enabled &&
+      workflow.trigger === trigger &&
+      workflow.steps.some((step) => isRunnableStep(step, trigger)),
+  );
+  let note: NoteTypeSelection | undefined;
   for (const workflow of workflows) {
-    if (!workflow.enabled || workflow.trigger !== trigger) {
-      continue;
-    }
-    if (workflow.steps.length === 0) {
-      continue;
-    }
-    if (trigger === "note_enhanced") {
-      try {
-        await runWorkflowWithFileExports(sessionId, workflow);
-      } catch (error) {
-        console.error("[automations] workflow run failed", error);
+    if (workflow.conditions.noteTypeId !== null) {
+      note ??= await getSessionNoteType(sessionId);
+      if (!workflowMatchesNote(workflow.conditions, note)) {
+        continue;
       }
+    }
+    // Markdown exports overwrite the same file, so summary-ready workflows
+    // rerun on every regenerated summary.
+    if (
+      trigger === "meeting_completed" &&
+      workflow.processedSessionIds.includes(sessionId)
+    ) {
       continue;
     }
-    if (workflow.processedSessionIds.includes(sessionId)) {
+    if (
+      trigger === "speakers_named" &&
+      (await hasSpeakersNamedWorkflowRun(sessionId, workflow.id))
+    ) {
       continue;
     }
     try {
-      await runWorkflow(sessionId, workflow);
+      await runWorkflow(sessionId, workflow, trigger);
     } catch (error) {
       console.error("[automations] workflow run failed", error);
     }
   }
 }
 
+function isRunnableStep(step: WorkflowStep, trigger: WorkflowTrigger) {
+  return (
+    step.type !== "summary_template" &&
+    isStepAllowedForTrigger(step.type, trigger)
+  );
+}
+
+// A failed Markdown export stops the workflow, as it always has; other steps
+// are independent, so the rest still run. Any successful step marks the note
+// processed, so a run where every step failed can be retried.
 async function runWorkflow(
   sessionId: string,
   workflow: AutomationWorkflow,
+  trigger: WorkflowTrigger,
 ): Promise<void> {
   const record: AutomationRunRecord = {
     at: new Date().toISOString(),
     status: "success",
     detail: "",
   };
-  let markedSessionId: string | undefined;
-  const markProcessed = async () => {
-    markedSessionId = sessionId;
-    await persistWorkflowResult(workflow.id, { sessionId });
-  };
-  try {
-    const details: string[] = [];
-    for (const step of workflow.steps) {
-      details.push(
-        await executeWorkflowStep(
-          sessionId,
-          step,
-          workflowStepKey(workflow, step, sessionId),
-        ),
-      );
-      await markProcessed();
+  const details: string[] = [];
+  for (const step of workflow.steps) {
+    if (!isRunnableStep(step, trigger)) {
+      continue;
     }
-    record.detail = details.filter(Boolean).join(" · ") || "ok";
-    await persistWorkflowResult(workflow.id, {
-      record,
-      sessionId,
-    });
-  } catch (error) {
-    record.status = "error";
-    record.detail = error instanceof Error ? error.message : String(error);
-    console.error("[automations] workflow failed", error);
-    await persistWorkflowResult(workflow.id, {
-      record,
-      sessionId: markedSessionId,
-    });
+    try {
+      details.push(await executeWorkflowStep(sessionId, workflow, step));
+      if (trigger === "speakers_named") {
+        await markSpeakersNamedWorkflowRun(sessionId, workflow.id);
+      }
+      await persistWorkflowResult(workflow.id, { sessionId });
+    } catch (error) {
+      record.status = "error";
+      details.push(error instanceof Error ? error.message : String(error));
+      console.error("[automations] workflow step failed", error);
+      if (step.type === "markdown_export") {
+        break;
+      }
+    }
   }
+  record.detail = details.filter(Boolean).join(" · ") || "ok";
+  await persistWorkflowResult(workflow.id, { record });
 }
 
 async function persistWorkflowResult(
@@ -172,7 +204,59 @@ function appendProcessedSession(
 
 async function executeWorkflowStep(
   sessionId: string,
+  workflow: AutomationWorkflow,
   step: WorkflowStep,
+): Promise<string> {
+  switch (step.type) {
+    case "markdown_export":
+      return executeMarkdownExportStep(
+        sessionId,
+        step,
+        workflowStepKey(workflow, step, sessionId),
+      );
+    case "regenerate_summary":
+      return regenerateSummary(sessionId);
+    case "move_to_folder":
+      return moveToFolder(sessionId, step.folderPath);
+    case "summary_template":
+      return "";
+  }
+}
+
+async function regenerateSummary(sessionId: string): Promise<string> {
+  const { getEnhancerService } = await import("~/services/enhancer");
+  const service = getEnhancerService();
+  if (service) {
+    await service.requestAutoEnhance(sessionId, "regenerate");
+  } else {
+    const { requestMainAutoEnhance } = await import("~/ai/task-window-sync");
+    await requestMainAutoEnhance(sessionId, "regenerate");
+  }
+  return t`summary regeneration requested`;
+}
+
+async function moveToFolder(
+  sessionId: string,
+  folderPath: string,
+): Promise<string> {
+  const path = normalizeFolderPath(folderPath);
+  if (!path) {
+    throw new Error(t`choose a folder first`);
+  }
+  const [{ loadFolderPaths }, { updateSession }] = await Promise.all([
+    import("~/session/queries/folders"),
+    import("~/session/queries/sessions"),
+  ]);
+  if (!(await loadFolderPaths()).includes(path)) {
+    throw new Error(t`folder ${path} no longer exists`);
+  }
+  await updateSession(sessionId, { folder_id: path });
+  return t`moved to ${path}`;
+}
+
+async function executeMarkdownExportStep(
+  sessionId: string,
+  step: Extract<WorkflowStep, { type: "markdown_export" }>,
   stepKey: string,
 ): Promise<string> {
   const directory = step.directory.trim();
@@ -326,36 +410,4 @@ function parseMarkdownExportFiles(
   } catch {
     return [];
   }
-}
-
-// Markdown exports overwrite the same file, so summary-ready workflows rerun
-// on every regenerated summary.
-async function runWorkflowWithFileExports(
-  sessionId: string,
-  workflow: AutomationWorkflow,
-): Promise<void> {
-  const record: AutomationRunRecord = {
-    at: new Date().toISOString(),
-    status: "success",
-    detail: "",
-  };
-  const details: string[] = [];
-  for (const step of workflow.steps) {
-    try {
-      details.push(
-        await executeWorkflowStep(
-          sessionId,
-          step,
-          workflowStepKey(workflow, step, sessionId),
-        ),
-      );
-      await persistWorkflowResult(workflow.id, { sessionId });
-    } catch (error) {
-      record.status = "error";
-      details.push(error instanceof Error ? error.message : String(error));
-      break;
-    }
-  }
-  record.detail = details.join(" · ");
-  await persistWorkflowResult(workflow.id, { record });
 }

@@ -14,6 +14,7 @@ import {
   FileText,
   FolderOpen,
   PictureInPicture,
+  UsersThree,
   Waveform,
 } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
@@ -34,6 +35,7 @@ import { toast } from "@anlg/ui/components/ui/toast";
 
 import { MetadataPanelContent } from "../metadata";
 import { AlwaysOnTop } from "./always-on-top";
+import { AssignSpeakersDialog } from "./assign-speakers-dialog";
 import { DeleteNote } from "./delete";
 import { ExportModal } from "./export-modal";
 import { Listening } from "./listening";
@@ -74,6 +76,8 @@ export function OverflowButton({
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [hasOpenedExportModal, setHasOpenedExportModal] = useState(false);
   const [exportOpenCount, setExportOpenCount] = useState(0);
+  const [isAssignSpeakersOpen, setIsAssignSpeakersOpen] = useState(false);
+  const [assignSpeakersOpenCount, setAssignSpeakersOpenCount] = useState(0);
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
   const [hasOpenedVersionHistory, setHasOpenedVersionHistory] = useState(false);
   const hasTranscript = useHasTranscript(sessionId);
@@ -101,6 +105,7 @@ export function OverflowButton({
     !currentNoteHasContent &&
     !isMeetingInProgress;
   const showAudioInFolder = audioExistsResolved && audioExists;
+  const showAssignSpeakers = hasTranscript && sessionMode === "inactive";
   const showAudioLabel =
     platform() === "macos"
       ? t`Show Audio in Finder`
@@ -119,6 +124,11 @@ export function OverflowButton({
     setHasOpenedExportModal(true);
     setExportOpenCount((count) => count + 1);
     requestAnimationFrame(() => setIsExportModalOpen(true));
+  };
+  const openAssignSpeakers = () => {
+    setOpen(false);
+    setAssignSpeakersOpenCount((count) => count + 1);
+    requestAnimationFrame(() => setIsAssignSpeakersOpen(true));
   };
   const openVersionHistory = () => {
     setOpen(false);
@@ -256,7 +266,20 @@ export function OverflowButton({
                 <span>{showAudioLabel}</span>
               </DropdownMenuItem>
             )}
-            {hasRecordingActions && <DropdownMenuSeparator />}
+            {showAssignSpeakers && (
+              <DropdownMenuItem
+                onClick={openAssignSpeakers}
+                className="cursor-pointer"
+              >
+                <UsersThree />
+                <span>
+                  <Trans>Assign speakers…</Trans>
+                </span>
+              </DropdownMenuItem>
+            )}
+            {(hasRecordingActions || showAssignSpeakers) && (
+              <DropdownMenuSeparator />
+            )}
             <DropdownMenuItem
               onClick={openExportModal}
               className="cursor-pointer"
@@ -307,6 +330,14 @@ export function OverflowButton({
           currentView={currentView}
           open={isExportModalOpen}
           onOpenChange={setIsExportModalOpen}
+        />
+      )}
+      {assignSpeakersOpenCount > 0 && (
+        <AssignSpeakersDialog
+          key={assignSpeakersOpenCount}
+          sessionId={sessionId}
+          open={isAssignSpeakersOpen}
+          onOpenChange={setIsAssignSpeakersOpen}
         />
       )}
       {hasOpenedVersionHistory && (

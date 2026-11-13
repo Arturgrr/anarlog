@@ -449,6 +449,10 @@ pub const APP_MIGRATION_STEPS: &[anlg_db_migrate::MigrationStep] = &[
         id: "20261111120000_dictation_history",
         sql: include_str!("../migrations/20261111120000_dictation_history.sql"),
     },
+    anlg_db_migrate::MigrationStep {
+        id: "20261113120000_note_types",
+        sql: include_str!("../migrations/20261113120000_note_types.sql"),
+    },
 ];
 
 pub fn schema() -> anlg_db_migrate::DbSchema {
