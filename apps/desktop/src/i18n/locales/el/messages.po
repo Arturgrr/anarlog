@@ -355,6 +355,10 @@ msgstr ""
 msgid "A quick introduction to Librelog."
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "A recording holds everything shown on the display under the pointer, what your microphone hears, your red marks, and the name and title of the app in front. Each one is a folder on this computer, in Librelog's data folder under annotations, with the video, the audio, the key frames, a contact sheet and a summary. Your narration is transcribed by your transcription provider. Nothing else leaves this computer until you paste it somewhere: then it goes to that app and its provider."
+msgstr ""
+
 #: src/templates/template-sidebar.tsx
 msgid "A to Z"
 msgstr ""
@@ -623,12 +627,24 @@ msgstr ""
 msgid "Allow Accessibility"
 msgstr ""
 
+#: src/annotate/lifecycle.tsx
+msgid "Allow Librelog in System Settings › Privacy & Security › Screen Recording, then try again."
+msgstr ""
+
 #: src/stt/start-failure.ts
 msgid "Allow microphone access for Librelog, then try again."
 msgstr ""
 
 #: src/settings/dictation-audio.tsx
 msgid "Allow…"
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Allowed"
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Allowed. Quit and reopen Librelog to use it."
 msgstr ""
 
 #: src/onboarding/final.tsx
@@ -651,6 +667,10 @@ msgstr ""
 msgid "Amazon Transcribe's native file API requires SigV4 plus an S3 object. Enter an OpenAI-compatible gateway URL that performs that AWS authentication and upload, then paste the gateway token as the API key."
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "An annotation is already in progress."
+msgstr ""
+
 #: src/shared/control.tsx
 msgid "An unexpected error occurred."
 msgstr ""
@@ -661,6 +681,27 @@ msgstr ""
 
 #: src/templates/template-icon-picker.tsx
 msgid "Animals & Nature"
+msgstr ""
+
+#: src/settings/annotate.tsx
+#: src/sidebar/settings-nav-groups.ts
+msgid "Annotate"
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Annotate is available in the macOS app downloaded from the website."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Annotate is only available in the macOS app."
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Annotate shortcut"
+msgstr ""
+
+#: src/annotate/lifecycle.tsx
+msgid "Annotation ready"
 msgstr ""
 
 #: src/stt/start-failure.ts
@@ -1131,6 +1172,7 @@ msgstr ""
 msgid "Change photo"
 msgstr ""
 
+#: src/settings/annotate.tsx
 #: src/settings/dictation-paste-last.tsx
 #: src/settings/dictation-shortcut.tsx
 msgid "Change shortcut {keys}"
@@ -1195,6 +1237,7 @@ msgstr ""
 #: src/settings/ai/llm/index.tsx
 #: src/settings/ai/shared/in-use-bar.tsx
 #: src/settings/ai/stt/index.tsx
+#: src/settings/annotate.tsx
 #: src/settings/developers/cli.tsx
 msgid "Checking…"
 msgstr ""
@@ -2236,6 +2279,14 @@ msgstr ""
 msgid "Disable all notifications"
 msgstr ""
 
+#: src/annotate/lifecycle.tsx
+msgid "Discard"
+msgstr ""
+
+#: src/annotate/lifecycle.tsx
+msgid "Discard?"
+msgstr ""
+
 #: src/settings/ai/shared/provider-connection.tsx
 msgid "Disconnect"
 msgstr ""
@@ -2471,12 +2522,20 @@ msgstr ""
 msgid "Enable {0}"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Enable Annotate"
+msgstr ""
+
 #: src/settings/dictation.tsx
 msgid "Enable dictation"
 msgstr ""
 
 #: src/i18n/external-messages.ts
 msgid "Enable Librelog in System Settings > Privacy & Security > Accessibility to insert dictation into other apps."
+msgstr ""
+
+#: src/annotate/lifecycle.tsx
+msgid "Enable microphone permission in Settings > Permissions before annotating."
 msgstr ""
 
 #: src/dictation/lifecycle.tsx
@@ -2603,6 +2662,10 @@ msgstr ""
 msgid "Expected output"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Experimental. Record your screen while you draw on it in red and talk, then paste the result into a coding agent such as Claude Code: numbered key frames with your marks, and what you said at each one."
+msgstr ""
+
 #: src/session/components/outer-header/overflow/export-modal.tsx
 #: src/session/components/outer-header/overflow/index.tsx
 msgid "Export"
@@ -2723,6 +2786,10 @@ msgstr ""
 msgid "Finishing connection…"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Finishing the annotation…"
+msgstr ""
+
 #: src/settings/ai/llm/builtin.tsx
 msgid "Fits"
 msgstr ""
@@ -2790,6 +2857,7 @@ msgid "For enabled notifications"
 msgstr ""
 
 #: src/dictation/history/page.tsx
+#: src/settings/annotate.tsx
 #: src/settings/general/audio-settings.tsx
 msgid "Forever"
 msgstr ""
@@ -3227,12 +3295,24 @@ msgstr ""
 msgid "Its subtypes are deleted too. Notes of this type will show no type."
 msgstr ""
 
+#: src/annotate/lifecycle.tsx
+msgid "Its summary is on the clipboard. Use your Paste last annotation shortcut in your coding agent to paste it with its image."
+msgstr ""
+
 #: src/contacts/details.tsx
 msgid "Job Title"
 msgstr ""
 
 #: src/onboarding/final.tsx
 msgid "Join our community and stay updated:"
+msgstr ""
+
+#: src/annotate/lifecycle.tsx
+msgid "Keep"
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Keep annotations for"
 msgstr ""
 
 #: src/dictation/history/page.tsx
@@ -3245,6 +3325,10 @@ msgstr ""
 
 #: src/settings/dictation-paste-last.tsx
 msgid "Keep last dictation on the clipboard"
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Keep Librelog running to use the Annotate shortcuts in other apps."
 msgstr ""
 
 #: src/settings/dictation.tsx
@@ -3371,6 +3455,10 @@ msgstr ""
 
 #: src/onboarding/permissions.tsx
 msgid "Librelog can read meeting details"
+msgstr ""
+
+#: src/annotate/lifecycle.tsx
+msgid "Librelog can't record the screen."
 msgstr ""
 
 #: src/settings/developers/cli.tsx
@@ -3677,6 +3765,10 @@ msgstr ""
 msgid "Lower to"
 msgstr ""
 
+#: src/annotate/lifecycle.tsx
+msgid "macOS applies the Screen Recording permission after a relaunch."
+msgstr ""
+
 #: src/settings/ai/shared/provider-connection.tsx
 msgid "macOS cannot access your login Keychain. Repairing briefly locks it and asks for your Mac password before Librelog retries this API key."
 msgstr ""
@@ -3938,6 +4030,10 @@ msgstr ""
 msgid "Monday"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Month"
+msgstr ""
+
 #: src/session/components/outer-header/overflow/index.tsx
 #: src/settings/stats/index.tsx
 msgid "More"
@@ -4019,6 +4115,10 @@ msgstr ""
 msgid "Needs setup"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "New Annotate shortcut"
+msgstr ""
+
 #: src/sidebar/automations.tsx
 msgid "New automation"
 msgstr ""
@@ -4049,6 +4149,10 @@ msgstr ""
 #: src/main/empty.tsx
 #: src/main/windows-title-bar.tsx
 msgid "New Note"
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "New Paste last annotation shortcut"
 msgstr ""
 
 #: src/settings/dictation-paste-last.tsx
@@ -4101,6 +4205,10 @@ msgstr ""
 
 #: src/session/hooks/useAutoEnhance.ts
 msgid "No AI model configured"
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "No annotation is recording."
 msgstr ""
 
 #: src/settings/general/notification.tsx
@@ -4343,8 +4451,16 @@ msgstr ""
 msgid "Not a chat model"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Not allowed"
+msgstr ""
+
 #: src/settings/ai/llm/models.tsx
 msgid "Not an LLM type"
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Not asked yet. macOS asks the first time you annotate."
 msgstr ""
 
 #: src/settings/stats/insights.tsx
@@ -4449,6 +4565,10 @@ msgstr ""
 
 #: src/note-types/picker.tsx
 msgid "Nothing here yet."
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Nothing is deleted automatically."
 msgstr ""
 
 #: src/settings/dictation-indicator.tsx
@@ -4575,6 +4695,11 @@ msgstr ""
 msgid "Open permissions"
 msgstr ""
 
+#: src/annotate/lifecycle.tsx
+#: src/settings/annotate.tsx
+msgid "Open System Settings"
+msgstr ""
+
 #: src/settings/ai/llm/subscriptions/connect.tsx
 msgid "Opening sign-in…"
 msgstr ""
@@ -4683,6 +4808,10 @@ msgstr ""
 msgid "Paste it anywhere with Ctrl+V, without a shortcut. It replaces what was on the clipboard."
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Paste last annotation shortcut"
+msgstr ""
+
 #: src/i18n/native-labels.tsx
 msgid "Paste last dictation"
 msgstr ""
@@ -4713,6 +4842,10 @@ msgstr ""
 
 #: src/settings/dictation-paste-last.tsx
 msgid "Paste your last dictation into the focused app again. It's also in the menu bar icon's menu."
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Pastes the contact sheet's file path, then the summary, into the focused app. In Claude Code and similar terminal agents, the path attaches the image."
 msgstr ""
 
 #: src/audio-player/timeline.tsx
@@ -4882,6 +5015,10 @@ msgstr ""
 msgid "Press the shortcut…"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Press to start recording the display under the pointer, and again to finish. While recording, hold it to draw in red where the pointer goes; let go to stop drawing. Escape turns drawing off."
+msgstr ""
+
 #: src/settings/general/notification.tsx
 msgid "Prevent selected apps from triggering meeting detection."
 msgstr ""
@@ -4942,6 +5079,10 @@ msgstr ""
 
 #: src/i18n/native-labels.tsx
 msgid "Quit {app} Completely?"
+msgstr ""
+
+#: src/annotate/lifecycle.tsx
+msgid "Quit and reopen Librelog to record the screen."
 msgstr ""
 
 #: src/i18n/native-labels.tsx
@@ -5094,6 +5235,10 @@ msgstr ""
 
 #: src/stt/saved-capture-audio.tsx
 msgid "Recording stopped unexpectedly, so the audio was kept on purpose. Create the meeting note to transcribe and summarize it, or resume listening. The audio is deleted once it is transcribed."
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Recording…"
 msgstr ""
 
 #: src/session/components/note-input/transcript/index.tsx
@@ -5455,6 +5600,14 @@ msgstr ""
 msgid "Saving…"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Screen Recording"
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Screen Recording is not allowed for Librelog."
+msgstr ""
+
 #: src/session/components/note-input/transcript/renderer/index.tsx
 msgid "Scroll to bottom"
 msgstr ""
@@ -5757,6 +5910,10 @@ msgstr ""
 msgid "Show All"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Show annotations folder"
+msgstr ""
+
 #: src/settings/general/app-settings.tsx
 msgid "Show app in Dock"
 msgstr ""
@@ -5786,6 +5943,7 @@ msgstr ""
 msgid "Show ignored models"
 msgstr ""
 
+#: src/annotate/lifecycle.tsx
 #: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
 #: src/sidebar/timeline/item.tsx
@@ -6077,6 +6235,7 @@ msgid "Starting voice input"
 msgstr ""
 
 #: src/chat/components/input/index.tsx
+#: src/settings/annotate.tsx
 msgid "Starting…"
 msgstr ""
 
@@ -6389,6 +6548,10 @@ msgstr ""
 msgid "The model that writes summaries, answers in chat and titles your notes."
 msgstr ""
 
+#: src/annotate/lifecycle.tsx
+msgid "The narration could not be transcribed. The annotation is saved without it."
+msgstr ""
+
 #: src/i18n/external-messages.ts
 msgid "The new transcription returned much less text. Your saved transcript and recording were kept. Try transcribing again."
 msgstr ""
@@ -6458,6 +6621,10 @@ msgstr ""
 msgid "There isn’t enough free disk space for this model."
 msgstr ""
 
+#: src/annotate/lifecycle.tsx
+msgid "There's no annotation to paste yet."
+msgstr ""
+
 #: src/dictation/paste-last.tsx
 msgid "There's no dictation to paste yet."
 msgstr ""
@@ -6488,6 +6655,10 @@ msgstr ""
 
 #: src/settings/automations/workflow-builder.tsx
 msgid "This action is not available for this trigger. Remove it or choose another trigger."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "This annotation is no longer waiting to be finished."
 msgstr ""
 
 #: src/settings/ai/llm/builtin.tsx
@@ -6576,6 +6747,14 @@ msgstr ""
 
 #: src/settings/dictation-shortcut.tsx
 msgid "This shortcut is already in your list."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "This shortcut is already used by Annotate. Choose another one."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "This shortcut is already used by another Librelog shortcut. Choose another one."
 msgstr ""
 
 #: src/settings/ai/llm/subscriptions/connect.tsx
@@ -7196,6 +7375,14 @@ msgstr ""
 msgid "Version history"
 msgstr ""
 
+#: src/settings/annotate.tsx
+msgid "Video and audio are deleted after 30 days, the rest of each annotation after 90."
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Video and audio are deleted after 7 days, the rest of each annotation after 30."
+msgstr ""
+
 #: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 msgid "View"
@@ -7251,6 +7438,10 @@ msgstr ""
 
 #: src/settings/developers/webhooks.tsx
 msgid "Webhooks"
+msgstr ""
+
+#: src/settings/annotate.tsx
+msgid "Week"
 msgstr ""
 
 #: src/settings/general/week-start.tsx
