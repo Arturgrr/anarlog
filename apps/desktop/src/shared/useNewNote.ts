@@ -1,6 +1,9 @@
 import { useCallback } from "react";
 import { create } from "zustand";
 
+import { commands as trayCommands } from "@anlg/plugin-tray";
+import { commands as windowsCommands } from "@anlg/plugin-windows";
+
 import {
   type NoteTypeSelection,
   setSessionNoteType,
@@ -31,14 +34,14 @@ function requestNewNote({
   record: boolean;
   behavior: "new" | "current";
 }) {
-  const { noteFilter, folderFilter } = useSidebarNotes.getState();
   useNewNoteDialog.setState({
-    request: {
-      record,
-      behavior,
-      folderId: folderIdForNewNote(noteFilter, folderFilter),
-    },
+    request: { record, behavior, folderId: currentFolderId() },
   });
+}
+
+function currentFolderId() {
+  const { noteFilter, folderFilter } = useSidebarNotes.getState();
+  return folderIdForNewNote(noteFilter, folderFilter);
 }
 
 export async function createRequestedNote(
@@ -136,4 +139,65 @@ export function openSessionAndListen(
     id: sessionId,
     state: { view: null, autoStart: true },
   });
+}
+
+// The menu bar's "Start a new meeting" may arrive while the main window is
+// hidden, so it records without the dialog; the note is named later.
+// `fromClick` is false for the check made when the main window loads, which
+// only acts on a click the window could not receive at the time.
+export async function takeTrayMeetingStart({
+  fromClick,
+}: {
+  fromClick: boolean;
+}) {
+  let pending = fromClick;
+  try {
+    const result = await trayCommands.takePendingTrayStart();
+    if (result.status === "error") throw new Error(result.error);
+    pending = result.data;
+  } catch (error) {
+    console.error("[tray] failed to claim the menu bar start", error);
+  }
+  if (pending) await startMeetingFromTray();
+}
+
+let trayMeetingStart: Promise<void> | null = null;
+
+function startMeetingFromTray() {
+  trayMeetingStart ??= recordNewMeetingInBackground().finally(() => {
+    trayMeetingStart = null;
+  });
+  return trayMeetingStart;
+}
+
+async function recordNewMeetingInBackground() {
+  const { tabs, openNew, select } = useTabs.getState();
+  const { status, sessionId: liveSessionId } = listenerStore.getState().live;
+
+  if (status === "active" && liveSessionId) {
+    openNew({ type: "sessions", id: liveSessionId });
+    return;
+  }
+
+  const starting = tabs.find(
+    (tab) => tab.type === "sessions" && Boolean(tab.state.autoStart),
+  );
+  if (starting) {
+    select(starting);
+    return;
+  }
+
+  try {
+    const { folderError } = await createRequestedNote(
+      { record: true, behavior: "new", folderId: currentFolderId() },
+      { title: "", noteType: { typeId: null, subtypeId: null } },
+    );
+    if (folderError) {
+      console.error("[session] failed to catalog note folder", folderError);
+    }
+  } catch (error) {
+    console.error("[session] failed to create the menu bar meeting", error);
+    requestNewNote({ record: true, behavior: "new" });
+    await windowsCommands.windowShow({ type: "main" });
+  }
 }

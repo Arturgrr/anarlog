@@ -8,6 +8,7 @@ Default permissions for the plugin
 - `allow-set-tray-labels`
 - `allow-set-tray-paste-last-visible`
 - `allow-set-tray-recording-title`
+- `allow-take-pending-tray-start`
 
 ## Permission Table
 
@@ -118,6 +119,32 @@ Enables the set_tray_recording_title command without any pre-configured scope.
 <td>
 
 Denies the set_tray_recording_title command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`anlg-tray:allow-take-pending-tray-start`
+
+</td>
+<td>
+
+Enables the take_pending_tray_start command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`anlg-tray:deny-take-pending-tray-start`
+
+</td>
+<td>
+
+Denies the take_pending_tray_start command without any pre-configured scope.
 
 </td>
 </tr>

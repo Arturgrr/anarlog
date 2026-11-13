@@ -3,6 +3,7 @@ const COMMANDS: &[&str] = &[
     "set_tray_recording_title",
     "set_tray_labels",
     "set_tray_paste_last_visible",
+    "take_pending_tray_start",
 ];
 
 fn main() {

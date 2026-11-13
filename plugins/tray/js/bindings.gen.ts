@@ -66,6 +66,21 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
+  /**
+   * Claims a "Start a new meeting" click from the menu bar icon. Returns true
+   * once per click, so it starts one recording however many times it is asked.
+   */
+  async takePendingTrayStart(): Promise<Result<boolean, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:anlg-tray|take_pending_tray_start"),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
 };
 
 /** user-defined events **/

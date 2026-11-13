@@ -79,6 +79,7 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             commands::set_tray_recording_title,
             commands::set_tray_labels,
             commands::set_tray_paste_last_visible,
+            commands::take_pending_tray_start,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }
