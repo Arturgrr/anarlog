@@ -6819,6 +6819,7 @@ name = "librelog-cli"
 version = "0.1.0"
 dependencies = [
  "agent-access",
+ "annotate-core",
  "base64 0.22.1",
  "clap",
  "cli-docs",

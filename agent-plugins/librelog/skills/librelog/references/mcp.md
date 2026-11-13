@@ -15,6 +15,8 @@ The local MCP server (`librelog mcp`) reads the local database. Proposal tools i
 | `list_proposals`                | List staged proposals. Defaults to `status: pending`.                                                                      |
 | `get_proposal`                  | Read one proposal and its unified `diff`.                                                                                  |
 | `decline_proposal`              | Discard a pending proposal without changing the meeting. Applied proposals cannot be declined.                             |
+| `list_annotations`              | List the user's screen annotations (screen recording, red ink, narration), newest first.                                   |
+| `get_annotation`                | Read one annotation, the newest without `id`: its summary, transcript, contact sheet image and file paths.                 |
 
 Meeting objects include `folder_path`; it is `null` for meetings outside a folder.
 
@@ -29,6 +31,10 @@ Available resources:
 - `librelog://series/{series_id}`
 
 Prefer tools when the workflow needs structured JSON. Use resources when the client needs concise Markdown or plain-text context. Transcript resources default to 200 words (cap 500) and return plain text only.
+
+## Annotations
+
+When the user says they recorded or annotated their screen for you, call `get_annotation` without `id` and read its `summary` beside the contact sheet image: each numbered frame shows what they marked in red and what they said then. The `key_frames` are full-size files to open when a detail is too small; `video` and `audio` are only there until retention removes them.
 
 ## Recording import
 

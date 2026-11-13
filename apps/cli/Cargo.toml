@@ -9,6 +9,7 @@ path = "src/main.rs"
 
 [dependencies]
 anlg-agent-access = { workspace = true }
+anlg-annotate-core = { workspace = true }
 anlg-db-app = { workspace = true }
 anlg-db-core = { workspace = true }
 

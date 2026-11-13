@@ -8,12 +8,14 @@ use rmcp::{
 };
 use serde::Serialize;
 
-use crate::Error;
+use crate::{Error, annotations};
 use anlg_agent_access as access;
 
 #[derive(Clone)]
 struct LibrelogMcpServer {
     db: Arc<anlg_db_core::Db>,
+    /// The desktop app's annotations folder.
+    annotations: std::path::PathBuf,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -32,13 +34,62 @@ enum ResourceRequest {
 }
 
 impl LibrelogMcpServer {
+    #[cfg(test)]
     fn new(db: Arc<anlg_db_core::Db>) -> Self {
-        Self { db }
+        Self::with_annotations(db, std::path::PathBuf::from("annotations"))
+    }
+
+    fn with_annotations(db: Arc<anlg_db_core::Db>, annotations: std::path::PathBuf) -> Self {
+        Self { db, annotations }
     }
 }
 
 #[tool_router]
 impl LibrelogMcpServer {
+    #[tool(
+        title = "List annotations",
+        description = "List the screen annotations recorded with Librelog's Annotate shortcut (screen recording, red ink and narration), newest first, with id, created time, duration, the app and window in front, and the folder. Pass an id to get_annotation.",
+        output_schema = rmcp::handler::server::tool::schema_for_type::<annotations::AnnotationList>(),
+        annotations(read_only_hint = true, destructive_hint = false, idempotent_hint = true, open_world_hint = false)
+    )]
+    async fn list_annotations(
+        &self,
+        Parameters(input): Parameters<annotations::ListAnnotationsInput>,
+    ) -> std::result::Result<CallToolResult, McpError> {
+        let root = self.annotations.clone();
+        let list = tokio::task::spawn_blocking(move || annotations::list(&root, input.limit))
+            .await
+            .map_err(internal_error)?;
+        structured(&list)
+    }
+
+    #[tool(
+        title = "Get annotation",
+        description = "Get one screen annotation, the newest when id is omitted: its summary (what was said and marked on each numbered key frame), the transcript, the contact sheet as an image, the key frame paths, and the video and audio paths while retention keeps them. Read the summary beside the image.",
+        output_schema = rmcp::handler::server::tool::schema_for_type::<annotations::AnnotationDetail>(),
+        annotations(read_only_hint = true, destructive_hint = false, idempotent_hint = true, open_world_hint = false)
+    )]
+    async fn get_annotation(
+        &self,
+        Parameters(input): Parameters<annotations::GetAnnotationInput>,
+    ) -> std::result::Result<CallToolResult, McpError> {
+        let root = self.annotations.clone();
+        let (detail, sheet) =
+            tokio::task::spawn_blocking(move || annotations::get(&root, input.id.as_deref()))
+                .await
+                .map_err(internal_error)?
+                .map_err(|error| match error {
+                    annotations::Error::Read(_) => internal_error(error),
+                    _ => McpError::invalid_params(error.to_string(), None),
+                })?;
+        let mut result = structured(&detail)?;
+        result.content.push(ContentBlock::image(
+            annotations::base64_png(&sheet),
+            "image/png",
+        ));
+        Ok(result)
+    }
+
     #[tool(
         title = "Import recording",
         description = "Create a meeting from a local audio file using the running Librelog desktop app and its configured providers. May send audio to the configured transcription provider and use paid quota. file_path is on this computer, not a remote host. Returns durable job and meeting IDs. Reuse request_key on retries; poll get_recording_import until done or failed.",
@@ -353,7 +404,7 @@ impl ServerHandler for LibrelogMcpServer {
         .with_protocol_version(ProtocolVersion::V_2026_07_28)
         .with_server_info(Implementation::new("librelog", crate::VERSION))
         .with_instructions(
-            "Local access to Librelog meeting data. Start with list_meetings to resolve a meeting_id; to scope work to a project or client, call list_folders and pass a returned path as folder_path. Then call get_meeting for notes, summaries, participants, and action items. Request transcript pages with get_meeting_transcript and continue with pagination.next_offset; each page is capped at 500 words. Use get_recurring_meeting_history for series context. Use export_meeting only when the task needs the complete record including transcripts. To persist an edit, call propose_summary_edit or propose_memo_edit; the result stays pending until a human applies it in the desktop app. List or inspect staged work with list_proposals and get_proposal. decline_proposal discards a pending proposal without changing the meeting. Never invent meeting titles, dates, or ids. If list_meetings returns no meetings, say so. Never access SQLite directly, or claim a proposal was applied. Documentation: https://github.com/Arturgrr/librelog/blob/main/docs/reference/mcp.mdx",
+            "Local access to Librelog meeting data. Start with list_meetings to resolve a meeting_id; to scope work to a project or client, call list_folders and pass a returned path as folder_path. Then call get_meeting for notes, summaries, participants, and action items. Request transcript pages with get_meeting_transcript and continue with pagination.next_offset; each page is capped at 500 words. Use get_recurring_meeting_history for series context. Use export_meeting only when the task needs the complete record including transcripts. To persist an edit, call propose_summary_edit or propose_memo_edit; the result stays pending until a human applies it in the desktop app. List or inspect staged work with list_proposals and get_proposal. decline_proposal discards a pending proposal without changing the meeting. Never invent meeting titles, dates, or ids. If list_meetings returns no meetings, say so. Never access SQLite directly, or claim a proposal was applied. For screen annotations the user recorded (screen, red ink, narration), call get_annotation, or list_annotations to choose one. Documentation: https://github.com/Arturgrr/librelog/blob/main/docs/reference/mcp.mdx",
         )
     }
 
@@ -496,8 +547,11 @@ impl ServerHandler for LibrelogMcpServer {
     }
 }
 
-pub async fn serve(db: Arc<anlg_db_core::Db>) -> crate::Result<()> {
-    let running = LibrelogMcpServer::new(db)
+pub async fn serve(
+    db: Arc<anlg_db_core::Db>,
+    annotations: std::path::PathBuf,
+) -> crate::Result<()> {
+    let running = LibrelogMcpServer::with_annotations(db, annotations)
         .serve(rmcp::transport::stdio())
         .await
         .map_err(|error| Error::operation("start MCP server", error.to_string()))?;
@@ -675,6 +729,107 @@ mod tests {
         assert!(invalid.is_err());
     }
 
+    fn annotation(root: &std::path::Path, created_at_ms: u64) -> std::path::PathBuf {
+        use anlg_annotate_core as core;
+        let dir = root.join(core::new_bundle_id());
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join(core::AUDIO_FILE), b"wav").unwrap();
+        let gray = |t: u64| core::RgbaFrame::new(t, 64, 40, [90, 90, 90, 255].repeat(64 * 40));
+        let recording = core::Recording {
+            created_at_ms,
+            duration_ms: 3_000,
+            target: core::Target {
+                width: 1512.0,
+                height: 982.0,
+                scale: 2.0,
+                app: Some("Terminal".into()),
+                window_title: Some("zsh".into()),
+            },
+            transcript: core::Transcript {
+                source: "test".into(),
+                text: "This button is broken.".into(),
+                ..Default::default()
+            },
+            strokes: Vec::new(),
+            candidates: (0..6).map(|i| gray(i * 500)).collect(),
+            video_offset_ms: 0,
+        };
+        core::finalize(&dir, recording, &mut |_: &[u64]| Vec::new()).unwrap();
+        dir
+    }
+
+    #[tokio::test]
+    async fn annotation_tools_list_newest_first_and_return_the_contact_sheet_image() {
+        let root = tempfile::tempdir().unwrap();
+        let older = annotation(root.path(), 1_000);
+        let newer = annotation(root.path(), 2_000);
+        let db = anlg_db_core::Db::connect_memory_plain().await.unwrap();
+        let server = LibrelogMcpServer::with_annotations(Arc::new(db), root.path().to_path_buf());
+
+        let list = server
+            .list_annotations(Parameters(annotations::ListAnnotationsInput {
+                limit: None,
+            }))
+            .await
+            .unwrap()
+            .structured_content
+            .unwrap();
+        let ids: Vec<_> = list["annotations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|a| a["id"].as_str().unwrap().to_owned())
+            .collect();
+        let name = |dir: &std::path::Path| dir.file_name().unwrap().to_string_lossy().into_owned();
+        assert_eq!(ids, [name(&newer), name(&older)]);
+        assert_eq!(list["annotations"][0]["app"], "Terminal");
+
+        let latest = server
+            .get_annotation(Parameters(annotations::GetAnnotationInput { id: None }))
+            .await
+            .unwrap();
+        let detail = latest.structured_content.clone().unwrap();
+        assert_eq!(detail["id"], name(&newer).as_str());
+        assert_eq!(detail["transcript"], "This button is broken.");
+        assert!(
+            detail["summary"]
+                .as_str()
+                .unwrap()
+                .contains("This button is broken.")
+        );
+        assert!(detail["video"].is_null());
+        assert!(detail["audio"].as_str().unwrap().ends_with("audio.wav"));
+        assert!(!detail["key_frames"].as_array().unwrap().is_empty());
+        let image = serde_json::to_value(&latest.content).unwrap();
+        assert!(
+            image
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|c| c["type"] == "image" && c["mimeType"] == "image/png")
+        );
+
+        let older_detail = server
+            .get_annotation(Parameters(annotations::GetAnnotationInput {
+                id: Some(name(&older)),
+            }))
+            .await
+            .unwrap()
+            .structured_content
+            .unwrap();
+        assert_eq!(older_detail["created_at_ms"], 1_000);
+        for id in ["../etc", "annotation-missing"] {
+            assert!(
+                server
+                    .get_annotation(Parameters(annotations::GetAnnotationInput {
+                        id: Some(id.into()),
+                    }))
+                    .await
+                    .is_err()
+            );
+        }
+    }
+
     #[tokio::test]
     async fn client_server_handshake_lists_tools_and_resources() {
         let db = anlg_db_core::Db::connect_memory_plain().await.unwrap();
@@ -714,12 +869,14 @@ mod tests {
             [
                 "decline_proposal",
                 "export_meeting",
+                "get_annotation",
                 "get_meeting",
                 "get_meeting_transcript",
                 "get_proposal",
                 "get_recording_import",
                 "get_recurring_meeting_history",
                 "import_recording",
+                "list_annotations",
                 "list_folders",
                 "list_meetings",
                 "list_proposals",
@@ -865,7 +1022,7 @@ mod tests {
         let tools = client.receive().await.unwrap();
         let tools = serde_json::to_value(tools).unwrap();
         assert_eq!(tools["result"]["resultType"], "complete");
-        assert_eq!(tools["result"]["tools"].as_array().unwrap().len(), 13);
+        assert_eq!(tools["result"]["tools"].as_array().unwrap().len(), 15);
 
         drop(client);
         server_task.await.unwrap().cancel().await.unwrap();
