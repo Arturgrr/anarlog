@@ -233,6 +233,15 @@ pub fn main() {
             },
         ));
 
+    // Annotate posts keystrokes to paste and is experimental: left out of the
+    // sandboxed App Store build. Off macOS every command says it is unavailable.
+    #[cfg(not(feature = "app-store"))]
+    {
+        builder = builder.plugin(tauri_plugin_annotate::init(
+            db::desktop_db_dir(&identifier).map(|dir| dir.join("annotations")),
+        ));
+    }
+
     // The App Store sandbox cannot run a listening child process.
     #[cfg(not(feature = "app-store"))]
     {

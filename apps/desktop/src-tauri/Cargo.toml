@@ -23,6 +23,7 @@ tauri-build = { workspace = true, features = [] }
 tauri = { workspace = true, features = ["specta", "protocol-asset"] }
 
 tauri-plugin-agent = { workspace = true }
+tauri-plugin-annotate = { workspace = true }
 tauri-plugin-apple-foundation = { workspace = true }
 tauri-plugin-autostart = { workspace = true }
 tauri-plugin-clipboard-manager = { workspace = true }

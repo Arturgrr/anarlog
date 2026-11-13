@@ -2937,6 +2937,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-agent",
  "tauri-plugin-anlg-tray",
+ "tauri-plugin-annotate",
  "tauri-plugin-apple-foundation",
  "tauri-plugin-autostart",
  "tauri-plugin-clipboard-manager",
@@ -12613,6 +12614,31 @@ dependencies = [
  "tracing",
  "tray-icon",
  "unicode-width",
+]
+
+[[package]]
+name = "tauri-plugin-annotate"
+version = "0.1.0"
+dependencies = [
+ "annotate-core",
+ "annotate-macos",
+ "audio",
+ "futures-util",
+ "hound",
+ "image",
+ "libc",
+ "serde",
+ "serde_json",
+ "specta",
+ "specta-typescript",
+ "tauri",
+ "tauri-plugin",
+ "tauri-specta",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-util",
+ "tracing",
 ]
 
 [[package]]
