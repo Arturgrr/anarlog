@@ -11,11 +11,15 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createSession: vi.fn(),
+  folderError: null as unknown,
   setSessionNoteType: vi.fn(),
 }));
 
 vi.mock("~/session/queries", () => ({
-  createSession: mocks.createSession,
+  createSessionReportingFolder: async (...args: unknown[]) => ({
+    sessionId: await mocks.createSession(...args),
+    folderError: mocks.folderError,
+  }),
 }));
 
 vi.mock("~/note-types/queries", () => ({
@@ -59,6 +63,7 @@ function nameField() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.folderError = null;
   resetTabsStore();
   resetSidebarNotes();
   listenerStore.setState(listenerStore.getInitialState(), true);
@@ -94,6 +99,25 @@ it("creates the named, typed note in the active folder and opens it", async () =
     subtypeId: "screen",
   });
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("opens the note it created even when its folder could not be cataloged", async () => {
+  mocks.folderError = new Error("catalog locked");
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  useSidebarNotes.getState().setView("mine", "CS 101");
+  renderDialog();
+  act(() => openNewNote());
+
+  fireEvent.submit(nameField().closest("form")!);
+
+  await waitFor(() => {
+    expect(useTabs.getState().currentTab).toMatchObject({
+      type: "sessions",
+      id: "new-session",
+    });
+  });
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(mocks.createSession).toHaveBeenCalledTimes(1);
 });
 
 it("starts recording the new note when confirmed in record mode", async () => {

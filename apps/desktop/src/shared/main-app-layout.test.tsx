@@ -11,6 +11,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createSession: vi.fn(),
+  folderError: null as unknown,
   openTabListener: null as
     | ((event: { payload: { tab: unknown } }) => void)
     | null,
@@ -47,7 +48,10 @@ vi.mock("~/shared/zoom", () => ({
 }));
 
 vi.mock("~/session/queries", () => ({
-  createSession: mocks.createSession,
+  createSessionReportingFolder: async (...args: unknown[]) => ({
+    sessionId: await mocks.createSession(...args),
+    folderError: mocks.folderError,
+  }),
 }));
 
 vi.mock("~/note-types/picker", () => ({
@@ -62,6 +66,7 @@ import { resetTabsStore } from "~/store/zustand/tabs/test-utils";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.folderError = null;
   resetTabsStore();
   listenerStore.setState(listenerStore.getInitialState(), true);
   mocks.createSession.mockResolvedValue("tray-session");

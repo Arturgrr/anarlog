@@ -5,7 +5,7 @@ import {
   type NoteTypeSelection,
   setSessionNoteType,
 } from "~/note-types/queries";
-import { createSession } from "~/session/queries";
+import { createSessionReportingFolder } from "~/session/queries";
 import { folderIdForNewNote, useSidebarNotes } from "~/sidebar/note-filter";
 import { listenerStore } from "~/store/zustand/listener/instance";
 import { useTabs } from "~/store/zustand/tabs";
@@ -45,10 +45,12 @@ export async function createRequestedNote(
   request: NewNoteRequest,
   { title, noteType }: { title: string; noteType: NoteTypeSelection },
 ) {
-  const sessionId =
+  const { sessionId, folderError } =
     request.folderId === undefined
-      ? await createSession(title)
-      : await createSession(title, undefined, { folder_id: request.folderId });
+      ? await createSessionReportingFolder(title)
+      : await createSessionReportingFolder(title, undefined, {
+          folder_id: request.folderId,
+        });
 
   const typeError = noteType.typeId
     ? await setSessionNoteType(sessionId, noteType).then(
@@ -65,7 +67,7 @@ export async function createRequestedNote(
     open({ type: "sessions", id: sessionId });
   }
 
-  return { sessionId, typeError };
+  return { sessionId, typeError, folderError };
 }
 
 export function useNewNote({

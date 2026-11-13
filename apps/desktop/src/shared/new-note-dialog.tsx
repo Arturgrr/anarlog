@@ -51,10 +51,16 @@ function NewNoteForm({
   const create = useMutation({
     mutationFn: (value: { title: string; noteType: NoteTypeSelection }) =>
       createRequestedNote(request, value),
-    onSuccess: ({ typeError }) => {
+    onSuccess: ({ typeError, folderError }) => {
       if (typeError) {
         console.error("[session] failed to set note type", typeError);
         toast.error(t`The note was created, but its type could not be set.`);
+      }
+      if (folderError) {
+        console.error("[session] failed to catalog note folder", folderError);
+        toast.error(
+          t`The note was created, but its folder could not be updated.`,
+        );
       }
       onClose();
     },

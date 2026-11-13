@@ -20,7 +20,10 @@ export {
   useEnhancedNoteRecords,
   useUpdateEnhancedNoteContent,
 } from "./queries/enhanced-notes";
-export { createSession } from "./queries/creation";
+export {
+  createSession,
+  createSessionReportingFolder,
+} from "./queries/creation";
 export {
   loadSessionSummariesByFolder,
   useFolderIcons,
