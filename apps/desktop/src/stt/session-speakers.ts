@@ -88,7 +88,22 @@ export async function getSessionSpeakers(
   );
 }
 
+export function toChannelProfile(channel: number): ChannelProfile {
+  return channel === 0
+    ? "DirectMic"
+    : channel === 1
+      ? "RemoteParty"
+      : "MixedCapture";
+}
+
 export function useSessionSpeakers(sessionId: string): SessionSpeaker[] {
+  return useSessionSpeakersState(sessionId).speakers;
+}
+
+export function useSessionSpeakersState(sessionId: string): {
+  speakers: SessionSpeaker[];
+  isLoading: boolean;
+} {
   const transcripts = useSessionTranscripts(sessionId);
   const participantHumanIds = useSessionParticipantHumanIds(sessionId);
   const speakerContext = useSpeakerContext(sessionId);
@@ -117,14 +132,23 @@ export function useSessionSpeakers(sessionId: string): SessionSpeaker[] {
   );
 
   const combine = useCallback(
-    (results: Array<{ data?: RenderedTranscriptSegment[] }>) =>
-      groupSessionSpeakers(
+    (
+      results: Array<{
+        data?: RenderedTranscriptSegment[];
+        isFetching: boolean;
+      }>,
+    ) => ({
+      speakers: groupSessionSpeakers(
         requests.map(({ transcriptId, request }, index) => ({
           transcriptId,
           selfHumanId: request?.self_human_id ?? null,
           segments: results[index]?.data ?? [],
         })),
       ),
+      isLoading: results.some(
+        (result) => result.data === undefined && result.isFetching,
+      ),
+    }),
     [requests],
   );
 

@@ -250,26 +250,11 @@ export function buildCreateSpeakerParticipantOption({
   };
 }
 
-export function SpeakerParticipantPicker({
-  sessionId,
-  onSelect,
-  showAssignmentScope = true,
-}: {
-  sessionId: string | undefined;
-  onSelect: (humanId: string, mode: AssignmentMode) => void | Promise<void>;
-  showAssignmentScope?: boolean;
-}) {
+export function useSpeakerParticipantOptions(sessionId: string | undefined) {
   const { t } = useLingui();
   const session = useSession(sessionId ?? "");
   const participantRecords = useSessionParticipants(sessionId ?? "");
   const humanRecords = useHumans();
-
-  const [query, setQuery] = useState("");
-  const [selectedOption, setSelectedOption] =
-    useState<SpeakerParticipantOption | null>(null);
-  const [applyToAllMatching, setApplyToAllMatching] = useState(true);
-  const [assigning, setAssigning] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const avatarByHumanId = useMemo(
     () =>
@@ -328,26 +313,6 @@ export function SpeakerParticipantPicker({
     [participants],
   );
 
-  const groups = useMemo(
-    () =>
-      buildSpeakerParticipantGroups({
-        sessionParticipants: participants,
-        contacts,
-        query,
-      }),
-    [contacts, participants, query],
-  );
-
-  const createOption = useMemo(
-    () =>
-      buildCreateSpeakerParticipantOption({
-        query,
-        existingOptions: [...participants, ...contacts],
-      }),
-    [contacts, participants, query],
-  );
-  const hasPeopleGroup = groups.some((group) => group.title === "People");
-
   const linkHumanToSession = useCallback(
     async (humanId: string) => {
       if (!sessionId || participantIds.has(humanId)) {
@@ -358,10 +323,6 @@ export function SpeakerParticipantPicker({
     },
     [participantIds, sessionId],
   );
-
-  const handleSelect = useCallback((option: SpeakerParticipantOption) => {
-    setSelectedOption(option);
-  }, []);
 
   const getCurrentHumanId = useCallback(
     async (option: SpeakerParticipantOption) => {
@@ -393,17 +354,83 @@ export function SpeakerParticipantPicker({
     [contacts, session?.user_id],
   );
 
+  const resolveHumanId = useCallback(
+    async (option: SpeakerParticipantOption) => {
+      const humanId = await getCurrentHumanId(option);
+      if (humanId) await linkHumanToSession(humanId);
+      return humanId;
+    },
+    [getCurrentHumanId, linkHumanToSession],
+  );
+
+  return { participants, contacts, resolveHumanId };
+}
+
+export function SpeakerParticipantPicker({
+  sessionId,
+  onSelect,
+  onPick,
+  pickedId,
+  showAssignmentScope = true,
+}: {
+  sessionId: string | undefined;
+  onSelect?: (humanId: string, mode: AssignmentMode) => void | Promise<void>;
+  onPick?: (option: SpeakerParticipantOption) => void;
+  pickedId?: string | null;
+  showAssignmentScope?: boolean;
+}) {
+  const { t } = useLingui();
+  const { participants, contacts, resolveHumanId } =
+    useSpeakerParticipantOptions(sessionId);
+
+  const [query, setQuery] = useState("");
+  const [selectedOption, setSelectedOption] =
+    useState<SpeakerParticipantOption | null>(null);
+  const [applyToAllMatching, setApplyToAllMatching] = useState(true);
+  const [assigning, setAssigning] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const groups = useMemo(
+    () =>
+      buildSpeakerParticipantGroups({
+        sessionParticipants: participants,
+        contacts,
+        query,
+      }),
+    [contacts, participants, query],
+  );
+
+  const createOption = useMemo(
+    () =>
+      buildCreateSpeakerParticipantOption({
+        query,
+        existingOptions: [...participants, ...contacts],
+      }),
+    [contacts, participants, query],
+  );
+  const hasPeopleGroup = groups.some((group) => group.title === "People");
+
+  const handleSelect = useCallback(
+    (option: SpeakerParticipantOption) => {
+      if (onPick) {
+        onPick(option);
+        return;
+      }
+      setSelectedOption(option);
+    },
+    [onPick],
+  );
+
   const handleConfirm = useCallback(() => {
     if (!selectedOption) {
       return;
     }
 
     setAssigning(true);
-    void getCurrentHumanId(selectedOption)
+    void resolveHumanId(selectedOption)
       .then(async (humanId) => {
         if (!humanId) return;
-        await linkHumanToSession(humanId);
-        await onSelect(
+        await onSelect?.(
           humanId,
           showAssignmentScope && applyToAllMatching ? "all" : "segment",
         );
@@ -414,9 +441,8 @@ export function SpeakerParticipantPicker({
       .finally(() => setAssigning(false));
   }, [
     applyToAllMatching,
-    getCurrentHumanId,
-    linkHumanToSession,
     onSelect,
+    resolveHumanId,
     selectedOption,
     showAssignmentScope,
   ]);
@@ -459,7 +485,11 @@ export function SpeakerParticipantPicker({
                   <ParticipantOptionButton
                     key={option.id}
                     option={option}
-                    selected={selectedOption === option}
+                    selected={
+                      onPick
+                        ? option.id === pickedId
+                        : selectedOption === option
+                    }
                     onSelect={handleSelect}
                   />
                 ))}
@@ -504,31 +534,35 @@ export function SpeakerParticipantPicker({
           </div>
         </div>
       </AppFloatingPanel>
-      <div className="flex shrink-0 items-center justify-end gap-3 py-1 pl-2">
-        {showAssignmentScope && (
-          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
-            <Checkbox
-              checked={applyToAllMatching}
-              onCheckedChange={(value) => setApplyToAllMatching(value === true)}
-            />
-            <span className="text-muted-foreground text-sm whitespace-nowrap">
-              <Trans>Apply to all</Trans>
-            </span>
-          </label>
-        )}
-        <button
-          type="button"
-          className={cn([
-            "bg-primary text-primary-foreground shadow-button-contrast h-7 rounded-md px-3 text-xs font-medium",
-            "hover:bg-primary/90",
-            "disabled:pointer-events-none disabled:opacity-50",
-          ])}
-          disabled={!selectedOption || assigning}
-          onClick={handleConfirm}
-        >
-          <Trans>Confirm</Trans>
-        </button>
-      </div>
+      {!onPick && (
+        <div className="flex shrink-0 items-center justify-end gap-3 py-1 pl-2">
+          {showAssignmentScope && (
+            <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+              <Checkbox
+                checked={applyToAllMatching}
+                onCheckedChange={(value) =>
+                  setApplyToAllMatching(value === true)
+                }
+              />
+              <span className="text-muted-foreground text-sm whitespace-nowrap">
+                <Trans>Apply to all</Trans>
+              </span>
+            </label>
+          )}
+          <button
+            type="button"
+            className={cn([
+              "bg-primary text-primary-foreground shadow-button-contrast h-7 rounded-md px-3 text-xs font-medium",
+              "hover:bg-primary/90",
+              "disabled:pointer-events-none disabled:opacity-50",
+            ])}
+            disabled={!selectedOption || assigning}
+            onClick={handleConfirm}
+          >
+            <Trans>Confirm</Trans>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
