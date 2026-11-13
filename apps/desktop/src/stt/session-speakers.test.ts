@@ -121,6 +121,25 @@ describe("groupSessionSpeakers", () => {
     expect(areAllSpeakersNamed(speakers)).toBe(true);
   });
 
+  it("does not treat a guess of the owner off the microphone as self", () => {
+    const speakers = groupSessionSpeakers([
+      {
+        transcriptId: "t1",
+        selfHumanId: "self",
+        segments: [
+          segment({ channel: "RemoteParty", speaker_index: 0 }, "You", ["w1"], {
+            name: "You",
+            human_id: "self",
+            reason: "sole_remote_participant",
+          }),
+        ],
+      },
+    ]);
+
+    expect(speakers).toMatchObject([{ humanId: null, isSelf: false }]);
+    expect(areAllSpeakersNamed(speakers)).toBe(false);
+  });
+
   it("does not name an undiarized remote channel from its sole participant guess", () => {
     const speakers = groupSessionSpeakers([
       {

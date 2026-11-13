@@ -213,7 +213,13 @@ export function groupSessionSpeakers(
 
       let speaker = speakers.get(key);
       if (!speaker) {
-        const identityId = humanId ?? provisional?.human_id ?? null;
+        // The renderer guesses the owner only for the microphone, where it
+        // shows "You"; a guess on any other channel is never the owner.
+        const identityId =
+          humanId ??
+          (segment.key.channel === "DirectMic"
+            ? (provisional?.human_id ?? null)
+            : null);
         speaker = {
           key,
           transcriptId,
