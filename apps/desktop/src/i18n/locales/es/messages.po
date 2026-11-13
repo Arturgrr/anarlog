@@ -1084,7 +1084,7 @@ msgstr ""
 #: src/settings/dictionary/index.tsx
 #: src/settings/general/storage/legacy-cleanup.tsx
 #: src/settings/note-types/index.tsx
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 #: src/shared/ui/destructive-confirmation-dialog.tsx
 #: src/sidebar/folder-name-dialog.tsx
 #: src/templates/auto-format-examples-dialog.tsx
@@ -1844,6 +1844,10 @@ msgstr ""
 
 #: src/settings/automations/index.tsx
 msgid "Could not save the automation draft"
+msgstr ""
+
+#: src/shared/edit-note-dialog.tsx
+msgid "Could not save the changes. Try again."
 msgstr ""
 
 #: src/sidebar/folder-name-dialog.tsx
@@ -4053,8 +4057,12 @@ msgstr ""
 
 #: src/contacts/details.tsx
 #: src/contacts/organization-details.tsx
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 msgid "Name"
+msgstr ""
+
+#: src/shared/edit-note-dialog.tsx
+msgid "Name and type"
 msgstr ""
 
 #: src/settings/ai/shared/provider-setup-label.tsx
@@ -5247,6 +5255,10 @@ msgstr ""
 msgid "Rename {0}"
 msgstr ""
 
+#: src/sidebar/timeline/item.tsx
+msgid "Rename and Set Type…"
+msgstr ""
+
 #: src/sidebar/folder-materials.tsx
 msgid "Rename folder"
 msgstr ""
@@ -5449,6 +5461,7 @@ msgstr ""
 
 #: src/settings/dictionary/index.tsx
 #: src/settings/note-types/index.tsx
+#: src/shared/edit-note-dialog.tsx
 #: src/templates/auto-form.tsx
 msgid "Save"
 msgstr "Guardar"
@@ -6924,7 +6937,7 @@ msgstr ""
 #: src/session/components/outer-header/overflow/export-modal.tsx
 #: src/session/components/title-input.tsx
 #: src/session/title-content.ts
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 #: src/shared/open-note-dialog.tsx
 #: src/sidebar/timeline/item.tsx
 #: src/sidebar/toast/undo-delete-toast.tsx
@@ -7402,7 +7415,7 @@ msgstr ""
 msgid "You can"
 msgstr ""
 
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 msgid "You can leave the name empty and add it later."
 msgstr ""
 

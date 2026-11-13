@@ -1097,7 +1097,7 @@ msgstr "Não transcreve todos os seus idiomas juntos."
 #: src/settings/dictionary/index.tsx
 #: src/settings/general/storage/legacy-cleanup.tsx
 #: src/settings/note-types/index.tsx
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 #: src/shared/ui/destructive-confirmation-dialog.tsx
 #: src/sidebar/folder-name-dialog.tsx
 #: src/templates/auto-format-examples-dialog.tsx
@@ -1858,6 +1858,10 @@ msgstr "Não foi possível restaurar a nota excluída"
 #: src/settings/automations/index.tsx
 msgid "Could not save the automation draft"
 msgstr "Não foi possível salvar o rascunho da automação"
+
+#: src/shared/edit-note-dialog.tsx
+msgid "Could not save the changes. Try again."
+msgstr "Não foi possível salvar as alterações. Tente novamente."
 
 #: src/sidebar/folder-name-dialog.tsx
 msgid "Could not save the folder."
@@ -4066,9 +4070,13 @@ msgstr "Minhas automações"
 
 #: src/contacts/details.tsx
 #: src/contacts/organization-details.tsx
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 msgid "Name"
 msgstr "Nome"
+
+#: src/shared/edit-note-dialog.tsx
+msgid "Name and type"
+msgstr "Nome e tipo"
 
 #: src/settings/ai/shared/provider-setup-label.tsx
 msgid "Needs a server address"
@@ -5260,6 +5268,10 @@ msgstr "Renomear"
 msgid "Rename {0}"
 msgstr "Renomear {0}"
 
+#: src/sidebar/timeline/item.tsx
+msgid "Rename and Set Type…"
+msgstr "Renomear e Definir Tipo…"
+
 #: src/sidebar/folder-materials.tsx
 msgid "Rename folder"
 msgstr "Renomear pasta"
@@ -5462,6 +5474,7 @@ msgstr "São Paulo"
 
 #: src/settings/dictionary/index.tsx
 #: src/settings/note-types/index.tsx
+#: src/shared/edit-note-dialog.tsx
 #: src/templates/auto-form.tsx
 msgid "Save"
 msgstr "Salvar"
@@ -6937,7 +6950,7 @@ msgstr "Até que ele seja baixado, todos que você ouve pelo computador continua
 #: src/session/components/outer-header/overflow/export-modal.tsx
 #: src/session/components/title-input.tsx
 #: src/session/title-content.ts
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 #: src/shared/open-note-dialog.tsx
 #: src/sidebar/timeline/item.tsx
 #: src/sidebar/toast/undo-delete-toast.tsx
@@ -7425,7 +7438,7 @@ msgstr "Você"
 msgid "You can"
 msgstr "Você pode"
 
-#: src/shared/new-note-dialog.tsx
+#: src/shared/note-details-form.tsx
 msgid "You can leave the name empty and add it later."
 msgstr "Você pode deixar o nome em branco e adicioná-lo depois."
 
