@@ -5,13 +5,15 @@ use std::time::Duration;
 use dictation_ui_macos::{hud_event, hud_meter, prewarm_hud};
 
 /// Records for four seconds of synthetic syllables, transcribes, finishes;
-/// then records again and fails.
+/// then records again and fails. The first argument is the HUD's position:
+/// `top` (the default), `bottom`, `hidden` or `notch`.
 fn main() {
-    common::run_app(|| {
+    let position = std::env::args().nth(1).unwrap_or_else(|| "top".into());
+    common::run_app(move || {
         prewarm_hud();
         std::thread::sleep(Duration::from_millis(300));
         for outcome in ["completed", "failed"] {
-            if !hud_event(r#"{"type":"started"}"#) {
+            if !hud_event(&format!(r#"{{"type":"started","position":"{position}"}}"#)) {
                 eprintln!("the HUD could not show");
                 std::process::exit(1);
             }
