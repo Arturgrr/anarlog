@@ -12,6 +12,10 @@ import { createSessionReportingFolder } from "~/session/queries";
 import { folderIdForNewNote, useSidebarNotes } from "~/sidebar/note-filter";
 import { listenerStore } from "~/store/zustand/listener/instance";
 import { useTabs } from "~/store/zustand/tabs";
+import {
+  AUTO_START_TIMEOUT_MS,
+  onAutoStartSettled,
+} from "~/stt/auto-start-events";
 
 export type NewNoteRequest = {
   record: boolean;
@@ -188,16 +192,58 @@ async function recordNewMeetingInBackground() {
   }
 
   try {
-    const { folderError } = await createRequestedNote(
+    const { sessionId, folderError } = await createRequestedNote(
       { record: true, behavior: "new", folderId: currentFolderId() },
       { title: "", noteType: { typeId: null, subtypeId: null } },
     );
     if (folderError) {
       console.error("[session] failed to catalog note folder", folderError);
     }
+    watchTrayRecording(sessionId);
   } catch (error) {
     console.error("[session] failed to create the menu bar meeting", error);
     requestNewNote({ record: true, behavior: "new" });
     await windowsCommands.windowShow({ type: "main" });
   }
+}
+
+// Fires just after SessionAutoStart gives up on a connection that never
+// became ready.
+export const TRAY_RECORDING_TIMEOUT_MS = AUTO_START_TIMEOUT_MS + 1_000;
+// A start that resolved may still be waiting for the native Active event.
+const TRAY_RECORDING_SETTLE_GRACE_MS = 3_000;
+
+// Failures to start only show a toast in the window, which is still hidden
+// after a menu bar start; bring it forward on the note so they are seen.
+function watchTrayRecording(sessionId: string) {
+  const isRecording = () => {
+    const { status, sessionId: liveSessionId } = listenerStore.getState().live;
+    return liveSessionId === sessionId && status !== "inactive";
+  };
+  if (isRecording()) return;
+
+  let settleTimer: ReturnType<typeof setTimeout> | undefined;
+  const finish = (failed: boolean) => {
+    clearTimeout(timeout);
+    clearTimeout(settleTimer);
+    unsubscribeListener();
+    unsubscribeSettled();
+    if (failed) void revealTrayNote(sessionId);
+  };
+  const check = () => finish(!isRecording());
+
+  const timeout = setTimeout(check, TRAY_RECORDING_TIMEOUT_MS);
+  const unsubscribeListener = listenerStore.subscribe(() => {
+    if (isRecording()) finish(false);
+  });
+  const unsubscribeSettled = onAutoStartSettled((settledSessionId) => {
+    if (settledSessionId !== sessionId) return;
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(check, TRAY_RECORDING_SETTLE_GRACE_MS);
+  });
+}
+
+async function revealTrayNote(sessionId: string) {
+  useTabs.getState().openNew({ type: "sessions", id: sessionId });
+  await windowsCommands.windowShow({ type: "main" });
 }

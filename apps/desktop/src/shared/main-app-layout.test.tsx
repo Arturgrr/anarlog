@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createSession: vi.fn(),
   takePendingTrayStart: vi.fn(),
+  windowShow: vi.fn(),
   folderError: null as unknown,
   windowLabel: "main",
   navigateListener: null as
@@ -32,6 +33,7 @@ vi.mock("@anlg/plugin-tray", () => ({
 
 vi.mock("@anlg/plugin-windows", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@anlg/plugin-windows")>()),
+  commands: { windowShow: mocks.windowShow },
   events: {
     navigate: () => ({
       listen: (listener: typeof mocks.navigateListener) => {
@@ -68,7 +70,7 @@ vi.mock("~/note-types/picker", () => ({
 }));
 
 import MainAppLayout from "./main-app-layout";
-import { useNewNoteDialog } from "./useNewNote";
+import { TRAY_RECORDING_TIMEOUT_MS, useNewNoteDialog } from "./useNewNote";
 
 import { listenerStore } from "~/store/zustand/listener/instance";
 import { useTabs } from "~/store/zustand/tabs";
@@ -99,10 +101,12 @@ beforeEach(() => {
   listenerStore.setState(listenerStore.getInitialState(), true);
   mocks.createSession.mockResolvedValue("tray-session");
   mocks.takePendingTrayStart.mockResolvedValue({ status: "ok", data: false });
+  mocks.windowShow.mockResolvedValue({ status: "ok", data: null });
 });
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
 });
 
 it("records the tray's Start meeting in one untitled note without a dialog", async () => {
@@ -170,3 +174,44 @@ it("leaves the tray's Start meeting to the main window", async () => {
   expect(mocks.createSession).not.toHaveBeenCalled();
   expect(useNewNoteDialog.getState().request).toBeNull();
 });
+
+it.each([
+  ["never starts", false, 1],
+  ["starts and is then stopped", true, 0],
+])(
+  "shows the main window only when a tray recording %s",
+  async (_, starts, shown) => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mocks.takePendingTrayStart.mockResolvedValue({ status: "ok", data: true });
+    renderLayout();
+    await waitFor(() => {
+      expect(useTabs.getState().currentTab).toMatchObject({
+        id: "tray-session",
+      });
+    });
+
+    if (starts) {
+      act(() =>
+        listenerStore.setState((state) => ({
+          live: { ...state.live, status: "active", sessionId: "tray-session" },
+        })),
+      );
+      act(() =>
+        listenerStore.setState((state) => ({
+          live: { ...state.live, status: "inactive", sessionId: null },
+        })),
+      );
+    }
+    useTabs.getState().openNew({ type: "settings", state: { tab: "app" } });
+    await act(() => vi.advanceTimersByTimeAsync(TRAY_RECORDING_TIMEOUT_MS * 2));
+
+    expect(mocks.windowShow).toHaveBeenCalledTimes(shown);
+    if (shown) {
+      expect(mocks.windowShow).toHaveBeenCalledWith({ type: "main" });
+      expect(useTabs.getState().currentTab).toMatchObject({
+        type: "sessions",
+        id: "tray-session",
+      });
+    }
+  },
+);
