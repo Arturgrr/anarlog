@@ -77,6 +77,11 @@ msgstr ""
 msgid "{0, plural, one {# note deleted} other {# notes deleted}}"
 msgstr ""
 
+#. placeholder {0}: speaker.wordCount
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "{0, plural, one {# word} other {# words}}"
+msgstr ""
+
 #. placeholder {0}: failure.removedDraftCount ?? 0
 #: src/chat/components/input/hooks.ts
 msgid "{0, plural, one {An older unsent chat draft was removed to keep your current draft.} other {# older unsent chat drafts were removed to keep your current draft.}}"
@@ -395,6 +400,7 @@ msgstr ""
 
 #: src/contacts/shared.tsx
 #: src/settings/dictionary/index.tsx
+#: src/settings/note-types/index.tsx
 #: src/sidebar/toast/registry.tsx
 msgid "Add"
 msgstr ""
@@ -419,6 +425,10 @@ msgstr ""
 msgid "Add {0} in System Settings > General > Language & Region to transcribe with {model}, or choose another model."
 msgstr ""
 
+#: src/settings/note-types/index.tsx
+msgid "Add a subtype"
+msgstr ""
+
 #: src/sidebar/folder-materials.tsx
 msgid "Add a syllabus or PDF for this folder"
 msgstr ""
@@ -429,6 +439,14 @@ msgstr ""
 
 #: src/settings/automations/workflow-builder.tsx
 msgid "Add a trigger, then stack actions like Zapier."
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "Add a type above, then add subtypes under it."
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "Add a type, like Class or Client"
 msgstr ""
 
 #: src/settings/automations/workflow-builder.tsx
@@ -511,8 +529,16 @@ msgstr "කථන භාෂාව එක් කරන්න"
 msgid "Add step"
 msgstr ""
 
+#: src/settings/note-types/index.tsx
+msgid "Add subtype"
+msgstr ""
+
 #: src/templates/template-form.tsx
 msgid "Add tag"
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "Add type"
 msgstr ""
 
 #: src/settings/developers/webhooks.tsx
@@ -526,6 +552,10 @@ msgstr "අමතර කථන භාෂා"
 #: src/settings/ai/shared/provider-connection.tsx
 #: src/sidebar/settings-nav-groups.ts
 msgid "Advanced"
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "After every speaker is named"
 msgstr ""
 
 #: src/settings/ai/shared/provider-labels.ts
@@ -708,6 +738,14 @@ msgstr ""
 msgid "Application menu"
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "Applies to"
+msgstr ""
+
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Apply"
+msgstr ""
+
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
 msgid "Apply to all"
 msgstr ""
@@ -720,6 +758,10 @@ msgstr ""
 #: src/chat/components/message/tool/edit-summary.tsx
 #: src/edit/tab-content.tsx
 msgid "Apply to summary"
+msgstr ""
+
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Applying…"
 msgstr ""
 
 #: src/stt/detect-events.ts
@@ -741,6 +783,14 @@ msgstr ""
 
 #: src/shared/chat-cta.tsx
 msgid "Ask Librelog anything"
+msgstr ""
+
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Assign speakers"
+msgstr ""
+
+#: src/session/components/outer-header/overflow/index.tsx
+msgid "Assign speakers…"
 msgstr ""
 
 #: src/templates/auto-format-examples-dialog.tsx
@@ -1025,9 +1075,12 @@ msgid "Can’t transcribe all your languages together."
 msgstr ""
 
 #: src/i18n/native-labels.tsx
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
 #: src/settings/ai/llm/subscriptions/connect.tsx
 #: src/settings/dictionary/index.tsx
 #: src/settings/general/storage/legacy-cleanup.tsx
+#: src/settings/note-types/index.tsx
+#: src/shared/new-note-dialog.tsx
 #: src/shared/ui/destructive-confirmation-dialog.tsx
 #: src/sidebar/folder-name-dialog.tsx
 #: src/templates/auto-format-examples-dialog.tsx
@@ -1193,6 +1246,14 @@ msgstr ""
 msgid "Choose a file format and what to include."
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "Choose a folder"
+msgstr ""
+
+#: src/automations/engine.ts
+msgid "choose a folder first"
+msgstr ""
+
 #: src/settings/ai/llm/in-use.tsx
 msgid "Choose a language model for summaries and chat."
 msgstr ""
@@ -1205,12 +1266,25 @@ msgstr ""
 msgid "Choose a model to continue"
 msgstr ""
 
+#. placeholder {0}: speaker.label
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Choose a person for {0}"
+msgstr ""
+
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Choose a person for each speaker. All of that speaker's lines will be marked as them."
+msgstr ""
+
 #: src/i18n/external-messages.ts
 msgid "Choose a shortcut with Control, Alt, Shift, or Command."
 msgstr ""
 
 #: src/settings/automations/index.tsx
 msgid "Choose a starter from the sidebar, or create a workflow and add steps like Zapier."
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "Choose a template"
 msgstr ""
 
 #: src/settings/ai/stt/local-file-model.tsx
@@ -1291,6 +1365,10 @@ msgstr ""
 msgid "Choose how long recordings stay on this device."
 msgstr ""
 
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Choose person"
+msgstr ""
+
 #: src/templates/template-icon-picker.tsx
 msgid "Choose template icon"
 msgstr ""
@@ -1322,6 +1400,10 @@ msgstr ""
 
 #: src/settings/general/storage/legacy-cleanup.tsx
 msgid "Cleaning up..."
+msgstr ""
+
+#: src/note-types/picker.tsx
+msgid "Clear"
 msgstr ""
 
 #: src/dictation/history/page.tsx
@@ -1606,8 +1688,20 @@ msgstr ""
 msgid "Copy this signing secret now — it is only shown once."
 msgstr ""
 
+#: src/settings/note-types/index.tsx
+msgid "Could not add it. Please try again."
+msgstr ""
+
 #: src/session/components/note-input/file-handler.ts
 msgid "Could not add this attachment."
+msgstr ""
+
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Could not assign {failedLabel}. Speakers listed before it were saved; try again to finish."
+msgstr ""
+
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Could not assign speakers. Try again."
 msgstr ""
 
 #. placeholder {0}: error.message
@@ -1651,8 +1745,20 @@ msgstr ""
 msgid "Could not copy to clipboard"
 msgstr ""
 
+#: src/note-types/picker.tsx
+msgid "Could not create \"{nextName}\"."
+msgstr ""
+
+#: src/shared/new-note-dialog.tsx
+msgid "Could not create the note. Try again."
+msgstr ""
+
 #: src/session/hooks/useCreatePreMeetingBrief.ts
 msgid "Could not create the pre-meeting brief. Try again."
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "Could not delete it. Please try again."
 msgstr ""
 
 #: src/automations/actions.ts
@@ -1723,6 +1829,11 @@ msgstr ""
 msgid "Could not remove the automation"
 msgstr ""
 
+#. placeholder {0}: noteType.name
+#: src/settings/note-types/index.tsx
+msgid "Could not rename \"{0}\"."
+msgstr ""
+
 #: src/sidebar/toast/undo-delete-toast.tsx
 msgid "Could not restore deleted note"
 msgstr ""
@@ -1778,6 +1889,10 @@ msgstr ""
 msgid "Could not update the note date."
 msgstr ""
 
+#: src/session/components/outer-header/metadata/note-type.tsx
+msgid "Could not update the note type."
+msgstr ""
+
 #: src/settings/ai/stt/local-file-model.tsx
 msgid "Could not use the selected model"
 msgstr ""
@@ -1831,8 +1946,16 @@ msgstr ""
 msgid "Create \"{folderName}\""
 msgstr ""
 
+#: src/note-types/picker.tsx
+msgid "Create \"{name}\""
+msgstr ""
+
 #: src/session/components/note-input/create-brief-suggestion.tsx
 msgid "Create a brief to prepare this meeting"
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "Create a folder in the sidebar first."
 msgstr ""
 
 #: src/stt/saved-capture-audio.tsx
@@ -1849,6 +1972,10 @@ msgstr ""
 
 #: src/session/components/note-input/template-picker.tsx
 msgid "Create new template"
+msgstr ""
+
+#: src/shared/new-note-dialog.tsx
+msgid "Create note"
 msgstr ""
 
 #: src/templates/details.tsx
@@ -1950,12 +2077,18 @@ msgstr ""
 #: src/session/components/outer-header/overflow/delete.tsx
 #: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
+#: src/settings/note-types/index.tsx
 #: src/sidebar/automations.tsx
 #: src/sidebar/timeline/index.tsx
 #: src/templates/sections-editor.tsx
 #: src/templates/template-form.tsx
 #: src/templates/template-sidebar.tsx
 msgid "Delete"
+msgstr ""
+
+#. placeholder {0}: noteType.name
+#: src/settings/note-types/index.tsx
+msgid "Delete {0}"
 msgstr ""
 
 #: src/settings/ai/stt/model-rows.tsx
@@ -2019,6 +2152,20 @@ msgstr ""
 
 #: src/sidebar/timeline/index.tsx
 msgid "Delete Selected ({sessionCount})"
+msgstr ""
+
+#. placeholder {0}: pendingDelete.name
+#: src/settings/note-types/index.tsx
+msgid "Delete subtype \"{0}\"?"
+msgstr ""
+
+#. placeholder {0}: pendingDelete?.name
+#: src/settings/note-types/index.tsx
+msgid "Delete type \"{0}\"?"
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "Deleted template"
 msgstr ""
 
 #: src/settings/ai/llm/models.tsx
@@ -2442,8 +2589,16 @@ msgstr ""
 msgid "Every conversation adds to your story."
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "Every note. Choose a type to run only for those notes."
+msgstr ""
+
 #: src/dictation/history/page.tsx
 msgid "Every saved dictation and its audio are deleted from this computer. This cannot be undone."
+msgstr ""
+
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Every speaker has a person. You can still change who they are."
 msgstr ""
 
 #: src/settings/ai/llm/models.tsx
@@ -2644,6 +2799,10 @@ msgstr ""
 msgid "Folder"
 msgstr ""
 
+#: src/automations/engine.ts
+msgid "folder {path} no longer exists"
+msgstr ""
+
 #: src/folders/folder-editor.tsx
 msgid "Folder actions"
 msgstr ""
@@ -2713,6 +2872,10 @@ msgstr ""
 
 #: src/session/components/note-input/enhanced/index.tsx
 msgid "Generate summary"
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "Generates the note's summary again, for example so it uses the names you just gave the speakers."
 msgstr ""
 
 #: src/session/components/note-input/enhanced/streaming.tsx
@@ -2792,6 +2955,10 @@ msgstr ""
 
 #: src/settings/ai/llm/subscriptions/oauth.ts
 msgid "Grok authorization failed."
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "Group notes by type and subtype, like a class and its subject or a client and a recurring meeting. Set them from a note's meeting info."
 msgstr ""
 
 #: src/sidebar/note-filter-menu.tsx
@@ -3101,6 +3268,10 @@ msgstr ""
 
 #: src/i18n/external-messages.ts
 msgid "Invalid dictation shortcut: {rest}"
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "Its subtypes are deleted too. Notes of this type will show no type."
 msgstr ""
 
 #: src/contacts/details.tsx
@@ -3487,6 +3658,10 @@ msgstr ""
 msgid "Loading settings"
 msgstr ""
 
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Loading speakers…"
+msgstr ""
+
 #: src/settings/stats/badge-collection.tsx
 msgid "Loading your badges…"
 msgstr ""
@@ -3843,8 +4018,16 @@ msgstr ""
 msgid "Move down"
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "Move the note to a folder"
+msgstr ""
+
 #: src/templates/sections-editor.tsx
 msgid "Move up"
+msgstr ""
+
+#: src/automations/engine.ts
+msgid "moved to {path}"
 msgstr ""
 
 #: src/settings/ai/stt/model-rows.tsx
@@ -3866,6 +4049,7 @@ msgstr ""
 
 #: src/contacts/details.tsx
 #: src/contacts/organization-details.tsx
+#: src/shared/new-note-dialog.tsx
 msgid "Name"
 msgstr ""
 
@@ -3908,6 +4092,7 @@ msgid "New folder"
 msgstr ""
 
 #: src/main/sidebar-timeline-chrome.tsx
+#: src/shared/new-note-dialog.tsx
 msgid "New note"
 msgstr ""
 
@@ -3921,6 +4106,14 @@ msgstr ""
 msgid "New paste last dictation shortcut"
 msgstr ""
 
+#: src/shared/new-note-dialog.tsx
+msgid "New recording"
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "New subtype name"
+msgstr ""
+
 #: src/session/components/note-input/raw.tsx
 msgid "New template"
 msgstr ""
@@ -3929,6 +4122,10 @@ msgstr ""
 #: src/session/components/note-input/template-picker.tsx
 #: src/templates/utils.ts
 msgid "New Template"
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "New type name"
 msgstr ""
 
 #: src/contacts/related-notes.tsx
@@ -4057,6 +4254,10 @@ msgstr ""
 msgid "No match"
 msgstr ""
 
+#: src/note-types/picker.tsx
+msgid "No match."
+msgstr ""
+
 #: src/onboarding/language-picker.tsx
 #: src/settings/general/main-language.tsx
 #: src/settings/general/spoken-languages.tsx
@@ -4085,6 +4286,10 @@ msgstr ""
 
 #: src/settings/ai/llm/models.tsx
 msgid "No models ready to use. Show ignored models to pick one anyway."
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "No note types yet"
 msgstr ""
 
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
@@ -4143,6 +4348,10 @@ msgstr ""
 msgid "No spoken languages set"
 msgstr ""
 
+#: src/note-types/picker.tsx
+msgid "No subtype"
+msgstr ""
+
 #: src/templates/template-sidebar.tsx
 msgid "No templates found"
 msgstr ""
@@ -4171,6 +4380,10 @@ msgstr ""
 
 #: src/services/enhancer/eligibility.ts
 msgid "No transcript recorded"
+msgstr ""
+
+#: src/note-types/picker.tsx
+msgid "No type"
 msgstr ""
 
 #: src/settings/ai/llm/models.tsx
@@ -4250,6 +4463,11 @@ msgstr ""
 msgid "Note is Locked"
 msgstr ""
 
+#: src/settings/note-types/index.tsx
+#: src/sidebar/settings-nav-groups.ts
+msgid "Note types"
+msgstr ""
+
 #: src/contacts/details.tsx
 msgid "Notes"
 msgstr ""
@@ -4258,10 +4476,22 @@ msgstr ""
 msgid "Notes list"
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "Notes of this type, whatever their subtype."
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/folders/folder-editor.tsx
 #: src/sidebar/folder-materials.tsx
 msgid "Notes stay in All notes. Materials in this folder will be deleted."
+msgstr ""
+
+#: src/settings/note-types/index.tsx
+msgid "Notes with this subtype will show no subtype."
+msgstr ""
+
+#: src/note-types/picker.tsx
+msgid "Nothing here yet."
 msgstr ""
 
 #: src/settings/general/index.tsx
@@ -4322,6 +4552,10 @@ msgstr ""
 
 #: src/session/components/note-input/enhanced/streaming.tsx
 msgid "On-device models can take a few minutes to warm up before text appears."
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "Only notes of this subtype."
 msgstr ""
 
 #: src/lock/auth.ts
@@ -4567,6 +4801,11 @@ msgstr ""
 
 #: src/onboarding/index.tsx
 msgid "Permissions granted"
+msgstr ""
+
+#. placeholder {0}: speaker.label
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Person for {0}: {personName}"
 msgstr ""
 
 #: src/contacts/details.tsx
@@ -4854,6 +5093,10 @@ msgstr ""
 msgid "Record your voice in meetings and calls."
 msgstr ""
 
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "Recording {transcriptNumber}"
+msgstr ""
+
 #: src/session/components/note-input/transcript/screens/batch.tsx
 msgid "Recording continues. Your transcript will be generated after you stop."
 msgstr ""
@@ -4908,6 +5151,10 @@ msgstr ""
 
 #: src/chat/components/message/normal.tsx
 msgid "Regenerate message"
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "Regenerate the summary"
 msgstr ""
 
 #: src/settings/developers/cli.tsx
@@ -4989,6 +5236,11 @@ msgstr ""
 
 #: src/sidebar/folder-materials.tsx
 msgid "Rename"
+msgstr ""
+
+#. placeholder {0}: noteType.name
+#: src/settings/note-types/index.tsx
+msgid "Rename {0}"
 msgstr ""
 
 #: src/sidebar/folder-materials.tsx
@@ -5179,6 +5431,10 @@ msgstr ""
 msgid "Runs entirely on your Mac. Audio never leaves this computer."
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "Runs once per note, when you name its last unnamed speaker."
+msgstr ""
+
 #: src/settings/ai/llm/builtin.tsx
 msgid "Runs with a short context and leaves little memory for other apps."
 msgstr ""
@@ -5188,6 +5444,7 @@ msgid "Sao Paulo"
 msgstr ""
 
 #: src/settings/dictionary/index.tsx
+#: src/settings/note-types/index.tsx
 #: src/templates/auto-form.tsx
 msgid "Save"
 msgstr ""
@@ -5298,12 +5555,24 @@ msgstr ""
 msgid "Search or create folder"
 msgstr ""
 
+#: src/note-types/picker.tsx
+msgid "Search or create subtype"
+msgstr ""
+
+#: src/note-types/picker.tsx
+msgid "Search or create type"
+msgstr ""
+
 #: src/settings/ai/shared/provider-search.tsx
 msgid "Search providers or models"
 msgstr ""
 
 #: src/sidebar/settings.tsx
 msgid "Search settings..."
+msgstr ""
+
+#: src/note-types/picker.tsx
+msgid "Search subtypes"
 msgstr ""
 
 #: src/session/components/note-input/template-picker.tsx
@@ -5313,6 +5582,10 @@ msgstr ""
 
 #: src/settings/general/timezone.tsx
 msgid "Search timezone..."
+msgstr ""
+
+#: src/note-types/picker.tsx
+msgid "Search types"
 msgstr ""
 
 #: src/contacts/related-notes.tsx
@@ -5784,6 +6057,10 @@ msgstr "පිවිසීමේදී Librelog ආරම්භ කරන්න"
 msgid "Start listening"
 msgstr ""
 
+#: src/shared/new-note-dialog.tsx
+msgid "Start recording"
+msgstr ""
+
 #: src/main/empty.tsx
 msgid "Start Recording"
 msgstr ""
@@ -5904,6 +6181,10 @@ msgstr ""
 msgid "Subscriptions"
 msgstr ""
 
+#: src/note-types/picker.tsx
+msgid "Subtype"
+msgstr ""
+
 #: src/settings/general/notification.tsx
 msgid "Success"
 msgstr ""
@@ -5963,6 +6244,10 @@ msgstr ""
 
 #: src/services/enhancer/summary-notification.ts
 msgid "Summary ready"
+msgstr ""
+
+#: src/automations/engine.ts
+msgid "summary regeneration requested"
 msgstr ""
 
 #: src/chat/components/message/tool/edit-summary.tsx
@@ -6142,6 +6427,14 @@ msgstr ""
 msgid "The new transcription returned much less text. Your saved transcript and recording were kept. Try transcribing again."
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "The note type this automation applied to was deleted, so it matches no note. Choose another type or clear it."
+msgstr ""
+
+#: src/shared/new-note-dialog.tsx
+msgid "The note was created, but its type could not be set."
+msgstr ""
+
 #: src/shared/control.tsx
 msgid "The page you're looking for doesn't exist."
 msgstr ""
@@ -6203,6 +6496,10 @@ msgstr ""
 msgid "Thinking..."
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "This action is not available for this trigger. Remove it or choose another trigger."
+msgstr ""
+
 #: src/settings/ai/llm/builtin.tsx
 msgid "This build of Librelog doesn’t include the model server. The release for Macs with Apple silicon does."
 msgstr ""
@@ -6229,6 +6526,10 @@ msgstr ""
 
 #: src/i18n/external-messages.ts
 msgid "This field does not expose whether it is editable. Copy your last dictation from Settings > Dictation."
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "This folder no longer exists. Choose another one."
 msgstr ""
 
 #: src/i18n/external-messages.ts
@@ -6292,8 +6593,16 @@ msgstr ""
 msgid "This sign-in expired. Try connecting again."
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "This template was deleted, so summaries fall back to the default template."
+msgstr ""
+
 #: src/i18n/external-messages.ts
 msgid "This text field does not expose an accessibility identity."
+msgstr ""
+
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
+msgid "This transcript has no speakers to assign."
 msgstr ""
 
 #: src/session/components/note-input/transcript/index.tsx
@@ -6488,6 +6797,10 @@ msgstr ""
 msgid "Turn on Apple Intelligence in System Settings."
 msgstr ""
 
+#: src/note-types/picker.tsx
+msgid "Type"
+msgstr ""
+
 #: src/settings/stats/insights.tsx
 msgid "Typical conversation length"
 msgstr ""
@@ -6603,6 +6916,7 @@ msgstr ""
 #: src/session/components/outer-header/overflow/export-modal.tsx
 #: src/session/components/title-input.tsx
 #: src/session/title-content.ts
+#: src/shared/new-note-dialog.tsx
 #: src/shared/open-note-dialog.tsx
 #: src/sidebar/timeline/item.tsx
 #: src/sidebar/toast/undo-delete-toast.tsx
@@ -6628,6 +6942,10 @@ msgstr ""
 
 #: src/edit/tab-content.tsx
 msgid "Untitled session"
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "Untitled template"
 msgstr ""
 
 #: src/i18n/native-labels.tsx
@@ -6776,6 +7094,10 @@ msgstr ""
 msgid "Use a stable filename in the configured export directory."
 msgstr ""
 
+#: src/settings/automations/workflow-builder.tsx
+msgid "Use a summary template"
+msgstr ""
+
 #: src/settings/ai/stt/provider-context.ts
 msgid "Use a whisper.cpp `.bin` or GGUF `.gguf` model file you already have. It runs on this computer after each recording."
 msgstr ""
@@ -6814,6 +7136,10 @@ msgstr ""
 
 #: src/settings/general/spoken-languages.tsx
 msgid "Used for transcription and automatic summary language detection."
+msgstr ""
+
+#: src/settings/automations/workflow-builder.tsx
+msgid "Used whenever Librelog creates this note's summary. A template chosen in the note itself comes first, and a summary that already exists keeps its template when it is regenerated."
 msgstr ""
 
 #: src/settings/ai/llm/provider-context.ts
@@ -7059,12 +7385,17 @@ msgstr ""
 #: src/meeting-float/route-state.ts
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
 #: src/session/components/outer-header/metadata/participants/chip.tsx
+#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
 #: src/stt/live-segment.ts
 msgid "You"
 msgstr ""
 
 #: src/settings/todo/permission.tsx
 msgid "You can"
+msgstr ""
+
+#: src/shared/new-note-dialog.tsx
+msgid "You can leave the name empty and add it later."
 msgstr ""
 
 #: src/sidebar/timeline/index.tsx

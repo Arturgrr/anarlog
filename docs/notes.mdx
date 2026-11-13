@@ -49,6 +49,30 @@ With **Settings → Meetings → Remember speakers** on, naming a voice this way
 
 Correcting a selection with **Change speaker** fixes those words only and does not teach Librelog a voice. Voiceprints need the recording until the meeting is processed, so **Don't save** under **Audio file retention** also stops new voiceprints.
 
+### Assign every speaker at once
+
+After the meeting, open the **•••** menu in the note header and choose **Assign speakers…**. The dialog lists one row per speaker, with their word count and a sample of what they said. When the note has several recordings, each row shows which one it belongs to.
+
+1. Click **Choose person** on a row, or the name already shown, and pick a participant or contact.
+2. Repeat for each speaker you want to change.
+3. Click **Apply**.
+
+Only the rows you changed are written. If Librelog split one person's voice into two speakers, choose the same person for both rows to bring them together. Your own microphone row shows **You** and cannot be changed here.
+
+Naming the last unnamed speaker, here or in the transcript, can start an [automation](/automations#run-a-workflow-when-speakers-are-named).
+
+## Group notes by type
+
+Note types let you group notes, such as a class and its subject or a client and a recurring meeting. Each type can have subtypes, one level deep.
+
+- Manage types in **Settings → Note types**. Add a type, add subtypes under it, and rename or delete either.
+- Set a note's type from **Type** when you create the note, or from **Meeting info** in the note's **•••** menu. **Subtype** appears after you choose a type.
+- Type a new name in the picker and choose **Create "…"** to add a type or subtype without opening Settings.
+
+Deleting a type also deletes its subtypes. Notes that used them show no type; their other content is unchanged.
+
+Automations can run only for one type or subtype, for example to export each type to its own folder or summarize it with its own template. See [Run a workflow for one type of note](/automations#run-a-workflow-for-one-type-of-note).
+
 ## Shape the summary
 
 Use the template picker beside **Summary** to change its structure. You can also set standing instructions, add names and specialized terms, and control how templates interact with your preferences.
