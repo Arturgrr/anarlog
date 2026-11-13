@@ -2,7 +2,7 @@
 //! and narration, each a folder `anlg_annotate_core` reads, kept beside the
 //! database in `annotations/`.
 
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use base64::Engine as _;
 use serde::Serialize;
@@ -17,6 +17,9 @@ pub fn root_for(db_path: &Path) -> PathBuf {
 
 pub const DEFAULT_LIMIT: u32 = 20;
 pub const MAX_LIMIT: u32 = 100;
+/// The largest contact sheet returned as image content; a larger one is
+/// left to its path.
+pub const MAX_IMAGE_BYTES: u64 = 8 * 1024 * 1024;
 
 #[derive(Debug, Default, serde::Deserialize, schemars::JsonSchema)]
 pub struct ListAnnotationsInput {
@@ -99,8 +102,27 @@ pub enum Error {
     Read(String),
 }
 
-/// The annotation `id`, or the newest. Ids are folder names, never paths.
-pub fn get(root: &Path, id: Option<&str>) -> Result<(AnnotationDetail, Vec<u8>), Error> {
+/// `name`, as the manifest gives it, when it is a file inside `dir`: a
+/// relative path of plain parts (`contact-sheet.png`, `frames/frame-01.png`)
+/// that still resolves inside the folder, links followed.
+fn inside(dir: &Path, name: &str) -> Option<PathBuf> {
+    let relative = Path::new(name);
+    let plain = relative.components().next().is_some()
+        && relative
+            .components()
+            .all(|part| matches!(part, Component::Normal(_)));
+    if !plain {
+        return None;
+    }
+    let path = dir.join(relative);
+    let real = path.canonicalize().ok()?;
+    (real.starts_with(dir.canonicalize().ok()?) && real.is_file()).then_some(path)
+}
+
+/// The annotation `id`, or the newest, with its contact sheet's bytes when
+/// they are small enough to return as an image. Ids are folder names, never
+/// paths.
+pub fn get(root: &Path, id: Option<&str>) -> Result<(AnnotationDetail, Option<Vec<u8>>), Error> {
     let entry = match id {
         None => anlg_annotate_core::library::latest(root).ok_or(Error::None)?,
         Some(id) => {
@@ -117,24 +139,67 @@ pub fn get(root: &Path, id: Option<&str>) -> Result<(AnnotationDetail, Vec<u8>),
         }
     };
     let dir = &entry.dir;
-    let path = |name: &str| dir.join(name).to_string_lossy().into_owned();
+    let path = |name: &str| inside(dir, name).map(|path| path.to_string_lossy().into_owned());
     let summary = std::fs::read_to_string(dir.join(anlg_annotate_core::SUMMARY_FILE))
         .map_err(|error| Error::Read(error.to_string()))?;
-    let sheet = std::fs::read(dir.join(&entry.annotation.contact_sheet))
-        .map_err(|error| Error::Read(error.to_string()))?;
     let annotation = &entry.annotation;
+    let sheet_path = inside(dir, &annotation.contact_sheet)
+        .ok_or_else(|| Error::Read("the contact sheet is not in the annotation's folder".into()))?;
+    let size = std::fs::metadata(&sheet_path)
+        .map_err(|error| Error::Read(error.to_string()))?
+        .len();
+    let sheet = if size <= MAX_IMAGE_BYTES {
+        Some(std::fs::read(&sheet_path).map_err(|error| Error::Read(error.to_string()))?)
+    } else {
+        None
+    };
     let detail = AnnotationDetail {
         item: item(&entry),
         summary,
         transcript: annotation.transcript.text.clone(),
-        contact_sheet: path(&annotation.contact_sheet),
-        key_frames: annotation.keyframes.iter().map(|k| path(&k.file)).collect(),
-        video: annotation.video.as_deref().map(path),
-        audio: annotation.audio.as_deref().map(path),
+        contact_sheet: sheet_path.to_string_lossy().into_owned(),
+        key_frames: annotation
+            .keyframes
+            .iter()
+            .filter_map(|k| path(&k.file))
+            .collect(),
+        video: annotation.video.as_deref().and_then(path),
+        audio: annotation.audio.as_deref().and_then(path),
     };
     Ok((detail, sheet))
 }
 
 pub fn base64_png(bytes: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_files_inside_the_annotation_folder_are_named_or_read() {
+        let root = tempfile::tempdir().unwrap();
+        let outside = root.path().join("secret.png");
+        std::fs::write(&outside, b"secret").unwrap();
+        let dir = root.path().join("annotation-1");
+        std::fs::create_dir_all(dir.join("frames")).unwrap();
+        std::fs::write(dir.join("contact-sheet.png"), b"png").unwrap();
+        std::fs::write(dir.join("frames/frame-01.png"), b"png").unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&outside, dir.join("link.png")).unwrap();
+
+        assert!(inside(&dir, "contact-sheet.png").is_some());
+        assert!(inside(&dir, "frames/frame-01.png").is_some());
+        for tampered in [
+            "../secret.png",
+            "frames/../../secret.png",
+            outside.to_str().unwrap(),
+            "link.png",
+            "",
+            "frames",
+        ] {
+            assert_eq!(inside(&dir, tampered), None, "{tampered}");
+        }
+    }
 }

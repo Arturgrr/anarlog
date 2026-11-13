@@ -83,10 +83,13 @@ impl LibrelogMcpServer {
                     _ => McpError::invalid_params(error.to_string(), None),
                 })?;
         let mut result = structured(&detail)?;
-        result.content.push(ContentBlock::image(
-            annotations::base64_png(&sheet),
-            "image/png",
-        ));
+        result.content.push(match sheet {
+            Some(sheet) => ContentBlock::image(annotations::base64_png(&sheet), "image/png"),
+            None => ContentBlock::text(format!(
+                "The contact sheet is too large to return as an image; open it at {}.",
+                detail.contact_sheet
+            )),
+        });
         Ok(result)
     }
 
