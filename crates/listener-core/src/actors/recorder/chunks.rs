@@ -1061,6 +1061,9 @@ mod tests {
     static BARRIER_SYNCS: AtomicUsize = AtomicUsize::new(0);
     static OUTAGE: AtomicBool = AtomicBool::new(false);
     static FAILED_SYNCS: AtomicUsize = AtomicUsize::new(0);
+    static GATED_SYNCS_ENTERED: AtomicUsize = AtomicUsize::new(0);
+    static GATED_SYNCS_DONE: AtomicUsize = AtomicUsize::new(0);
+    static SYNC_GATE_OPEN: AtomicBool = AtomicBool::new(false);
 
     fn check_ok(_: &Path) -> std::io::Result<DiskSpace> {
         Ok(DiskSpace::Ample)
@@ -1094,9 +1097,18 @@ mod tests {
         Ok(())
     }
 
-    fn slow_sync(file: &File) -> std::io::Result<()> {
-        std::thread::sleep(Duration::from_millis(500));
-        file.sync_all()
+    /// Holds each sync until the test opens the gate, so a writer that
+    /// waited for the sync is told from one that did not without a clock.
+    fn gated_sync(file: &File) -> std::io::Result<()> {
+        GATED_SYNCS_ENTERED.fetch_add(1, Ordering::SeqCst);
+        let waiting = Instant::now();
+        while !SYNC_GATE_OPEN.load(Ordering::SeqCst) && waiting.elapsed() < Duration::from_secs(30)
+        {
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        let result = file.sync_all();
+        GATED_SYNCS_DONE.fetch_add(1, Ordering::SeqCst);
+        result
     }
 
     fn fail_first_three_syncs(file: &File) -> std::io::Result<()> {
@@ -1191,14 +1203,20 @@ mod tests {
     fn slow_chunk_sync_neither_blocks_the_writer_nor_publishes_early() {
         let dir = tempfile::tempdir().unwrap();
         let mut config = test_config();
-        config.sync = slow_sync;
+        config.sync = gated_sync;
         config.finish_deadline = Duration::from_secs(2);
         let mut sink = ChunkedSink::new(dir.path(), 123, 0, false, config).unwrap();
-        let started = Instant::now();
         write_one_chunk(&mut sink);
-        assert!(started.elapsed() < Duration::from_millis(500));
-        assert!(list_recovery_chunks(dir.path()).unwrap().is_empty());
         sink.write(&[0.1; 160], &[0.1; 160]).unwrap();
+        // The writer is back while the chunk's sync is still held.
+        let waiting = Instant::now();
+        while GATED_SYNCS_ENTERED.load(Ordering::SeqCst) == 0 {
+            assert!(waiting.elapsed() < Duration::from_secs(10));
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert_eq!(GATED_SYNCS_DONE.load(Ordering::SeqCst), 0);
+        assert!(list_recovery_chunks(dir.path()).unwrap().is_empty());
+        SYNC_GATE_OPEN.store(true, Ordering::SeqCst);
         sink.finish().unwrap();
         let chunks = list_recovery_chunks(dir.path()).unwrap();
         assert_eq!(chunks.len(), 2);
