@@ -92,9 +92,9 @@ env:
   # dependency whose macOS behaviour the tests reach (local transcription,
   # capture, the app's macOS plugins). macos_ci tests them; linux_ci skips them.
   MACOS_TESTS: >-
-    afconvert apple-todo audio-actual audio-norm detect dictation-ui-macos
-    listener-core listener2-core local-model local-stt-core notification
-    overlay-kit owhisper-client recording-environment shortcut-macos
+    afconvert annotate-macos apple-todo audio-actual audio-norm detect
+    dictation-ui-macos listener-core listener2-core local-model local-stt-core
+    notification overlay-kit owhisper-client recording-environment shortcut-macos
     tauri-plugin-anlg-tray tauri-plugin-dictation tauri-plugin-dock
     tauri-plugin-shortcut tauri-plugin-todo tauri-plugin-transcription
     transcribe-soniqo transcribe-speechanalyzer transcription-core
@@ -219,6 +219,8 @@ jobs:
         run: swift build --package-path plugins/windows/swift-lib
       - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: swift test --package-path crates/dictation-ui-macos/swift-lib
+      - if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: swift test --package-path crates/annotate-macos/swift-lib
       # The test build goes first so the long Soniqo Swift build in its build
       # script overlaps with compiling, not with waiting. Schedule and manual
       # runs test the macOS crates with the rest of the workspace below.
