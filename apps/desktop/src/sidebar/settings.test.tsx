@@ -67,6 +67,10 @@ vi.mock("@lingui/react/macro", () => ({
   }),
 }));
 
+vi.mock("~/annotate/system", () => ({
+  annotateAvailable: () => false,
+}));
+
 vi.mock("./custom-sidebar-header", () => ({
   CustomSidebarHeader: () => <div />,
 }));

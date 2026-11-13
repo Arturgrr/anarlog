@@ -9,6 +9,7 @@ import { Button } from "@anlg/ui/components/ui/button";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
+import { waitForAnnotateCleanup } from "~/annotate/registration";
 import { waitForDictationCleanup } from "~/dictation/lifecycle";
 import { waitForPasteLastCleanup } from "~/dictation/paste-last";
 import { useDictationStatus } from "~/dictation/state";
@@ -403,7 +404,11 @@ export function ShortcutCapture({
   // start dictation or paste instead of reaching this page.
   const prepare = useMutation({
     mutationFn: () =>
-      Promise.all([waitForDictationCleanup(), waitForPasteLastCleanup()]),
+      Promise.all([
+        waitForDictationCleanup(),
+        waitForPasteLastCleanup(),
+        waitForAnnotateCleanup(),
+      ]),
   });
   const [capture, setCapture] = useState<{
     pending: string | null;

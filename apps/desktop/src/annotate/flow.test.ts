@@ -1,0 +1,158 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { createAnnotateFlow, PASTE_GAP_MS, type AnnotateDeps } from "./flow";
+
+const stopped = {
+  id: "annotation-1",
+  dir: "/data/annotations/annotation-1",
+  audioPath: "/data/annotations/annotation-1/audio.wav",
+  durationMs: 4_000,
+  endedBy: "stop",
+  warnings: [],
+};
+const finalized = {
+  id: "annotation-1",
+  dir: stopped.dir,
+  summary: "# Annotation\n\n1. Look here.",
+  contactSheet: `${stopped.dir}/contact-sheet.png`,
+};
+
+function setup(overrides: Partial<AnnotateDeps["plugin"]> = {}) {
+  const calls: string[] = [];
+  const notify = {
+    ready: vi.fn(),
+    screenRecordingDenied: vi.fn(),
+    needsRestart: vi.fn(),
+    microphoneDenied: vi.fn(),
+    transcriptionFailed: vi.fn(),
+    nothingToPaste: vi.fn(),
+    error: vi.fn(),
+  };
+  const plugin: AnnotateDeps["plugin"] = {
+    status: vi.fn(async () => ({
+      available: true,
+      phase: "idle" as const,
+      stopped: null,
+    })),
+    screenRecording: vi.fn(async () => "granted"),
+    requestScreenRecording: vi.fn(async () => true),
+    start: vi.fn(async () => ({ id: stopped.id, dir: stopped.dir })),
+    stop: vi.fn(async () => stopped),
+    finalize: vi.fn(async () => finalized),
+    cancel: vi.fn(async () => {}),
+    setInkMode: vi.fn(async () => {}),
+    latest: vi.fn(async () => finalized),
+    ...overrides,
+  };
+  const deps: AnnotateDeps = {
+    plugin,
+    microphoneAuthorized: vi.fn(async () => true),
+    transcribe: vi.fn(async () => ({
+      provider: "deepgram",
+      text: "Look here.",
+      words: [{ startMs: 100, endMs: 400, text: " Look" }],
+    })),
+    copy: vi.fn(async () => {}),
+    insert: vi.fn(async (text: string) => {
+      calls.push(`insert:${text}`);
+    }),
+    sleep: vi.fn(async (ms: number) => {
+      calls.push(`sleep:${ms}`);
+    }),
+    setRecording: vi.fn(async () => {}),
+    setEscape: vi.fn(async () => {}),
+    notify,
+    onPhase: vi.fn(),
+  };
+  return { flow: createAnnotateFlow(deps), deps, plugin, notify, calls };
+}
+
+describe("Annotate flow", () => {
+  it("records, transcribes, finalizes and leaves the summary on the clipboard", async () => {
+    const { flow, deps, plugin, notify } = setup();
+    await flow.onShortcut("start");
+    expect(flow.phase).toBe("recording");
+    expect(deps.setRecording).toHaveBeenLastCalledWith(true);
+
+    await flow.onShortcut("stop");
+    expect(deps.transcribe).toHaveBeenCalledWith(stopped.audioPath);
+    expect(plugin.finalize).toHaveBeenCalledWith(
+      stopped.id,
+      expect.objectContaining({ text: "Look here." }),
+    );
+    expect(deps.copy).toHaveBeenCalledWith(finalized.summary);
+    expect(notify.ready).toHaveBeenCalledWith(finalized);
+    expect(flow.phase).toBe("idle");
+    expect(deps.setRecording).toHaveBeenLastCalledWith(false);
+  });
+
+  it("asks for Screen Recording once and stops at a denial or a needed relaunch", async () => {
+    const answers = ["not_determined", "denied"];
+    const denied = setup({
+      screenRecording: vi.fn(async () => answers.shift() ?? "denied"),
+    });
+    await denied.flow.start();
+    expect(denied.plugin.requestScreenRecording).toHaveBeenCalledOnce();
+    expect(denied.notify.screenRecordingDenied).toHaveBeenCalled();
+    expect(denied.plugin.start).not.toHaveBeenCalled();
+    expect(denied.flow.phase).toBe("idle");
+
+    const restart = setup({
+      screenRecording: vi.fn(async () => "needs_restart"),
+    });
+    await restart.flow.start();
+    expect(restart.notify.needsRestart).toHaveBeenCalled();
+    expect(restart.plugin.start).not.toHaveBeenCalled();
+  });
+
+  it("still finalizes without a transcript when transcription fails", async () => {
+    const { flow, deps, plugin, notify } = setup();
+    vi.mocked(deps.transcribe).mockRejectedValue(new Error("no provider"));
+    await flow.start();
+    await flow.stop();
+    expect(notify.transcriptionFailed).toHaveBeenCalled();
+    expect(plugin.finalize).toHaveBeenCalledWith(stopped.id, null);
+    expect(notify.ready).toHaveBeenCalledWith(finalized);
+    expect(flow.phase).toBe("idle");
+  });
+
+  it("finalizes a recording the capsule or the cap stopped, once", async () => {
+    const { flow, plugin } = setup({
+      stop: vi.fn(async () => {
+        throw new Error("No annotation is recording.");
+      }),
+    });
+    await flow.start();
+    // The shortcut's stop lost the race to the capsule's.
+    await flow.stop();
+    await flow.onEvent({ type: "stopped", stopped });
+    expect(plugin.finalize).toHaveBeenCalledOnce();
+    expect(flow.phase).toBe("idle");
+  });
+
+  it("returns to idle when finalizing fails", async () => {
+    const { flow, notify } = setup({
+      finalize: vi.fn(async () => {
+        throw new Error("disk full");
+      }),
+    });
+    await flow.start();
+    await flow.stop();
+    expect(notify.error).toHaveBeenCalled();
+    expect(flow.phase).toBe("idle");
+  });
+
+  it("pastes the contact sheet's path, pauses, then the summary", async () => {
+    const { flow, calls, notify, plugin } = setup();
+    await flow.pasteLast();
+    expect(calls).toEqual([
+      `insert:${finalized.contactSheet}`,
+      `sleep:${PASTE_GAP_MS}`,
+      `insert:${finalized.summary}`,
+    ]);
+
+    vi.mocked(plugin.latest).mockResolvedValue(null);
+    await flow.pasteLast();
+    expect(notify.nothingToPaste).toHaveBeenCalled();
+  });
+});

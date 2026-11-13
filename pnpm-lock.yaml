@@ -160,6 +160,9 @@ importers:
       '@anlg/editor':
         specifier: workspace:^
         version: link:../../packages/editor
+      '@anlg/plugin-annotate':
+        specifier: workspace:*
+        version: link:../../plugins/annotate
       '@anlg/plugin-apple-foundation':
         specifier: workspace:*
         version: link:../../plugins/apple-foundation

@@ -12,6 +12,10 @@ const mocks = vi.hoisted(() => ({
   }>,
 }));
 
+vi.mock("~/annotate/system", () => ({
+  annotateAvailable: () => false,
+}));
+
 vi.mock("~/session/queries", () => ({
   useSessionSummaries: () => mocks.sessions,
 }));

@@ -59,6 +59,22 @@ export function localizeExternalMessage(message: string): string {
       return t`This shortcut already starts dictation. Choose another one.`;
     case "This shortcut already pastes the last dictation. Choose another one.":
       return t`This shortcut already pastes the last dictation. Choose another one.`;
+    case "This shortcut is already used by Annotate. Choose another one.":
+      return t`This shortcut is already used by Annotate. Choose another one.`;
+    case "This shortcut is already used by another Librelog shortcut. Choose another one.":
+      return t`This shortcut is already used by another Librelog shortcut. Choose another one.`;
+    case "Annotate is only available in the macOS app.":
+      return t`Annotate is only available in the macOS app.`;
+    case "Screen Recording is not allowed for Librelog.":
+      return t`Screen Recording is not allowed for Librelog.`;
+    case "An annotation is already starting.":
+    case "An annotation is already recording.":
+    case "An annotation is already finishing.":
+      return t`An annotation is already in progress.`;
+    case "No annotation is recording.":
+      return t`No annotation is recording.`;
+    case "This annotation is no longer waiting to be finished.":
+      return t`This annotation is no longer waiting to be finished.`;
     case "Transcription stopped.":
       return t`Transcription stopped.`;
     case "Batch transcription did not include the current recording.":
