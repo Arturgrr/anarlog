@@ -12,6 +12,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createSession: vi.fn(),
   folderError: null as unknown,
+  windowLabel: "main",
   openTabListener: null as
     | ((event: { payload: { tab: unknown } }) => void)
     | null,
@@ -23,7 +24,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("@tauri-apps/api/webviewWindow", () => ({
-  getCurrentWebviewWindow: () => ({}),
+  getCurrentWebviewWindow: () => ({ label: mocks.windowLabel }),
 }));
 
 vi.mock("@anlg/plugin-windows", async (importOriginal) => ({
@@ -59,6 +60,7 @@ vi.mock("~/note-types/picker", () => ({
 }));
 
 import MainAppLayout from "./main-app-layout";
+import { useNewNoteDialog } from "./useNewNote";
 
 import { listenerStore } from "~/store/zustand/listener/instance";
 import { useTabs } from "~/store/zustand/tabs";
@@ -67,6 +69,9 @@ import { resetTabsStore } from "~/store/zustand/tabs/test-utils";
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.folderError = null;
+  mocks.windowLabel = "main";
+  mocks.openTabListener = null;
+  useNewNoteDialog.setState({ request: null });
   resetTabsStore();
   listenerStore.setState(listenerStore.getInitialState(), true);
   mocks.createSession.mockResolvedValue("tray-session");
@@ -105,4 +110,23 @@ it("starts recording the note created from the tray's Start meeting item", async
       state: { autoStart: true },
     });
   });
+});
+
+it("asks for the tray's new note only in the main window", async () => {
+  mocks.windowLabel = "note-session-1";
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MainAppLayout />
+    </QueryClientProvider>,
+  );
+
+  await waitFor(() => expect(mocks.openTabListener).not.toBeNull());
+  act(() =>
+    mocks.openTabListener?.({
+      payload: { tab: { type: "sessions", id: "new" } },
+    }),
+  );
+
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(useNewNoteDialog.getState().request).toBeNull();
 });

@@ -18,6 +18,10 @@ import {
   useTabs,
 } from "~/store/zustand/tabs";
 
+// Every window mounts this layout, and the tray's OpenTab is broadcast to all
+// of them; only the main window asks for a new note.
+const isMainWindow = () => getCurrentWebviewWindow().label === "main";
+
 export default function MainAppLayout() {
   useNavigationEvents();
   useZoomShortcuts();
@@ -26,7 +30,7 @@ export default function MainAppLayout() {
     <>
       <Outlet />
       <UndoDeleteToast />
-      <NewNoteDialog />
+      {isMainWindow() ? <NewNoteDialog /> : null}
     </>
   );
 }
@@ -99,7 +103,9 @@ const useNavigationEvents = () => {
       .openTab(webview)
       .listen(({ payload }) => {
         if (payload.tab.type === "sessions" && payload.tab.id === "new") {
-          if (payload.tab.state?.autoStart) {
+          if (!isMainWindow()) {
+            return;
+          } else if (payload.tab.state?.autoStart) {
             openNewNoteAndListen({ behavior: "new" });
           } else {
             openNewNote({ behavior: "new" });
