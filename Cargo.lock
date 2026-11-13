@@ -173,6 +173,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "annotate-macos"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "swift-rs 1.0.9",
+]
+
+[[package]]
 name = "annotate-snippets"
 version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
