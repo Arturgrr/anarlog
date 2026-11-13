@@ -156,6 +156,10 @@ msgstr ""
 msgid "{hiddenCount, plural, one {Show # more provider} other {Show # more providers}}"
 msgstr ""
 
+#: src/note-types/picker.tsx
+msgid "{label}: {selectedName}"
+msgstr ""
+
 #: src/session/components/note-input/audio-drop-target.tsx
 msgid "{leadingLabels}, or {lastLabel}"
 msgstr ""
@@ -1700,10 +1704,6 @@ msgstr ""
 msgid "Could not assign {failedLabel}. Speakers listed before it were saved; try again to finish."
 msgstr ""
 
-#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
-msgid "Could not assign speakers. Try again."
-msgstr ""
-
 #. placeholder {0}: error.message
 #: src/settings/developers/cli.tsx
 msgid "Could not check the CLI: {0}"
@@ -1832,6 +1832,10 @@ msgstr ""
 #. placeholder {0}: noteType.name
 #: src/settings/note-types/index.tsx
 msgid "Could not rename \"{0}\"."
+msgstr ""
+
+#: src/session/components/title-input.tsx
+msgid "Could not rename the note."
 msgstr ""
 
 #: src/sidebar/toast/undo-delete-toast.tsx
@@ -6429,6 +6433,10 @@ msgstr ""
 
 #: src/settings/automations/workflow-builder.tsx
 msgid "The note type this automation applied to was deleted, so it matches no note. Choose another type or clear it."
+msgstr ""
+
+#: src/shared/new-note-dialog.tsx
+msgid "The note was created, but its folder could not be updated."
 msgstr ""
 
 #: src/shared/new-note-dialog.tsx

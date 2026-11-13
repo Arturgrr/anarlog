@@ -169,6 +169,10 @@ msgstr "{entryCount} selecionados"
 msgid "{hiddenCount, plural, one {Show # more provider} other {Show # more providers}}"
 msgstr "{hiddenCount, plural, one {Mostrar mais # provedor} other {Mostrar mais # provedores}}"
 
+#: src/note-types/picker.tsx
+msgid "{label}: {selectedName}"
+msgstr "{label}: {selectedName}"
+
 #: src/session/components/note-input/audio-drop-target.tsx
 msgid "{leadingLabels}, or {lastLabel}"
 msgstr "{leadingLabels} ou {lastLabel}"
@@ -1713,10 +1717,6 @@ msgstr "Não foi possível adicionar este anexo."
 msgid "Could not assign {failedLabel}. Speakers listed before it were saved; try again to finish."
 msgstr "Não foi possível atribuir {failedLabel}. Os falantes listados antes foram salvos; tente novamente para concluir."
 
-#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
-msgid "Could not assign speakers. Try again."
-msgstr "Não foi possível atribuir os falantes. Tente novamente."
-
 #. placeholder {0}: error.message
 #: src/settings/developers/cli.tsx
 msgid "Could not check the CLI: {0}"
@@ -1846,6 +1846,10 @@ msgstr "Não foi possível remover a automação"
 #: src/settings/note-types/index.tsx
 msgid "Could not rename \"{0}\"."
 msgstr "Não foi possível renomear \"{0}\"."
+
+#: src/session/components/title-input.tsx
+msgid "Could not rename the note."
+msgstr "Não foi possível renomear a nota."
 
 #: src/sidebar/toast/undo-delete-toast.tsx
 msgid "Could not restore deleted note"
@@ -6443,6 +6447,10 @@ msgstr "A nova transcrição retornou muito menos texto. Sua transcrição salva
 #: src/settings/automations/workflow-builder.tsx
 msgid "The note type this automation applied to was deleted, so it matches no note. Choose another type or clear it."
 msgstr "O tipo de nota a que esta automação se aplicava foi excluído, então ela não corresponde a nenhuma nota. Escolha outro tipo ou remova-o."
+
+#: src/shared/new-note-dialog.tsx
+msgid "The note was created, but its folder could not be updated."
+msgstr "A nota foi criada, mas não foi possível atualizar a pasta dela."
 
 #: src/shared/new-note-dialog.tsx
 msgid "The note was created, but its type could not be set."

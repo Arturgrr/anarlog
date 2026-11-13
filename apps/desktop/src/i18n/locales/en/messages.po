@@ -169,6 +169,10 @@ msgstr "{entryCount} selected"
 msgid "{hiddenCount, plural, one {Show # more provider} other {Show # more providers}}"
 msgstr "{hiddenCount, plural, one {Show # more provider} other {Show # more providers}}"
 
+#: src/note-types/picker.tsx
+msgid "{label}: {selectedName}"
+msgstr "{label}: {selectedName}"
+
 #: src/session/components/note-input/audio-drop-target.tsx
 msgid "{leadingLabels}, or {lastLabel}"
 msgstr "{leadingLabels}, or {lastLabel}"
@@ -1713,10 +1717,6 @@ msgstr "Could not add this attachment."
 msgid "Could not assign {failedLabel}. Speakers listed before it were saved; try again to finish."
 msgstr "Could not assign {failedLabel}. Speakers listed before it were saved; try again to finish."
 
-#: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
-msgid "Could not assign speakers. Try again."
-msgstr "Could not assign speakers. Try again."
-
 #. placeholder {0}: error.message
 #: src/settings/developers/cli.tsx
 msgid "Could not check the CLI: {0}"
@@ -1846,6 +1846,10 @@ msgstr "Could not remove the automation"
 #: src/settings/note-types/index.tsx
 msgid "Could not rename \"{0}\"."
 msgstr "Could not rename \"{0}\"."
+
+#: src/session/components/title-input.tsx
+msgid "Could not rename the note."
+msgstr "Could not rename the note."
 
 #: src/sidebar/toast/undo-delete-toast.tsx
 msgid "Could not restore deleted note"
@@ -6443,6 +6447,10 @@ msgstr "The new transcription returned much less text. Your saved transcript and
 #: src/settings/automations/workflow-builder.tsx
 msgid "The note type this automation applied to was deleted, so it matches no note. Choose another type or clear it."
 msgstr "The note type this automation applied to was deleted, so it matches no note. Choose another type or clear it."
+
+#: src/shared/new-note-dialog.tsx
+msgid "The note was created, but its folder could not be updated."
+msgstr "The note was created, but its folder could not be updated."
 
 #: src/shared/new-note-dialog.tsx
 msgid "The note was created, but its type could not be set."
