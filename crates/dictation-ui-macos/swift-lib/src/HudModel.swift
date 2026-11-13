@@ -94,9 +94,16 @@ final class HudModel {
   var recording: Bool { phase == .recording }
 
   func handle(_ event: HudEvent, now: Double, reduceMotion: Bool) {
+    let wasActive = active
     active = true
     switch event {
     case .started:
+      // Outside notch mode the HUD hides without waiting for the ears to
+      // fold, so a new dictation starts them closed.
+      if !wasActive {
+        earsOpen.jump(0)
+        earsFade.jump(0)
+      }
       phase = .recording
       phaseStarted = now
       completionPending = false

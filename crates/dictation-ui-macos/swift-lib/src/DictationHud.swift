@@ -167,7 +167,9 @@ final class DictationHud: NSObject {
       startObserving()
     }
     if displayLink == nil {
-      let link = scopeView.displayLink(target: self, selector: #selector(tick(_:)))
+      // From the panel, not the scope view: the scope is hidden in notch mode,
+      // and a hidden view's display link may not fire.
+      let link = panel.displayLink(target: self, selector: #selector(tick(_:)))
       link.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
       link.add(to: .main, forMode: .common)
       displayLink = link
