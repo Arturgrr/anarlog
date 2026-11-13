@@ -534,15 +534,7 @@ PY
 
     #[cfg(unix)]
     fn write_fake_codex_script(temp_dir: &TempDir, body: &str) -> PathBuf {
-        use std::os::unix::fs::PermissionsExt;
-
-        let path = temp_dir.path().join("codex");
-        let script = format!("#!/bin/sh\nset -eu\n{body}");
-        fs::write(&path, script).expect("write fake codex");
-        let mut permissions = fs::metadata(&path).expect("metadata").permissions();
-        permissions.set_mode(0o755);
-        fs::set_permissions(&path, permissions).expect("chmod");
-        path
+        crate::test_support::write_fake_codex_script(temp_dir, body)
     }
 
     #[cfg(unix)]
