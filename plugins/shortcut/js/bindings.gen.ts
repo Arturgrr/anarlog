@@ -50,11 +50,13 @@ export const commands = {
   },
   /**
    * Checks a dictation shortcut, which must differ from the `paste_last`
-   * shortcut when there is one.
+   * shortcut when there is one, and from Annotate's shortcuts (`annotate`,
+   * empty while Annotate is off).
    */
   async validate(
     shortcut: string,
     pasteLast: string | null,
+    annotate: string[],
   ): Promise<Result<null, string>> {
     try {
       return {
@@ -62,6 +64,7 @@ export const commands = {
         data: await TAURI_INVOKE("plugin:shortcut|validate", {
           shortcut,
           pasteLast,
+          annotate,
         }),
       };
     } catch (e) {
@@ -102,11 +105,12 @@ export const commands = {
   },
   /**
    * Checks a paste-last shortcut: a key with modifiers that none of the
-   * `dictation` shortcuts uses.
+   * `dictation` shortcuts or Annotate's (`annotate`) uses.
    */
   async validatePasteLast(
     shortcut: string,
     dictation: string[],
+    annotate: string[],
   ): Promise<Result<null, string>> {
     try {
       return {
@@ -114,6 +118,7 @@ export const commands = {
         data: await TAURI_INVOKE("plugin:shortcut|validate_paste_last", {
           shortcut,
           dictation,
+          annotate,
         }),
       };
     } catch (e) {
@@ -177,22 +182,6 @@ export const commands = {
         status: "ok",
         data: await TAURI_INVOKE("plugin:shortcut|set_annotate_recording", {
           recording,
-        }),
-      };
-    } catch (e) {
-      if (e instanceof Error) throw e;
-      else return { status: "error", error: e as any };
-    }
-  },
-  /**
-   * Takes Escape from other apps while Annotate's ink is on, to turn it off.
-   */
-  async setAnnotateEscape(enabled: boolean): Promise<Result<null, string>> {
-    try {
-      return {
-        status: "ok",
-        data: await TAURI_INVOKE("plugin:shortcut|set_annotate_escape", {
-          enabled,
         }),
       };
     } catch (e) {

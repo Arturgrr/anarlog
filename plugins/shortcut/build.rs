@@ -9,7 +9,6 @@ const COMMANDS: &[&str] = &[
     "configure_annotate",
     "validate_annotate",
     "set_annotate_recording",
-    "set_annotate_escape",
 ];
 
 fn main() {

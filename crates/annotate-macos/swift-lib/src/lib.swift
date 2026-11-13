@@ -22,8 +22,8 @@ private func blocking(_ work: () -> String) -> SRString {
 }
 
 @_cdecl("_annotate_probe")
-public func annotateProbe() -> SRString {
-  blocking { AnnotateReply.ok(AnnotatePermissions.probe()) }
+public func annotateProbe(tcc: Int) -> SRString {
+  blocking { AnnotateReply.ok(AnnotatePermissions.probe(tcc: tcc)) }
 }
 
 @_cdecl("_annotate_request")

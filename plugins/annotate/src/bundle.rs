@@ -9,7 +9,7 @@ use anlg_annotate_core::{FrameSource, Recording, RgbaFrame, Stroke, Target, Tran
 use serde::{Deserialize, Serialize};
 
 use crate::Error;
-use crate::native::{ExtractReply, Native, StopResult};
+use crate::native::{Candidate, ExtractReply, Native, StopResult};
 
 /// What the transcriber heard, from the frontend. Times are ms from the
 /// start of `audio.wav`, which is the capture's start.
@@ -78,18 +78,46 @@ fn transcript(input: Option<TranscriptInput>) -> Transcript {
     }
 }
 
-/// The candidate JPEGs as frames; one that can't be read is left out.
+/// Candidates decoded to choose the key frames: a 20-minute recording has
+/// about 5,500, which would take some 3 GB as full RGBA.
+const MAX_CANDIDATES: usize = 600;
+/// The width they are chosen at; the selection samples at most a 128-cell
+/// grid, so this loses nothing it reads.
+const SELECT_WIDTH: u32 = 256;
+
+/// At most `max` of `candidates`, evenly spaced, the first and last kept.
+fn thin(candidates: &[Candidate], max: usize) -> Vec<&Candidate> {
+    if candidates.len() <= max {
+        return candidates.iter().collect();
+    }
+    let last = candidates.len() - 1;
+    (0..max)
+        .map(|i| &candidates[(i * last + (max - 1) / 2) / (max - 1)])
+        .collect()
+}
+
+fn decode(candidate: &Candidate) -> Option<image::RgbaImage> {
+    image::open(&candidate.path)
+        .inspect_err(
+            |error| tracing::warn!(%error, path = candidate.path, "unreadable candidate frame"),
+        )
+        .ok()
+        .map(|image| image.into_rgba8())
+}
+
+/// The candidate JPEGs, thinned and shrunk, to choose the key frames from;
+/// one that can't be read is left out.
 fn candidates(result: &StopResult) -> Vec<RgbaFrame> {
-    result
-        .candidates
-        .iter()
+    thin(&result.candidates, MAX_CANDIDATES)
+        .into_iter()
         .filter_map(|candidate| {
-            let image = image::open(&candidate.path)
-                .inspect_err(|error| {
-                    tracing::warn!(%error, path = candidate.path, "unreadable candidate frame")
-                })
-                .ok()?
-                .into_rgba8();
+            let mut image = decode(candidate)?;
+            if image.width() > SELECT_WIDTH {
+                let height = (u64::from(image.height()) * u64::from(SELECT_WIDTH)
+                    / u64::from(image.width()))
+                .max(1) as u32;
+                image = image::imageops::thumbnail(&image, SELECT_WIDTH, height);
+            }
             let (width, height) = image.dimensions();
             Some(RgbaFrame::new(
                 ms(candidate.t_ms),
@@ -138,16 +166,42 @@ pub fn recording(result: &StopResult, transcript_input: Option<TranscriptInput>)
     }
 }
 
-/// Full-size frames read from the movie by the native layer.
+/// Full-size frames read from the movie by the native layer, else the
+/// candidate JPEG taken at that time, decoded again at its full size.
 struct MovieFrames<'a> {
     native: &'a Arc<dyn Native>,
     video: &'a str,
     video_offset_ms: i64,
     dir: &'a Path,
+    candidates: &'a [Candidate],
 }
 
 impl FrameSource for MovieFrames<'_> {
     fn frames_at(&mut self, times_ms: &[u64]) -> Vec<RgbaFrame> {
+        let mut frames = self.movie_frames(times_ms);
+        for &t in times_ms {
+            if frames.iter().any(|frame| frame.t_ms.abs_diff(t) <= 250) {
+                continue;
+            }
+            let full = self
+                .candidates
+                .iter()
+                .find(|candidate| ms(candidate.t_ms) == t)
+                .and_then(decode);
+            if let Some(image) = full {
+                let (width, height) = image.dimensions();
+                frames.push(RgbaFrame::new(t, width, height, image.into_raw()));
+            }
+        }
+        frames
+    }
+}
+
+impl MovieFrames<'_> {
+    fn movie_frames(&mut self, times_ms: &[u64]) -> Vec<RgbaFrame> {
+        if self.video.is_empty() {
+            return Vec::new();
+        }
         let request = serde_json::json!({
             "video": self.video,
             "video_offset_ms": self.video_offset_ms,
@@ -199,6 +253,7 @@ pub fn finalize(
         video: &result.video_path,
         video_offset_ms: result.video_offset_ms.unwrap_or(0),
         dir: &extract,
+        candidates: &result.candidates,
     };
     let finalized = anlg_annotate_core::finalize(dir, recording(result, transcript), &mut frames);
     let _ = std::fs::remove_dir_all(&extract);
@@ -277,6 +332,28 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_twenty_minute_recording_decodes_a_bounded_spread_of_candidates() {
+        // One candidate every 220 ms for 20 minutes.
+        let all: Vec<Candidate> = (0..5_455)
+            .map(|i| Candidate {
+                t_ms: i * 220,
+                path: format!("{i}.jpg"),
+            })
+            .collect();
+        let kept = thin(&all, MAX_CANDIDATES);
+        assert_eq!(kept.len(), MAX_CANDIDATES);
+        assert_eq!(kept[0].t_ms, 0);
+        assert_eq!(kept[MAX_CANDIDATES - 1].t_ms, all[all.len() - 1].t_ms);
+        let widest = kept
+            .windows(2)
+            .map(|pair| pair[1].t_ms - pair[0].t_ms)
+            .max()
+            .unwrap();
+        assert!(widest <= 2_200, "a {widest} ms gap");
+        assert_eq!(thin(&all[..10], MAX_CANDIDATES).len(), 10);
+    }
+
+    #[test]
     fn the_native_stop_result_becomes_the_cores_recording() {
         let dir = tempfile::tempdir().unwrap();
         let result = stop_result(dir.path(), 3);
@@ -322,7 +399,7 @@ pub(crate) mod tests {
         );
         let times: Vec<_> = recording.candidates.iter().map(|c| c.t_ms).collect();
         assert_eq!(times, [0, 500, 1_000]);
-        assert_eq!(recording.candidates[0].width, 480);
+        assert_eq!(recording.candidates[0].width, SELECT_WIDTH);
         assert_eq!(recording.transcript.text, "Look here");
         assert_eq!(recording.transcript.source, "deepgram");
         assert_eq!(recording.transcript.words[1].t0, 1_100);

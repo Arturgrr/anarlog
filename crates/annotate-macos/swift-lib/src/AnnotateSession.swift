@@ -358,6 +358,8 @@ final class AnnotateSession {
     guard machine.reserve() else {
       return .failure(AnnotateFailure(.busy, "a recording is \(machine.phase.rawValue)"))
     }
+    // A stop or discard left from the last recording is not this one's.
+    mailbox.update { mailbox in mailbox.events.removeAll() }
     let screens = NSScreen.screens.compactMap { AnnotateScreen($0) }
     guard let screen = AnnotateGeometry.screen(under: NSEvent.mouseLocation, in: screens) else {
       machine.reset()

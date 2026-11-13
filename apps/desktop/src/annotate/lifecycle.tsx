@@ -17,7 +17,7 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
 import { createAnnotateFlow } from "./flow";
 import { chainRegistration } from "./registration";
-import { useAnnotateStatus } from "./state";
+import { annotateRuns, useAnnotateStatus } from "./state";
 import { annotateAvailable, openScreenRecordingSettings } from "./system";
 
 import { useDictationStatus } from "~/dictation/state";
@@ -66,7 +66,10 @@ function ApplyRetention({ retention }: { retention: string }) {
 export function AnnotateLifecycle() {
   const settingsReady = useSettingsReady();
   const enabled = useConfigValue("annotate_enabled");
-  if (!settingsReady || !enabled || !annotateAvailable()) return null;
+  const phase = useAnnotateStatus((state) => state.phase);
+  if (!settingsReady || !annotateAvailable() || !annotateRuns(enabled, phase)) {
+    return null;
+  }
   return <ActiveAnnotate />;
 }
 
@@ -149,9 +152,6 @@ function ActiveAnnotate() {
       setRecording: async (recording) => {
         unwrap(await shortcuts.setAnnotateRecording(recording));
       },
-      setEscape: async (enabled) => {
-        unwrap(await shortcuts.setAnnotateEscape(enabled));
-      },
       notify: {
         ready: (finalized: Finalized) =>
           toast.success(t`Annotation ready`, {
@@ -217,7 +217,6 @@ function ActiveAnnotate() {
       disposed = true;
       for (const stop of unlisteners) stop();
       useAnnotateStatus.setState({ phase: "idle" });
-      void flow.discard();
     };
   });
 

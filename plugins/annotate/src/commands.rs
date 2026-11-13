@@ -159,7 +159,7 @@ pub(crate) async fn set_retention<R: tauri::Runtime>(
 #[specta::specta]
 pub(crate) async fn annotations_dir<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Result<String> {
     let root = session(&app).root().to_path_buf();
-    std::fs::create_dir_all(&root).map_err(|error| text(error.into()))?;
+    crate::session::ensure_root(&root).map_err(|error| text(error.into()))?;
     Ok(root.to_string_lossy().into_owned())
 }
 

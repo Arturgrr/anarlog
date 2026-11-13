@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createAnnotateFlow, PASTE_GAP_MS, type AnnotateDeps } from "./flow";
+import {
+  createAnnotateFlow,
+  NO_SPEECH,
+  PASTE_GAP_MS,
+  shellEscapePath,
+  type AnnotateDeps,
+} from "./flow";
+import { annotateRuns } from "./state";
 
 const stopped = {
   id: "annotation-1",
@@ -60,7 +67,6 @@ function setup(overrides: Partial<AnnotateDeps["plugin"]> = {}) {
       calls.push(`sleep:${ms}`);
     }),
     setRecording: vi.fn(async () => {}),
-    setEscape: vi.fn(async () => {}),
     notify,
     onPhase: vi.fn(),
   };
@@ -146,7 +152,7 @@ describe("Annotate flow", () => {
     const { flow, calls, notify, plugin } = setup();
     await flow.pasteLast();
     expect(calls).toEqual([
-      `insert:${finalized.contactSheet}`,
+      `insert:${shellEscapePath(finalized.contactSheet)}`,
       `sleep:${PASTE_GAP_MS}`,
       `insert:${finalized.summary}`,
     ]);
@@ -154,5 +160,101 @@ describe("Annotate flow", () => {
     vi.mocked(plugin.latest).mockResolvedValue(null);
     await flow.pasteLast();
     expect(notify.nothingToPaste).toHaveBeenCalled();
+  });
+
+  it("escapes a pasted path as Terminal's drag and drop does", () => {
+    expect(
+      shellEscapePath(
+        "/Users/a/Library/Application Support/Librelog (1)/it's.png",
+      ),
+    ).toBe(
+      "/Users/a/Library/Application\\ Support/Librelog\\ \\(1\\)/it\\'s.png",
+    );
+    expect(shellEscapePath("/a/b-c_d.e@f+g:h/é.png")).toBe(
+      "/a/b-c_d.e@f+g:h/é.png",
+    );
+  });
+
+  it("stops a recording whose stop was pressed while it was starting", async () => {
+    let started!: () => void;
+    const { flow, plugin } = setup({
+      start: vi.fn(
+        () =>
+          new Promise<{ id: string; dir: string }>((resolve) => {
+            started = () => resolve({ id: stopped.id, dir: stopped.dir });
+          }),
+      ),
+    });
+    const starting = flow.start();
+    await vi.waitFor(() => expect(plugin.start).toHaveBeenCalled());
+    await flow.onShortcut("stop");
+    expect(plugin.stop).not.toHaveBeenCalled();
+    started();
+    await starting;
+    expect(plugin.stop).toHaveBeenCalledOnce();
+    expect(plugin.finalize).toHaveBeenCalledOnce();
+    expect(flow.phase).toBe("idle");
+  });
+
+  it("goes back to idle when the stop finds nothing recording and no event follows", async () => {
+    const { flow, notify } = setup({
+      stop: vi.fn(async () => {
+        throw new Error("No annotation is recording.");
+      }),
+    });
+    await flow.start();
+    await flow.stop();
+    expect(flow.phase).toBe("idle");
+    expect(notify.error).not.toHaveBeenCalled();
+  });
+
+  it("treats a discarded stop as quiet", async () => {
+    const { flow, notify } = setup({
+      stop: vi.fn(async () => {
+        throw new Error("The annotation was cancelled.");
+      }),
+    });
+    await flow.start();
+    await flow.stop();
+    expect(notify.error).not.toHaveBeenCalled();
+    expect(flow.phase).toBe("idle");
+  });
+
+  it("finalizes without words and without a warning when nothing was said", async () => {
+    const { flow, deps, plugin, notify } = setup();
+    vi.mocked(deps.transcribe).mockRejectedValue(new Error(NO_SPEECH));
+    await flow.start();
+    await flow.stop();
+    expect(notify.transcriptionFailed).not.toHaveBeenCalled();
+    expect(plugin.finalize).toHaveBeenCalledWith(stopped.id, null);
+    expect(notify.ready).toHaveBeenCalledWith(finalized);
+  });
+
+  it("retries a failed finalize once with the same words", async () => {
+    const finalize = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("disk full"))
+      .mockResolvedValueOnce(finalized);
+    const { flow, deps, plugin, notify } = setup({
+      finalize,
+      status: vi.fn(async () => ({
+        available: true,
+        phase: "finishing" as const,
+        stopped,
+      })),
+    });
+    await flow.start();
+    await flow.stop();
+    expect(plugin.finalize).toHaveBeenCalledTimes(2);
+    expect(deps.transcribe).toHaveBeenCalledOnce();
+    expect(notify.error).not.toHaveBeenCalled();
+    expect(notify.ready).toHaveBeenCalledWith(finalized);
+  });
+
+  it("keeps running after Annotate is turned off until the session is idle", () => {
+    expect(annotateRuns(true, "idle")).toBe(true);
+    expect(annotateRuns(false, "recording")).toBe(true);
+    expect(annotateRuns(false, "transcribing")).toBe(true);
+    expect(annotateRuns(false, "idle")).toBe(false);
   });
 });

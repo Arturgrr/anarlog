@@ -10,6 +10,7 @@ mod press;
 pub use error::*;
 pub use events::*;
 pub use ext::*;
+pub use global::set_annotate_escape;
 
 use handler::Handler;
 use tauri::Manager;
@@ -30,7 +31,6 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             global::configure_annotate,
             global::validate_annotate,
             global::set_annotate_recording,
-            global::set_annotate_escape,
         ])
         .events(tauri_specta::collect_events![
             ShortcutEvent,

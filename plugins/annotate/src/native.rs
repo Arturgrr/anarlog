@@ -21,9 +21,19 @@ pub trait Native: Send + Sync + 'static {
 /// The real one: the Swift package on macOS, `unsupported` elsewhere.
 pub struct System;
 
+#[cfg(all(target_os = "macos", feature = "private-tcc"))]
+fn tcc() -> anlg_annotate_macos::Tcc {
+    anlg_tcc::screen_capture_permission_status()
+}
+
+#[cfg(not(all(target_os = "macos", feature = "private-tcc")))]
+fn tcc() -> anlg_annotate_macos::Tcc {
+    anlg_annotate_macos::TCC_UNKNOWN
+}
+
 impl Native for System {
     fn probe_screen_recording(&self) -> Result<String, AnnotateError> {
-        anlg_annotate_macos::probe_screen_recording()
+        anlg_annotate_macos::probe_screen_recording(tcc())
     }
 
     fn request_screen_recording(&self) -> Result<bool, AnnotateError> {
@@ -63,6 +73,10 @@ impl Native for System {
 pub struct StartReply {
     /// The capture's zero on the host clock (`mach_absolute_time` in ns).
     pub started_host_ns: u64,
+    #[serde(default)]
+    pub started_wall_ms: i64,
+    #[serde(default)]
+    pub display: Display,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]

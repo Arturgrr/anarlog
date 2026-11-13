@@ -9,7 +9,6 @@ permissions = [
   "allow-configure-annotate",
   "allow-validate-annotate",
   "allow-set-annotate-recording",
-  "allow-set-annotate-escape",
   "allow-register-hotkey",
   "allow-unregister-hotkey",
 ]

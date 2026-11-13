@@ -98,6 +98,7 @@ describe("dictation shortcut recorder", () => {
     expect(mocks.validate).toHaveBeenCalledWith(
       "Control+Alt+KeyD",
       "Alt+Shift+KeyV",
+      [],
     );
     await waitFor(() =>
       expect(useDictationStatus.getState().capturingShortcut).toBe(false),

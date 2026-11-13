@@ -10,6 +10,7 @@ import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
 import { waitForAnnotateCleanup } from "~/annotate/registration";
+import { useAnnotateShortcuts } from "~/annotate/system";
 import { waitForDictationCleanup } from "~/dictation/lifecycle";
 import { waitForPasteLastCleanup } from "~/dictation/paste-last";
 import { useDictationStatus } from "~/dictation/state";
@@ -225,6 +226,7 @@ export function DictationShortcuts({ shortcuts }: { shortcuts: string[] }) {
   const hintId = useId();
   const pasteLastEnabled = useConfigValue("dictation_paste_last_enabled");
   const pasteLast = useConfigValue("dictation_paste_last_shortcut");
+  const annotateShortcuts = useAnnotateShortcuts();
   const recorder = useShortcutRecorder<number>({
     validate: async (value, index) => {
       const identity = shortcutIdentity(value);
@@ -238,6 +240,7 @@ export function DictationShortcuts({ shortcuts }: { shortcuts: string[] }) {
       const result = await shortcutCommands.validate(
         value,
         pasteLastEnabled ? pasteLast : null,
+        annotateShortcuts,
       );
       return result.status === "error"
         ? localizeExternalMessage(result.error)

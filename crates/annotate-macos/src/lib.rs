@@ -52,12 +52,18 @@ impl StartRequest {
     }
 }
 
+/// TCC's own answer for Screen Recording, which only builds allowed to read
+/// private TCC have: `0` granted, `1` denied, `2` never asked.
+/// [`TCC_UNKNOWN`] otherwise.
+pub type Tcc = isize;
+pub const TCC_UNKNOWN: Tcc = -1;
+
 /// Whether this process can record the screen, read afresh:
-/// `"granted"`, `"denied"`, `"not_determined"` (never asked), or
-/// `"needs_restart"` (granted in System Settings, but this process can't
-/// record until it restarts). Blocks up to about 5 s.
-pub fn probe_screen_recording() -> Result<String, AnnotateError> {
-    reply::parse(&sys::probe()).and_then(reply::expect_string)
+/// `"granted"`, `"denied"`, `"not_determined"` (never asked, or unknown
+/// without `tcc`), or `"needs_restart"` (granted in System Settings, but this
+/// process can't record until it restarts). Blocks up to about 5 s.
+pub fn probe_screen_recording(tcc: Tcc) -> Result<String, AnnotateError> {
+    reply::parse(&sys::probe(tcc)).and_then(reply::expect_string)
 }
 
 /// Shows the system's Screen Recording prompt, which macOS shows once per
@@ -121,9 +127,9 @@ pub fn extract_frames(request: &str) -> Result<String, AnnotateError> {
 
 #[cfg(target_os = "macos")]
 mod sys {
-    use swift_rs::{SRString, swift};
+    use swift_rs::{Int, SRString, swift};
 
-    swift!(fn _annotate_probe() -> SRString);
+    swift!(fn _annotate_probe(tcc: Int) -> SRString);
     swift!(fn _annotate_request() -> SRString);
     swift!(fn _annotate_open_settings() -> SRString);
     swift!(fn _annotate_start(request: &SRString) -> SRString);
@@ -134,8 +140,8 @@ mod sys {
     swift!(fn _annotate_status() -> SRString);
     swift!(fn _annotate_extract_frames(request: &SRString) -> SRString);
 
-    pub fn probe() -> String {
-        unsafe { _annotate_probe() }.to_string()
+    pub fn probe(tcc: isize) -> String {
+        unsafe { _annotate_probe(tcc) }.to_string()
     }
 
     pub fn request() -> String {
@@ -180,7 +186,7 @@ mod sys {
     const UNSUPPORTED: &str =
         r#"{"ok":false,"error":{"code":"unsupported","message":"Annotate records only on macOS"}}"#;
 
-    pub fn probe() -> String {
+    pub fn probe(_tcc: isize) -> String {
         UNSUPPORTED.to_owned()
     }
 

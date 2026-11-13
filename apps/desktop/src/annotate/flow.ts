@@ -39,8 +39,6 @@ export type AnnotateDeps = {
   sleep: (ms: number) => Promise<void>;
   /** Tells the shortcut whether a recording runs. */
   setRecording: (recording: boolean) => Promise<void>;
-  /** Takes Escape from other apps while ink is on. */
-  setEscape: (enabled: boolean) => Promise<void>;
   notify: {
     ready: (finalized: Finalized) => void;
     screenRecordingDenied: () => void;
@@ -57,9 +55,21 @@ export type AnnotateDeps = {
 export const PASTE_GAP_MS = 160;
 
 const NOT_RECORDING = "No annotation is recording.";
+const CANCELLED = "The annotation was cancelled.";
+/** Batch transcription's answer for audio without speech. */
+export const NO_SPEECH = "No speech was detected in the audio.";
 
 function messageOf(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * A path as Terminal's drag and drop types it: spaces and the shell's
+ * special characters behind a backslash, which terminal agents such as
+ * Claude Code read as one path to attach.
+ */
+export function shellEscapePath(path: string) {
+  return path.replace(/[\s!"#$&'()*,;<=>?[\\\]^`{|}~]/gu, "\\$&");
 }
 
 /**
@@ -70,6 +80,10 @@ export function createAnnotateFlow(deps: AnnotateDeps) {
   let phase: AnnotatePhase = "idle";
   // The stopped recording being transcribed and finalized.
   let finishing: string | null = null;
+  // A stop pressed while the recording was still starting.
+  let stopWhenStarted = false;
+  // The transcript of a recording whose finalize is retried once.
+  let heard: { id: string; transcript: TranscriptInput | null } | null = null;
 
   const set = (next: AnnotatePhase) => {
     phase = next;
@@ -80,9 +94,9 @@ export function createAnnotateFlow(deps: AnnotateDeps) {
 
   const toIdle = () => {
     finishing = null;
+    stopWhenStarted = false;
     set("idle");
     void quietly(deps.setRecording(false));
-    void quietly(deps.setEscape(false));
   };
 
   async function screenRecordingAllowed() {
@@ -114,9 +128,31 @@ export function createAnnotateFlow(deps: AnnotateDeps) {
       set("recording");
       await quietly(deps.setRecording(true));
     } catch (error) {
-      deps.notify.error(error);
+      if (messageOf(error) !== CANCELLED) deps.notify.error(error);
       await recover();
+      return;
     }
+    if (stopWhenStarted) {
+      stopWhenStarted = false;
+      await stop();
+    }
+  }
+
+  async function transcribe(stopped: Stopped) {
+    if (heard?.id === stopped.id) return heard.transcript;
+    let transcript: TranscriptInput | null = null;
+    if (stopped.audioPath) {
+      try {
+        transcript = await deps.transcribe(stopped.audioPath);
+      } catch (error) {
+        // The bundle is still worth having: frames and ink, without words.
+        if (messageOf(error) !== NO_SPEECH) {
+          deps.notify.transcriptionFailed(error);
+        }
+      }
+    }
+    heard = { id: stopped.id, transcript };
+    return transcript;
   }
 
   async function finish(stopped: Stopped) {
@@ -124,37 +160,45 @@ export function createAnnotateFlow(deps: AnnotateDeps) {
     finishing = stopped.id;
     set("transcribing");
     void quietly(deps.setRecording(false));
-    void quietly(deps.setEscape(false));
-    let transcript: TranscriptInput | null = null;
-    if (stopped.audioPath) {
-      try {
-        transcript = await deps.transcribe(stopped.audioPath);
-      } catch (error) {
-        // The bundle is still worth having: frames and ink, without words.
-        deps.notify.transcriptionFailed(error);
-      }
-    }
+    const transcript = await transcribe(stopped);
     try {
       const finalized = await deps.plugin.finalize(stopped.id, transcript);
+      heard = null;
       await quietly(deps.copy(finalized.summary));
       deps.notify.ready(finalized);
+      toIdle();
     } catch (error) {
+      if (messageOf(error) === CANCELLED) return toIdle();
+      // The plugin keeps a recording whose finalize failed for one retry.
+      finishing = null;
+      const status = await deps.plugin.status().catch(() => null);
+      if (status?.phase === "finishing" && status.stopped?.id === stopped.id) {
+        console.error("[annotate] finalize, retrying", error);
+        return finish(status.stopped);
+      }
+      heard = null;
       deps.notify.error(error);
-    } finally {
       toIdle();
     }
   }
 
   async function stop() {
+    if (phase === "starting") {
+      stopWhenStarted = true;
+      return;
+    }
     if (phase !== "recording") return;
     set("finishing");
     let stopped: Stopped;
     try {
       stopped = await deps.plugin.stop();
     } catch (error) {
-      // The capsule's stop got there first; its event finishes it.
-      if (messageOf(error) === NOT_RECORDING) return;
-      deps.notify.error(error);
+      const message = messageOf(error);
+      if (message !== NOT_RECORDING && message !== CANCELLED) {
+        deps.notify.error(error);
+      }
+      // The capsule's stop or discard got there first: the plugin knows
+      // where it stands.
       return recover();
     }
     await finish(stopped);
@@ -185,7 +229,7 @@ export function createAnnotateFlow(deps: AnnotateDeps) {
       case "discarded":
         return toIdle();
       case "ink":
-        return quietly(deps.setEscape(event.on));
+        return;
       case "failed":
         deps.notify.error(new Error(event.message));
         return recover();
@@ -195,7 +239,6 @@ export function createAnnotateFlow(deps: AnnotateDeps) {
   async function ink(on: boolean) {
     if (phase !== "recording") return;
     await quietly(deps.plugin.setInkMode(on ? "hover" : "off"));
-    await quietly(deps.setEscape(on));
   }
 
   async function onShortcut(
@@ -226,18 +269,9 @@ export function createAnnotateFlow(deps: AnnotateDeps) {
   }
 
   async function paste(finalized: Finalized) {
-    await deps.insert(finalized.contactSheet);
+    await deps.insert(shellEscapePath(finalized.contactSheet));
     await deps.sleep(PASTE_GAP_MS);
     await deps.insert(finalized.summary);
-  }
-
-  async function discard() {
-    try {
-      await deps.plugin.cancel();
-    } catch (error) {
-      deps.notify.error(error);
-    }
-    await recover();
   }
 
   return {
@@ -248,7 +282,6 @@ export function createAnnotateFlow(deps: AnnotateDeps) {
     onShortcut,
     pasteLast,
     paste,
-    discard,
     get phase() {
       return phase;
     },

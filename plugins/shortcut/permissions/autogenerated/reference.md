@@ -12,7 +12,6 @@ Default permissions for the plugin
 - `allow-configure-annotate`
 - `allow-validate-annotate`
 - `allow-set-annotate-recording`
-- `allow-set-annotate-escape`
 - `allow-register-hotkey`
 - `allow-unregister-hotkey`
 
@@ -151,32 +150,6 @@ Enables the set_active command without any pre-configured scope.
 <td>
 
 Denies the set_active command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`shortcut:allow-set-annotate-escape`
-
-</td>
-<td>
-
-Enables the set_annotate_escape command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`shortcut:deny-set-annotate-escape`
-
-</td>
-<td>
-
-Denies the set_annotate_escape command without any pre-configured scope.
 
 </td>
 </tr>

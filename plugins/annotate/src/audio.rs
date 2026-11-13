@@ -24,8 +24,9 @@ use crate::Error;
 
 pub const SAMPLE_RATE: u32 = 16_000;
 const CHUNK_SIZE: usize = 320;
-/// The native layer stops at 20 minutes; this only bounds a microphone left
-/// open by a host that lost track.
+/// The native layer stops at 20 minutes from the capture's start; this only
+/// bounds a microphone left open by a host that lost track. Counted from the
+/// start once it is known, from opening the microphone until then.
 const MAX_SECONDS: u64 = 20 * 60 + 30;
 /// Frames observed before the start bound is trusted: a second of 20 ms frames.
 const OBSERVATIONS: usize = 50;
@@ -187,6 +188,8 @@ impl Aligner {
 #[derive(Clone, Debug)]
 pub struct Narrated {
     pub path: PathBuf,
+    /// Samples in the file, silence padding included.
+    pub samples: u32,
 }
 
 /// The microphone recording to `audio.wav` while a capture runs.
@@ -215,7 +218,11 @@ impl Narration {
             let start = start.clone();
             let keep = keep.clone();
             async move {
-                let result = record(stream, &path, cancellation, start, clock).await;
+                let result = record(stream, &path, &cancellation, start, clock).await;
+                // A stream that ended or failed by itself, or the deadline,
+                // leaves the file finished; only `stop` or `cancel` decides
+                // whether it stays.
+                cancellation.cancelled().await;
                 let keep = keep.load(std::sync::atomic::Ordering::SeqCst);
                 if result.is_err() || !keep {
                     let _ = std::fs::remove_file(&path);
@@ -260,7 +267,7 @@ impl Narration {
 async fn record(
     mut stream: anlg_audio::CaptureStream,
     path: &Path,
-    cancellation: CancellationToken,
+    cancellation: &CancellationToken,
     start: Arc<Mutex<Option<u64>>>,
     clock: Arc<dyn Clock>,
 ) -> Result<Narrated, Error> {
@@ -272,18 +279,33 @@ async fn record(
     };
     let mut writer = hound::WavWriter::create(path, spec).map_err(wav)?;
     let mut aligner = Aligner::new(SAMPLE_RATE);
-    let deadline = tokio::time::sleep(std::time::Duration::from_secs(MAX_SECONDS));
+    let max = std::time::Duration::from_secs(MAX_SECONDS);
+    let deadline = tokio::time::sleep(max);
     tokio::pin!(deadline);
+    let mut started = false;
     loop {
         tokio::select! {
             _ = cancellation.cancelled() => break,
             _ = &mut deadline => break,
             next = stream.next() => {
-                let Some(frame) = next else { break };
-                let frame = frame.map_err(|error| Error::Microphone(error.to_string()))?;
+                let frame = match next {
+                    Some(Ok(frame)) => frame,
+                    Some(Err(error)) => {
+                        tracing::warn!(%error, "annotate microphone stream failed");
+                        break;
+                    }
+                    None => {
+                        tracing::warn!("annotate microphone stream ended");
+                        break;
+                    }
+                };
                 let arrival = clock.now_ns();
                 if let Some(ns) = *start.lock().unwrap_or_else(|e| e.into_inner()) {
                     aligner.set_start(ns);
+                    if !started {
+                        started = true;
+                        deadline.as_mut().reset(tokio::time::Instant::now() + max);
+                    }
                 }
                 let ready = aligner.push(arrival, &frame.preferred_mic());
                 write(&mut writer, &ready)?;
@@ -291,14 +313,24 @@ async fn record(
         }
     }
     drop(stream);
-    if let Some(ns) = *start.lock().unwrap_or_else(|e| e.into_inner()) {
+    let known = |start: &Mutex<Option<u64>>| *start.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(ns) = known(&start) {
         aligner.set_start(ns);
+    } else if !cancellation.is_cancelled() {
+        // The stream ended before the capture started: its start, if it
+        // comes, still aligns what was heard.
+        cancellation.cancelled().await;
+        if let Some(ns) = known(&start) {
+            aligner.set_start(ns);
+        }
     }
     let rest = aligner.finish().ok_or(Error::Cancelled)?;
     write(&mut writer, &rest)?;
+    let samples = writer.len();
     writer.finalize().map_err(wav)?;
     Ok(Narrated {
         path: path.to_path_buf(),
+        samples,
     })
 }
 
@@ -389,5 +421,88 @@ mod tests {
             Shift::Pad(8_000)
         );
         assert_eq!(shift(5, 5, 16_000), Shift::Trim(0));
+    }
+
+    /// A microphone that delivers `frames` 20 ms frames, then ends.
+    struct Ending(usize);
+
+    impl anlg_audio::AudioProvider for Ending {
+        fn open_capture(
+            &self,
+            _: anlg_audio::CaptureConfig,
+        ) -> Result<anlg_audio::CaptureStream, anlg_audio::Error> {
+            unreachable!()
+        }
+        fn open_speaker_capture(
+            &self,
+            _: u32,
+            _: usize,
+        ) -> Result<anlg_audio::CaptureStream, anlg_audio::Error> {
+            unreachable!()
+        }
+        fn open_mic_capture(
+            &self,
+            _: Option<String>,
+            _: u32,
+            chunk: usize,
+        ) -> Result<anlg_audio::CaptureStream, anlg_audio::Error> {
+            let frame = anlg_audio::CaptureFrame {
+                raw_mic: Arc::from(vec![0.1_f32; chunk]),
+                raw_speaker: Arc::from([]),
+                aec_mic: None,
+            };
+            Ok(anlg_audio::CaptureStream::new(
+                futures_util::stream::unfold(self.0, move |left| {
+                    let frame = frame.clone();
+                    async move {
+                        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+                        (left > 0).then(|| (Ok(frame), left - 1))
+                    }
+                }),
+            ))
+        }
+        fn default_device_name(&self) -> String {
+            "mic".into()
+        }
+        fn list_mic_devices(&self) -> Vec<String> {
+            Vec::new()
+        }
+        fn play_silence(&self) -> std::sync::mpsc::Sender<()> {
+            std::sync::mpsc::channel().0
+        }
+        fn play_bytes(&self, _: &'static [u8]) -> std::sync::mpsc::Sender<()> {
+            std::sync::mpsc::channel().0
+        }
+        fn probe_mic(&self, _: Option<String>) -> Result<(), anlg_audio::Error> {
+            Ok(())
+        }
+        fn probe_speaker(&self) -> Result<(), anlg_audio::Error> {
+            Ok(())
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_microphone_that_ends_mid_recording_keeps_what_it_heard_for_stop() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("audio.wav");
+        let started = HostClock.now_ns();
+        let narration = Narration::start(
+            Arc::new(Ending(10)),
+            None,
+            path.clone(),
+            Arc::new(HostClock),
+        )
+        .unwrap();
+        narration.begin_at(started);
+        // The ten frames and the end of the stream come well before the stop.
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        let narrated = narration.stop().await.unwrap();
+        let wav = hound::WavReader::open(&narrated.path).unwrap();
+        assert!(
+            wav.duration() >= 10 * CHUNK_SIZE as u32 / 2,
+            "{}",
+            wav.duration()
+        );
+        assert_eq!(wav.duration(), narrated.samples);
     }
 }

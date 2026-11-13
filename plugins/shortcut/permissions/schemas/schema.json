@@ -355,18 +355,6 @@
           "markdownDescription": "Denies the set_active command without any pre-configured scope."
         },
         {
-          "description": "Enables the set_annotate_escape command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-set-annotate-escape",
-          "markdownDescription": "Enables the set_annotate_escape command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the set_annotate_escape command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-set-annotate-escape",
-          "markdownDescription": "Denies the set_annotate_escape command without any pre-configured scope."
-        },
-        {
           "description": "Enables the set_annotate_recording command without any pre-configured scope.",
           "type": "string",
           "const": "allow-set-annotate-recording",
@@ -427,10 +415,10 @@
           "markdownDescription": "Denies the validate_paste_last command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-configure`\n- `allow-validate`\n- `allow-set-active`\n- `allow-configure-paste-last`\n- `allow-validate-paste-last`\n- `allow-configure-annotate`\n- `allow-validate-annotate`\n- `allow-set-annotate-recording`\n- `allow-set-annotate-escape`\n- `allow-register-hotkey`\n- `allow-unregister-hotkey`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-configure`\n- `allow-validate`\n- `allow-set-active`\n- `allow-configure-paste-last`\n- `allow-validate-paste-last`\n- `allow-configure-annotate`\n- `allow-validate-annotate`\n- `allow-set-annotate-recording`\n- `allow-register-hotkey`\n- `allow-unregister-hotkey`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-configure`\n- `allow-validate`\n- `allow-set-active`\n- `allow-configure-paste-last`\n- `allow-validate-paste-last`\n- `allow-configure-annotate`\n- `allow-validate-annotate`\n- `allow-set-annotate-recording`\n- `allow-set-annotate-escape`\n- `allow-register-hotkey`\n- `allow-unregister-hotkey`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-configure`\n- `allow-validate`\n- `allow-set-active`\n- `allow-configure-paste-last`\n- `allow-validate-paste-last`\n- `allow-configure-annotate`\n- `allow-validate-annotate`\n- `allow-set-annotate-recording`\n- `allow-register-hotkey`\n- `allow-unregister-hotkey`"
         }
       ]
     }

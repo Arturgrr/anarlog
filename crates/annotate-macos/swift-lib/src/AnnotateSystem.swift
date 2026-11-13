@@ -71,22 +71,13 @@ extension AnnotateScreen {
 ///
 /// `CGPreflightScreenCaptureAccess` keeps its first answer for the life of
 /// the process, so a grant made while the app runs never shows through it
-/// (as Hex found). When it says no, TCC's own
-/// preflight (as `crates/tcc` reads it) tells never-asked and denied apart
+/// (as Hex found). When it says no, the host's reading of TCC (`tcc`: 0
+/// granted, 1 denied, 2 never asked, -1 unknown; the host reads it through
+/// `crates/tcc` only in builds allowed to) tells never-asked and denied apart
 /// without a prompt, and a one-frame ScreenCaptureKit screenshot tells
-/// whether this process can record or must restart first.
+/// whether this process can record or must restart first. This package
+/// itself uses public API only.
 enum AnnotatePermissions {
-  private typealias Preflight = @convention(c) (CFString, CFDictionary?) -> Int32
-
-  private static let tccPreflight: Preflight? = {
-    let path = "/System/Library/PrivateFrameworks/TCC.framework/Versions/A/TCC"
-    guard let handle = dlopen(path, RTLD_NOW), let symbol = dlsym(handle, "TCCAccessPreflight")
-    else {
-      return nil
-    }
-    return unsafeBitCast(symbol, to: Preflight.self)
-  }()
-
   static let settingsURLs = [
     "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_ScreenCapture",
     "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
@@ -95,14 +86,23 @@ enum AnnotatePermissions {
 
   /// `granted`, `denied`, `not_determined` or `needs_restart`. Blocks up to
   /// `timeout` for the screenshot; off the main thread.
-  static func probe(timeout: Double = 5) -> String {
-    if CGPreflightScreenCaptureAccess() { return "granted" }
-    // 0 granted, 1 denied, 2 never asked; -1 when TCC can't be read.
-    let tcc = Int(tccPreflight?("kTCCServiceScreenCapture" as CFString, nil) ?? -1)
+  static func probe(tcc: Int, timeout: Double = 5) -> String {
+    decide(
+      preflight: CGPreflightScreenCaptureAccess(), tcc: tcc,
+      screenshot: { screenshotWorks(timeout: timeout) })
+  }
+
+  /// The probe's answer from what it read; `screenshot` runs only when
+  /// needed. Without TCC's answer, a failing screenshot can't tell
+  /// never-asked from denied: `not_determined` lets the host ask, which
+  /// macOS shows once and ignores after that.
+  static func decide(preflight: Bool, tcc: Int, screenshot: () -> Bool) -> String {
+    if preflight { return "granted" }
     if tcc == 1 { return "denied" }
     if tcc == 2 { return "not_determined" }
-    if screenshotWorks(timeout: timeout) { return "granted" }
-    return tcc == 0 ? "needs_restart" : "denied"
+    if screenshot() { return "granted" }
+    if tcc == 0 { return "needs_restart" }
+    return "not_determined"
   }
 
   /// Shows the system prompt the first time; returns the preflight.

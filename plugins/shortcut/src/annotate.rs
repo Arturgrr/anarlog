@@ -1,8 +1,10 @@
 //! The Annotate shortcut's taps and holds. Idle, a press starts a recording.
 //! Recording, a tap stops it, while a hold of `HOLD` or more inks until the
 //! key is released and leaves the recording running. A press within
-//! `DEBOUNCE` of the start is ignored, so a start's key bounce never stops
-//! what it started.
+//! `DEBOUNCE` of the recording's start is ignored, so a start's key bounce
+//! never stops what it started. A press while the key is still down is key
+//! repeat, unless nothing was heard of the key for `LOST`: then its release
+//! was lost and this is a new press.
 
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -14,6 +16,9 @@ use crate::AnnotateShortcutEvent;
 
 pub const HOLD: Duration = Duration::from_millis(250);
 pub const DEBOUNCE: Duration = Duration::from_millis(400);
+/// Key repeat comes every few tens of ms; a silence this long means the
+/// release never arrived.
+pub const LOST: Duration = Duration::from_secs(1);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Action {
@@ -50,6 +55,8 @@ pub struct Gesture {
     recording: Option<Instant>,
     key: Key,
     presses: u64,
+    /// The last press event, repeats included.
+    heard: Option<Instant>,
 }
 
 impl Default for Gesture {
@@ -58,15 +65,20 @@ impl Default for Gesture {
             recording: None,
             key: Key::Up,
             presses: 0,
+            heard: None,
         }
     }
 }
 
 impl Gesture {
     pub fn press(&mut self, now: Instant) -> Pressed {
-        // Key repeat.
+        let heard = self.heard.replace(now);
         if self.key != Key::Up {
-            return Pressed::Nothing;
+            let repeat = heard.is_some_and(|heard| now.saturating_duration_since(heard) < LOST);
+            if repeat {
+                return Pressed::Nothing;
+            }
+            self.key = Key::Up;
         }
         match self.recording {
             None => {
@@ -120,14 +132,18 @@ impl Gesture {
         }
     }
 
-    /// The host says whether a recording runs: it started (`true`) or
-    /// failed to, stopped or was discarded (`false`).
+    /// The host says whether a recording runs: it began (`true`, which
+    /// restarts the debounce) or failed to, stopped or was discarded
+    /// (`false`). Either way the next press starts afresh.
     pub fn set_recording(&mut self, recording: bool, now: Instant) {
-        match (recording, self.recording) {
-            (true, None) => self.recording = Some(now),
-            (false, _) => self.recording = None,
-            _ => {}
-        }
+        self.recording = recording.then_some(now);
+        self.release_key();
+    }
+
+    /// Forgets a key that may still look held: its release can be lost when
+    /// the shortcut is registered again.
+    pub fn release_key(&mut self) {
+        self.key = Key::Up;
     }
 }
 
@@ -141,6 +157,10 @@ impl AnnotateGesture {
 
     pub fn set_recording(&self, recording: bool) {
         self.with(|gesture| gesture.set_recording(recording, Instant::now()));
+    }
+
+    pub fn release_key(&self) {
+        self.with(Gesture::release_key);
     }
 }
 
@@ -240,5 +260,45 @@ mod tests {
         // The capsule stopped it, or the start failed.
         gesture.set_recording(false, ms(t, 900));
         assert_eq!(gesture.press(ms(t, 1_000)), Pressed::Act(Action::Start));
+    }
+
+    #[test]
+    fn a_lost_release_never_leaves_the_key_stuck() {
+        let t = Instant::now();
+        let mut gesture = Gesture::default();
+        gesture.set_recording(true, t);
+        assert!(matches!(
+            gesture.press(ms(t, 1_000)),
+            Pressed::WaitForHold(_)
+        ));
+        // Key repeat while held does nothing.
+        assert_eq!(gesture.press(ms(t, 1_050)), Pressed::Nothing);
+        // No release came, and nothing for longer than LOST: a new press.
+        assert!(matches!(
+            gesture.press(ms(t, 5_000)),
+            Pressed::WaitForHold(_)
+        ));
+        assert_eq!(gesture.release(ms(t, 5_050)), Some(Action::Stop));
+
+        // The host's word resets a key it last saw down.
+        assert_eq!(gesture.press(ms(t, 6_000)), Pressed::Act(Action::Start));
+        gesture.set_recording(false, ms(t, 6_100));
+        assert_eq!(gesture.press(ms(t, 6_200)), Pressed::Act(Action::Start));
+    }
+
+    #[test]
+    fn the_debounce_counts_from_when_the_recording_began() {
+        let t = Instant::now();
+        let mut gesture = Gesture::default();
+        assert_eq!(gesture.press(t), Pressed::Act(Action::Start));
+        gesture.release(ms(t, 50));
+        // Starting took two seconds.
+        gesture.set_recording(true, ms(t, 2_000));
+        assert_eq!(gesture.press(ms(t, 2_100)), Pressed::Nothing);
+        gesture.release(ms(t, 2_150));
+        assert!(matches!(
+            gesture.press(ms(t, 2_500)),
+            Pressed::WaitForHold(_)
+        ));
     }
 }

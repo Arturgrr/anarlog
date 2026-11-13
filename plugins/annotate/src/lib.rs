@@ -25,6 +25,20 @@ use session::Session;
 
 const PLUGIN_NAME: &str = "annotate";
 const RETENTION_EVERY: Duration = Duration::from_secs(60 * 60);
+/// How long quitting waits for a recording to be discarded.
+const SHUTDOWN_WITHIN: Duration = Duration::from_secs(5);
+
+/// Discards whatever records, starts or finishes, for an app that is
+/// quitting; returns at once when nothing does or Annotate isn't running.
+/// Await it before exiting, off the main thread: the native layer closes its
+/// windows there.
+pub async fn shutdown<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+    let Some(session) = app.try_state::<Arc<Session>>() else {
+        return;
+    };
+    let session = session.inner().clone();
+    session.shutdown(SHUTDOWN_WITHIN).await;
+}
 
 async fn blocking_native<T: Send + 'static>(
     work: impl FnOnce() -> Result<T, anlg_annotate_macos::AnnotateError> + Send + 'static,
@@ -70,12 +84,27 @@ pub fn init(root: Option<PathBuf>) -> tauri::plugin::TauriPlugin<tauri::Wry> {
                 None => app.path().app_data_dir()?.join("annotations"),
             };
             let emitter = app.clone();
+            // Escape changes reach the shortcut in the order the session made them.
+            let (escape, mut escapes) = tokio::sync::mpsc::unbounded_channel::<bool>();
+            let shortcuts = app.clone();
+            tauri::async_runtime::spawn(async move {
+                while let Some(on) = escapes.recv().await {
+                    if let Err(error) =
+                        tauri_plugin_shortcut::set_annotate_escape(&shortcuts, on).await
+                    {
+                        tracing::warn!(%error, "annotate escape");
+                    }
+                }
+            });
             let session = Arc::new(Session::new(
                 Arc::new(native::System),
                 Arc::new(audio::HostClock),
                 root,
                 Arc::new(move |event: AnnotateEvent| {
                     let _ = event.emit(&emitter);
+                }),
+                Arc::new(move |on| {
+                    let _ = escape.send(on);
                 }),
             ));
             app.manage(session.clone());

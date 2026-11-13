@@ -30,7 +30,15 @@ tokio-util = { workspace = true }
 tracing = { workspace = true }
 
 tauri = { workspace = true, features = ["test"] }
+tauri-plugin-shortcut = { workspace = true }
 tauri-specta = { workspace = true, features = ["derive", "typescript"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+anlg-tcc = { workspace = true, optional = true }
 libc = "0.2"
+
+[features]
+default = []
+# Reads TCC's private Screen Recording answer, which tells never-asked from
+# denied; only for builds outside the App Store.
+private-tcc = ["dep:anlg-tcc"]
