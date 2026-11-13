@@ -4,7 +4,6 @@ import { useState } from "react";
 import { cn } from "@anlg/utils";
 
 import { summarizeActivity } from "./activity";
-import { BadgeCollection } from "./badge-collection";
 import { DateRangeFilter } from "./date-range";
 import { ConversationPatterns } from "./insights";
 import { useActivity } from "./queries";
@@ -176,12 +175,6 @@ export function SettingsInsights() {
             </div>
           </section>
 
-          <BadgeCollection
-            records={activity.data ?? []}
-            now={now}
-            timezone={timezone}
-            weekStartsOn={weekStartsOn}
-          />
           <p className="text-muted-foreground text-xs">
             <Trans>
               Includes imported transcripts. Deleted conversations are excluded.

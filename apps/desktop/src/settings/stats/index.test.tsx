@@ -18,13 +18,6 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("./queries", () => ({ useActivity: () => mocks.activity }));
-vi.mock("./badge-collection", () => ({
-  BadgeCollection: ({ records }: { records: ActivityRecord[] }) => (
-    <section aria-label="Your badges">
-      Lifetime records: {records.length}
-    </section>
-  ),
-}));
 vi.mock("~/shared/hooks/useNow", () => ({
   useNow: () => new Date("2026-09-05T12:00:00Z"),
   useTimezone: () => "UTC",
@@ -39,17 +32,17 @@ describe("merged insights page", () => {
     mocks.activity = { data: [], isLoading: false, error: null };
   });
 
-  it("waits for activity before showing the badge collection", () => {
+  it("waits for activity before showing totals", () => {
     mocks.activity.isLoading = true;
     const { rerender } = render(<SettingsInsights />);
     expect(screen.getByRole("status").textContent).toContain("Loading");
-    expect(screen.queryByRole("progressbar")).toBeNull();
+    expect(screen.queryByRole("region", { name: "Overview" })).toBeNull();
     mocks.activity.isLoading = false;
     rerender(<SettingsInsights />);
-    expect(screen.getByRole("region", { name: "Your badges" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Overview" })).toBeTruthy();
   });
 
-  it("filters totals without filtering badge history or the yearly heatmap", async () => {
+  it("filters totals without filtering the yearly heatmap", async () => {
     mocks.activity.data = ["2026-08-01T12:00:00Z", "2026-09-04T12:00:00Z"].map(
       (date, index) => ({
         session_id: String(index),
@@ -76,7 +69,6 @@ describe("merged insights page", () => {
         .getByRole("button", { name: "7 days" })
         .getAttribute("aria-pressed"),
     ).toBe("true");
-    expect(screen.getByText("Lifetime records: 2")).toBeTruthy();
     const day = screen.getByRole("listitem", {
       name: "August 1, 2026. Conversations: 1",
     });
