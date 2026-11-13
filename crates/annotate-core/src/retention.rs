@@ -7,7 +7,9 @@
 //! its video and audio are nearly all of its size. After the policy's `media_days` the media goes
 //! and the prompt stays; after `bundle_days` the whole bundle goes. A bundle younger than a day,
 //! or whose folder changed within the last day, and a pinned one (`.pinned`) are never touched.
-//! Only folders named like [`crate::new_bundle_id`] are considered.
+//! A folder without a manifest is a recording that never finished (the app quit, or finishing
+//! failed twice): it goes once it is a day old and unchanged for a day, whatever the policy.
+//! Only folders named like [`crate::new_bundle_id`] are considered; symbolic links never are.
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -149,7 +151,10 @@ pub fn plan(root: &Path, policy: &Policy, now: SystemTime) -> Vec<Action> {
     let mut bundles: Vec<(PathBuf, String)> = entries
         .filter_map(|e| e.ok())
         .filter_map(|e| Some((e.path(), e.file_name().into_string().ok()?)))
-        .filter(|(path, name)| name.starts_with(BUNDLE_PREFIX) && path.is_dir())
+        .filter(|(path, name)| {
+            name.starts_with(BUNDLE_PREFIX)
+                && std::fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir())
+        })
         .collect();
     bundles.sort();
     let mut actions = Vec::new();
@@ -160,7 +165,14 @@ pub fn plan(root: &Path, policy: &Policy, now: SystemTime) -> Vec<Action> {
         let (Some(created), Some(changed)) = (created_at(&dir, &name), changed_at(&dir)) else {
             continue;
         };
-        match decide(policy, ms_since(created, now), ms_since(changed, now)) {
+        let (age, unchanged) = (ms_since(created, now), ms_since(changed, now));
+        if !dir.join(MANIFEST).exists() {
+            if age >= DAY_MS && unchanged >= DAY_MS {
+                actions.push(Action::DeleteBundle(dir));
+            }
+            continue;
+        }
+        match decide(policy, age, unchanged) {
             Decision::Keep => {}
             Decision::DeleteBundle => actions.push(Action::DeleteBundle(dir)),
             Decision::DeleteMedia => {
@@ -340,7 +352,10 @@ mod tests {
                 },
             ]
         );
-        assert!(plan(root, &Preset::Forever.policy(), later()).is_empty());
+        assert_eq!(
+            plan(root, &Preset::Forever.policy(), later()),
+            [Action::DeleteBundle(abandoned.clone())]
+        );
 
         let report = apply(&actions, &remove);
         assert_eq!((report.media_deleted, report.bundles_deleted), (1, 2));
@@ -360,5 +375,29 @@ mod tests {
             assert!(dir.is_dir(), "{} kept", dir.display());
         }
         assert!(fresh.join(VIDEO_FILE).exists() && week.join(VIDEO_FILE).exists());
+    }
+
+    #[test]
+    fn an_unfinished_folder_goes_after_a_day_whatever_the_policy() {
+        let root = tempfile::tempdir().unwrap();
+        let fresh = bundle(root.path(), 1, 0.5, false);
+        let stale = bundle(root.path(), 2, 1.5, false);
+        let finished = bundle(root.path(), 3, 1.5, true);
+        let actions = plan(root.path(), &Preset::Forever.policy(), later());
+        assert_eq!(actions, [Action::DeleteBundle(stale)]);
+        assert!(fresh.is_dir() && finished.is_dir());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_link_named_like_a_bundle_is_never_followed() {
+        let root = tempfile::tempdir().unwrap();
+        let elsewhere = tempfile::tempdir().unwrap();
+        let target = bundle(elsewhere.path(), 1, 40.0, true);
+        let link = root.path().join(target.file_name().unwrap());
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+        assert!(plan(root.path(), &Policy::default(), later()).is_empty());
+        run(root.path(), &Policy::default());
+        assert!(target.join(VIDEO_FILE).is_file());
     }
 }
