@@ -27,6 +27,18 @@ final class AnnotateReplyTests: XCTestCase {
     XCTAssertEqual(request.timesMs, [1200])
   }
 
+  func testTheCapsuleKeepsEnglishForLabelsTheHostLeavesOut() throws {
+    let start = try AnnotateReply.decode(
+      AnnotateStartRequest.self,
+      from: #"{"dir":"/a","labels":{"discard_question":"Descartar?","keep":"Manter"}}"#
+    ).get()
+    XCTAssertEqual(start.labels?.discardQuestion, "Descartar?")
+    XCTAssertEqual(start.labels?.discard, "Discard")
+    XCTAssertEqual(start.labels?.keep, "Manter")
+    let bare = try AnnotateReply.decode(AnnotateStartRequest.self, from: #"{"dir":"/a"}"#).get()
+    XCTAssertNil(bare.labels)
+  }
+
   func testTheStopResultCarriesWhatTheHostAndAnnotateCoreRead() throws {
     let result = AnnotateStopResult(
       videoPath: "/a/recording.mp4", startedHostTicks: 2_400_000_000,

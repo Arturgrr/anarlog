@@ -22,6 +22,35 @@ mod reply;
 
 pub use reply::{AnnotateError, codes};
 
+/// What [`start`] takes, as JSON.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize)]
+pub struct StartRequest {
+    /// An absolute directory; created when missing.
+    pub dir: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub labels: Option<Labels>,
+}
+
+/// The capsule's words; one left out stays English.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize)]
+pub struct Labels {
+    /// "Discard?"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub discard_question: Option<String>,
+    /// "Discard"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub discard: Option<String>,
+    /// "Keep"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keep: Option<String>,
+}
+
+impl StartRequest {
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+}
+
 /// Whether this process can record the screen, read afresh:
 /// `"granted"`, `"denied"`, `"not_determined"` (never asked), or
 /// `"needs_restart"` (granted in System Settings, but this process can't
@@ -43,7 +72,9 @@ pub fn open_screen_recording_settings() -> Result<(), AnnotateError> {
 }
 
 /// Starts recording the display under the pointer into
-/// `{"dir": "/abs/path"}`: `recording.mp4` and `candidates/`. Returns the
+/// `{"dir": "/abs/path"}`: `recording.mp4` and `candidates/`. An optional
+/// `"labels": {"discard_question", "discard", "keep"}` puts the capsule's
+/// words in the host's language; each one left out stays English. Returns the
 /// start as JSON (`started_host_ticks`, `started_host_ns`,
 /// `started_wall_ms`, `display`). Blocks until the stream runs.
 pub fn start(request: &str) -> Result<String, AnnotateError> {

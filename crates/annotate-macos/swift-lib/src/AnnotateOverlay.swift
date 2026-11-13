@@ -154,6 +154,7 @@ final class AnnotateCapsuleView: NSView {
   var penOn = false {
     didSet { if penOn != oldValue { needsDisplay = true } }
   }
+  var labels = AnnotateLabels()
   var onAction: ((AnnotateCapsuleTarget) -> Void)?
 
   override var isOpaque: Bool { false }
@@ -183,12 +184,12 @@ final class AnnotateCapsuleView: NSView {
     rim.stroke()
 
     if asking {
-      text("Discard?", in: layout.question, color: .white, weight: .medium, center: false)
+      text(labels.discardQuestion, in: layout.question, color: .white, weight: .medium, center: false)
       for (target, rect) in layout.targets {
         let fill = target == .confirmDiscard ? red : NSColor(white: 1, alpha: 0.16)
         fill.setFill()
         NSBezierPath(roundedRect: rect, xRadius: 7, yRadius: 7).fill()
-        let label = target == .confirmDiscard ? "Discard" : "Keep"
+        let label = target == .confirmDiscard ? labels.discard : labels.keep
         text(label, in: rect, color: .white, weight: .semibold, center: true)
       }
       return
@@ -266,9 +267,10 @@ final class AnnotateCapsuleView: NSView {
 final class AnnotateCapsulePanel: AnnotatePanel {
   let capsuleView: AnnotateCapsuleView
 
-  init(screen: AnnotateScreen) {
+  init(screen: AnnotateScreen, labels: AnnotateLabels) {
     let size = AnnotateCapsuleLayout.size
     capsuleView = AnnotateCapsuleView(frame: NSRect(origin: .zero, size: size))
+    capsuleView.labels = labels
     let origin = AnnotateCapsuleLayout.origin(on: screen)
     super.init(frame: NSRect(origin: origin, size: size), level: AnnotateLevels.capsule)
     ignoresMouseEvents = false

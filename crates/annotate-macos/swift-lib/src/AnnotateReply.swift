@@ -90,6 +90,33 @@ struct AnnotateStartRequest: Decodable {
   /// An absolute directory; created when missing. `recording.mp4` must not
   /// be in it yet.
   var dir: String
+  /// The capsule's words in the host's language; English when absent.
+  var labels: AnnotateLabels?
+}
+
+/// The capsule's texts. A missing one stays English.
+struct AnnotateLabels: Decodable, Equatable {
+  var discardQuestion = "Discard?"
+  var discard = "Discard"
+  var keep = "Keep"
+
+  enum CodingKeys: String, CodingKey {
+    case discardQuestion = "discard_question"
+    case discard
+    case keep
+  }
+
+  init() {}
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let english = AnnotateLabels()
+    discardQuestion =
+      try container.decodeIfPresent(String.self, forKey: .discardQuestion)
+      ?? english.discardQuestion
+    discard = try container.decodeIfPresent(String.self, forKey: .discard) ?? english.discard
+    keep = try container.decodeIfPresent(String.self, forKey: .keep) ?? english.keep
+  }
 }
 
 struct AnnotateDisplayInfo: Codable, Equatable {

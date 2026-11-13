@@ -52,12 +52,12 @@ private final class AnnotateCurrent {
   var lastMouse: CGPoint?
   var animating = true
 
-  init(screen: AnnotateScreen, dir: URL, front: AnnotateFrontApp) {
+  init(screen: AnnotateScreen, dir: URL, front: AnnotateFrontApp, labels: AnnotateLabels) {
     self.screen = screen
     self.dir = dir
     self.front = front
     ink = AnnotateInkPanel(screen: screen)
-    capsule = AnnotateCapsulePanel(screen: screen)
+    capsule = AnnotateCapsulePanel(screen: screen, labels: labels)
     strokes = AnnotateStrokeRecorder(size: screen.frame.size)
   }
 }
@@ -121,7 +121,8 @@ final class AnnotateSession {
     }
     let dir = URL(fileURLWithPath: request.dir, isDirectory: true)
     let current: AnnotateCurrent
-    switch annotateOnMain({ reserve(dir: dir) }) {
+    let labels = request.labels ?? AnnotateLabels()
+    switch annotateOnMain({ reserve(dir: dir, labels: labels) }) {
     case .success(let reserved): current = reserved
     case .failure(let failure): return .failure(failure)
     }
@@ -340,7 +341,9 @@ final class AnnotateSession {
     case wait(AnnotateFinish)
   }
 
-  private func reserve(dir: URL) -> Result<AnnotateCurrent, AnnotateFailure> {
+  private func reserve(dir: URL, labels: AnnotateLabels) -> Result<
+    AnnotateCurrent, AnnotateFailure
+  > {
     if machine.phase == .idle, pending.get()?.isDone == true {
       // An unclaimed result of a recording that ended by itself; its files
       // stay where they are.
@@ -355,7 +358,8 @@ final class AnnotateSession {
       flush()
       return .failure(AnnotateFailure(.noDisplay, "no display"))
     }
-    let current = AnnotateCurrent(screen: screen, dir: dir, front: AnnotateFront.read())
+    let current = AnnotateCurrent(
+      screen: screen, dir: dir, front: AnnotateFront.read(), labels: labels)
     // On screen before the filter is built, so it can leave them out.
     current.ink.orderFrontRegardless()
     current.capsule.orderFrontRegardless()
