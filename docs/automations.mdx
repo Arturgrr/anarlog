@@ -49,7 +49,7 @@ To export each type to its own folder, create one workflow per type, each with i
 
 ### Run a workflow when speakers are named
 
-**After every speaker is named** runs once per note, when you give the last unnamed speaker a person, in the transcript or in the speaker assignment dialog. Naming or renaming speakers again does not run it a second time.
+**After every speaker is named** runs once per note, when you give the last unnamed speaker a person, in the transcript or in the speaker assignment dialog. Naming or renaming speakers again does not run it a second time. Naming speakers while the meeting is still being recorded or processed does not run it; name or reassign a speaker once the meeting has ended.
 
 Voices that Librelog names automatically from remembered voices do not count as naming a speaker, so they do not start this workflow on their own. Webhooks do not receive an event for it.
 
@@ -57,7 +57,7 @@ Voices that Librelog names automatically from remembered voices do not count as 
 
 - **Export the meeting as Markdown** writes the note to a folder on your computer.
 - **Use a summary template** chooses the template for the note's summary. It is available only for workflows that run after the meeting ends, and it applies whenever Librelog creates the note's summary, not only at the end of the meeting. A template you choose in the note itself takes priority. If several workflows match, the one with a subtype wins, then the one with only a type, then the one for every note. A summary that already exists keeps its template when it is regenerated, and a deleted template falls back to your default template.
-- **Regenerate the summary** generates the note's summary again, for example so that it uses the names you just gave the speakers. It is not available for workflows that run after the summary is ready, so a workflow cannot regenerate its own summary.
+- **Regenerate the summary** generates the note's summary again, for example so that it uses the names you just gave the speakers. It is available only for workflows that run after every speaker is named, since Librelog already generates the summary when the meeting ends.
 - **Move the note to a folder** files the note in a Librelog folder. If the folder no longer exists, the step fails and the note stays where it is.
 
 Actions run from top to bottom. A failed Markdown export stops the workflow; other failed actions are reported and the next actions still run.

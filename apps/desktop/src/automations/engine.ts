@@ -7,6 +7,10 @@ import {
 } from "@anlg/plugin-local-api";
 
 import { hasMarkdownExportContent } from "./markdown-export";
+import {
+  hasSpeakersNamedWorkflowRun,
+  markSpeakersNamedWorkflowRun,
+} from "./speakers-named";
 import { type AutomationRunRecord, parseAutomationRunRecord } from "./types";
 import {
   type AutomationWorkflow,
@@ -101,8 +105,14 @@ async function runCustomWorkflowsNow(
     // Markdown exports overwrite the same file, so summary-ready workflows
     // rerun on every regenerated summary.
     if (
-      trigger !== "note_enhanced" &&
+      trigger === "meeting_completed" &&
       workflow.processedSessionIds.includes(sessionId)
+    ) {
+      continue;
+    }
+    if (
+      trigger === "speakers_named" &&
+      (await hasSpeakersNamedWorkflowRun(sessionId, workflow.id))
     ) {
       continue;
     }
@@ -141,6 +151,9 @@ async function runWorkflow(
     }
     try {
       details.push(await executeWorkflowStep(sessionId, workflow, step));
+      if (trigger === "speakers_named") {
+        await markSpeakersNamedWorkflowRun(sessionId, workflow.id);
+      }
       await persistWorkflowResult(workflow.id, { sessionId });
     } catch (error) {
       record.status = "error";

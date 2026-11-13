@@ -10,6 +10,18 @@ const mocks = vi.hoisted(() => ({
   requestAutoEnhance: vi.fn(),
   loadFolderPaths: vi.fn(),
   updateSession: vi.fn(),
+  speakersNamedRuns: new Set<string>(),
+}));
+
+vi.mock("./speakers-named", () => ({
+  hasSpeakersNamedWorkflowRun: async (sessionId: string, workflowId: string) =>
+    mocks.speakersNamedRuns.has(`${sessionId}:${workflowId}`),
+  markSpeakersNamedWorkflowRun: async (
+    sessionId: string,
+    workflowId: string,
+  ) => {
+    mocks.speakersNamedRuns.add(`${sessionId}:${workflowId}`);
+  },
 }));
 
 vi.mock("~/note-types/queries", () => ({
@@ -69,6 +81,7 @@ function recordedRun(settingKey: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.speakersNamedRuns.clear();
   mocks.setSettingValue.mockResolvedValue(undefined);
 });
 
@@ -437,6 +450,32 @@ describe("workflow conditions and summary steps", () => {
     expect(saved.processedSessionIds).toEqual(["session-1"]);
   });
 
+  it("does not rerun a speakers-named workflow on an old note after 50 later notes ran it", async () => {
+    persistentSettings({
+      automation_workflows: JSON.stringify([
+        {
+          id: "wf-named",
+          enabled: true,
+          trigger: "speakers_named",
+          steps: [{ id: "regen", type: "regenerate_summary" }],
+        },
+      ]),
+    });
+    mocks.requestAutoEnhance.mockResolvedValue(undefined);
+
+    await runSpeakersNamedAutomations("session-old");
+    for (let index = 0; index < 50; index++) {
+      await runSpeakersNamedAutomations(`session-${index}`);
+    }
+    await runSpeakersNamedAutomations("session-old");
+
+    expect(
+      mocks.requestAutoEnhance.mock.calls.filter(
+        ([sessionId]) => sessionId === "session-old",
+      ),
+    ).toHaveLength(1);
+  });
+
   it("moves the note into an existing folder", async () => {
     persistentSettings({
       automation_workflows: JSON.stringify([
@@ -458,28 +497,35 @@ describe("workflow conditions and summary steps", () => {
     });
   });
 
-  it("never regenerates the summary from a summary-ready workflow", async () => {
-    persistentSettings({
-      automation_workflows: JSON.stringify([
-        {
-          id: "wf-loop",
-          enabled: true,
-          trigger: "note_enhanced",
-          steps: [
-            { id: "regen", type: "regenerate_summary" },
-            { id: "md", type: "markdown_export", directory: "/exports" },
-          ],
-        },
-      ]),
-    });
-    mocks.exportMeetingMarkdown.mockResolvedValue({
-      status: "ok",
-      data: { path: "/exports/note.md", sha256: "hash" },
-    });
+  it.each(["note_enhanced", "meeting_completed"] as const)(
+    "never regenerates the summary from a %s workflow",
+    async (trigger) => {
+      persistentSettings({
+        automation_workflows: JSON.stringify([
+          {
+            id: "wf-loop",
+            enabled: true,
+            trigger,
+            steps: [
+              { id: "regen", type: "regenerate_summary" },
+              { id: "md", type: "markdown_export", directory: "/exports" },
+            ],
+          },
+        ]),
+      });
+      mocks.exportMeetingMarkdown.mockResolvedValue({
+        status: "ok",
+        data: { path: "/exports/note.md", sha256: "hash" },
+      });
 
-    await runNoteEnhancedAutomations("session-1");
+      await (
+        trigger === "meeting_completed"
+          ? runMeetingCompletedAutomations
+          : runNoteEnhancedAutomations
+      )("session-1");
 
-    expect(mocks.requestAutoEnhance).not.toHaveBeenCalled();
-    expect(mocks.exportMeetingMarkdown).toHaveBeenCalledTimes(1);
-  });
+      expect(mocks.requestAutoEnhance).not.toHaveBeenCalled();
+      expect(mocks.exportMeetingMarkdown).toHaveBeenCalledTimes(1);
+    },
+  );
 });

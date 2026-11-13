@@ -89,8 +89,9 @@ export function createWorkflowStep(type: WorkflowStepType): WorkflowStep {
 }
 
 // The template step is read when a summary is generated, so it belongs to the
-// flow that precedes the first summary. Regenerating from a summary-ready flow
-// would trigger itself again.
+// flow that precedes the first summary. A summary is generated when the
+// meeting ends anyway, and regenerating from a summary-ready flow would
+// trigger itself again, so regenerating belongs to naming speakers only.
 export function isStepAllowedForTrigger(
   type: WorkflowStepType,
   trigger: WorkflowTrigger,
@@ -99,7 +100,7 @@ export function isStepAllowedForTrigger(
     case "summary_template":
       return trigger === "meeting_completed";
     case "regenerate_summary":
-      return trigger !== "note_enhanced";
+      return trigger === "speakers_named";
     default:
       return true;
   }

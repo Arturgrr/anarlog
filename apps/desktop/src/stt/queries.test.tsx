@@ -22,6 +22,21 @@ const mocks = vi.hoisted(() => ({
   getSessionSpeakers: vi.fn(),
   areAllSpeakersNamed: vi.fn(),
   runSpeakersNamedAutomations: vi.fn(),
+  sessionMode: "inactive" as string,
+  captureMarker: null as object | null,
+}));
+
+vi.mock("~/store/zustand/listener/instance", () => ({
+  listenerStore: {
+    getState: () => ({
+      getSessionMode: () => mocks.sessionMode,
+      live: { postStopProcessingBySession: {} },
+    }),
+  },
+}));
+
+vi.mock("~/stt/capture-lifecycle-storage", () => ({
+  loadCaptureLifecycleMarker: async () => mocks.captureMarker,
 }));
 
 vi.mock("~/stt/session-speakers", () => ({
@@ -86,6 +101,8 @@ import {
   useTranscriptMetadata,
 } from "./queries";
 
+import { emitSpeakersNamedIfComplete } from "~/automations/speakers-named";
+
 const { DatabaseSync } = createRequire(import.meta.url)(
   "node:sqlite",
 ) as typeof import("node:sqlite");
@@ -98,6 +115,8 @@ describe("transcript SQLite queries", () => {
     mocks.queryOptions = [];
     mocks.transcriptRows = [];
     mocks.getSessionSpeakers.mockResolvedValue([]);
+    mocks.sessionMode = "inactive";
+    mocks.captureMarker = null;
   });
 
   it("maps canonical transcript JSON into renderer records", () => {
@@ -975,6 +994,22 @@ describe("transcript SQLite queries", () => {
     await assign(true);
     expect(mocks.runSpeakersNamedAutomations).toHaveBeenCalledWith("session-1");
   });
+
+  it.each([
+    ["recorded in this window", "active", null],
+    ["recorded or processed in another window", "inactive", { version: 1 }],
+  ])(
+    "does not run speakers-named automations while the note is %s",
+    async (_case, sessionMode, captureMarker) => {
+      mocks.sessionMode = sessionMode;
+      mocks.captureMarker = captureMarker;
+      mocks.areAllSpeakersNamed.mockReturnValue(true);
+
+      await emitSpeakersNamedIfComplete({ sessionId: "session-1" });
+
+      expect(mocks.runSpeakersNamedAutomations).not.toHaveBeenCalled();
+    },
+  );
 
   it("rejects a stale source transcript instead of changing other captures", async () => {
     mocks.execute.mockResolvedValueOnce([{ id: "transcript-2" }]);

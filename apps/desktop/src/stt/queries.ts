@@ -615,7 +615,7 @@ export async function assignTranscriptSpeaker({
     wordIds,
     extendToAdjacent,
   });
-  emitSpeakersNamedIfComplete({ transcriptId });
+  void emitSpeakersNamedIfComplete({ transcriptId });
 }
 
 export async function assignSessionTranscriptSpeaker({
@@ -695,7 +695,7 @@ export async function assignSessionTranscriptSpeaker({
             }),
       ),
   );
-  emitSpeakersNamedIfComplete({ sessionId });
+  void emitSpeakersNamedIfComplete({ sessionId });
 }
 
 async function assignSpeakerInTranscript({
