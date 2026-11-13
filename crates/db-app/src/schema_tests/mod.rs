@@ -154,6 +154,7 @@ mod consent;
 mod dictation_history;
 mod entities;
 mod migrations;
+mod note_types;
 mod replica_migrations;
 mod search_index;
 mod session_audio;

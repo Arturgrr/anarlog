@@ -50,6 +50,10 @@ vi.mock("./participants", () => ({
   ParticipantsDisplay: () => null,
 }));
 
+vi.mock("./note-type", () => ({
+  NoteTypeEditor: () => null,
+}));
+
 describe("Metadata controls", () => {
   beforeEach(() => {
     mocks.createdAt = "2026-07-02T03:53:00.000Z";

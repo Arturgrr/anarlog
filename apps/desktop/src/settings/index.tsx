@@ -16,6 +16,7 @@ import { SettingsDevelopers } from "~/settings/developers";
 import { SettingsDictation } from "~/settings/dictation";
 import { SettingsDictionary } from "~/settings/dictionary";
 import { SettingsHydrationBoundary } from "~/settings/hydration-boundary";
+import { SettingsNoteTypes } from "~/settings/note-types";
 import { SettingsPrivacy } from "~/settings/privacy";
 import { SettingsInsights } from "~/settings/stats";
 import { StandardContentWrapper } from "~/shared/main";
@@ -69,6 +70,8 @@ function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
         return <SettingsDictation />;
       case "dictation-history":
         return <SettingsDictationHistory />;
+      case "note-types":
+        return <SettingsNoteTypes />;
       case "transcription":
         return <SttModelPicker variant="page" />;
       case "intelligence":
