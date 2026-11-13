@@ -62,12 +62,11 @@ export function useRenderedTranscriptData(
 
   // eslint-disable-next-line @tanstack/query/exhaustive-deps -- active input is frozen and reconciled with current SQLite state in JavaScript.
   const { data = [] } = useQuery({
-    queryKey: [
-      "rendered-transcript-segments",
+    queryKey: getRenderedTranscriptSegmentsQueryKey(
       transcriptId,
       currentActive ? "volatile" : "settled",
       requestKey,
-    ],
+    ),
     queryFn: async () => {
       if (!activeBaselineRequest) {
         return [];
@@ -93,6 +92,14 @@ export function useRenderedTranscriptData(
   );
 
   return { maxSpeakerNumber, request, segments: data };
+}
+
+export function getRenderedTranscriptSegmentsQueryKey(
+  transcriptId: string,
+  mode: "volatile" | "settled",
+  requestKey: string,
+) {
+  return ["rendered-transcript-segments", transcriptId, mode, requestKey];
 }
 
 export function getTranscriptTimelineOffsetMs(
