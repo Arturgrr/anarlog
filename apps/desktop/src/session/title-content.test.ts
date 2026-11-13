@@ -9,6 +9,7 @@ import {
   extractFirstLineTitle,
   extractSectionHeadings,
   removeDocumentTitle,
+  replaceFirstLineTitle,
 } from "./title-content";
 
 describe("documentTitlePlaceholder", () => {
@@ -313,5 +314,32 @@ describe("extractBodyHeadingsKey", () => {
     ).toBe("Updates\nNext Steps");
     expect(extractBodyHeadingsKey("## Updates\n", "markdown")).toBe("Updates");
     expect(extractBodyHeadingsKey("not json")).toBeNull();
+  });
+});
+
+describe("replaceFirstLineTitle", () => {
+  const summary = (title: string) => ({
+    type: "doc",
+    content: [
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: title }],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Decisions" }],
+      },
+    ],
+  });
+
+  it("renames the summary title line instead of stacking a second one", () => {
+    expect(
+      replaceFirstLineTitle(summary("Weekly sync"), "Weekly sync", "Board"),
+    ).toEqual(summary("Board"));
+    expect(
+      replaceFirstLineTitle(summary("Agenda"), "Weekly sync", "Board"),
+    ).toBeNull();
   });
 });

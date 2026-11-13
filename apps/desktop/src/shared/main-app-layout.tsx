@@ -4,7 +4,8 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { events as windowsEvents } from "@anlg/plugin-windows";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
-import { openNewNoteAndListen, useNewNote } from "./useNewNote";
+import { NewNoteDialog } from "./new-note-dialog";
+import { openNewNote, openNewNoteAndListen } from "./useNewNote";
 
 import { openFoldersFromNavigation } from "~/shared/folders-navigation";
 import { leaveAllOverlayTabs } from "~/shared/leave-overlay-tab";
@@ -25,6 +26,7 @@ export default function MainAppLayout() {
     <>
       <Outlet />
       <UndoDeleteToast />
+      <NewNoteDialog />
     </>
   );
 }
@@ -32,7 +34,6 @@ export default function MainAppLayout() {
 const useNavigationEvents = () => {
   const navigate = useNavigate();
   const openNew = useTabs((state) => state.openNew);
-  const openNewNote = useNewNote({ behavior: "new" });
 
   useMountEffect(() => {
     const navigateFromNative = (path: string) => {
@@ -74,7 +75,7 @@ const useNavigationEvents = () => {
           if (payload.search?.record === "true") {
             openNewNoteAndListen({ behavior: "new" });
           } else {
-            openNewNote();
+            openNewNote({ behavior: "new" });
           }
         } else if (payload.path === "/app/settings") {
           const tab = (payload.search?.tab as string) ?? "app";
@@ -98,7 +99,11 @@ const useNavigationEvents = () => {
       .openTab(webview)
       .listen(({ payload }) => {
         if (payload.tab.type === "sessions" && payload.tab.id === "new") {
-          openNewNote();
+          if (payload.tab.state?.autoStart) {
+            openNewNoteAndListen({ behavior: "new" });
+          } else {
+            openNewNote({ behavior: "new" });
+          }
         } else if (!isTabInputSupported(payload.tab)) {
           return;
         } else {

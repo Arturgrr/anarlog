@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,10 +19,17 @@ const mocks = vi.hoisted(() => ({
   isMainWebviewWindow: true,
   audioExists: false,
   hasTranscriptBySession: {} as Record<string, boolean>,
+  renameSession: vi.fn((_sessionId: string, _title: string) =>
+    Promise.resolve(),
+  ),
 }));
 
-vi.mock("../title-input", () => ({
-  TitleInput: () => <input aria-label="Session title" placeholder="Untitled" />,
+vi.mock("~/ai/hooks", () => ({
+  useTitleGenerating: () => false,
+}));
+
+vi.mock("~/session/rename", () => ({
+  renameSession: mocks.renameSession,
 }));
 
 vi.mock("~/session/queries", () => ({
@@ -68,6 +81,8 @@ vi.mock("~/stt/window-control", () => ({
 }));
 
 import { OuterHeader } from "./index";
+
+import { useLiveTitle } from "~/store/zustand/live-title";
 
 type Scenario = {
   mode?: string;
@@ -185,31 +200,55 @@ describe("OuterHeader", () => {
     expect(mocks.stopListening).not.toHaveBeenCalled();
   });
 
-  it.each<[string, Scenario, { view?: EditorView; tabs?: boolean }, boolean]>([
+  it.each<[string, Scenario, { view?: EditorView; tabs?: boolean }]>([
     [
       "summary tab before recording",
       {},
       { view: { type: "enhanced", id: "n" } as EditorView },
-      true,
     ],
-    ["memo tab before recording", {}, {}, true],
-    ["view switcher is shown", {}, { tabs: true }, false],
-    ["transcript exists", { transcript: true }, {}, false],
-    ["listening", { mode: "active" }, {}, false],
-    ["finalizing", { mode: "finalizing" }, {}, false],
-  ])(
-    "title input visibility when %s",
-    (_label, scenario, { view, tabs }, visible) => {
-      arrange(scenario);
-      renderHeader({
-        view,
-        withTab: true,
-        viewSwitcher: tabs ? <div>Tabs</div> : undefined,
-      });
+    ["memo tab before recording", {}, {}],
+    ["view switcher is shown", {}, { tabs: true }],
+    ["transcript exists", { transcript: true }, { tabs: true }],
+    ["listening", { mode: "active" }, { tabs: true }],
+    ["finalizing", { mode: "finalizing" }, { tabs: true }],
+  ])("keeps the title editable when %s", (_label, scenario, { view, tabs }) => {
+    arrange(scenario);
+    renderHeader({
+      view,
+      withTab: true,
+      viewSwitcher: tabs ? <div>Tabs</div> : undefined,
+    });
 
-      expect(
-        screen.queryByRole("textbox", { name: "Session title" }) !== null,
-      ).toBe(visible);
-    },
-  );
+    expect(
+      screen.getByRole("textbox", { name: "Session title" }),
+    ).not.toBeNull();
+  });
+
+  it("persists a title typed during a live meeting through the live draft", async () => {
+    useLiveTitle.setState({ titles: {} });
+    arrange({ mode: "active" });
+    renderHeader({ withTab: true, viewSwitcher: <div>Tabs</div> });
+
+    const input = screen.getByRole("textbox", { name: "Session title" });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "Board review" } });
+
+    expect(useLiveTitle.getState().titles["session-1"]).toMatchObject({
+      value: "Board review",
+      persisted: false,
+    });
+
+    fireEvent.blur(input);
+
+    expect(mocks.renameSession).toHaveBeenCalledWith(
+      "session-1",
+      "Board review",
+    );
+    await waitFor(() => {
+      expect(useLiveTitle.getState().titles["session-1"]).toMatchObject({
+        value: "Board review",
+        persisted: true,
+      });
+    });
+  });
 });

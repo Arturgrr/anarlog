@@ -43,8 +43,11 @@ vi.mock("~/session/queries", () => ({
       () => hoisted.storeTitle,
     ),
   }),
-  useUpdateSession: () => (changes: { title?: string }) =>
-    hoisted.setStoreTitle(changes.title),
+}));
+
+vi.mock("~/session/rename", () => ({
+  renameSession: (_sessionId: string, title: string) =>
+    hoisted.setStoreTitle(title),
 }));
 
 vi.mock("~/store/zustand/live-title", () => ({

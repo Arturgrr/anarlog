@@ -14,7 +14,8 @@ import { useResizeObserver } from "usehooks-ts";
 import { cn } from "@anlg/utils";
 
 import { useTitleGenerating } from "~/ai/hooks";
-import { useSession, useUpdateSession } from "~/session/queries";
+import { useSession } from "~/session/queries";
+import { renameSession } from "~/session/rename";
 import { useLiveTitle } from "~/store/zustand/live-title";
 import { type Tab } from "~/store/zustand/tabs";
 
@@ -120,7 +121,6 @@ const TitleInputInner = memo(
       const { t } = useLingui();
       const untitled = placeholder ?? t`Untitled`;
       const storeTitle = useSession(sessionId)?.title;
-      const updateSession = useUpdateSession(sessionId);
       const [draftTitle, setDraftTitle] = useState<string | null>(null);
       const [isOverflowing, setIsOverflowing] = useState(false);
       const [overflowDistance, setOverflowDistance] = useState(0);
@@ -247,8 +247,8 @@ const TitleInputInner = memo(
       }, [title, updateOverflowState]);
 
       const setStoreTitle = useCallback(
-        (title: string) => updateSession({ title }),
-        [updateSession],
+        (title: string) => renameSession(sessionId, title),
+        [sessionId],
       );
 
       const persistTitle = useCallback(

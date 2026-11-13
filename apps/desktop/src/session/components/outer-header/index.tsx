@@ -50,7 +50,7 @@ export function OuterHeader({
     sessionMode === "active" || sessionMode === "running_batch";
   const isLiveMeeting = isRecording || sessionMode === "finalizing";
   const meetingOver = !isRecording && (hasTranscript || audioExists);
-  const showTitleInput =
+  const showFolderBreadcrumb =
     Boolean(tab) && !viewSwitcher && !isLiveMeeting && !meetingOver;
 
   return (
@@ -71,12 +71,24 @@ export function OuterHeader({
       ])}
     >
       {viewSwitcher}
-      {showTitleInput && tab ? (
-        <div className="flex min-w-0 shrink items-center gap-1">
-          <FolderPicker sessionId={sessionId} />
-          <span aria-hidden="true" className="text-muted-foreground shrink-0">
-            /
-          </span>
+      {tab ? (
+        <div
+          className={cn([
+            "flex min-w-0 shrink items-center gap-1",
+            !showFolderBreadcrumb && "ml-2",
+          ])}
+        >
+          {showFolderBreadcrumb ? (
+            <>
+              <FolderPicker sessionId={sessionId} />
+              <span
+                aria-hidden="true"
+                className="text-muted-foreground shrink-0"
+              >
+                /
+              </span>
+            </>
+          ) : null}
           <div className="max-w-56 min-w-0 shrink">
             <TitleInput key={tab.id} tab={tab} variant="breadcrumb" />
           </div>
@@ -91,7 +103,9 @@ export function OuterHeader({
         data-tauri-drag-region
         className="relative z-10 flex shrink-0 items-center pr-1"
       >
-        {!showTitleInput && <FolderPicker sessionId={sessionId} align="end" />}
+        {!showFolderBreadcrumb && (
+          <FolderPicker sessionId={sessionId} align="end" />
+        )}
         <HeaderMeetingControl
           sessionId={sessionId}
           sessionMode={sessionMode}
