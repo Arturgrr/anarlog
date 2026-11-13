@@ -58,6 +58,20 @@ final class AnnotateMachineTests: XCTestCase {
       machine.drainEvents(), [AnnotateEvent(.penOn), AnnotateEvent(.inkOff, reason: "escape")])
   }
 
+  func testThePenTurnsAnyInkOffInOneClick() {
+    var machine = recording()
+    XCTAssertTrue(machine.setInk(.hover, now: 101))
+    machine.capsule(.pen, now: 102)
+    XCTAssertEqual(machine.ink, .off)
+    machine.capsule(.pen, now: 103)
+    XCTAssertEqual(machine.ink, .drag)
+    machine.capsule(.pen, now: 104)
+    XCTAssertEqual(machine.ink, .off)
+    XCTAssertEqual(
+      machine.drainEvents(),
+      [AnnotateEvent(.penOff), AnnotateEvent(.penOn), AnnotateEvent(.penOff)])
+  }
+
   func testInkCanOnlyBeOnWhileRecording() {
     var machine = AnnotateMachine()
     XCTAssertFalse(machine.setInk(.hover, now: 0))

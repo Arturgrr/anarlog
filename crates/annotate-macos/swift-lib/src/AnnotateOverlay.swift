@@ -21,8 +21,9 @@ class AnnotatePanel: NSPanel {
     super.init(
       contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered,
       defer: false)
-    self.level = level
+    // Setting `isFloatingPanel` resets the level, so it goes first.
     isFloatingPanel = true
+    self.level = level
     hidesOnDeactivate = false
     isOpaque = false
     backgroundColor = .clear
@@ -184,7 +185,9 @@ final class AnnotateCapsuleView: NSView {
     rim.stroke()
 
     if asking {
-      text(labels.discardQuestion, in: layout.question, color: .white, weight: .medium, center: false)
+      text(
+        labels.discardQuestion, in: layout.question, color: .white, weight: .medium,
+        center: false)
       for (target, rect) in layout.targets {
         let fill = target == .confirmDiscard ? red : NSColor(white: 1, alpha: 0.16)
         fill.setFill()

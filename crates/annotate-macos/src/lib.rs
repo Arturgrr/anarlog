@@ -7,7 +7,8 @@
 //! [`codes::UNSUPPORTED`].
 //!
 //! Threads: [`start`], [`stop`], [`cancel`], [`probe_screen_recording`] and
-//! [`extract_frames`] block (up to about a minute for `stop`) and refuse the
+//! [`extract_frames`] block (`start` up to about 30 s, `stop` up to about 80 s,
+//! or 120 s when it waits on a recording that ended by itself) and refuse the
 //! main thread with [`codes::MAIN_THREAD`]; call them from a worker. The
 //! others return at once from any thread. The Swift side runs its windows on
 //! the main thread, so the host's main run loop must keep running.
@@ -76,7 +77,8 @@ pub fn open_screen_recording_settings() -> Result<(), AnnotateError> {
 /// `"labels": {"discard_question", "discard", "keep"}` puts the capsule's
 /// words in the host's language; each one left out stays English. Returns the
 /// start as JSON (`started_host_ticks`, `started_host_ns`,
-/// `started_wall_ms`, `display`). Blocks until the stream runs.
+/// `started_wall_ms`, `display`). Blocks until the movie is being written:
+/// up to 10 s each to list the displays, start the stream and begin the file.
 pub fn start(request: &str) -> Result<String, AnnotateError> {
     reply::parse(&sys::start(request)).map(|value| value.to_string())
 }

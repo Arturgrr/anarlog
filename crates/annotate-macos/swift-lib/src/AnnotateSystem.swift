@@ -76,7 +76,7 @@ extension AnnotateScreen {
 /// without a prompt, and a one-frame ScreenCaptureKit screenshot tells
 /// whether this process can record or must restart first.
 enum AnnotatePermissions {
-  private typealias Preflight = @convention(c) (CFString, CFDictionary?) -> Int
+  private typealias Preflight = @convention(c) (CFString, CFDictionary?) -> Int32
 
   private static let tccPreflight: Preflight? = {
     let path = "/System/Library/PrivateFrameworks/TCC.framework/Versions/A/TCC"
@@ -98,7 +98,7 @@ enum AnnotatePermissions {
   static func probe(timeout: Double = 5) -> String {
     if CGPreflightScreenCaptureAccess() { return "granted" }
     // 0 granted, 1 denied, 2 never asked; -1 when TCC can't be read.
-    let tcc = tccPreflight?("kTCCServiceScreenCapture" as CFString, nil) ?? -1
+    let tcc = Int(tccPreflight?("kTCCServiceScreenCapture" as CFString, nil) ?? -1)
     if tcc == 1 { return "denied" }
     if tcc == 2 { return "not_determined" }
     if screenshotWorks(timeout: timeout) { return "granted" }

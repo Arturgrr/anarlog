@@ -64,6 +64,8 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
   private let samplerQueue = DispatchQueue(label: "librelog.annotate.sampler")
   private let state = AnnotateLocked(State())
   private let outputDone = DispatchSemaphore(value: 0)
+  /// Signalled when the recording output begins writing, or fails first.
+  private let outputBegan = DispatchSemaphore(value: 0)
   private let shots = DispatchGroup()
   private var stream: SCStream?
   private var output: SCRecordingOutput?
@@ -73,7 +75,8 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
   var videoURL: URL? { plan?.dir.appendingPathComponent(AnnotateFiles.video) }
 
   /// Starts the stream with the recording output attached, then the
-  /// sampler. Blocks until the stream runs; off the main thread.
+  /// sampler. Blocks until the movie is being written (up to twice
+  /// `startTimeout`); off the main thread.
   func start(_ plan: AnnotateRecordingPlan) -> AnnotateFailure? {
     self.plan = plan
     let configuration = SCStreamConfiguration()
@@ -110,6 +113,8 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
     stream.startCapture { error in
       started.set((true, error))
       ready.signal()
+      // A start that answered after `abandon` gave up on it.
+      if error == nil, self.state.get().stopping { stream.stopCapture { _ in } }
     }
     if ready.wait(timeout: .now() + Self.startTimeout) == .timedOut {
       abandon()
@@ -118,6 +123,12 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
     if let error = started.get().error {
       abandon()
       return Self.failure(error, "could not start the stream")
+    }
+    let began = outputBegan.wait(timeout: .now() + Self.startTimeout) == .success
+    if !began || state.get().outputDone {
+      let why = state.get().outputError ?? "the recording output did not start"
+      abandon()
+      return AnnotateFailure(.recording, why)
     }
     startSampler(plan)
     return nil
@@ -297,6 +308,10 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
     if !stopping { onFailure?("the recording output failed: \(error)") }
   }
 
+  func recordingOutputDidStartRecording(_ recordingOutput: SCRecordingOutput) {
+    outputBegan.signal()
+  }
+
   func recordingOutputDidFinishRecording(_ recordingOutput: SCRecordingOutput) {
     finishOutput(error: nil)
   }
@@ -308,6 +323,9 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
       state.outputError = error
       return true
     }
-    if first { outputDone.signal() }
+    if first {
+      outputDone.signal()
+      outputBegan.signal()
+    }
   }
 }

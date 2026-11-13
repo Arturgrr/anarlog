@@ -13,12 +13,15 @@ import ScreenCaptureKit
 final class AnnotateFinish {
   let dir: URL
   let reason: String
+  /// Whether `start` made `candidates/`; cancel removes only what it made.
+  let ownsCandidates: Bool
   private let group = DispatchGroup()
   private let outcome = AnnotateLocked<Result<AnnotateStopResult, AnnotateFailure>?>(nil)
 
-  init(dir: URL, reason: String) {
+  init(dir: URL, reason: String, ownsCandidates: Bool) {
     self.dir = dir
     self.reason = reason
+    self.ownsCandidates = ownsCandidates
     group.enter()
   }
 
@@ -48,6 +51,7 @@ private final class AnnotateCurrent {
   var anchorTicks: UInt64 = 0
   var wallMs: Int64 = 0
   var display: AnnotateDisplayInfo?
+  var createdCandidates = false
   var strokes: AnnotateStrokeRecorder
   var lastMouse: CGPoint?
   var animating = true
@@ -169,10 +173,10 @@ final class AnnotateSession {
         finish = waiting
       }
       claim()
-      remove([
-        finish.dir.appendingPathComponent(AnnotateFiles.video),
-        finish.dir.appendingPathComponent(AnnotateFiles.candidates),
-      ])
+      remove(
+        [finish.dir.appendingPathComponent(AnnotateFiles.video)]
+          + (finish.ownsCandidates
+            ? [finish.dir.appendingPathComponent(AnnotateFiles.candidates)] : []))
       return .success(AnnotateNothing())
     }
   }
@@ -246,8 +250,10 @@ final class AnnotateSession {
       widthPx: Int((screen.frame.width * screen.scale).rounded()),
       heightPx: Int((screen.frame.height * screen.scale).rounded()), videoWidth: video.width,
       videoHeight: video.height)
+    let ownsCandidates = created.contains(candidates)
     let running = annotateOnMain { () -> Bool in
       current.recorder = recorder
+      current.createdCandidates = ownsCandidates
       current.anchorTicks = anchor
       current.wallMs = wallMs
       current.display = info
@@ -415,7 +421,9 @@ final class AnnotateSession {
       guard let finishing = finishing(endedBy: reason) else {
         return .failure(AnnotateFailure(.internal, "the recording has no recorder"))
       }
-      let finish = AnnotateFinish(dir: finishing.current.dir, reason: reason)
+      let finish = AnnotateFinish(
+        dir: finishing.current.dir, reason: reason,
+        ownsCandidates: finishing.current.createdCandidates)
       pending.set(finish)
       return .success(.run(finishing, finish))
     }
@@ -437,7 +445,9 @@ final class AnnotateSession {
   /// The cap or a stream failure: finish on a worker; `stop` collects it.
   private func finishByItself(reason: String, message: String? = nil) {
     guard machine.phase == .recording, let finishing = finishing(endedBy: reason) else { return }
-    let finish = AnnotateFinish(dir: finishing.current.dir, reason: reason)
+    let finish = AnnotateFinish(
+      dir: finishing.current.dir, reason: reason,
+      ownsCandidates: finishing.current.createdCandidates)
     pending.set(finish)
     DispatchQueue.global(qos: .userInitiated).async {
       _ = self.runFinish(finishing, finish)
@@ -576,7 +586,7 @@ final class AnnotateSession {
     if animating || current.animating {
       current.ink.inkView.scene = AnnotateInkScene(
         strokes: AnnotateInkLook.visible(current.strokes, nowMs: t).map { shown in
-          (shown.stroke.points.map { CGPoint(x: $0.x, y: $0.y) }, shown.alpha)
+          (points: shown.stroke.points.map { CGPoint(x: $0.x, y: $0.y) }, alpha: shown.alpha)
         },
         glow: AnnotateInkLook.glow(ms: Double(t)))
       current.ink.inkView.needsDisplay = true

@@ -145,7 +145,8 @@ struct AnnotateMachine {
     switch action {
     case .pen:
       lastActivity = now
-      if ink == .drag {
+      // Any ink gives the pointer back in one click, Escape or not.
+      if ink != .off {
         ink = .off
         events.append(AnnotateEvent(.penOff))
       } else {
