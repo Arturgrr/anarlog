@@ -31,13 +31,15 @@ The capsule has three buttons:
 
 Press Escape to stop drawing; it never stops the recording. Drawing also turns off after 30 seconds without pointer movement. A recording stops by itself after 20 minutes.
 
+Turning off **Enable Annotate** while you record does not discard the recording: the shortcut still finishes it, and Annotate turns off once the annotation is written. Quitting Librelog while you record, or while an annotation is being finished, discards it.
+
 ## Use the result
 
 When you finish, Librelog transcribes your narration, picks key frames where you drew, spoke or the screen changed, and writes the annotation. This can take a moment; **Settings → Annotate** shows **Finishing the annotation…** meanwhile. Then the summary is copied to your clipboard and **Annotation ready** appears, with **Show in Finder** to open its folder.
 
-To hand it to an agent, focus the agent's input and press the paste last annotation shortcut. Librelog pastes the contact sheet's file path, then the summary. In Claude Code and similar terminal agents, the path attaches the image. Paste last annotation uses the same text insertion as [dictation](/dictation#where-the-text-goes).
+To hand it to an agent, focus the agent's input and press the paste last annotation shortcut. Librelog pastes the contact sheet's file path, with spaces and special characters escaped as when you drag a file into Terminal, then the summary. In Claude Code and similar terminal agents, the path attaches the image. Paste last annotation uses the same text insertion as [dictation](/dictation#where-the-text-goes).
 
-The summary lists each numbered key frame with what you marked and what you said then. If no speech was heard, or transcription failed, the annotation is still written, without a transcript.
+The summary lists each numbered key frame with what you marked and what you said then. If no speech was heard, the annotation is written without a transcript. If transcription failed, it is written without one too, and Librelog tells you.
 
 Agents can also read annotations themselves through the [MCP server](/reference/mcp#list_annotations): `get_annotation` returns the newest one, with its summary, transcript and contact sheet.
 
