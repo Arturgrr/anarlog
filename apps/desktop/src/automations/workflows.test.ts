@@ -9,7 +9,9 @@ import {
   createWorkflowStep,
   isWorkflowReady,
   parseAutomationWorkflows,
+  readAutomationWorkflows,
   serializeAutomationWorkflows,
+  serializeStoredAutomationWorkflows,
 } from "./workflows";
 
 describe("automation workflows", () => {
@@ -86,6 +88,55 @@ describe("automation workflows", () => {
         chatGroupId: "group-1",
       },
     ]);
+  });
+
+  it("keeps workflows an older build would misread out of the key it reads, preserving order", () => {
+    const exportStep = {
+      id: "md",
+      type: "markdown_export" as const,
+      directory: "~/Classes",
+    };
+    const legacy = createEmptyWorkflow({ id: "legacy", steps: [exportStep] });
+    const named = createEmptyWorkflow({
+      id: "named",
+      trigger: "speakers_named",
+      conditions: { noteTypeId: "class", noteSubtypeId: null },
+      steps: [exportStep],
+    });
+    const stored = serializeStoredAutomationWorkflows([named, legacy]);
+
+    expect(
+      JSON.parse(stored.automation_workflows).map(
+        (workflow: { id: string }) => workflow.id,
+      ),
+    ).toEqual(["legacy"]);
+    expect(readAutomationWorkflows(stored)).toEqual([named, legacy]);
+
+    // An older build prepends a workflow it created to the key it reads.
+    const added = createEmptyWorkflow({ id: "added", steps: [exportStep] });
+    const afterOlderBuild = {
+      ...stored,
+      automation_workflows: serializeAutomationWorkflows([added, legacy]),
+    };
+    expect(
+      readAutomationWorkflows(afterOlderBuild).map((workflow) => workflow.id),
+    ).toEqual(["added", "named", "legacy"]);
+
+    const moved = serializeStoredAutomationWorkflows([
+      { ...named, trigger: "note_enhanced", conditions: legacy.conditions },
+      legacy,
+    ]);
+    expect(JSON.parse(moved.automation_workflows_extended).workflows).toEqual(
+      [],
+    );
+    expect(
+      readAutomationWorkflows(moved).map((workflow) => workflow.id),
+    ).toEqual(["named", "legacy"]);
+
+    const released = serializeAutomationWorkflows([legacy]);
+    expect(readAutomationWorkflows({ automation_workflows: released })).toEqual(
+      parseAutomationWorkflows(released),
+    );
   });
 
   it("treats a workflow as ready only when every action is configured", () => {

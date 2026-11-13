@@ -5,7 +5,7 @@ import { toast } from "@anlg/ui/components/ui/toast";
 
 import { useAutomationSelection } from "./selection";
 import { STARTER_AUTOMATIONS, type StarterId } from "./starters";
-import { parseAutomationWorkflows, saveAutomationWorkflows } from "./workflows";
+import { readAutomationWorkflows, saveAutomationWorkflows } from "./workflows";
 
 import { deleteChatGroup } from "~/chat/store/queries";
 import { getStoredSettingValues, setSettingValues } from "~/settings/queries";
@@ -47,9 +47,7 @@ export function useDeleteChatAutomation() {
     mutationKey: ["automation-delete-chat"],
     mutationFn: async (groupId: string) => {
       const stored = await getStoredSettingValues();
-      const workflows = parseAutomationWorkflows(
-        stored.values.automation_workflows,
-      );
+      const workflows = readAutomationWorkflows(stored.values);
       const remaining = workflows.filter(
         (workflow) => workflow.chatGroupId !== groupId,
       );
@@ -76,9 +74,7 @@ export function useDeleteWorkflow() {
     mutationKey: ["automation-delete-workflow"],
     mutationFn: async (workflowId: string) => {
       const stored = await getStoredSettingValues();
-      const workflows = parseAutomationWorkflows(
-        stored.values.automation_workflows,
-      );
+      const workflows = readAutomationWorkflows(stored.values);
       const workflow = workflows.find((item) => item.id === workflowId);
       await saveAutomationWorkflows(
         workflows.filter((item) => item.id !== workflowId),

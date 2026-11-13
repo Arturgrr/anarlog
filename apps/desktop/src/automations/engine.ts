@@ -11,7 +11,7 @@ import { type AutomationRunRecord, parseAutomationRunRecord } from "./types";
 import {
   type AutomationWorkflow,
   isStepAllowedForTrigger,
-  parseAutomationWorkflows,
+  readAutomationWorkflows,
   mutateAutomationWorkflows,
   workflowMatchesNote,
   type WorkflowStep,
@@ -84,9 +84,7 @@ async function runCustomWorkflowsNow(
   trigger: WorkflowTrigger,
 ): Promise<void> {
   const { values } = await getStoredSettingValues();
-  const workflows = parseAutomationWorkflows(
-    values.automation_workflows,
-  ).filter(
+  const workflows = readAutomationWorkflows(values).filter(
     (workflow) =>
       workflow.enabled &&
       workflow.trigger === trigger &&

@@ -12,7 +12,7 @@ import type { AutomationRunRecord } from "./types";
 import type { NoteTypeSelection } from "~/note-types/queries";
 import {
   getStoredSettingValues,
-  setSettingValue,
+  setSettingValues,
   useStoredSettingValue,
 } from "~/settings/queries";
 import { id } from "~/shared/utils";
@@ -204,19 +204,109 @@ export function serializeAutomationWorkflows(
   return JSON.stringify(workflows);
 }
 
-export async function saveAutomationWorkflows(
-  workflows: AutomationWorkflow[],
-): Promise<void> {
-  await setSettingValue(
-    "automation_workflows",
-    serializeAutomationWorkflows(workflows),
+// Released builds read `automation_workflows` with a parser that turns an
+// unknown trigger into note_enhanced and drops conditions and unknown steps,
+// then rewrite the list. Workflows they cannot read faithfully live in
+// `automation_workflows_extended`, which they never load, together with the
+// list order across both keys.
+const LEGACY_TRIGGERS: readonly WorkflowTrigger[] = [
+  "note_enhanced",
+  "meeting_completed",
+];
+
+function isLegacyReadable(workflow: AutomationWorkflow): boolean {
+  return (
+    LEGACY_TRIGGERS.includes(workflow.trigger) &&
+    workflow.conditions.noteTypeId === null &&
+    workflow.steps.every((step) => step.type === "markdown_export")
   );
 }
 
-export function useAutomationWorkflows(): AutomationWorkflow[] {
-  return parseAutomationWorkflows(
-    useStoredSettingValue("automation_workflows").value,
+type StoredWorkflowValues = {
+  automation_workflows?: string;
+  automation_workflows_extended?: string;
+};
+
+export function readAutomationWorkflows(
+  values: StoredWorkflowValues,
+): AutomationWorkflow[] {
+  const extended = parseExtendedWorkflows(values.automation_workflows_extended);
+  const extendedIds = new Set(
+    extended.workflows.map((workflow) => workflow.id),
   );
+  const workflows = [
+    ...extended.workflows,
+    ...parseAutomationWorkflows(values.automation_workflows).filter(
+      (workflow) => !extendedIds.has(workflow.id),
+    ),
+  ];
+  const rank = new Map(extended.order.map((id, index) => [id, index]));
+  // Older builds add workflows to the front of the list, so ones missing
+  // from the saved order go first.
+  return workflows
+    .map((workflow, index) => ({
+      workflow,
+      rank: rank.get(workflow.id) ?? -1,
+      index,
+    }))
+    .sort((left, right) =>
+      left.rank === -1 && right.rank === -1
+        ? left.index - right.index
+        : left.rank - right.rank,
+    )
+    .map(({ workflow }) => workflow);
+}
+
+export function serializeStoredAutomationWorkflows(
+  workflows: AutomationWorkflow[],
+): Required<StoredWorkflowValues> {
+  return {
+    automation_workflows: serializeAutomationWorkflows(
+      workflows.filter(isLegacyReadable),
+    ),
+    automation_workflows_extended: JSON.stringify({
+      order: workflows.map((workflow) => workflow.id),
+      workflows: workflows.filter((workflow) => !isLegacyReadable(workflow)),
+    }),
+  };
+}
+
+function parseExtendedWorkflows(value: string | undefined): {
+  order: string[];
+  workflows: AutomationWorkflow[];
+} {
+  try {
+    const parsed: unknown = value ? JSON.parse(value) : null;
+    if (!isRecord(parsed)) return { order: [], workflows: [] };
+    return {
+      order: Array.isArray(parsed.order)
+        ? parsed.order.filter((id): id is string => typeof id === "string")
+        : [],
+      workflows: Array.isArray(parsed.workflows)
+        ? parsed.workflows.flatMap((item) => {
+            const workflow = parseWorkflow(item);
+            return workflow ? [workflow] : [];
+          })
+        : [],
+    };
+  } catch {
+    return { order: [], workflows: [] };
+  }
+}
+
+export async function saveAutomationWorkflows(
+  workflows: AutomationWorkflow[],
+): Promise<void> {
+  await setSettingValues(serializeStoredAutomationWorkflows(workflows));
+}
+
+export function useAutomationWorkflows(): AutomationWorkflow[] {
+  const legacy = useStoredSettingValue("automation_workflows").value;
+  const extended = useStoredSettingValue("automation_workflows_extended").value;
+  return readAutomationWorkflows({
+    automation_workflows: legacy,
+    automation_workflows_extended: extended,
+  });
 }
 
 function parseWorkflow(value: unknown): AutomationWorkflow | null {
@@ -331,12 +421,7 @@ export function mutateAutomationWorkflows(
 ): Promise<void> {
   const next = workflowWriteQueue.then(async () => {
     const { values } = await getStoredSettingValues();
-    await setSettingValue(
-      "automation_workflows",
-      serializeAutomationWorkflows(
-        update(parseAutomationWorkflows(values.automation_workflows)),
-      ),
-    );
+    await saveAutomationWorkflows(update(readAutomationWorkflows(values)));
   });
   workflowWriteQueue = next.catch(() => {});
   return next;

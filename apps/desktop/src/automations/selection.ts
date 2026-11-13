@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { isStarterId, type StarterId } from "./starters";
-import { parseAutomationWorkflows, saveAutomationWorkflows } from "./workflows";
+import { readAutomationWorkflows, saveAutomationWorkflows } from "./workflows";
 
 import { useChatContext } from "~/chat/state/chat-context";
 import {
@@ -177,9 +177,9 @@ useChatContext.subscribe((chatState) => {
 
 async function restoreWorkflowChat(workflowId: string): Promise<void> {
   const stored = await getStoredSettingValues();
-  const workflow = parseAutomationWorkflows(
-    stored.values.automation_workflows,
-  ).find((item) => item.id === workflowId);
+  const workflow = readAutomationWorkflows(stored.values).find(
+    (item) => item.id === workflowId,
+  );
   if (!workflow?.chatGroupId) {
     return;
   }
@@ -214,9 +214,7 @@ async function attachWorkflowChatGroup(
   chatGroupId: string,
 ): Promise<void> {
   const stored = await getStoredSettingValues();
-  const workflows = parseAutomationWorkflows(
-    stored.values.automation_workflows,
-  );
+  const workflows = readAutomationWorkflows(stored.values);
   const current = workflows.find((workflow) => workflow.id === workflowId);
   if (!current || current.chatGroupId === chatGroupId) {
     return;

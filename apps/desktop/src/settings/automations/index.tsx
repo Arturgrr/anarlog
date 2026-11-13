@@ -45,7 +45,7 @@ import {
   type AutomationWorkflow,
   createEmptyWorkflow,
   isWorkflowReady,
-  parseAutomationWorkflows,
+  readAutomationWorkflows,
   saveAutomationWorkflows,
   useAutomationWorkflows,
 } from "~/automations/workflows";
@@ -379,9 +379,7 @@ function useEnsuredWorkflow({
 
     void (async () => {
       const stored = await getStoredSettingValues();
-      const current = parseAutomationWorkflows(
-        stored.values.automation_workflows,
-      );
+      const current = readAutomationWorkflows(stored.values);
       if (
         current.some(
           (workflow) =>

@@ -37,6 +37,11 @@ vi.mock("@anlg/plugin-local-api", () => ({
 vi.mock("~/settings/queries", () => ({
   getStoredSettingValues: mocks.getStoredSettingValues,
   setSettingValue: mocks.setSettingValue,
+  setSettingValues: async (values: Record<string, unknown>) => {
+    for (const [key, value] of Object.entries(values)) {
+      await mocks.setSettingValue(key, value);
+    }
+  },
 }));
 
 import {
@@ -45,6 +50,7 @@ import {
   runNoteEnhancedAutomations,
   runSpeakersNamedAutomations,
 } from "./engine";
+import { readAutomationWorkflows } from "./workflows";
 
 function storedSettings(values: Record<string, unknown>) {
   mocks.getStoredSettingValues.mockResolvedValue({
@@ -337,7 +343,9 @@ describe("configured Markdown workflows", () => {
     await runMeetingCompletedAutomations("session-1");
     expect(mocks.exportMeetingMarkdown).not.toHaveBeenCalled();
     const saved = JSON.parse(
-      mocks.setSettingValue.mock.calls.slice(-1)[0]![1] as string,
+      mocks.setSettingValue.mock.calls
+        .filter((entry) => entry[0] === "automation_workflows")
+        .slice(-1)[0]![1] as string,
     );
     expect(saved[0].lastRun.status).toBe("error");
     expect(saved[0].processedSessionIds).toEqual([]);
@@ -424,8 +432,8 @@ describe("workflow conditions and summary steps", () => {
       "session-1",
       "regenerate",
     );
-    const [saved] = JSON.parse(values.automation_workflows as string);
-    expect(saved.lastRun.status).toBe("error");
+    const [saved] = readAutomationWorkflows(values);
+    expect(saved.lastRun?.status).toBe("error");
     expect(saved.processedSessionIds).toEqual(["session-1"]);
   });
 

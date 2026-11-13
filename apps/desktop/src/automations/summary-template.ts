@@ -1,5 +1,5 @@
 import {
-  parseAutomationWorkflows,
+  readAutomationWorkflows,
   workflowSummaryTemplateIds,
 } from "./workflows";
 
@@ -11,7 +11,7 @@ export async function getWorkflowSummaryTemplateId(
   sessionId: string,
 ): Promise<string | undefined> {
   const { values } = await getStoredSettingValues();
-  const workflows = parseAutomationWorkflows(values.automation_workflows);
+  const workflows = readAutomationWorkflows(values);
   if (
     !workflows.some((workflow) =>
       workflow.steps.some((step) => step.type === "summary_template"),
