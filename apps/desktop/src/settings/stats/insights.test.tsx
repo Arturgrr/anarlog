@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("./dictation-section", () => ({ DictationSection: () => null }));
 vi.mock("./queries", () => ({ useActivity: () => mocks.activity }));
 vi.mock("~/shared/hooks/useNow", () => ({
   useNow: () => new Date("2026-09-05T12:00:00Z"),

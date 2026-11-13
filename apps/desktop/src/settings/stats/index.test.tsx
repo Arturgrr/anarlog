@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { DictationStatsRow } from "./dictation-queries";
 import type { ActivityRecord } from "./queries";
 
 const mocks = vi.hoisted(() => ({
@@ -15,9 +16,19 @@ const mocks = vi.hoisted(() => ({
     isLoading: false,
     error: null as Error | null,
   },
+  dictations: {
+    data: [] as DictationStatsRow[] | undefined,
+    isLoading: false,
+    error: null as Error | null,
+  },
+  retention: "week",
 }));
 
 vi.mock("./queries", () => ({ useActivity: () => mocks.activity }));
+vi.mock("~/db", () => ({ useLiveQuery: () => mocks.dictations }));
+vi.mock("~/shared/config", () => ({
+  useConfigValue: () => mocks.retention,
+}));
 vi.mock("~/shared/hooks/useNow", () => ({
   useNow: () => new Date("2026-09-05T12:00:00Z"),
   useTimezone: () => "UTC",
@@ -30,6 +41,8 @@ describe("merged insights page", () => {
   afterEach(cleanup);
   beforeEach(() => {
     mocks.activity = { data: [], isLoading: false, error: null };
+    mocks.dictations = { data: [], isLoading: false, error: null };
+    mocks.retention = "week";
   });
 
   it("waits for activity before showing totals", () => {
@@ -83,5 +96,67 @@ describe("merged insights page", () => {
     render(<SettingsInsights />);
     expect(screen.getByRole("alert").textContent).toContain("Couldn't load");
     expect(screen.queryByText("Conversations")).toBeNull();
+  });
+
+  it("summarizes the dictations still kept, and says so when none are", () => {
+    const dictation = (
+      created_at: string,
+      final_text: string,
+      target_app_name: string | null = "Slack",
+    ): DictationStatsRow => ({
+      created_at,
+      duration_ms: 30_000,
+      target_app_name,
+      target_app_id: null,
+      language: "en",
+      raw_text: final_text,
+      final_text,
+    });
+    mocks.dictations.data = [
+      dictation("2026-09-05T09:00:00.000Z", "one two three four"),
+      dictation("2026-09-04T09:00:00.000Z", "five six", "Mail"),
+      dictation("2026-08-20T09:00:00.000Z", "expired by retention"),
+    ];
+    const { rerender } = render(<SettingsInsights />);
+    const section = screen.getByRole("region", { name: "Dictation" });
+    const figure = (label: string) =>
+      within(section).getByText(label).nextElementSibling?.textContent;
+    expect(figure("Dictations")).toBe("2");
+    expect(figure("Words")).toBe("6");
+    expect(figure("Words per minute")).toBe("6");
+    expect(figure("Day streak")).toBe("2");
+    expect(
+      within(within(section).getByRole("region", { name: "Most-used apps" }))
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual([
+      expect.stringContaining("Mail"),
+      expect.stringContaining("Slack"),
+    ]);
+    expect(within(section).getByText(/last 7 days/)).toBeTruthy();
+
+    mocks.dictations.data = [];
+    rerender(<SettingsInsights />);
+    expect(within(section).queryByText("Dictations")).toBeNull();
+    expect(within(section).getByText(/No saved dictations yet/)).toBeTruthy();
+
+    mocks.retention = "off";
+    rerender(<SettingsInsights />);
+    expect(within(section).getByText(/Dictation history is off/)).toBeTruthy();
+  });
+
+  it("keeps the conversation insights when dictation statistics fail to load", () => {
+    mocks.dictations = {
+      data: undefined,
+      isLoading: false,
+      error: new Error("Database unavailable"),
+    };
+    render(<SettingsInsights />);
+    expect(screen.getByRole("region", { name: "Overview" })).toBeTruthy();
+    expect(
+      within(screen.getByRole("region", { name: "Dictation" })).getByRole(
+        "alert",
+      ).textContent,
+    ).toContain("Couldn't load your dictation statistics");
   });
 });
