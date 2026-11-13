@@ -15,6 +15,12 @@ const mocks = vi.hoisted(() => ({
   assignTranscriptSpeaker: vi.fn(),
   onOpenChange: vi.fn(),
   speakers: [] as SessionSpeaker[],
+  pickedOption: { id: "alice", name: "Alice" } as {
+    id: string;
+    name: string;
+    isNew?: boolean;
+  },
+  resolveHumanId: vi.fn(async (option: { id: string }) => option.id),
 }));
 
 vi.mock("~/stt/queries", () => ({
@@ -36,17 +42,14 @@ vi.mock(
     useSpeakerParticipantOptions: () => ({
       participants: [],
       contacts: [],
-      resolveHumanId: async (option: { id: string }) => option.id,
+      resolveHumanId: mocks.resolveHumanId,
     }),
     SpeakerParticipantPicker: ({
       onPick,
     }: {
-      onPick: (option: { id: string; name: string }) => void;
+      onPick: (option: typeof mocks.pickedOption) => void;
     }) => (
-      <button
-        type="button"
-        onClick={() => onPick({ id: "alice", name: "Alice" })}
-      >
+      <button type="button" onClick={() => onPick(mocks.pickedOption)}>
         Pick Alice
       </button>
     ),
@@ -95,6 +98,7 @@ describe("AssignSpeakersDialog", () => {
     vi.clearAllMocks();
     mocks.assignSessionTranscriptSpeaker.mockResolvedValue(undefined);
     mocks.speakers = [remoteSpeaker()];
+    mocks.pickedOption = { id: "alice", name: "Alice" };
   });
   afterEach(cleanup);
 
@@ -119,6 +123,26 @@ describe("AssignSpeakersDialog", () => {
       wordIds: ["w1", "w2"],
     });
     expect(mocks.assignTranscriptSpeaker).not.toHaveBeenCalled();
+  });
+
+  it("does not create a new person again when retrying after a failed assignment", async () => {
+    mocks.pickedOption = { id: "new:Carol", name: "Carol", isNew: true };
+    mocks.resolveHumanId.mockResolvedValueOnce("carol");
+    mocks.assignSessionTranscriptSpeaker
+      .mockRejectedValueOnce(new Error("revision changed"))
+      .mockResolvedValueOnce(undefined);
+    renderDialog();
+    pickAliceForSpeaker1();
+
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    await screen.findByRole("alert");
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+    await waitFor(() => expect(mocks.onOpenChange).toHaveBeenCalledWith(false));
+    expect(mocks.resolveHumanId).toHaveBeenCalledTimes(1);
+    expect(mocks.assignSessionTranscriptSpeaker).toHaveBeenLastCalledWith(
+      expect.objectContaining({ humanId: "carol" }),
+    );
   });
 
   it("discards picked people on Cancel", () => {

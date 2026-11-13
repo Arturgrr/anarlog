@@ -1,7 +1,7 @@
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { CaretDown } from "@anlg/ui/components/icons";
 import { Button } from "@anlg/ui/components/ui/button";
@@ -74,6 +74,10 @@ export function AssignSpeakersDialog({
       : null;
   }, [speakers]);
 
+  // A person created for a "new" choice must survive a retry after a partial
+  // failure, or the retry would create them again.
+  const resolvedHumanIds = useRef(new Map<string, string>());
+
   const apply = useMutation({
     // Rows are applied one at a time: transcript writes are optimistically
     // locked on the content revision.
@@ -84,19 +88,18 @@ export function AssignSpeakersDialog({
       rows: SessionSpeaker[];
       choices: Record<string, SpeakerParticipantOption>;
     }) => {
-      const resolvedHumanIds = new Map<string, string>();
       for (const step of planSpeakerAssignments(rows, choices)) {
         try {
           const choiceKey = step.choice.isNew
             ? `new:${step.choice.name.trim().toLowerCase()}`
             : step.choice.id;
           const humanId =
-            resolvedHumanIds.get(choiceKey) ??
+            resolvedHumanIds.current.get(choiceKey) ??
             (await resolveHumanId(step.choice));
           if (!humanId) {
             throw new Error("Could not resolve the chosen person");
           }
-          resolvedHumanIds.set(choiceKey, humanId);
+          resolvedHumanIds.current.set(choiceKey, humanId);
 
           const call = toSpeakerAssignmentCall({ sessionId, humanId, step });
           await (call.kind === "speaker"
@@ -104,16 +107,14 @@ export function AssignSpeakersDialog({
             : assignTranscriptSpeaker(call.args));
         } catch (error) {
           console.error("[assign-speakers] failed to assign speaker", error);
-          return { failedLabel: step.speaker.label };
+          const failedLabel = step.speaker.label;
+          throw new Error(
+            t`Could not assign ${failedLabel}. Speakers listed before it were saved; try again to finish.`,
+          );
         }
       }
-      return { failedLabel: null };
     },
-    onSuccess: ({ failedLabel }) => {
-      if (failedLabel === null) {
-        onOpenChange(false);
-      }
-    },
+    onSuccess: () => onOpenChange(false),
   });
 
   const form = useForm({
@@ -121,10 +122,9 @@ export function AssignSpeakersDialog({
       choices: {} as Record<string, SpeakerParticipantOption>,
     },
     onSubmit: ({ value }) =>
-      apply.mutateAsync({ rows: speakers, choices: value.choices }),
+      apply.mutate({ rows: speakers, choices: value.choices }),
   });
 
-  const failedLabel = apply.data?.failedLabel ?? null;
   const allNamed = areAllSpeakersNamed(speakers);
 
   return (
@@ -210,11 +210,9 @@ export function AssignSpeakersDialog({
             </form.Subscribe>
           )}
 
-          {(failedLabel !== null || apply.error) && (
+          {apply.error && (
             <p role="alert" className="text-destructive text-xs">
-              {failedLabel !== null
-                ? t`Could not assign ${failedLabel}. Speakers listed before it were saved; try again to finish.`
-                : t`Could not assign speakers. Try again.`}
+              {apply.error.message}
             </p>
           )}
 
