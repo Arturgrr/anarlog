@@ -19,6 +19,18 @@ const mocks = vi.hoisted(() => ({
     enabled?: boolean;
   }>,
   transcriptRows: [] as Array<Record<string, unknown>>,
+  getSessionSpeakers: vi.fn(),
+  areAllSpeakersNamed: vi.fn(),
+  runSpeakersNamedAutomations: vi.fn(),
+}));
+
+vi.mock("~/stt/session-speakers", () => ({
+  areAllSpeakersNamed: mocks.areAllSpeakersNamed,
+  getSessionSpeakers: mocks.getSessionSpeakers,
+}));
+
+vi.mock("~/automations/engine", () => ({
+  runSpeakersNamedAutomations: mocks.runSpeakersNamedAutomations,
 }));
 
 vi.mock("@anlg/plugin-transcription", () => ({
@@ -85,6 +97,7 @@ describe("transcript SQLite queries", () => {
     mocks.participantRows = [];
     mocks.queryOptions = [];
     mocks.transcriptRows = [];
+    mocks.getSessionSpeakers.mockResolvedValue([]);
   });
 
   it("maps canonical transcript JSON into renderer records", () => {
@@ -930,6 +943,37 @@ describe("transcript SQLite queries", () => {
       extend_to_adjacent: false,
     });
     expect(mocks.promoteVoiceprintCandidates).not.toHaveBeenCalled();
+  });
+
+  it("runs speakers-named automations only when the assignment names the last speaker", async () => {
+    const assign = async (allNamed: boolean) => {
+      mocks.areAllSpeakersNamed.mockReturnValueOnce(allNamed);
+      mocks.execute
+        .mockResolvedValueOnce([{ id: "transcript-1" }])
+        .mockResolvedValueOnce([speakerRow("word-1", 0)]);
+      const calls = mocks.getSessionSpeakers.mock.calls.length;
+      await assignSessionTranscriptSpeaker({
+        sessionId: "session-1",
+        transcriptId: "transcript-1",
+        segmentKey: {
+          channel: "RemoteParty",
+          speaker_index: 0,
+          speaker_human_id: null,
+        },
+        humanId: "alice",
+        anchorWordId: "word-1",
+      });
+      await vi.waitFor(() =>
+        expect(mocks.getSessionSpeakers.mock.calls.length).toBe(calls + 1),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    };
+
+    await assign(false);
+    expect(mocks.runSpeakersNamedAutomations).not.toHaveBeenCalled();
+
+    await assign(true);
+    expect(mocks.runSpeakersNamedAutomations).toHaveBeenCalledWith("session-1");
   });
 
   it("rejects a stale source transcript instead of changing other captures", async () => {

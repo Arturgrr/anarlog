@@ -7,6 +7,7 @@ import { commands as transcriptionCommands } from "@anlg/plugin-transcription";
 import type { RecoveryInterval } from "./capture-audio-recovery";
 import { selectRecoveredWords } from "./recovered-transcript";
 
+import { emitSpeakersNamedIfComplete } from "~/automations/speakers-named";
 import { executeTransaction, liveQueryClient, useLiveQuery } from "~/db";
 import { enqueueDatabaseWrite } from "~/db/write-queue";
 import type { SegmentKey } from "~/stt/live-segment";
@@ -588,7 +589,7 @@ export function mergeTranscriptSegments({
   });
 }
 
-export function assignTranscriptSpeaker({
+export async function assignTranscriptSpeaker({
   transcriptId,
   segmentKey,
   humanId,
@@ -605,7 +606,7 @@ export function assignTranscriptSpeaker({
   wordIds?: string[];
   extendToAdjacent?: boolean;
 }): Promise<void> {
-  return assignSpeakerInTranscript({
+  await assignSpeakerInTranscript({
     transcriptId,
     segmentKey,
     humanId,
@@ -614,6 +615,7 @@ export function assignTranscriptSpeaker({
     wordIds,
     extendToAdjacent,
   });
+  emitSpeakersNamedIfComplete({ transcriptId });
 }
 
 export async function assignSessionTranscriptSpeaker({
@@ -693,6 +695,7 @@ export async function assignSessionTranscriptSpeaker({
             }),
       ),
   );
+  emitSpeakersNamedIfComplete({ sessionId });
 }
 
 async function assignSpeakerInTranscript({

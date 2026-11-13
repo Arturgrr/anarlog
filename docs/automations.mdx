@@ -3,7 +3,7 @@ title: "Automate meeting follow-up"
 description: "Export every meeting as Markdown when it ends."
 ---
 
-Automations run repeatable work when a meeting ends. They write local Markdown files, so they need no account or connected service.
+Automations run repeatable work when a meeting ends, when its summary is ready, or when you name its speakers. They work locally, so they need no account or connected service.
 
 ## Use the starter
 
@@ -32,11 +32,35 @@ These options belong to desktop Automations. CLI `meetings export` still exports
 
 Click **+** in the Automations sidebar to start a workflow:
 
-1. Choose when it should run: after the meeting summary is ready, or after the meeting ends.
-2. Add a Markdown export action and configure its folder and content.
-3. Click **Save & enable**.
+1. Choose when it should run: after the meeting summary is ready, after the meeting ends, or after every speaker is named.
+2. Under **Applies to**, keep every note or choose a note type, and optionally a subtype.
+3. Add actions and configure them.
+4. Click **Save & enable**.
 
 Enabled custom workflows run automatically, the same way the starter does. Chat on the right can still help you refine the workflow; it is not required to make the automation run.
+
+### Run a workflow for one type of note
+
+A workflow without a type runs for every note. Choose a type, such as **Aula**, to run it only for notes of that type, whatever their subtype. Add a subtype, such as **Daily**, to run it only for notes of that subtype. Workflows saved before types existed keep running for every note.
+
+Librelog checks the note's type when the workflow runs. Set the type before the meeting ends for workflows that run after the meeting ends.
+
+To export each type to its own folder, create one workflow per type, each with its own Markdown export folder.
+
+### Run a workflow when speakers are named
+
+**After every speaker is named** runs once per note, when you give the last unnamed speaker a person, in the transcript or in the speaker assignment dialog. Naming or renaming speakers again does not run it a second time.
+
+Voices that Librelog names automatically from remembered voices do not count as naming a speaker, so they do not start this workflow on their own. Webhooks do not receive an event for it.
+
+### Choose an action
+
+- **Export the meeting as Markdown** writes the note to a folder on your computer.
+- **Use a summary template** chooses the template for the note's summary. It is available only for workflows that run after the meeting ends, and it applies whenever Librelog creates the note's summary, not only at the end of the meeting. A template you choose in the note itself takes priority. If several workflows match, the one with a subtype wins, then the one with only a type, then the one for every note. A summary that already exists keeps its template when it is regenerated, and a deleted template falls back to your default template.
+- **Regenerate the summary** generates the note's summary again, for example so that it uses the names you just gave the speakers. It is not available for workflows that run after the summary is ready, so a workflow cannot regenerate its own summary.
+- **Move the note to a folder** files the note in a Librelog folder. If the folder no longer exists, the step fails and the note stays where it is.
+
+Actions run from top to bottom. A failed Markdown export stops the workflow; other failed actions are reported and the next actions still run.
 
 Librelog must be open to run a workflow. It does not backfill older notes or queue runs while the app is closed.
 

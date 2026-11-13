@@ -6,6 +6,26 @@ const mocks = vi.hoisted(() => ({
   exportMeetingMarkdown: vi.fn(),
   getStoredSettingValues: vi.fn(),
   setSettingValue: vi.fn(),
+  getSessionNoteType: vi.fn(),
+  requestAutoEnhance: vi.fn(),
+  loadFolderPaths: vi.fn(),
+  updateSession: vi.fn(),
+}));
+
+vi.mock("~/note-types/queries", () => ({
+  getSessionNoteType: mocks.getSessionNoteType,
+}));
+
+vi.mock("~/services/enhancer", () => ({
+  getEnhancerService: () => ({ requestAutoEnhance: mocks.requestAutoEnhance }),
+}));
+
+vi.mock("~/session/queries/folders", () => ({
+  loadFolderPaths: mocks.loadFolderPaths,
+}));
+
+vi.mock("~/session/queries/sessions", () => ({
+  updateSession: mocks.updateSession,
 }));
 
 vi.mock("@anlg/plugin-local-api", () => ({
@@ -23,6 +43,7 @@ import {
   parseAutomationRunRecord,
   runMeetingCompletedAutomations,
   runNoteEnhancedAutomations,
+  runSpeakersNamedAutomations,
 } from "./engine";
 
 function storedSettings(values: Record<string, unknown>) {
@@ -320,5 +341,137 @@ describe("configured Markdown workflows", () => {
     );
     expect(saved[0].lastRun.status).toBe("error");
     expect(saved[0].processedSessionIds).toEqual([]);
+  });
+});
+
+describe("workflow conditions and summary steps", () => {
+  function persistentSettings(values: Record<string, unknown>) {
+    storedSettings(values);
+    mocks.setSettingValue.mockImplementation(async (key: string, value) => {
+      values[key] = value;
+    });
+  }
+
+  function exportWorkflow(
+    directory: string,
+    conditions: { noteTypeId: string; noteSubtypeId?: string } | undefined,
+  ) {
+    return {
+      id: `wf-${directory}`,
+      enabled: true,
+      trigger: "meeting_completed",
+      ...(conditions ? { conditions } : {}),
+      steps: [{ id: "step", type: "markdown_export", directory }],
+    };
+  }
+
+  it("runs only the workflows whose type and subtype match the note", async () => {
+    persistentSettings({
+      automation_workflows: JSON.stringify([
+        exportWorkflow("/every", undefined),
+        exportWorkflow("/ferreri", { noteTypeId: "ferreri" }),
+        exportWorkflow("/daily", {
+          noteTypeId: "ferreri",
+          noteSubtypeId: "daily",
+        }),
+        exportWorkflow("/weekly", {
+          noteTypeId: "ferreri",
+          noteSubtypeId: "weekly",
+        }),
+        exportWorkflow("/aula", { noteTypeId: "aula" }),
+      ]),
+    });
+    mocks.getSessionNoteType.mockResolvedValue({
+      typeId: "ferreri",
+      subtypeId: "daily",
+    });
+    mocks.exportMeetingMarkdown.mockImplementation(async (_id, directory) => ({
+      status: "ok",
+      data: { path: `${directory}/note.md`, sha256: "hash" },
+    }));
+
+    await runMeetingCompletedAutomations("session-1");
+
+    expect(
+      mocks.exportMeetingMarkdown.mock.calls.map(([, directory]) => directory),
+    ).toEqual(["/every", "/ferreri", "/daily"]);
+  });
+
+  it("runs a speakers-named workflow once per note and keeps going after a failed step", async () => {
+    const values: Record<string, unknown> = {
+      automation_workflows: JSON.stringify([
+        {
+          id: "wf-named",
+          enabled: true,
+          trigger: "speakers_named",
+          steps: [
+            { id: "move", type: "move_to_folder", folderPath: "Deleted" },
+            { id: "regen", type: "regenerate_summary" },
+          ],
+        },
+      ]),
+    };
+    persistentSettings(values);
+    mocks.loadFolderPaths.mockResolvedValue(["Work"]);
+    mocks.requestAutoEnhance.mockResolvedValue(undefined);
+
+    await runSpeakersNamedAutomations("session-1");
+    await runSpeakersNamedAutomations("session-1");
+
+    expect(mocks.updateSession).not.toHaveBeenCalled();
+    expect(mocks.requestAutoEnhance).toHaveBeenCalledTimes(1);
+    expect(mocks.requestAutoEnhance).toHaveBeenCalledWith(
+      "session-1",
+      "regenerate",
+    );
+    const [saved] = JSON.parse(values.automation_workflows as string);
+    expect(saved.lastRun.status).toBe("error");
+    expect(saved.processedSessionIds).toEqual(["session-1"]);
+  });
+
+  it("moves the note into an existing folder", async () => {
+    persistentSettings({
+      automation_workflows: JSON.stringify([
+        {
+          id: "wf-move",
+          enabled: true,
+          trigger: "meeting_completed",
+          steps: [{ id: "move", type: "move_to_folder", folderPath: "Work" }],
+        },
+      ]),
+    });
+    mocks.loadFolderPaths.mockResolvedValue(["Work"]);
+    mocks.updateSession.mockResolvedValue(undefined);
+
+    await runMeetingCompletedAutomations("session-1");
+
+    expect(mocks.updateSession).toHaveBeenCalledWith("session-1", {
+      folder_id: "Work",
+    });
+  });
+
+  it("never regenerates the summary from a summary-ready workflow", async () => {
+    persistentSettings({
+      automation_workflows: JSON.stringify([
+        {
+          id: "wf-loop",
+          enabled: true,
+          trigger: "note_enhanced",
+          steps: [
+            { id: "regen", type: "regenerate_summary" },
+            { id: "md", type: "markdown_export", directory: "/exports" },
+          ],
+        },
+      ]),
+    });
+    mocks.exportMeetingMarkdown.mockResolvedValue({
+      status: "ok",
+      data: { path: "/exports/note.md", sha256: "hash" },
+    });
+
+    await runNoteEnhancedAutomations("session-1");
+
+    expect(mocks.requestAutoEnhance).not.toHaveBeenCalled();
+    expect(mocks.exportMeetingMarkdown).toHaveBeenCalledTimes(1);
   });
 });

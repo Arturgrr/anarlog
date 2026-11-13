@@ -13,7 +13,7 @@ import {
 } from "./workflows";
 
 describe("automation workflows", () => {
-  it("parses persisted workflows and drops malformed or removed steps", () => {
+  it("parses pre-condition workflows as every note and drops malformed or removed steps", () => {
     const workflows = parseAutomationWorkflows(
       JSON.stringify([
         {
@@ -69,6 +69,7 @@ describe("automation workflows", () => {
         title: "Recap",
         enabled: true,
         trigger: "meeting_completed",
+        conditions: { noteTypeId: null, noteSubtypeId: null },
         steps: [
           {
             id: "step-1",
