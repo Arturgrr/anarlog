@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-validate-annotate"
+description = "Enables the validate_annotate command without any pre-configured scope."
+commands.allow = ["validate_annotate"]
+
+[[permission]]
+identifier = "deny-validate-annotate"
+description = "Denies the validate_annotate command without any pre-configured scope."
+commands.deny = ["validate_annotate"]

@@ -7,7 +7,10 @@ use tauri::Manager;
 use tauri_plugin_global_shortcut::{Code, Shortcut, ShortcutState};
 use tauri_specta::Event;
 
-use crate::{PasteLastEvent, ShortcutEvent, ShortcutPluginExt, press};
+use crate::{
+    AnnotateShortcutEvent, PasteLastAnnotationEvent, PasteLastEvent, ShortcutEvent,
+    ShortcutPluginExt, annotate, press,
+};
 
 pub fn uses_portal() -> bool {
     cfg!(target_os = "linux") && std::env::var_os("WAYLAND_DISPLAY").is_some()
@@ -18,11 +21,16 @@ const NEEDS_MODIFIER: &str = "Choose a shortcut with Control, Alt, Shift, or Com
 const TAKEN_BY_DICTATION: &str = "This shortcut already starts dictation. Choose another one.";
 const TAKEN_BY_PASTE_LAST: &str =
     "This shortcut already pastes the last dictation. Choose another one.";
+const TAKEN_BY_ANNOTATE: &str = "This shortcut is already used by Annotate. Choose another one.";
+const TAKEN: &str =
+    "This shortcut is already used by another Librelog shortcut. Choose another one.";
 
 #[derive(Default)]
 pub struct GlobalState {
     registration: tokio::sync::Mutex<Registration>,
     active: Arc<AtomicBool>,
+    /// Escape turns Annotate's ink off while this is set.
+    annotate_escape: Arc<AtomicBool>,
 }
 
 #[derive(Default)]
@@ -42,6 +50,10 @@ struct Keys {
     dictation: Vec<Shortcut>,
     cancel: Vec<Shortcut>,
     paste_last: Option<Shortcut>,
+    annotate: Option<Shortcut>,
+    annotate_paste: Option<Shortcut>,
+    /// Escape keys held for Annotate that dictation's `cancel` does not hold.
+    annotate_escape: Vec<Shortcut>,
 }
 
 #[derive(Clone, Copy)]
@@ -51,6 +63,9 @@ enum Action {
     Dictate(usize),
     Cancel,
     PasteLast,
+    /// Annotate's start, stop and hold-to-ink key.
+    Annotate,
+    PasteLastAnnotation,
 }
 
 trait Backend {
@@ -67,6 +82,9 @@ impl Keys {
         for (source, key) in keys {
             if self.paste_last == Some(key) {
                 return Err(TAKEN_BY_PASTE_LAST.into());
+            }
+            if self.annotate == Some(key) || self.annotate_paste == Some(key) {
+                return Err(TAKEN_BY_ANNOTATE.into());
             }
             backend
                 .register(key, Action::Dictate(source))
@@ -96,7 +114,7 @@ impl Keys {
             )
             .collect::<Vec<_>>();
         for key in keys {
-            if self.cancel.contains(&key) {
+            if self.cancel.contains(&key) || self.annotate_escape.contains(&key) {
                 continue;
             }
             backend.register(key, Action::Cancel)?;
@@ -125,6 +143,9 @@ impl Keys {
         if self.dictation.contains(&key) {
             return Err(TAKEN_BY_DICTATION.into());
         }
+        if self.annotate == Some(key) || self.annotate_paste == Some(key) {
+            return Err(TAKEN_BY_ANNOTATE.into());
+        }
         backend.register(key, Action::PasteLast).map_err(|e| {
             format!(
                 "Could not register the paste last dictation shortcut. It may be used by another app: {e}"
@@ -132,6 +153,72 @@ impl Keys {
         })?;
         self.paste_last = Some(key);
         Ok(())
+    }
+}
+
+impl Keys {
+    /// Replaces Annotate's two shortcuts; `None` leaves one out. Neither may
+    /// be a dictation shortcut, the paste-last one or the other.
+    fn set_annotate(
+        &mut self,
+        backend: &impl Backend,
+        annotate: Option<Shortcut>,
+        paste: Option<Shortcut>,
+    ) -> Result<(), String> {
+        for current in [self.annotate.take(), self.annotate_paste.take()]
+            .into_iter()
+            .flatten()
+        {
+            backend.unregister(current)?;
+        }
+        if annotate.is_some() && annotate == paste {
+            return Err(TAKEN.into());
+        }
+        for (key, action) in [
+            (annotate, Action::Annotate),
+            (paste, Action::PasteLastAnnotation),
+        ] {
+            let Some(key) = key else { continue };
+            if self.dictation.contains(&key) {
+                return Err(TAKEN_BY_DICTATION.into());
+            }
+            if self.paste_last == Some(key) {
+                return Err(TAKEN_BY_PASTE_LAST.into());
+            }
+            backend.register(key, action).map_err(|e| {
+                format!(
+                    "Could not register the Annotate shortcut. It may be used by another app: {e}"
+                )
+            })?;
+            match action {
+                Action::Annotate => self.annotate = Some(key),
+                _ => self.annotate_paste = Some(key),
+            }
+        }
+        Ok(())
+    }
+
+    /// Escape, alone and with the Annotate shortcut's modifiers, which may be
+    /// held while inking. Keys dictation already holds are shared.
+    fn add_annotate_escape(&mut self, backend: &impl Backend) -> Result<(), String> {
+        let keys = std::iter::once(Shortcut::new(None, Code::Escape))
+            .chain(
+                self.annotate
+                    .map(|shortcut| Shortcut::new(Some(shortcut.mods), Code::Escape)),
+            )
+            .collect::<Vec<_>>();
+        for key in keys {
+            if self.cancel.contains(&key) || self.annotate_escape.contains(&key) {
+                continue;
+            }
+            backend.register(key, Action::Cancel)?;
+            self.annotate_escape.push(key);
+        }
+        Ok(())
+    }
+
+    fn remove_annotate_escape(&mut self, backend: &impl Backend) -> Result<(), String> {
+        release(&mut self.annotate_escape, backend)
     }
 }
 
@@ -146,6 +233,7 @@ fn release(keys: &mut Vec<Shortcut>, backend: &impl Backend) -> Result<(), Strin
 struct Global<'a> {
     shortcuts: &'a GlobalShortcut,
     active: &'a Arc<AtomicBool>,
+    annotate_escape: &'a Arc<AtomicBool>,
 }
 
 impl Backend for Global<'_> {
@@ -161,12 +249,31 @@ impl Backend for Global<'_> {
             }),
             Action::Cancel => {
                 let enabled = self.active.clone();
+                let annotate = self.annotate_escape.clone();
                 self.shortcuts.on_shortcut(key, move |app, _, event| {
-                    if event.state == ShortcutState::Pressed && enabled.load(Ordering::SeqCst) {
+                    if event.state != ShortcutState::Pressed {
+                        return;
+                    }
+                    if enabled.load(Ordering::SeqCst) {
                         press::cancel(app);
+                    }
+                    if annotate.load(Ordering::SeqCst) {
+                        let _ = AnnotateShortcutEvent::Escape.emit(app);
                     }
                 })
             }
+            Action::Annotate => self.shortcuts.on_shortcut(key, |app, _, event| {
+                if event.state == ShortcutState::Pressed {
+                    annotate::pressed(app);
+                } else {
+                    annotate::released(app);
+                }
+            }),
+            Action::PasteLastAnnotation => self.shortcuts.on_shortcut(key, |app, _, event| {
+                if event.state == ShortcutState::Pressed {
+                    let _ = PasteLastAnnotationEvent {}.emit(app);
+                }
+            }),
             Action::PasteLast => self.shortcuts.on_shortcut(key, |app, _, event| {
                 if event.state == ShortcutState::Pressed {
                     let _ = PasteLastEvent {}.emit(app);
@@ -187,6 +294,7 @@ fn global<'a>(app: &'a tauri::AppHandle, state: &'a GlobalState) -> Option<Globa
     app.try_state::<GlobalShortcut>().map(|shortcuts| Global {
         shortcuts: shortcuts.inner(),
         active: &state.active,
+        annotate_escape: &state.annotate_escape,
     })
 }
 
@@ -312,7 +420,104 @@ pub async fn set_active(app: tauri::AppHandle, active: bool) -> Result<(), Strin
     if active {
         registration.keys.add_cancel(&global)
     } else {
-        registration.keys.remove_cancel(&global)
+        registration.keys.remove_cancel(&global)?;
+        // Annotate may still need the Escape dictation held.
+        if state.annotate_escape.load(Ordering::SeqCst) {
+            registration.keys.add_annotate_escape(&global)?;
+        }
+        Ok(())
+    }
+}
+
+/// Registers Annotate's shortcut, which starts, stops and inks, and its
+/// paste-last-annotation shortcut, replacing the previous ones; `None`
+/// leaves one out. Each needs a key with modifiers. If one cannot be
+/// registered, neither stays registered.
+#[tauri::command]
+#[specta::specta]
+pub async fn configure_annotate(
+    app: tauri::AppHandle,
+    shortcut: Option<String>,
+    paste: Option<String>,
+) -> Result<(), String> {
+    let global_available = app.try_state::<GlobalShortcut>().is_some();
+    let key = |shortcut: Option<String>| {
+        shortcut
+            .map(|shortcut| paste_last_key(&shortcut, global_available))
+            .transpose()
+    };
+    let (annotate, paste) = (key(shortcut)?, key(paste)?);
+    let state = app.state::<GlobalState>();
+    let mut registration = state.registration.lock().await;
+    let Some(global) = global(&app, &state) else {
+        return if annotate.is_none() && paste.is_none() {
+            Ok(())
+        } else {
+            Err(UNAVAILABLE.into())
+        };
+    };
+    let result = registration.keys.set_annotate(&global, annotate, paste);
+    if result.is_err() {
+        let _ = registration.keys.set_annotate(&global, None, None);
+    }
+    result
+}
+
+/// Checks an Annotate shortcut: a key with modifiers that none of `taken`
+/// (the other Librelog shortcuts) uses.
+#[tauri::command]
+#[specta::specta]
+pub fn validate_annotate(
+    app: tauri::AppHandle,
+    shortcut: String,
+    taken: Vec<String>,
+) -> Result<(), String> {
+    validate_annotate_shortcut(
+        &shortcut,
+        &taken,
+        app.try_state::<GlobalShortcut>().is_some(),
+    )
+}
+
+fn validate_annotate_shortcut(
+    shortcut: &str,
+    taken: &[String],
+    global_available: bool,
+) -> Result<(), String> {
+    let key = paste_last_key(shortcut, global_available)?;
+    if taken
+        .iter()
+        .any(|other| parse_shortcut(other).is_ok_and(|other| other == key))
+    {
+        return Err(TAKEN.into());
+    }
+    Ok(())
+}
+
+/// Tells the Annotate shortcut whether a recording runs, so its next press
+/// starts one or stops or inks this one.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_annotate_recording(app: tauri::AppHandle, recording: bool) -> Result<(), String> {
+    app.state::<annotate::AnnotateGesture>()
+        .set_recording(recording);
+    Ok(())
+}
+
+/// Takes Escape from other apps while Annotate's ink is on, to turn it off.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_annotate_escape(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    let state = app.state::<GlobalState>();
+    let mut registration = state.registration.lock().await;
+    state.annotate_escape.store(enabled, Ordering::SeqCst);
+    let Some(global) = global(&app, &state) else {
+        return Ok(());
+    };
+    if enabled {
+        registration.keys.add_annotate_escape(&global)
+    } else {
+        registration.keys.remove_annotate_escape(&global)
     }
 }
 
@@ -639,6 +844,69 @@ mod registration_tests {
         assert_eq!(
             held(),
             HashSet::from([key("Control+Alt+KeyD"), key("Alt+Shift+KeyV")])
+        );
+    }
+
+    #[test]
+    fn annotate_shortcuts_never_take_dictations_and_share_its_escape() {
+        let key = |shortcut: &str| parse_shortcut(shortcut).unwrap();
+        let os = Os::default();
+        let held = || os.0.borrow().clone();
+        let mut keys = Keys::default();
+        keys.add_dictation(&os, vec![(0, key("Control+Alt+Space"))])
+            .unwrap();
+        keys.set_paste_last(&os, Some(key("Alt+Shift+KeyV")))
+            .unwrap();
+        // The defaults fit beside dictation's.
+        keys.set_annotate(
+            &os,
+            Some(key("Alt+Shift+KeyS")),
+            Some(key("Alt+Shift+KeyA")),
+        )
+        .unwrap();
+        assert_eq!(
+            keys.set_annotate(&os, Some(key("Alt+Shift+KeyV")), None),
+            Err(TAKEN_BY_PASTE_LAST.into())
+        );
+        keys.set_annotate(
+            &os,
+            Some(key("Alt+Shift+KeyS")),
+            Some(key("Alt+Shift+KeyA")),
+        )
+        .unwrap();
+        assert_eq!(
+            keys.set_paste_last(&os, Some(key("Shift+Alt+KeyA"))),
+            Err(TAKEN_BY_ANNOTATE.into())
+        );
+        keys.set_paste_last(&os, Some(key("Alt+Shift+KeyV")))
+            .unwrap();
+
+        // Dictation and Annotate both want Escape; each key is held once,
+        // and Annotate keeps its own when dictation lets go.
+        keys.add_cancel(&os).unwrap();
+        keys.add_annotate_escape(&os).unwrap();
+        let held_escape = Shortcut::new(Some(key("Alt+Shift+KeyS").mods), Code::Escape);
+        assert!(held().contains(&held_escape));
+        keys.remove_cancel(&os).unwrap();
+        keys.add_annotate_escape(&os).unwrap();
+        assert!(held().contains(&Shortcut::new(None, Code::Escape)));
+        keys.remove_annotate_escape(&os).unwrap();
+        assert_eq!(
+            held(),
+            HashSet::from([
+                key("Control+Alt+Space"),
+                key("Alt+Shift+KeyV"),
+                key("Alt+Shift+KeyS"),
+                key("Alt+Shift+KeyA"),
+            ])
+        );
+        assert_eq!(
+            validate_annotate_shortcut("Alt+Shift+KeyS", &["Alt+Shift+KeyA".into()], true),
+            Ok(())
+        );
+        assert_eq!(
+            validate_annotate_shortcut("Shift+Alt+KeyA", &["Alt+Shift+KeyA".into()], true),
+            Err(TAKEN.into())
         );
     }
 }

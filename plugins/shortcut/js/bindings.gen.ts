@@ -121,14 +121,97 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
+  /**
+   * Registers Annotate's shortcut, which starts, stops and inks, and its
+   * paste-last-annotation shortcut, replacing the previous ones; `None`
+   * leaves one out. Each needs a key with modifiers. If one cannot be
+   * registered, neither stays registered.
+   */
+  async configureAnnotate(
+    shortcut: string | null,
+    paste: string | null,
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:shortcut|configure_annotate", {
+          shortcut,
+          paste,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
+  /**
+   * Checks an Annotate shortcut: a key with modifiers that none of `taken`
+   * (the other Librelog shortcuts) uses.
+   */
+  async validateAnnotate(
+    shortcut: string,
+    taken: string[],
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:shortcut|validate_annotate", {
+          shortcut,
+          taken,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
+  /**
+   * Tells the Annotate shortcut whether a recording runs, so its next press
+   * starts one or stops or inks this one.
+   */
+  async setAnnotateRecording(
+    recording: boolean,
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:shortcut|set_annotate_recording", {
+          recording,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
+  /**
+   * Takes Escape from other apps while Annotate's ink is on, to turn it off.
+   */
+  async setAnnotateEscape(enabled: boolean): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:shortcut|set_annotate_escape", {
+          enabled,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
 };
 
 /** user-defined events **/
 
 export const events = __makeEvents__<{
+  annotateShortcutEvent: AnnotateShortcutEvent;
+  pasteLastAnnotationEvent: PasteLastAnnotationEvent;
   pasteLastEvent: PasteLastEvent;
   shortcutEvent: ShortcutEvent;
 }>({
+  annotateShortcutEvent: "plugin:shortcut:annotate-shortcut-event",
+  pasteLastAnnotationEvent: "plugin:shortcut:paste-last-annotation-event",
   pasteLastEvent: "plugin:shortcut:paste-last-event",
   shortcutEvent: "plugin:shortcut:shortcut-event",
 });
@@ -137,6 +220,21 @@ export const events = __makeEvents__<{
 
 /** user-defined types **/
 
+/**
+ * What the Annotate shortcut asks for, decided by its taps and holds.
+ */
+export type AnnotateShortcutEvent =
+  | { type: "start" }
+  | { type: "stop" }
+  /**
+   * Held while recording: ink follows the pointer until release.
+   */
+  | { type: "inkOn" }
+  | { type: "inkOff" }
+  /**
+   * Escape while ink is on.
+   */
+  | { type: "escape" };
 export type HotKey = { key: number | null; modifiers: Modifier[] };
 export type Modifier =
   | "command"
@@ -150,6 +248,10 @@ export type Options = {
   doubleTapLockEnabled?: boolean;
   minimumKeyTimeMs?: number;
 };
+/**
+ * Paste the last annotation: its shortcut was pressed.
+ */
+export type PasteLastAnnotationEvent = Record<string, never>;
 /**
  * Paste the last dictation again: its shortcut was pressed, or its tray
  * item chosen.
