@@ -1,7 +1,8 @@
 // The dictation HUD's page on Windows and Linux (`dictation-hud.html`): the
 // scope in a transparent, click-through window the dictation plugin places at
-// the top of the display under the pointer, and Hex's live text plate under
-// it. The page keeps the HUD's clock and says when it has faded out.
+// the top or the bottom of the display under the pointer, and Hex's live text
+// plate on the side of it facing the screen's middle. The page keeps the HUD's
+// clock and says when it has faded out.
 
 import { emit, listen } from "@tauri-apps/api/event";
 
@@ -102,6 +103,10 @@ void (async () => {
       const { event } = payload;
       if (event.type === "started") {
         session = payload.session;
+        document.documentElement.classList.toggle(
+          "bottom",
+          event.position === "bottom",
+        );
         stable = "";
         tentative = "";
       }

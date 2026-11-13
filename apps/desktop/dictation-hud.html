@@ -7,8 +7,10 @@
     <style>
       /* Laid out for the 560 × 100 pt window the dictation plugin opens:
          Hex's 304 × 80 pt HUD with the plate in its middle, and the live
-         text plate 6 pt under the plate. Colours are the graphite design
-         tokens (`packages/design-system/src/tokens.css`). */
+         text plate 6 pt under the plate. At the bottom (`.bottom`, set by
+         `page.ts`) the scope sits at the window's foot and the live text
+         6 pt above its plate. Colours are the graphite design tokens
+         (`packages/design-system/src/tokens.css`). */
       html,
       body {
         margin: 0;
@@ -45,6 +47,12 @@
         font: 440 13px/1 Inter, "SF Pro Text", system-ui, -apple-system,
           "Segoe UI", Roboto, sans-serif;
         white-space: pre;
+      }
+      .bottom #scope {
+        top: 20px;
+      }
+      .bottom #live-text {
+        top: 9px;
       }
       #live-text[hidden] {
         display: none;

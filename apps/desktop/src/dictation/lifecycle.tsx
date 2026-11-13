@@ -22,6 +22,7 @@ import {
   recordingEnvironmentConfig,
 } from "./environment";
 import { recordDictation } from "./history/store";
+import { normalizeHudPosition } from "./hud-position";
 import { useDictationStatus } from "./state";
 
 import { localizeExternalMessage } from "~/i18n/external-messages";
@@ -121,6 +122,7 @@ function ActiveDictation() {
   const dictionary = useConfigValue("personalization_dictionary_terms");
   const languages = useConfigValue("spoken_languages");
   const sounds = useConfigValue("dictation_sounds");
+  const hudPosition = useConfigValue("dictation_hud_position");
   const audio = {
     behavior: useConfigValue("dictation_audio_behavior"),
     duckVolume: useConfigValue("dictation_audio_duck_volume"),
@@ -137,6 +139,7 @@ function ActiveDictation() {
     languages,
     dictionary,
     sounds,
+    hudPosition,
     audio,
     meetingActive,
     conn,
@@ -149,6 +152,7 @@ function ActiveDictation() {
     languages,
     dictionary,
     sounds,
+    hudPosition,
     audio,
     meetingActive,
     conn,
@@ -220,8 +224,15 @@ function ActiveDictation() {
       start: async (signal) => {
         // First, while the app being dictated into is still in front.
         const app = frontmostApp().catch(() => null);
-        const { microphone, livePreview, conn, languages, dictionary, audio } =
-          current.current;
+        const {
+          microphone,
+          livePreview,
+          conn,
+          languages,
+          dictionary,
+          audio,
+          hudPosition,
+        } = current.current;
         useDictationStatus.setState({ error: null });
         const meeting = meetingRecording().catch(() => true);
         if (platform() === "macos") {
@@ -280,13 +291,14 @@ function ActiveDictation() {
               delayMs: (await started) ? Math.max(0, cueEnds - Date.now()) : 0,
             };
         signal.throwIfAborted();
-        // The HUD is on screen before the microphone opens.
-        const shown = await sendHud({ type: "started" });
-        if (shown.status === "error")
-          throw new Error(
-            t`Could not show the dictation indicator. Please try again.`,
-          );
-        hudShown = true;
+        // The HUD is on screen before the microphone opens. It is only a cue:
+        // when it can't show, the dictation goes on without it.
+        const shown = await sendHud({
+          type: "started",
+          position: normalizeHudPosition(hudPosition, platform()),
+        });
+        if (shown.status === "ok") hudShown = true;
+        else console.error("Dictation indicator could not show:", shown.error);
         signal.throwIfAborted();
         const capture = {
           stopped: false,

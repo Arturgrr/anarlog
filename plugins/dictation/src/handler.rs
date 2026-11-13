@@ -38,10 +38,11 @@ mod macos {
 }
 
 /// The HUD on Windows and Linux: a transparent, click-through, never-focused
-/// webview at the top of the display under the pointer, drawing the scope
-/// with WebGL (`apps/desktop/src/dictation/hud`). The page keeps the HUD's
-/// clock and says when it has faded out, so the window hides. Type-checked
-/// in macOS tests too.
+/// webview at the top or bottom of the display under the pointer, or none at
+/// all when hidden, drawing the scope with WebGL
+/// (`apps/desktop/src/dictation/hud`). The page keeps the HUD's clock and
+/// says when it has faded out, so the window hides. Type-checked in macOS
+/// tests too.
 #[cfg(any(test, not(target_os = "macos")))]
 #[cfg_attr(target_os = "macos", allow(dead_code))]
 mod webview {
@@ -53,6 +54,7 @@ mod webview {
     use tauri::{Emitter, Listener, Manager};
 
     use super::{Error, HudEvent};
+    use crate::events::HudPosition;
 
     pub const LABEL: &str = "dictation-overlay";
     const URL: &str = "dictation-hud.html";
@@ -61,6 +63,9 @@ mod webview {
     const WINDOW: (f64, f64) = (560.0, 100.0);
     /// The window's margin from the top of the work area, as Hex's.
     const TOP_OFFSET: f64 = 12.0;
+    /// The window's margin from the bottom of the work area: clear of the
+    /// taskbar or a dock, as Hex's bottom position on macOS.
+    const BOTTOM_OFFSET: f64 = 24.0;
     /// How often a shown HUD moves to the display under the pointer.
     const FOLLOW_EVERY: Duration = Duration::from_millis(250);
     /// How long a new HUD page has to load before dictation gives up.
@@ -89,6 +94,7 @@ mod webview {
         shown: AtomicBool,
         session: AtomicU32,
         monitor: std::sync::Mutex<Option<(i32, i32)>>,
+        position: std::sync::Mutex<HudPosition>,
     }
 
     pub struct Handler {
@@ -104,6 +110,7 @@ mod webview {
                 shown: AtomicBool::new(false),
                 session: AtomicU32::new(0),
                 monitor: std::sync::Mutex::new(None),
+                position: std::sync::Mutex::new(HudPosition::Top),
             });
             let on_ready = shared.clone();
             app.listen_any(READY, move |_| {
@@ -124,8 +131,8 @@ mod webview {
 
         pub async fn hud(&self, event: HudEvent) -> Result<(), Error> {
             let shared = &self.shared;
-            if event == HudEvent::Started {
-                return shared.start().await;
+            if let HudEvent::Started { position } = event {
+                return shared.start(position).await;
             }
             if shared.shown.load(Ordering::SeqCst) {
                 shared.send(event);
@@ -146,7 +153,19 @@ mod webview {
             let _ = self.app.emit_to(LABEL, EVENT, Message { session, event });
         }
 
-        async fn start(self: &Arc<Self>) -> Result<(), Error> {
+        async fn start(self: &Arc<Self>, position: HudPosition) -> Result<(), Error> {
+            if position == HudPosition::Hidden {
+                // Nothing to show, so nothing that can fail: the window is
+                // neither created nor shown, an earlier dictation's HUD goes,
+                // and the rest of this dictation's events find it hidden.
+                self.session.fetch_add(1, Ordering::SeqCst);
+                self.hide();
+                return Ok(());
+            }
+            *self
+                .position
+                .lock()
+                .unwrap_or_else(|error| error.into_inner()) = position;
             let loaded = self.loaded.notified();
             tokio::pin!(loaded);
             loaded.as_mut().enable();
@@ -158,7 +177,7 @@ mod webview {
                     .map_err(|_| Error::Hud("the dictation indicator did not load".into()))?;
             }
             self.session.fetch_add(1, Ordering::SeqCst);
-            self.send(HudEvent::Started);
+            self.send(HudEvent::Started { position });
             let this = self.clone();
             on_main(&self.app, move || this.place(true))?;
             if !self.shown.swap(true, Ordering::SeqCst) {
@@ -181,8 +200,8 @@ mod webview {
             }
         }
 
-        /// Top-centre of the work area of the display under the pointer;
-        /// `show` also orders the window in.
+        /// Top- or bottom-centre of the work area of the display under the
+        /// pointer; `show` also orders the window in.
         fn place(&self, show: bool) -> Result<(), Error> {
             let Some(window) = self.app.get_webview_window(LABEL) else {
                 return Ok(());
@@ -209,10 +228,13 @@ mod webview {
                     let work = monitor.work_area();
                     let origin = work.position.to_logical::<f64>(scale);
                     let size = work.size.to_logical::<f64>(scale);
-                    window.set_position(tauri::LogicalPosition::new(
-                        origin.x + (size.width - WINDOW.0) / 2.0,
-                        origin.y + TOP_OFFSET,
-                    ))?;
+                    let position = *self
+                        .position
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner());
+                    let (x, y) =
+                        window_origin((origin.x, origin.y), (size.width, size.height), position);
+                    window.set_position(tauri::LogicalPosition::new(x, y))?;
                     *placed = Some(key);
                 }
             }
@@ -238,6 +260,21 @@ mod webview {
                 }
             });
         }
+    }
+
+    /// The window's top-left corner in a work area (logical, y down): centred,
+    /// at the top or above the bottom. A notch is macOS's; here it is the top.
+    pub(super) fn window_origin(
+        origin: (f64, f64),
+        size: (f64, f64),
+        position: HudPosition,
+    ) -> (f64, f64) {
+        let x = origin.0 + (size.0 - WINDOW.0) / 2.0;
+        let y = match position {
+            HudPosition::Bottom => origin.1 + size.1 - WINDOW.1 - BOTTOM_OFFSET,
+            HudPosition::Top | HudPosition::Hidden | HudPosition::Notch => origin.1 + TOP_OFFSET,
+        };
+        (x, y)
     }
 
     fn ensure_window(app: &tauri::AppHandle) -> Result<(), Error> {
@@ -282,5 +319,31 @@ mod webview {
         })?;
         rx.recv()
             .map_err(|_| Error::Hud("main thread reply lost".into()))?
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::webview::window_origin;
+    use crate::events::HudPosition;
+
+    /// A 1920 × 1080 display right of the primary one, its taskbar 48 px
+    /// tall at the bottom: Bottom must clear the taskbar, not cover it.
+    #[test]
+    fn the_web_hud_sits_at_the_top_or_above_the_taskbar() {
+        let origin = (1920.0, 0.0);
+        let size = (1920.0, 1032.0);
+        assert_eq!(
+            window_origin(origin, size, HudPosition::Top),
+            (1920.0 + 680.0, 12.0)
+        );
+        assert_eq!(
+            window_origin(origin, size, HudPosition::Notch),
+            window_origin(origin, size, HudPosition::Top)
+        );
+        assert_eq!(
+            window_origin(origin, size, HudPosition::Bottom),
+            (1920.0 + 680.0, 1032.0 - 100.0 - 24.0)
+        );
     }
 }

@@ -168,6 +168,7 @@ describe("dictation access and lifecycle", () => {
     mocks.settings.dictation_shortcuts = ["Control+Alt+Space"];
     mocks.settings.microphone_device = "";
     mocks.settings.dictation_audio_behavior = "nothing";
+    mocks.settings.dictation_hud_position = "top";
     mocks.meeting = { status: "inactive", loading: false };
     mocks.listener = null;
     for (const fn of [
@@ -382,15 +383,53 @@ describe("dictation access and lifecycle", () => {
     expect(mocks.play).not.toHaveBeenCalled();
   });
 
-  it("does not record when the HUD cannot show", async () => {
+  it("still dictates when the HUD cannot show, since the indicator is only a cue", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
     mocks.hud.mockResolvedValue({ status: "error", error: "no panel" });
     render(<DictationLifecycle />);
     await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
     await act(async () => {
       mocks.listener?.({ payload: { type: "pressed" } });
     });
-    expect(mocks.startSystemRecording).not.toHaveBeenCalled();
-    expect(useDictationStatus.getState().error).toMatch(/indicator/u);
+    expect(mocks.startSystemRecording).toHaveBeenCalled();
+    expect(useDictationStatus.getState().error).toBeNull();
+    expect(logged).toHaveBeenCalledWith(
+      expect.stringMatching(/indicator/u),
+      "no panel",
+    );
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "released" } });
+    });
+    await waitFor(() => expect(mocks.insertText).toHaveBeenCalledWith("Hello"));
+    logged.mockRestore();
+  });
+
+  it("starts the HUD where the settings put it, read at each press", async () => {
+    mocks.settings.dictation_hud_position = "bottom";
+    const view = render(<DictationLifecycle />);
+    await waitFor(() => expect(useDictationStatus.getState().ready).toBe(true));
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "pressed" } });
+    });
+    expect(mocks.hud).toHaveBeenCalledWith({
+      type: "started",
+      position: "bottom",
+    });
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "cancelled" } });
+    });
+
+    mocks.hud.mockClear();
+    mocks.platform = "windows";
+    mocks.settings.dictation_hud_position = "notch";
+    view.rerender(<DictationLifecycle />);
+    await act(async () => {
+      mocks.listener?.({ payload: { type: "pressed" } });
+    });
+    expect(mocks.hud).toHaveBeenCalledWith({
+      type: "started",
+      position: "top",
+    });
   });
 
   it("reuses the finalized live transcript even when preview display is disabled", async () => {

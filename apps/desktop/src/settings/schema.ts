@@ -84,6 +84,13 @@ export const SETTING_DEFINITIONS = {
     path: ["dictation", "audio_pause_browser"],
     default: false as boolean,
   },
+  // "top" | "bottom" | "hidden" | "notch" (macOS); see
+  // `normalizeHudPosition`.
+  dictation_hud_position: {
+    type: "string",
+    path: ["dictation", "hud_position"],
+    default: "top" as string,
+  },
   dictation_history_retention: {
     type: "string",
     path: ["dictation", "history_retention"],
