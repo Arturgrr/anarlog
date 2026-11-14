@@ -7,6 +7,7 @@ Default permissions for the plugin
 - `allow-set-tray-icon-visible`
 - `allow-set-tray-labels`
 - `allow-set-tray-paste-last-visible`
+- `allow-set-tray-capture-visible`
 - `allow-set-tray-recording-title`
 - `allow-take-pending-tray-start`
 
@@ -18,6 +19,32 @@ Default permissions for the plugin
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`anlg-tray:allow-set-tray-capture-visible`
+
+</td>
+<td>
+
+Enables the set_tray_capture_visible command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`anlg-tray:deny-set-tray-capture-visible`
+
+</td>
+<td>
+
+Denies the set_tray_capture_visible command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>

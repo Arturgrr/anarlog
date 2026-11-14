@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the set_tray_capture_visible command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-tray-capture-visible",
+          "markdownDescription": "Enables the set_tray_capture_visible command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_tray_capture_visible command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-tray-capture-visible",
+          "markdownDescription": "Denies the set_tray_capture_visible command without any pre-configured scope."
+        },
+        {
           "description": "Enables the set_tray_icon_visible command without any pre-configured scope.",
           "type": "string",
           "const": "allow-set-tray-icon-visible",
@@ -355,10 +367,10 @@
           "markdownDescription": "Denies the take_pending_tray_start command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-recording-title`\n- `allow-take-pending-tray-start`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-capture-visible`\n- `allow-set-tray-recording-title`\n- `allow-take-pending-tray-start`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-recording-title`\n- `allow-take-pending-tray-start`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-set-tray-icon-visible`\n- `allow-set-tray-labels`\n- `allow-set-tray-paste-last-visible`\n- `allow-set-tray-capture-visible`\n- `allow-set-tray-recording-title`\n- `allow-take-pending-tray-start`"
         }
       ]
     }

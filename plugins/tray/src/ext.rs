@@ -27,8 +27,8 @@ use crate::menu_items::{
     AppInfo, AppNew, HelpReportBug, HelpSuggestFeature, TrayPasteLast, TrayQuit,
 };
 use crate::menu_items::{
-    MenuItemHandler, TrayCheckUpdate, TrayHide, TrayOpen, TrayQuitCompletely, TraySettings,
-    TrayStart, TrayVersion,
+    MenuItemHandler, TrayCaptureArea, TrayCheckUpdate, TrayHide, TrayOpen, TrayQuitCompletely,
+    TrayRecordScreen, TraySettings, TrayStart, TrayVersion,
 };
 
 const TRAY_ID: &str = "anlg-tray";
@@ -38,6 +38,7 @@ static IS_DEGRADED: AtomicBool = AtomicBool::new(false);
 static IS_UPDATE_AVAILABLE: AtomicBool = AtomicBool::new(false);
 static START_DISABLED: AtomicBool = AtomicBool::new(false);
 static PASTE_LAST_VISIBLE: AtomicBool = AtomicBool::new(false);
+static CAPTURE_VISIBLE: AtomicBool = AtomicBool::new(false);
 static ANIMATION_TASK: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
 static MENU_BAR_TITLE: Mutex<Option<String>> = Mutex::new(None);
 static RECORDING_TITLE: Mutex<Option<String>> = Mutex::new(None);
@@ -321,6 +322,10 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
         if PASTE_LAST_VISIBLE.load(Ordering::SeqCst) {
             menu.append(&TrayPasteLast::build(app)?)?;
         }
+        if CAPTURE_VISIBLE.load(Ordering::SeqCst) {
+            menu.append(&TrayCaptureArea::build(app)?)?;
+            menu.append(&TrayRecordScreen::build(app)?)?;
+        }
         menu.append(&TraySettings::build(app)?)?;
         menu.append(&PredefinedMenuItem::separator(app)?)?;
         menu.append(&TrayVersion::build(app)?)?;
@@ -470,6 +475,13 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
 
     pub fn set_paste_last_visible(&self, visible: bool) -> Result<()> {
         if PASTE_LAST_VISIBLE.swap(visible, Ordering::SeqCst) == visible {
+            return Ok(());
+        }
+        Self::rebuild_menu(self.manager.app_handle())
+    }
+
+    pub fn set_capture_visible(&self, visible: bool) -> Result<()> {
+        if CAPTURE_VISIBLE.swap(visible, Ordering::SeqCst) == visible {
             return Ok(());
         }
         Self::rebuild_menu(self.manager.app_handle())

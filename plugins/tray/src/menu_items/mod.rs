@@ -2,6 +2,7 @@ mod app_info;
 mod app_new;
 mod help_report_bug;
 mod help_suggest_feature;
+mod tray_capture;
 mod tray_check_update;
 mod tray_hide;
 mod tray_open;
@@ -16,6 +17,7 @@ pub use app_info::AppInfo;
 pub use app_new::AppNew;
 pub use help_report_bug::HelpReportBug;
 pub use help_suggest_feature::HelpSuggestFeature;
+pub use tray_capture::{TrayCaptureArea, TrayRecordScreen};
 pub use tray_check_update::{TrayCheckUpdate, UpdateMenuState};
 pub use tray_hide::TrayHide;
 pub use tray_open::TrayOpen;
@@ -76,6 +78,8 @@ menu_items! {
     TrayOpen => TrayOpen,
     TrayStart => TrayStart,
     TrayPasteLast => TrayPasteLast,
+    TrayCaptureArea => TrayCaptureArea,
+    TrayRecordScreen => TrayRecordScreen,
     TraySettings => TraySettings,
     TrayCheckUpdate => TrayCheckUpdate,
     TrayHide => TrayHide,
