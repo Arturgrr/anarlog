@@ -343,6 +343,18 @@
           "markdownDescription": "Denies the delete_capture command without any pre-configured scope."
         },
         {
+          "description": "Enables the export_png command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-export-png",
+          "markdownDescription": "Enables the export_png command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the export_png command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-export-png",
+          "markdownDescription": "Denies the export_png command without any pre-configured scope."
+        },
+        {
           "description": "Enables the list_captures command without any pre-configured scope.",
           "type": "string",
           "const": "allow-list-captures",
@@ -475,10 +487,10 @@
           "markdownDescription": "Denies the system_shortcuts command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-screenshot`\n- `allow-start-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-list-captures`\n- `allow-delete-capture`\n- `allow-copy-capture`\n- `allow-save-capture-as`\n- `allow-save-edited`\n- `allow-show-card`\n- `allow-close-cards`\n- `allow-system-shortcuts`\n- `allow-replace-system-shortcuts`\n- `allow-restore-system-shortcuts`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-screenshot`\n- `allow-start-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-list-captures`\n- `allow-delete-capture`\n- `allow-copy-capture`\n- `allow-save-capture-as`\n- `allow-save-edited`\n- `allow-show-card`\n- `allow-close-cards`\n- `allow-system-shortcuts`\n- `allow-replace-system-shortcuts`\n- `allow-restore-system-shortcuts`\n- `allow-export-png`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-screenshot`\n- `allow-start-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-list-captures`\n- `allow-delete-capture`\n- `allow-copy-capture`\n- `allow-save-capture-as`\n- `allow-save-edited`\n- `allow-show-card`\n- `allow-close-cards`\n- `allow-system-shortcuts`\n- `allow-replace-system-shortcuts`\n- `allow-restore-system-shortcuts`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-screenshot`\n- `allow-start-recording`\n- `allow-stop-recording`\n- `allow-cancel-recording`\n- `allow-list-captures`\n- `allow-delete-capture`\n- `allow-copy-capture`\n- `allow-save-capture-as`\n- `allow-save-edited`\n- `allow-show-card`\n- `allow-close-cards`\n- `allow-system-shortcuts`\n- `allow-replace-system-shortcuts`\n- `allow-restore-system-shortcuts`\n- `allow-export-png`"
         }
       ]
     }

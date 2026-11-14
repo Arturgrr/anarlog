@@ -8,6 +8,7 @@
 mod commands;
 mod error;
 mod events;
+mod export;
 mod library;
 mod native;
 mod session;
@@ -63,6 +64,7 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::system_shortcuts::<tauri::Wry>,
             commands::replace_system_shortcuts::<tauri::Wry>,
             commands::restore_system_shortcuts::<tauri::Wry>,
+            export::export_png,
         ])
         .events(tauri_specta::collect_events![CaptureEvent])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)

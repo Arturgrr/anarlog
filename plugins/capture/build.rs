@@ -14,6 +14,7 @@ const COMMANDS: &[&str] = &[
     "system_shortcuts",
     "replace_system_shortcuts",
     "restore_system_shortcuts",
+    "export_png",
 ];
 
 fn main() {

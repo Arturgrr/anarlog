@@ -16,4 +16,5 @@ permissions = [
   "allow-system-shortcuts",
   "allow-replace-system-shortcuts",
   "allow-restore-system-shortcuts",
+  "allow-export-png",
 ]

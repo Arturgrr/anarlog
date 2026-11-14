@@ -19,6 +19,7 @@ Default permissions for the plugin
 - `allow-system-shortcuts`
 - `allow-replace-system-shortcuts`
 - `allow-restore-system-shortcuts`
+- `allow-export-png`
 
 ## Permission Table
 
@@ -129,6 +130,32 @@ Enables the delete_capture command without any pre-configured scope.
 <td>
 
 Denies the delete_capture command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`capture:allow-export-png`
+
+</td>
+<td>
+
+Enables the export_png command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`capture:deny-export-png`
+
+</td>
+<td>
+
+Denies the export_png command without any pre-configured scope.
 
 </td>
 </tr>

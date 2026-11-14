@@ -230,6 +230,27 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
+  /**
+   * Writes a base64 PNG of at most 80 MB to `dest_path`, an absolute file
+   * path, replacing what is there.
+   */
+  async exportPng(
+    destPath: string,
+    pngBase64: string,
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:capture|export_png", {
+          destPath,
+          pngBase64,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
 };
 
 /** user-defined events **/
