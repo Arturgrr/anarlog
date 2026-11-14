@@ -45,7 +45,7 @@ export type CaptureDeps = {
     listCaptures: () => Promise<CaptureEntry[]>;
   };
   settings: () => CaptureSettings;
-  labels: () => CaptureLabels;
+  labels: (kind: "screenshot" | "recording") => CaptureLabels;
   microphoneAuthorized: () => Promise<boolean>;
   /** Whether a Librelog window is in front. */
   frontmost: () => Promise<boolean>;
@@ -158,7 +158,7 @@ export function createCaptureFlow(deps: CaptureDeps) {
     try {
       if (!(await screenRecordingAllowed())) return set("idle");
       await deps.plugin.screenshot(
-        screenshotRequest(mode, deps.settings(), deps.labels()),
+        screenshotRequest(mode, deps.settings(), deps.labels("screenshot")),
       );
       // `captured` arrives as an event.
       if (now() === "selecting") set("idle");
@@ -178,7 +178,9 @@ export function createCaptureFlow(deps: CaptureDeps) {
       }
       recordingSelector = true;
       const started = await deps.plugin
-        .startRecording(recordingRequest(output, settings, deps.labels()))
+        .startRecording(
+          recordingRequest(output, settings, deps.labels("recording")),
+        )
         .finally(() => (recordingSelector = false));
       set(started.status === "recording" ? "recording" : "idle");
     } catch (error) {

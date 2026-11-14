@@ -51,10 +51,9 @@ export async function revealCapture(path: string) {
 }
 
 /** The words the selectors, the capsule and the cards show. */
-export function useCaptureLabels(): CaptureLabels {
+export function useCaptureLabels() {
   const { t } = useLingui();
-  return {
-    areaHint: t`Drag to capture · Space for a window · Esc to cancel`,
+  const shared = {
     windowHint: t`Click a window · Space for an area · Esc to cancel`,
     discardQuestion: t`Discard?`,
     discard: t`Discard`,
@@ -65,6 +64,16 @@ export function useCaptureLabels(): CaptureLabels {
     edit: t`Edit`,
     close: t`Close`,
   };
+  return {
+    screenshot: {
+      ...shared,
+      areaHint: t`Drag to capture · Space for a window · Esc to cancel`,
+    },
+    recording: {
+      ...shared,
+      areaHint: t`Drag to record · Space for a window · Return for the whole screen · Esc to cancel`,
+    },
+  } satisfies Record<string, CaptureLabels>;
 }
 
 function useCaptureSettings(): CaptureSettings {
@@ -167,7 +176,7 @@ function ActiveCapture() {
         listCaptures: async () => unwrap(await capture.listCaptures()),
       },
       settings: () => current.current.settings,
-      labels: () => current.current.labels,
+      labels: (kind) => current.current.labels[kind],
       microphoneAuthorized: async () =>
         unwrap(await permissions.checkPermission("microphone")) ===
         "authorized",
