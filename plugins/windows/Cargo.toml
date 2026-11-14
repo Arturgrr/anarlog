@@ -30,6 +30,8 @@ tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", branch = "v2.
 windows = { workspace = true, features = ["Win32_Foundation", "Win32_Graphics_Dwm"] }
 
 [dependencies]
+anlg-capture-core = { workspace = true }
+
 serde = { workspace = true }
 serde_json = { workspace = true }
 
