@@ -77,6 +77,10 @@ impl ImageFormat {
 /// `<stem> 2026-11-14 at 14.03.22.<extension>`, then ` (2)`, ` (3)`… for
 /// `copy` past the first.
 pub fn name_as(stem: &str, extension: &str, at: Stamp, copy: u32) -> String {
+    name_with(stem, "", extension, at, copy)
+}
+
+fn name_with(stem: &str, suffix: &str, extension: &str, at: Stamp, copy: u32) -> String {
     let Stamp {
         year,
         month,
@@ -85,12 +89,74 @@ pub fn name_as(stem: &str, extension: &str, at: Stamp, copy: u32) -> String {
         minute,
         second,
     } = at;
-    let base = format!("{stem} {year:04}-{month:02}-{day:02} at {hour:02}.{minute:02}.{second:02}");
+    let base = format!(
+        "{stem} {year:04}-{month:02}-{day:02} at {hour:02}.{minute:02}.{second:02}{suffix}"
+    );
     if copy <= 1 {
         format!("{base}.{extension}")
     } else {
         format!("{base} ({copy}).{extension}")
     }
+}
+
+/// A capture's file name, before the ` (2)`, ` (3)`… a clash adds.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FileName {
+    stem: &'static str,
+    suffix: &'static str,
+    extension: &'static str,
+    at: Stamp,
+}
+
+impl FileName {
+    pub fn screenshot(at: Stamp, format: ImageFormat) -> Self {
+        Self {
+            stem: SCREENSHOT_STEM,
+            suffix: "",
+            extension: format.extension(),
+            at,
+        }
+    }
+
+    /// `.gif` when `gif`, else `.mp4`.
+    pub fn recording(at: Stamp, gif: bool) -> Self {
+        Self {
+            stem: RECORDING_STEM,
+            suffix: "",
+            extension: if gif { "gif" } else { "mp4" },
+            at,
+        }
+    }
+
+    /// A movie a quit or crash left unnamed: `… (recovered).mp4`.
+    pub fn recovered(at: Stamp) -> Self {
+        Self {
+            suffix: " (recovered)",
+            ..Self::recording(at, false)
+        }
+    }
+
+    /// The name for the `copy`th capture with this name (1 is the first).
+    pub fn nth(&self, copy: u32) -> String {
+        name_with(self.stem, self.suffix, self.extension, self.at, copy)
+    }
+}
+
+/// `file_name`, or with ` (copy)` before its extension past the first.
+pub fn nth_like(file_name: &str, copy: u32) -> String {
+    if copy <= 1 {
+        return file_name.to_owned();
+    }
+    let name = Path::new(file_name);
+    let stem = name
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let extension = name
+        .extension()
+        .map(|extension| format!(".{}", extension.to_string_lossy()))
+        .unwrap_or_default();
+    format!("{stem} ({copy}){extension}")
 }
 
 /// A path in `folder` that no file holds yet, named as [`name_as`] names it.
@@ -111,25 +177,10 @@ pub fn recording_path(folder: &Path, at: Stamp, gif: bool) -> PathBuf {
 }
 
 /// `file_name` in `folder`, or with ` (2)`, ` (3)`… before its extension
-/// when that is taken: where a capture moved into another folder goes.
+/// when that is taken.
 pub fn free_path_like(folder: &Path, file_name: &str) -> PathBuf {
-    let name = Path::new(file_name);
-    let stem = name
-        .file_stem()
-        .map(|stem| stem.to_string_lossy().into_owned())
-        .unwrap_or_default();
-    let extension = name
-        .extension()
-        .map(|extension| format!(".{}", extension.to_string_lossy()))
-        .unwrap_or_default();
     (1..)
-        .map(|copy| {
-            if copy == 1 {
-                folder.join(file_name)
-            } else {
-                folder.join(format!("{stem} ({copy}){extension}"))
-            }
-        })
+        .map(|copy| folder.join(nth_like(file_name, copy)))
         .find(|path| !path.exists())
         .unwrap_or_else(|| folder.join(file_name))
 }

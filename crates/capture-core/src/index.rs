@@ -50,17 +50,28 @@ pub struct Entry {
     /// The file is in the library folder, not saved to a folder of the
     /// user's.
     pub in_library: bool,
+    /// Fields a newer build wrote, kept as they were.
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, serde_json::Value>,
 }
 
-#[derive(Serialize, Deserialize)]
-struct File {
+#[derive(Serialize)]
+struct File<'a> {
     version: u32,
-    entries: Vec<Entry>,
+    entries: Vec<std::borrow::Cow<'a, serde_json::Value>>,
+}
+
+/// An entry this build reads, or one it cannot (from a newer build sharing
+/// the folder), kept as it was and written back in its place.
+#[derive(Clone, Debug, PartialEq)]
+enum Item {
+    Parsed(Entry),
+    Raw(serde_json::Value),
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Index {
-    entries: Vec<Entry>,
+    items: Vec<Item>,
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -68,22 +79,27 @@ pub struct Loaded {
     pub index: Index,
     /// Where an unreadable index was renamed to.
     pub set_aside: Option<PathBuf>,
-    /// Entries left out because they could not be read.
+    /// Entries this build cannot read; they are kept as they are.
     pub skipped: usize,
 }
 
-/// A capture's file is gone: missing from a folder that is there. A file in
-/// a folder that cannot be reached (an unplugged drive, no permission) is
-/// not gone.
+/// A capture's file is gone: its folder can be read and says the file is
+/// not there. Any other failure (an unplugged drive, a folder this app may
+/// not read) is not proof, and the entry stays.
 pub fn gone(path: &Path) -> bool {
-    !path.exists() && path.parent().is_some_and(Path::is_dir)
+    match std::fs::metadata(path) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => path
+            .parent()
+            .is_some_and(|parent| std::fs::read_dir(parent).is_ok()),
+        _ => false,
+    }
 }
 
 impl Index {
     /// Reads the index. A missing one is empty; one that cannot be read as an
     /// index at all is renamed aside and an empty one takes its place, so it
-    /// is never silently overwritten. Single entries that cannot be read are
-    /// left out and counted.
+    /// is never silently overwritten. Entries this build cannot read are
+    /// counted and kept as they are.
     pub fn load(path: &Path) -> std::io::Result<Loaded> {
         let bytes = match std::fs::read(path) {
             Ok(bytes) => bytes,
@@ -109,50 +125,99 @@ impl Index {
                 ..Loaded::default()
             });
         };
-        let total = entries.len();
-        let entries: Vec<Entry> = entries
+        let items: Vec<Item> = entries
             .into_iter()
-            .filter_map(|entry| serde_json::from_value(entry).ok())
+            .map(
+                |entry| match serde_json::from_value::<Entry>(entry.clone()) {
+                    Ok(parsed) => Item::Parsed(parsed),
+                    Err(_) => Item::Raw(entry),
+                },
+            )
             .collect();
         Ok(Loaded {
-            skipped: total - entries.len(),
-            index: Self { entries },
+            skipped: items
+                .iter()
+                .filter(|item| matches!(item, Item::Raw(_)))
+                .count(),
+            index: Self { items },
             set_aside: None,
         })
     }
 
     /// Writes it atomically, readable by this user only.
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
+        use std::borrow::Cow;
+        let entries = self
+            .items
+            .iter()
+            .map(|item| match item {
+                Item::Parsed(entry) => serde_json::to_value(entry).map(Cow::Owned),
+                Item::Raw(raw) => Ok(Cow::Borrowed(raw)),
+            })
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(std::io::Error::other)?;
         let file = File {
             version: VERSION,
-            entries: self.entries.clone(),
+            entries,
         };
         let json = serde_json::to_vec_pretty(&file).map_err(std::io::Error::other)?;
         write_atomic(path, &json, true)
     }
 
-    pub fn entries(&self) -> &[Entry] {
-        &self.entries
+    /// The entries this build reads, newest first.
+    pub fn entries(&self) -> impl Iterator<Item = &Entry> {
+        self.items.iter().filter_map(|item| match item {
+            Item::Parsed(entry) => Some(entry),
+            Item::Raw(_) => None,
+        })
     }
 
     pub fn get(&self, id: &str) -> Option<&Entry> {
-        self.entries.iter().find(|entry| entry.id == id)
+        self.entries().find(|entry| entry.id == id)
+    }
+
+    fn position(&self, id: &str) -> Option<usize> {
+        self.items
+            .iter()
+            .position(|item| matches!(item, Item::Parsed(entry) if entry.id == id))
+    }
+
+    /// Drops the oldest entries this build reads past [`MAX_ENTRIES`];
+    /// returns them.
+    fn cap(&mut self) -> Vec<Entry> {
+        let mut seen = 0;
+        let mut dropped = Vec::new();
+        self.items.retain(|item| match item {
+            Item::Parsed(entry) => {
+                seen += 1;
+                if seen > MAX_ENTRIES {
+                    dropped.push(entry.clone());
+                    false
+                } else {
+                    true
+                }
+            }
+            Item::Raw(_) => true,
+        });
+        dropped
     }
 
     /// Puts `entry` first (replacing one with its id) and returns the oldest
     /// ones past [`MAX_ENTRIES`].
     pub fn add(&mut self, entry: Entry) -> Vec<Entry> {
-        self.entries.retain(|known| known.id != entry.id);
-        self.entries.insert(0, entry);
-        self.entries.split_off(self.entries.len().min(MAX_ENTRIES))
+        if let Some(at) = self.position(&entry.id) {
+            self.items.remove(at);
+        }
+        self.items.insert(0, Item::Parsed(entry));
+        self.cap()
     }
 
     /// Replaces the entry with `entry`'s id, keeping its place. False when
     /// there is none.
     pub fn update(&mut self, entry: Entry) -> bool {
-        match self.entries.iter_mut().find(|known| known.id == entry.id) {
-            Some(known) => {
-                *known = entry;
+        match self.position(&entry.id) {
+            Some(at) => {
+                self.items[at] = Item::Parsed(entry);
                 true
             }
             None => false,
@@ -160,18 +225,25 @@ impl Index {
     }
 
     pub fn remove(&mut self, id: &str) -> Option<Entry> {
-        let at = self.entries.iter().position(|entry| entry.id == id)?;
-        Some(self.entries.remove(at))
+        let at = self.position(id)?;
+        match self.items.remove(at) {
+            Item::Parsed(entry) => Some(entry),
+            Item::Raw(_) => None,
+        }
     }
 
-    /// Drops the entries whose file `exists` says is gone, and the oldest
-    /// past [`MAX_ENTRIES`]; returns them.
-    pub fn prune(&mut self, exists: impl Fn(&Path) -> bool) -> Vec<Entry> {
-        let (kept, mut dropped): (Vec<_>, Vec<_>) = std::mem::take(&mut self.entries)
-            .into_iter()
-            .partition(|entry| exists(Path::new(&entry.path)));
-        self.entries = kept;
-        dropped.extend(self.entries.split_off(self.entries.len().min(MAX_ENTRIES)));
+    /// Drops the entries `keep` says no to, and the oldest past
+    /// [`MAX_ENTRIES`]; returns them. Entries this build cannot read stay.
+    pub fn prune(&mut self, keep: impl Fn(&Path) -> bool) -> Vec<Entry> {
+        let mut dropped = Vec::new();
+        self.items.retain(|item| match item {
+            Item::Parsed(entry) if !keep(Path::new(&entry.path)) => {
+                dropped.push(entry.clone());
+                false
+            }
+            _ => true,
+        });
+        dropped.extend(self.cap());
         dropped
     }
 }
@@ -217,6 +289,7 @@ mod tests {
             duration_ms: 0,
             bytes: 3,
             in_library,
+            extra: Default::default(),
         }
     }
 
@@ -236,16 +309,23 @@ mod tests {
         for n in 2..MAX_ENTRIES as i64 {
             index.add(entry(&layout, n, n % 2 == 0, &user));
         }
-        let gone = index.entries()[5].clone();
+        let gone = index.entries().nth(5).unwrap().clone();
         std::fs::remove_file(&gone.path).unwrap();
         // A file on a drive that is not plugged in is not gone.
-        let mut unplugged = index.entries()[6].clone();
+        let mut unplugged = index.entries().nth(6).unwrap().clone();
         unplugged.path = dir
             .path()
             .join("Volumes/USB/a.png")
             .to_string_lossy()
             .into_owned();
         index.update(unplugged.clone());
+        // Nor one this app cannot look at: here its "folder" is a file.
+        let mut unreadable = index.entries().nth(7).unwrap().clone();
+        unreadable.path = Path::new(&oldest_user.path)
+            .join("a.png")
+            .to_string_lossy()
+            .into_owned();
+        index.update(unreadable.clone());
         // Two more push the two oldest out.
         let overflow = [
             entry(&layout, 1000, true, &user),
@@ -260,9 +340,9 @@ mod tests {
 
         let ids: Vec<_> = dropped.iter().map(|entry| entry.id.as_str()).collect();
         assert_eq!(ids, [oldest_user.id.as_str(), &oldest_library.id, &gone.id]);
-        assert_eq!(index.entries().len(), MAX_ENTRIES - 1);
-        assert_eq!(index.entries()[0].created_ms, 1001);
-        assert!(index.get(&unplugged.id).is_some());
+        assert_eq!(index.entries().count(), MAX_ENTRIES - 1);
+        assert_eq!(index.entries().next().unwrap().created_ms, 1001);
+        assert!(index.get(&unplugged.id).is_some() && index.get(&unreadable.id).is_some());
         assert!(Path::new(&oldest_user.path).exists());
         assert!(!Path::new(&oldest_library.path).exists());
         assert!(!Path::new(&oldest_user.thumbnail_path).exists());
@@ -279,7 +359,7 @@ mod tests {
 
         std::fs::write(&path, b"{ not json").unwrap();
         let loaded = Index::load(&path).unwrap();
-        assert!(loaded.index.entries().is_empty());
+        assert_eq!(loaded.index.entries().count(), 0);
         let aside = loaded.set_aside.unwrap();
         assert_eq!(std::fs::read(&aside).unwrap(), b"{ not json");
         assert!(!path.exists());
@@ -289,18 +369,21 @@ mod tests {
         index.save(&path).unwrap();
         assert_eq!(Index::load(&path).unwrap().index, index);
 
-        // One entry that cannot be read leaves the others in place.
+        // A newer build's entry and field survive this build's saves.
         let mut file: serde_json::Value =
             serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
-        file["entries"]
-            .as_array_mut()
-            .unwrap()
-            .push(serde_json::json!({ "id": "cap-8-0000", "kind": "hologram" }));
+        let newer = serde_json::json!({ "id": "cap-8-0000", "kind": "hologram" });
+        let entries = file["entries"].as_array_mut().unwrap();
+        entries[0]["annotations"] = serde_json::json!(3);
+        entries.push(newer.clone());
         std::fs::write(&path, serde_json::to_vec(&file).unwrap()).unwrap();
-        let loaded = Index::load(&path).unwrap();
-        assert_eq!(
-            (loaded.index, loaded.skipped, loaded.set_aside),
-            (index, 1, None)
-        );
+        let mut loaded = Index::load(&path).unwrap();
+        assert_eq!((loaded.skipped, loaded.set_aside), (1, None));
+        loaded.index.add(entry(&layout, 9, true, dir.path()));
+        loaded.index.save(&path).unwrap();
+        let saved: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        assert_eq!(saved["entries"][1]["annotations"], 3);
+        assert_eq!(saved["entries"][2], newer);
     }
 }

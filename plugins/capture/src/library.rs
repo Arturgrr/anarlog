@@ -6,8 +6,11 @@ use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use anlg_capture_core::fs::{copy_atomic, move_file, same_file, write_atomic};
+use anlg_capture_core::fs::{
+    copy_atomic, lock_exclusive, move_to_free_name, same_file, write_atomic,
+};
 use anlg_capture_core::layout::{THUMBNAIL_LONG_EDGE, new_id, user_folder};
+use anlg_capture_core::names::FileName;
 use anlg_capture_core::{Entry, ImageFormat, Index, Kind, Stamp, index, names};
 use base64::Engine;
 
@@ -19,6 +22,7 @@ use crate::types::CaptureEntry;
 const MAX_EDITED_BYTES: usize = 80 * 1024 * 1024;
 const PNG_SIGNATURE: &[u8] = b"\x89PNG\r\n\x1a\n";
 const JPEG_QUALITY: u8 = 90;
+const INDEX_LOCK: &str = "index.lock";
 
 impl Session {
     /// Reads the index (dropping entries whose file is gone), lets `change`
@@ -32,6 +36,8 @@ impl Session {
         }
         let _guard = self.index.lock().unwrap_or_else(|e| e.into_inner());
         self.layout.ensure()?;
+        // The other app sharing the folder (stable or Nightly) waits too.
+        let _shared = lock_exclusive(&self.layout.root().join(INDEX_LOCK))?;
         let path = self.layout.index_path();
         let loaded = Index::load(&path)?;
         if let Some(aside) = loaded.set_aside {
@@ -68,7 +74,7 @@ impl Session {
         if !self.native.available() {
             return Ok(Vec::new());
         }
-        self.with_index(|index| Ok(index.entries().iter().cloned().map(Into::into).collect()))
+        self.with_index(|index| Ok(index.entries().cloned().map(Into::into).collect()))
     }
 
     pub(crate) fn copy_entry(&self, entry: &Entry) -> Result<(), Error> {
@@ -154,19 +160,32 @@ impl Session {
                 .ok_or(Error::UnknownCapture)?
                 .to_path_buf();
             let created_ms = now_ms();
-            let path = names::screenshot_path(&dir, Stamp::local(created_ms), format);
-            let id = new_id(created_ms);
+            // Written beside it, then named exclusively.
+            let temp = dir.join(format!(
+                ".capture-{}.{}",
+                new_id(created_ms),
+                format.extension()
+            ));
+            write_atomic(&temp, &bytes, false)?;
+            let name = FileName::screenshot(Stamp::local(created_ms), format);
+            let moved =
+                move_to_free_name(&temp, &dir, |copy| name.nth(copy)).inspect_err(|_| {
+                    let _ = std::fs::remove_file(&temp);
+                })?;
+            let path = moved.path;
             let saved = Entry {
                 thumbnail_path: String::new(),
                 created_ms,
                 in_library: entry.in_library && self.layout.in_library(&path),
                 path: path.to_string_lossy().into_owned(),
-                id,
+                id: new_id(created_ms),
                 ..entry.clone()
             };
             (path, saved)
         };
-        write_atomic(&path, &bytes, false)?;
+        if replace {
+            write_atomic(&path, &bytes, false)?;
+        }
         let thumbnail = self.layout.thumbnail_path(&saved.id);
         saved.thumbnail_path = match write_thumbnail(&image.picture, &thumbnail) {
             Ok(()) => thumbnail.to_string_lossy().into_owned(),
@@ -204,6 +223,19 @@ impl Session {
         Ok(saved.into())
     }
 
+    /// The capture whose file `path` is, however spelled.
+    pub(crate) fn entry_at(&self, path: &Path) -> Result<Option<Entry>, Error> {
+        if !self.native.available() {
+            return Ok(None);
+        }
+        self.with_index(|index| {
+            Ok(index
+                .entries()
+                .find(|entry| same_file(Path::new(&entry.path), path))
+                .cloned())
+        })
+    }
+
     pub fn show_card(self: &Arc<Self>, id: &str) -> Result<(), Error> {
         let entry = self.entry(id)?;
         self.show_entry_card(&entry)
@@ -229,19 +261,20 @@ impl Session {
             .ok_or(Error::UnknownCapture)?
             .to_string_lossy()
             .into_owned();
-        let target = names::free_path_like(&folder, &name);
-        let moved = Entry {
-            path: target.to_string_lossy().into_owned(),
-            in_library: false,
-            ..entry
-        };
-        let updated = moved.clone();
         // Moved under the index's lock, which would otherwise drop the
         // entry of a file it no longer finds.
-        self.with_index(|index| {
-            move_file(&file, &target)?;
-            index.update(updated);
-            Ok(())
+        let moved = self.with_index(|index| {
+            let target = move_to_free_name(&file, &folder, |copy| names::nth_like(&name, copy))?;
+            if let Some(leftover) = target.leftover {
+                tracing::warn!(%leftover, "capture leftover in the library");
+            }
+            let moved = Entry {
+                path: target.path.to_string_lossy().into_owned(),
+                in_library: false,
+                ..entry
+            };
+            index.update(moved.clone());
+            Ok(moved)
         })?;
         // The card follows the file, so dragging it out still works.
         self.close_card(id);

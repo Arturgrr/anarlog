@@ -66,7 +66,7 @@ fn make_specta_builder<R: tauri::Runtime>() -> tauri_specta::Builder<R> {
             commands::system_shortcuts::<tauri::Wry>,
             commands::replace_system_shortcuts::<tauri::Wry>,
             commands::restore_system_shortcuts::<tauri::Wry>,
-            export::export_png,
+            export::export_png::<tauri::Wry>,
         ])
         .events(tauri_specta::collect_events![CaptureEvent])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
@@ -94,7 +94,9 @@ pub fn init(root: Option<PathBuf>) -> tauri::plugin::TauriPlugin<tauri::Wry> {
                     let _ = event.emit(&emitter);
                 }),
             ));
-            app.manage(session);
+            app.manage(session.clone());
+            // Movies a quit or crash left unnamed join the list.
+            tauri::async_runtime::spawn_blocking(move || session.recover_leftovers());
             Ok(())
         })
         .build()

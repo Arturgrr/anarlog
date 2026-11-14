@@ -14,9 +14,10 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use anlg_capture_core::fs::{ensure_writable, move_file};
+use anlg_capture_core::fs::{ensure_writable, move_to_free_name};
 use anlg_capture_core::layout::{THUMBNAIL_LONG_EDGE, new_id};
-use anlg_capture_core::{Entry, Kind, Layout, Stamp, index, names};
+use anlg_capture_core::names::FileName;
+use anlg_capture_core::{Entry, Kind, Layout, Stamp, index};
 
 use crate::Error;
 use crate::events::{CaptureEvent, CardActionKind};
@@ -32,15 +33,15 @@ const POLL: Duration = Duration::from_millis(100);
 /// A card leaves by itself (the native layer then posts `card_closed`); this
 /// only stops the poll for a card whose `card_closed` never came.
 const CARD_SAFETY_CAP: Duration = Duration::from_secs(10 * 60);
-const MAX_CARDS: usize = 4;
 const MAX_GIF_FRAMES: u32 = 900;
 const MAX_RECORDING_S: u32 = 30 * 60;
 const JPEG_QUALITY: f64 = 0.9;
 /// Hidden files older than this in the library were left by a quit or a
 /// crash: a recording is capped at 30 minutes.
 const STALE_TEMPS: Duration = Duration::from_secs(2 * 60 * 60);
-/// What quitting keeps for cancelling a recording whose stop ran out of time.
-const CANCEL_RESERVE: Duration = Duration::from_millis(1_500);
+/// The least quitting waits for a running recording to stop: it is never
+/// cancelled instead, since it has frames.
+const QUIT_STOP_AT_LEAST: Duration = Duration::from_secs(2);
 /// Card metadata kept for captures made since launch.
 const MAX_META: usize = 2 * anlg_capture_core::index::MAX_ENTRIES;
 
@@ -190,10 +191,6 @@ impl Session {
         downloads: Option<PathBuf>,
         emit: Emit,
     ) -> Self {
-        let swept = layout.sweep_temps(STALE_TEMPS);
-        if swept > 0 {
-            tracing::info!(swept, "capture removed files a quit or crash left");
-        }
         Self {
             native,
             layout,
@@ -271,33 +268,117 @@ impl Session {
         Ok((dest, in_library))
     }
 
-    /// Moves a finished capture from its hidden file to the name `name`
-    /// gives it in `dest`. When that fails it stays in the library, under
-    /// that name if it can; the message says where.
+    /// Moves a finished capture from its hidden file into `dest` under
+    /// `name`, never replacing a file. When that fails it stays in the
+    /// library, under that name if it can; the message says where. Blocks.
     fn place(
         &self,
         source: &Path,
         dest: &Path,
         in_library: bool,
-        name: impl Fn(&Path) -> PathBuf,
+        name: FileName,
     ) -> (PathBuf, bool, Option<String>) {
-        let target = name(dest);
-        let error = match move_file(source, &target) {
-            Ok(()) => return (target, in_library, None),
+        let error = match move_to_free_name(source, dest, |copy| name.nth(copy)) {
+            Ok(moved) => {
+                if let Some(leftover) = moved.leftover {
+                    // Saved all the same; only the hidden copy stays behind.
+                    tracing::warn!(%leftover, source = %source.display(), "capture leftover");
+                }
+                return (moved.path, in_library, None);
+            }
             Err(error) => error,
         };
-        let kept = name(&self.layout.files_dir());
-        let kept = if std::fs::rename(source, &kept).is_ok() {
-            kept
-        } else {
-            source.to_path_buf()
-        };
+        let files = self.layout.files_dir();
+        let kept = (dest != files)
+            .then(|| move_to_free_name(source, &files, |copy| name.nth(copy)).ok())
+            .flatten()
+            .map_or_else(|| source.to_path_buf(), |moved| moved.path);
         let message = format!(
             "Could not save the capture in {}: {error}. It was kept at {}.",
             dest.display(),
             kept.display()
         );
         (kept, true, Some(message))
+    }
+
+    /// [`Session::place`] on the blocking pool: a move across volumes copies.
+    async fn place_off_thread(
+        self: &Arc<Self>,
+        source: PathBuf,
+        dest: PathBuf,
+        in_library: bool,
+        name: FileName,
+    ) -> Result<(PathBuf, bool, Option<String>), Error> {
+        let session = self.clone();
+        blocking(move || session.place(&source, &dest, in_library, name)).await
+    }
+
+    /// Gives movies a quit or crash left hidden in the library a visible
+    /// "(recovered)" name and an index entry; the other leftovers go. Run at
+    /// launch, on a worker.
+    pub fn recover_leftovers(&self) -> Vec<CaptureEntry> {
+        if !self.native.available() {
+            return Vec::new();
+        }
+        let mut recovered = Vec::new();
+        let movies = self.layout.sweep_temps(STALE_TEMPS);
+        if !movies.is_empty()
+            && let Err(error) = self.layout.ensure()
+        {
+            tracing::warn!(%error, "capture recovery");
+            return recovered;
+        }
+        for movie in movies {
+            let created_ms = std::fs::metadata(&movie)
+                .and_then(|metadata| metadata.modified())
+                .ok()
+                .and_then(|modified| modified.duration_since(std::time::UNIX_EPOCH).ok())
+                .map_or_else(now_ms, |since| {
+                    i64::try_from(since.as_millis()).unwrap_or(i64::MAX)
+                });
+            let name = FileName::recovered(Stamp::local(created_ms));
+            let moved =
+                match move_to_free_name(&movie, &self.layout.files_dir(), |copy| name.nth(copy)) {
+                    Ok(moved) => moved,
+                    Err(error) => {
+                        tracing::warn!(%error, movie = %movie.display(), "capture recovery");
+                        continue;
+                    }
+                };
+            let id = new_id(created_ms);
+            let thumbnail = self.layout.thumbnail_path(&id);
+            let json = serde_json::json!({
+                "source": path_text(&moved.path),
+                "out_path": path_text(&thumbnail),
+                "long_edge": THUMBNAIL_LONG_EDGE,
+            });
+            let thumbnail_path = match self.native.thumbnail(&json.to_string()) {
+                Ok(_) if thumbnail.is_file() => path_text(&thumbnail),
+                _ => String::new(),
+            };
+            let entry = Entry {
+                id,
+                kind: Kind::Video,
+                bytes: std::fs::metadata(&moved.path).map_or(0, |metadata| metadata.len()),
+                path: path_text(&moved.path),
+                thumbnail_path,
+                created_ms,
+                width: 0,
+                height: 0,
+                scale: 0.0,
+                duration_ms: 0,
+                in_library: true,
+                extra: Default::default(),
+            };
+            match self.add_entry(entry.clone()) {
+                Ok(()) => recovered.push(entry.into()),
+                Err(error) => tracing::warn!(%error, "capture recovery"),
+            }
+        }
+        if !recovered.is_empty() {
+            tracing::info!(count = recovered.len(), "capture recovered movies");
+        }
+        recovered
     }
 
     fn failed(&self, message: String) {
@@ -357,9 +438,14 @@ impl Session {
         let id = new_id(created_ms);
         let stamp = Stamp::local(created_ms);
         let source = reply.path.map(PathBuf::from).unwrap_or(temp);
-        let (path, in_library, problem) = self.place(&source, &dest, in_library, |dir| {
-            names::screenshot_path(dir, stamp, format)
-        });
+        let (path, in_library, problem) = self
+            .place_off_thread(
+                source,
+                dest,
+                in_library,
+                FileName::screenshot(stamp, format),
+            )
+            .await?;
         if let Some(problem) = problem {
             self.failed(problem);
         }
@@ -386,6 +472,7 @@ impl Session {
             scale: reply.scale,
             duration_ms: 0,
             in_library,
+            extra: Default::default(),
         };
         let meta = Meta {
             folder: request.folder,
@@ -579,9 +666,18 @@ impl Session {
                 RecordStopReply::default()
             }),
             Err(error) => {
-                // Nothing usable was written.
-                let _ = std::fs::remove_file(&recording.movie);
-                return Err(error.into());
+                // The native side may still be finishing a movie with frames
+                // in it: that one stays, hidden, for recovery at a later
+                // launch. Only an empty or missing one goes.
+                let kept =
+                    std::fs::metadata(&recording.movie).is_ok_and(|metadata| metadata.len() > 0);
+                if !kept {
+                    let _ = std::fs::remove_file(&recording.movie);
+                    return Err(error.into());
+                }
+                let error = Error::Unfinished(path_text(&recording.movie), error.to_string());
+                self.failed(error.to_string());
+                return Err(error);
             }
         };
         for warning in &stop.warnings {
@@ -595,7 +691,7 @@ impl Session {
             .filter(|path| path.is_file())
             .unwrap_or_else(|| recording.movie.clone());
         let stamp = Stamp::local(recording.created_ms);
-        let movie_name = |dir: &Path| names::recording_path(dir, stamp, false);
+        let movie_name = FileName::recording(stamp, false);
         let mut kind = Kind::Video;
         let (mut width, mut height) = (stop.width_px, stop.height_px);
         let gif = recording.output == RecordingOutput::Gif && how == Finish::Normal;
@@ -622,19 +718,32 @@ impl Session {
                         .path
                         .filter(|path| !path.is_empty())
                         .map_or(out, PathBuf::from);
-                    let placed =
-                        self.place(&source, &recording.dest, recording.in_library, |dir| {
-                            names::recording_path(dir, stamp, true)
-                        });
-                    let _ = std::fs::remove_file(&movie);
+                    let placed = self
+                        .place_off_thread(
+                            source,
+                            recording.dest.clone(),
+                            recording.in_library,
+                            FileName::recording(stamp, true),
+                        )
+                        .await?;
+                    // The movie goes only once its GIF is there.
+                    if placed.0.is_file() {
+                        let _ = std::fs::remove_file(&movie);
+                    }
                     kind = Kind::Gif;
                     (width, height) = (made.width_px, made.height_px);
                     placed
                 }
                 Err(error) => {
                     let _ = std::fs::remove_file(&out);
-                    let (path, in_library, problem) =
-                        self.place(&movie, &recording.dest, recording.in_library, movie_name);
+                    let (path, in_library, problem) = self
+                        .place_off_thread(
+                            movie.clone(),
+                            recording.dest.clone(),
+                            recording.in_library,
+                            movie_name,
+                        )
+                        .await?;
                     let problem = problem.unwrap_or_else(|| {
                         format!(
                             "Could not make the GIF, so the recording was kept as a movie at {}: {error}",
@@ -645,7 +754,13 @@ impl Session {
                 }
             }
         } else {
-            self.place(&movie, &recording.dest, recording.in_library, movie_name)
+            self.place_off_thread(
+                movie.clone(),
+                recording.dest.clone(),
+                recording.in_library,
+                movie_name,
+            )
+            .await?
         };
         if let Some(problem) = problem {
             self.failed(problem);
@@ -682,6 +797,7 @@ impl Session {
             scale: recording.scale,
             duration_ms: stop.duration_ms,
             in_library,
+            extra: Default::default(),
         };
         let (meta, labels) = {
             let cards = self.lock_cards();
@@ -727,7 +843,15 @@ impl Session {
             }
         };
         let native = self.native.clone();
-        let cancelled = blocking(move || native.record_cancel()).await?;
+        let cancelled = match blocking(move || native.record_cancel()).await {
+            Ok(cancelled) => cancelled,
+            Err(error) => {
+                if recording.is_some() {
+                    self.set_idle();
+                }
+                return Err(error);
+            }
+        };
         let Some(recording) = recording else {
             // The selector answers `cancelled` to whoever waits on it.
             return Ok(());
@@ -738,42 +862,38 @@ impl Session {
     }
 
     /// The app is quitting, and allows `within`. The cards close; a
-    /// recording is stopped and kept (as a movie, indexed) unless that runs
-    /// out of time, when it is cancelled; a selector or countdown is
-    /// cancelled. A GIF still being written when time runs out is removed.
+    /// recording is stopped and kept (as a movie, indexed), waiting at least
+    /// [`QUIT_STOP_AT_LEAST`]; a selector or countdown is cancelled. Once a
+    /// recording was asked to stop it is never cancelled: a finish still
+    /// running when time is up leaves its movie hidden in the library, where
+    /// a later launch recovers it. Only a GIF still being written goes.
     pub async fn shutdown(self: &Arc<Self>, within: Duration) {
         let _ = self.close_cards();
         let deadline = Instant::now() + within;
         loop {
-            let remaining = deadline.saturating_duration_since(Instant::now());
-            if remaining.is_zero() {
-                break;
-            }
             if let Some(recording) = self.take_recording() {
-                let stop_within = remaining.saturating_sub(CANCEL_RESERVE);
+                let stop_within = deadline
+                    .saturating_duration_since(Instant::now())
+                    .max(QUIT_STOP_AT_LEAST);
                 let kept = tokio::time::timeout(
                     stop_within,
                     self.finish_recording(recording, Finish::Quit),
                 )
                 .await;
                 match kept {
-                    Ok(Ok(_)) => {}
+                    Ok(Ok(_)) => continue,
                     Ok(Err(error)) => tracing::warn!(%error, "capture shutdown"),
-                    Err(_) => {
-                        tracing::warn!("capture shutdown: the stop ran out of time; cancelling");
-                        let native = self.native.clone();
-                        let _ = tokio::time::timeout(
-                            CANCEL_RESERVE,
-                            blocking(move || native.record_cancel()),
-                        )
-                        .await;
-                        self.set_idle();
-                    }
+                    Err(_) => tracing::warn!(
+                        "capture shutdown: the recording is still being finished; it will be recovered"
+                    ),
                 }
-                continue;
+                break;
             }
             if matches!(&*self.lock(), State::Idle) {
                 return;
+            }
+            if Instant::now() >= deadline {
+                break;
             }
             // Cancels a selector or countdown; a capture being finished is
             // waited for.
@@ -782,7 +902,6 @@ impl Session {
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
         }
-        tracing::warn!("capture shutdown timed out");
         let partial = self
             .partial
             .lock()
@@ -816,10 +935,9 @@ impl Session {
         {
             let mut cards = self.lock_cards();
             cards.up.retain(|(id, _)| *id != entry.id);
+            // The native layer lets cards go (four a display) and says so
+            // with `card_closed`.
             cards.up.push((entry.id.clone(), Instant::now()));
-            // The native layer lets the oldest go and says so.
-            let extra = cards.up.len().saturating_sub(MAX_CARDS);
-            cards.up.drain(..extra);
         }
         self.ensure_poll();
         Ok(())

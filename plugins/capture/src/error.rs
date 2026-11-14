@@ -30,6 +30,12 @@ pub enum Error {
     NotWritable(String, std::io::Error),
     #[error("The capture was kept at {0}, but {1}")]
     Kept(String, String),
+    #[error(
+        "The recording could not be finished ({1}). What was recorded is kept at {0}, and Librelog adds it to your captures later."
+    )]
+    Unfinished(String, String),
+    #[error("That file is a recording in your captures. Choose another name.")]
+    OverRecording,
     #[error("Could not write the capture: {0}")]
     Io(#[from] std::io::Error),
     #[error("{0}")]

@@ -1,13 +1,17 @@
 //! The editor's Save As: a PNG the webview made, written where the user
-//! chose. Kept apart from the library: it adds no entry and no thumbnail.
+//! chose. It adds no entry; written over a capture's own file, it saves
+//! that capture as Save does (a JPEG stays a JPEG) and refreshes its entry.
 
 use std::path::Path;
+use std::sync::Arc;
+
+use tauri::Manager;
 
 use anlg_capture_core::fs::write_atomic;
 use base64::Engine;
 
 use crate::Error;
-use crate::session::blocking;
+use crate::session::{Session, blocking};
 
 /// The same limit as `save_edited`, decoded.
 const MAX_BYTES: usize = 80 * 1024 * 1024;
@@ -17,11 +21,38 @@ const PNG_SIGNATURE: &[u8] = b"\x89PNG\r\n\x1a\n";
 /// path, replacing what is there.
 #[tauri::command]
 #[specta::specta]
-pub(crate) async fn export_png(dest_path: String, png_base64: String) -> Result<(), String> {
-    blocking(move || write_png(Path::new(&dest_path), &png_base64))
+pub(crate) async fn export_png<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    dest_path: String,
+    png_base64: String,
+) -> Result<(), String> {
+    let session = app
+        .try_state::<Arc<Session>>()
+        .map(|state| state.inner().clone());
+    blocking(move || export(session.as_ref(), Path::new(&dest_path), &png_base64))
         .await
         .and_then(|done| done)
         .map_err(|error| error.to_string())
+}
+
+pub(crate) fn export(
+    session: Option<&Arc<Session>>,
+    dest: &Path,
+    png_base64: &str,
+) -> Result<(), Error> {
+    let capture = match session {
+        Some(session) if dest.is_absolute() => {
+            session.entry_at(dest)?.map(|entry| (session, entry))
+        }
+        _ => None,
+    };
+    match capture {
+        Some((session, entry)) if entry.kind == anlg_capture_core::Kind::Screenshot => session
+            .save_edited(&entry.id, png_base64, true, false)
+            .map(drop),
+        Some(_) => Err(Error::OverRecording),
+        None => write_png(dest, png_base64),
+    }
 }
 
 fn write_png(dest: &Path, png_base64: &str) -> Result<(), Error> {

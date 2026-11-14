@@ -24,6 +24,8 @@ struct Fake {
     gif_delay: Mutex<Option<Duration>>,
     fail_gif: AtomicBool,
     garbled_stop: AtomicBool,
+    stop_delay: Mutex<Option<Duration>>,
+    stop_error: AtomicBool,
     unavailable: AtomicBool,
 }
 
@@ -90,6 +92,14 @@ impl Native for Fake {
     }
 
     fn record_stop(&self) -> Result<String, AnnotateError> {
+        self.call("record_stop".into());
+        wait(&self.stop_delay);
+        if self.stop_error.load(Ordering::SeqCst) {
+            return Err(AnnotateError {
+                code: "timeout".into(),
+                message: "the writer did not finish in time".into(),
+            });
+        }
         if self.garbled_stop.load(Ordering::SeqCst) {
             return Ok("[\"not what you asked for\"]".into());
         }
@@ -583,8 +593,11 @@ async fn quitting_while_a_gif_is_written_removes_the_partial_gif_when_time_runs_
     .await
     .unwrap();
     assert!(partial.exists());
+    let movie = h.fake.movie.lock().unwrap().clone().unwrap();
     h.session.shutdown(Duration::from_millis(300)).await;
     assert!(!partial.exists());
+    // The movie the GIF was made from stays where a later launch finds it.
+    assert!(movie.is_file());
     let _ = stopping.await;
 }
 
@@ -756,4 +769,98 @@ async fn off_macos_nothing_touches_the_disk() {
     ));
     assert!(!h.session.status().available);
     assert!(!h.dir.path().join("captures").exists());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn quitting_never_cancels_a_recording_whose_stop_outlasts_the_budget() {
+    let h = Harness::new();
+    h.session
+        .start_recording(recording(RecordingOutput::Mp4, Some("")))
+        .await
+        .unwrap();
+    let movie = h.fake.movie.lock().unwrap().clone().unwrap();
+    *h.fake.stop_delay.lock().unwrap() = Some(Duration::from_secs(3));
+    let started = std::time::Instant::now();
+    h.session.shutdown(Duration::ZERO).await;
+    // Even with no time left it waited for the stop, then left the movie.
+    assert!(started.elapsed() >= Duration::from_secs(2));
+    assert!(movie.is_file());
+    let calls = h.fake.calls();
+    assert!(calls.contains(&"record_stop".to_string()));
+    assert!(!calls.contains(&"record_cancel".to_string()));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_failed_stop_keeps_a_movie_that_has_frames() {
+    let h = Harness::new();
+    h.session
+        .start_recording(recording(RecordingOutput::Mp4, None))
+        .await
+        .unwrap();
+    let movie = h.fake.movie.lock().unwrap().clone().unwrap();
+    h.fake.stop_error.store(true, Ordering::SeqCst);
+    assert!(matches!(
+        h.session.stop_recording().await,
+        Err(Error::Unfinished(..))
+    ));
+    assert!(movie.is_file());
+    assert_eq!(h.session.status().phase, CapturePhase::Idle);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_movie_a_quit_left_hidden_is_recovered_into_the_list() {
+    let h = Harness::new();
+    let files = h.dir.path().join("captures/files");
+    std::fs::create_dir_all(&files).unwrap();
+    let hidden = files.join(".capture-0123.mp4");
+    std::fs::write(&hidden, b"mp4 with frames").unwrap();
+    std::fs::File::options()
+        .write(true)
+        .open(&hidden)
+        .unwrap()
+        .set_modified(std::time::SystemTime::now() - Duration::from_secs(3 * 3600))
+        .unwrap();
+    let recovered = h.session.recover_leftovers();
+    assert_eq!(recovered.len(), 1);
+    let entry = &recovered[0];
+    assert!(!hidden.exists() && Path::new(&entry.path).is_file());
+    assert!(entry.path.ends_with(" (recovered).mp4"), "{}", entry.path);
+    assert!(entry.in_library && entry.kind == CaptureKind::Video);
+    assert_eq!(h.session.list_captures().unwrap(), recovered);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn every_card_up_stays_actionable_past_four() {
+    let h = Harness::new();
+    let mut entries = Vec::new();
+    for _ in 0..6 {
+        entries.push(h.screenshot(ImageFormat::Png, None).await);
+    }
+    // Two displays show four cards each: the first is still up.
+    h.fake.push(&format!(
+        r#"{{"type":"card_action","id":"{}","action":"edit"}}"#,
+        entries[0].id
+    ));
+    tokio::time::sleep(Duration::from_millis(400)).await;
+    assert!(h.events().contains(&CaptureEvent::CardAction {
+        id: entries[0].id.clone(),
+        action: CardActionKind::Edit
+    }));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn exporting_over_a_jpeg_capture_keeps_it_a_jpeg_and_refreshes_its_entry() {
+    let h = Harness::new();
+    let entry = h.screenshot(ImageFormat::Jpeg, Some("")).await;
+    crate::export::export(
+        Some(&h.session),
+        Path::new(&entry.path),
+        &png_base64(64, 32),
+    )
+    .unwrap();
+    let bytes = std::fs::read(&entry.path).unwrap();
+    assert_eq!(&bytes[..2], [0xFF, 0xD8]);
+    let listed = h.session.list_captures().unwrap();
+    assert_eq!((listed[0].width, listed[0].height), (64, 32));
+    assert_eq!(listed[0].bytes, bytes.len() as u64);
 }

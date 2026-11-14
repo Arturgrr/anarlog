@@ -66,28 +66,40 @@ impl Layout {
         ))
     }
 
-    /// Deletes hidden capture files in the library last written more than
-    /// `older_than` ago: what a quit or crash left. Fresh ones may belong to
-    /// a recording another copy of the app (stable or Nightly) is making.
-    pub fn sweep_temps(&self, older_than: std::time::Duration) -> usize {
+    /// Hidden capture files in the library last written more than
+    /// `older_than` ago: what a quit or crash left. Movies with something in
+    /// them are returned, to be recovered; the rest (empty files, partial
+    /// GIFs, pictures never named) are deleted. Fresh ones may belong to a
+    /// capture another copy of the app (stable or Nightly) is making.
+    pub fn sweep_temps(&self, older_than: std::time::Duration) -> Vec<PathBuf> {
         let Ok(files) = std::fs::read_dir(self.files_dir()) else {
-            return 0;
+            return Vec::new();
         };
-        files
-            .filter_map(Result::ok)
-            .filter(|file| {
-                let name = file.file_name().to_string_lossy().into_owned();
-                TEMP_PREFIXES.iter().any(|prefix| name.starts_with(prefix))
-            })
-            .filter(|file| {
-                file.metadata()
-                    .and_then(|metadata| metadata.modified())
-                    .ok()
-                    .and_then(|modified| modified.elapsed().ok())
-                    .is_some_and(|age| age > older_than)
-            })
-            .filter(|file| std::fs::remove_file(file.path()).is_ok())
-            .count()
+        let mut movies = Vec::new();
+        for file in files.filter_map(Result::ok) {
+            let name = file.file_name().to_string_lossy().into_owned();
+            if !TEMP_PREFIXES.iter().any(|prefix| name.starts_with(prefix)) {
+                continue;
+            }
+            let Ok(metadata) = file.metadata() else {
+                continue;
+            };
+            let old = metadata
+                .modified()
+                .ok()
+                .and_then(|modified| modified.elapsed().ok())
+                .is_some_and(|age| age > older_than);
+            if !old || !metadata.is_file() {
+                continue;
+            }
+            if name.ends_with(".mp4") && metadata.len() > 0 {
+                movies.push(file.path());
+            } else {
+                let _ = std::fs::remove_file(file.path());
+            }
+        }
+        movies.sort();
+        movies
     }
 
     /// Creates the folders, readable by this user only.
@@ -144,6 +156,15 @@ pub fn user_folder(folder: Option<&str>, downloads: Option<&Path>) -> Result<Pat
     }
 }
 
+/// Whether `id` is fit for a window label and a route:
+/// `[A-Za-z0-9_-]{1,64}`, as every id [`new_id`] makes is.
+pub fn is_capture_id(id: &str) -> bool {
+    (1..=64).contains(&id.len())
+        && id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
+}
+
 /// `cap-<created_ms>-<4 hex>`.
 pub fn new_id(created_ms: i64) -> String {
     let random = uuid::Uuid::new_v4();
@@ -185,25 +206,39 @@ mod tests {
     }
 
     #[test]
-    fn only_old_hidden_capture_files_are_swept() {
+    fn only_plain_ids_name_a_capture_editor() {
+        assert!(is_capture_id(&new_id(1_763_128_000_000)));
+        for bad in ["", "../note", "cap 1", "cap/1", "cap-é", &"a".repeat(65)] {
+            assert!(!is_capture_id(bad), "{bad}");
+        }
+    }
+
+    #[test]
+    fn old_hidden_movies_are_kept_for_recovery_and_other_leftovers_swept() {
         let dir = tempfile::tempdir().unwrap();
         let layout = Layout::new(dir.path().to_path_buf());
         layout.ensure().unwrap();
         let hours_ago = std::time::SystemTime::now() - std::time::Duration::from_secs(3 * 3600);
-        let old = [
-            layout.temp_path("mp4"),
+        let movies = [
+            layout.files_dir().join(".capture-a.mp4"),
             layout.files_dir().join(".recording-cap-1-0000.mp4"),
         ];
-        let kept = [
+        let swept = [
             layout.temp_path("gif"),
+            layout.files_dir().join(".capture-b.mp4"),
+        ];
+        let kept = [
+            layout.temp_path("mp4"),
             layout
                 .files_dir()
                 .join("Librelog Recording 2026-11-14 at 14.03.22.mp4"),
         ];
-        for path in old.iter().chain(&kept) {
+        for path in movies.iter().chain(&kept) {
             std::fs::write(path, b"mp4").unwrap();
         }
-        let old_file = |path: &PathBuf| {
+        std::fs::write(&swept[0], b"GIF8").unwrap();
+        std::fs::write(&swept[1], b"").unwrap();
+        let make_old = |path: &PathBuf| {
             std::fs::File::options()
                 .write(true)
                 .open(path)
@@ -211,13 +246,11 @@ mod tests {
                 .set_modified(hours_ago)
                 .unwrap();
         };
-        old.iter().for_each(old_file);
-        old_file(&kept[1]);
-        assert_eq!(
-            layout.sweep_temps(std::time::Duration::from_secs(2 * 3600)),
-            2
-        );
-        assert!(old.iter().all(|path| !path.exists()));
-        assert!(kept.iter().all(|path| path.exists()));
+        movies.iter().chain(&swept).for_each(make_old);
+        make_old(&kept[1]);
+        let found = layout.sweep_temps(std::time::Duration::from_secs(2 * 3600));
+        assert_eq!(found, movies.to_vec());
+        assert!(movies.iter().chain(&kept).all(|path| path.exists()));
+        assert!(swept.iter().all(|path| !path.exists()));
     }
 }
