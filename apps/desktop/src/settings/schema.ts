@@ -122,6 +122,120 @@ export const SETTING_DEFINITIONS = {
     path: ["annotate", "retention"],
     default: "week" as string,
   },
+  capture_enabled: {
+    type: "boolean",
+    path: ["capture", "enabled"],
+    default: false as boolean,
+  },
+  capture_shortcut_area: {
+    type: "string",
+    path: ["capture", "shortcut_area"],
+    default: "Alt+Shift+Digit4" as string,
+  },
+  capture_shortcut_fullscreen: {
+    type: "string",
+    path: ["capture", "shortcut_fullscreen"],
+    default: "Alt+Shift+Digit3" as string,
+  },
+  capture_shortcut_window: {
+    type: "string",
+    path: ["capture", "shortcut_window"],
+    default: "" as string,
+  },
+  capture_shortcut_record: {
+    type: "string",
+    path: ["capture", "shortcut_record"],
+    default: "Alt+Shift+Digit5" as string,
+  },
+  capture_shortcut_gif: {
+    type: "string",
+    path: ["capture", "shortcut_gif"],
+    default: "Alt+Shift+Digit6" as string,
+  },
+  capture_replace_system_shortcuts: {
+    type: "boolean",
+    path: ["capture", "replace_system_shortcuts"],
+    default: false as boolean,
+  },
+  // JSON of the area, fullscreen, record and gif shortcuts from before the
+  // macOS ones replaced them; empty while they are not replaced.
+  capture_shortcuts_before_replace: {
+    type: "string",
+    path: ["capture", "shortcuts_before_replace"],
+    default: "" as string,
+  },
+  capture_copy_to_clipboard: {
+    type: "boolean",
+    path: ["capture", "copy_to_clipboard"],
+    default: true as boolean,
+  },
+  capture_save_to_folder: {
+    type: "boolean",
+    path: ["capture", "save_to_folder"],
+    default: true as boolean,
+  },
+  // Empty is the user's Downloads.
+  capture_folder: {
+    type: "string",
+    path: ["capture", "folder"],
+    default: "" as string,
+  },
+  capture_show_card: {
+    type: "boolean",
+    path: ["capture", "show_card"],
+    default: true as boolean,
+  },
+  capture_open_editor: {
+    type: "boolean",
+    path: ["capture", "open_editor"],
+    default: false as boolean,
+  },
+  // "png" | "jpeg"
+  capture_image_format: {
+    type: "string",
+    path: ["capture", "image_format"],
+    default: "png" as string,
+  },
+  capture_show_cursor: {
+    type: "boolean",
+    path: ["capture", "show_cursor"],
+    default: false as boolean,
+  },
+  capture_record_fps: {
+    type: "number",
+    path: ["capture", "record_fps"],
+    default: 30 as number,
+  },
+  capture_record_cursor: {
+    type: "boolean",
+    path: ["capture", "record_cursor"],
+    default: true as boolean,
+  },
+  capture_record_microphone: {
+    type: "boolean",
+    path: ["capture", "record_microphone"],
+    default: false as boolean,
+  },
+  capture_record_system_audio: {
+    type: "boolean",
+    path: ["capture", "record_system_audio"],
+    default: false as boolean,
+  },
+  capture_record_countdown: {
+    type: "number",
+    path: ["capture", "record_countdown"],
+    default: 0 as number,
+  },
+  capture_gif_fps: {
+    type: "number",
+    path: ["capture", "gif_fps"],
+    default: 15 as number,
+  },
+  capture_gif_max_width: {
+    type: "number",
+    path: ["capture", "gif_max_width"],
+    default: 720 as number,
+  },
   export_directory: {
     type: "string",
     path: ["general", "export_directory"],
