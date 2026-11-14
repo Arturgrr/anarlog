@@ -50,13 +50,15 @@ export const commands = {
   },
   /**
    * Checks a dictation shortcut, which must differ from the `paste_last`
-   * shortcut when there is one, and from Annotate's shortcuts (`annotate`,
-   * empty while Annotate is off).
+   * shortcut when there is one, from Annotate's shortcuts (`annotate`, empty
+   * while Annotate is off) and from Capture's (`capture`, empty while Capture
+   * is off).
    */
   async validate(
     shortcut: string,
     pasteLast: string | null,
     annotate: string[],
+    capture: string[],
   ): Promise<Result<null, string>> {
     try {
       return {
@@ -65,6 +67,7 @@ export const commands = {
           shortcut,
           pasteLast,
           annotate,
+          capture,
         }),
       };
     } catch (e) {
@@ -105,12 +108,14 @@ export const commands = {
   },
   /**
    * Checks a paste-last shortcut: a key with modifiers that none of the
-   * `dictation` shortcuts or Annotate's (`annotate`) uses.
+   * `dictation` shortcuts, Annotate's (`annotate`) or Capture's (`capture`)
+   * uses.
    */
   async validatePasteLast(
     shortcut: string,
     dictation: string[],
     annotate: string[],
+    capture: string[],
   ): Promise<Result<null, string>> {
     try {
       return {
@@ -119,6 +124,7 @@ export const commands = {
           shortcut,
           dictation,
           annotate,
+          capture,
         }),
       };
     } catch (e) {
@@ -189,17 +195,63 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
+  /**
+   * Registers Capture's shortcuts, replacing the previous ones; null or
+   * empty leaves one unbound. Each needs a key with modifiers and none may be
+   * another Librelog shortcut. Each registers on its own: when some cannot
+   * be, the others still are, and the error names those that were not. Capture
+   * always gives way: a dictation, paste-last or Annotate shortcut registered
+   * later takes its key.
+   */
+  async configureCapture(
+    shortcuts: CaptureShortcuts,
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:shortcut|configure_capture", {
+          shortcuts,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
+  /**
+   * Checks a Capture shortcut: a key with modifiers that none of `taken` (the
+   * other Librelog shortcuts, the other Capture ones included) uses.
+   */
+  async validateCapture(
+    shortcut: string,
+    taken: string[],
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:shortcut|validate_capture", {
+          shortcut,
+          taken,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
 };
 
 /** user-defined events **/
 
 export const events = __makeEvents__<{
   annotateShortcutEvent: AnnotateShortcutEvent;
+  captureShortcutEvent: CaptureShortcutEvent;
   pasteLastAnnotationEvent: PasteLastAnnotationEvent;
   pasteLastEvent: PasteLastEvent;
   shortcutEvent: ShortcutEvent;
 }>({
   annotateShortcutEvent: "plugin:shortcut:annotate-shortcut-event",
+  captureShortcutEvent: "plugin:shortcut:capture-shortcut-event",
   pasteLastAnnotationEvent: "plugin:shortcut:paste-last-annotation-event",
   pasteLastEvent: "plugin:shortcut:paste-last-event",
   shortcutEvent: "plugin:shortcut:shortcut-event",
@@ -224,6 +276,24 @@ export type AnnotateShortcutEvent =
    * Escape while ink is on.
    */
   | { type: "escape" };
+/**
+ * What a Capture shortcut, or its menu bar item, asks for.
+ */
+export type CaptureAction = "area" | "fullscreen" | "window" | "record" | "gif";
+/**
+ * A Capture shortcut was pressed, or its menu bar item chosen.
+ */
+export type CaptureShortcutEvent = { action: CaptureAction };
+/**
+ * Capture's shortcuts; null or empty leaves one unbound.
+ */
+export type CaptureShortcuts = {
+  area: string | null;
+  fullscreen: string | null;
+  window: string | null;
+  record: string | null;
+  gif: string | null;
+};
 export type HotKey = { key: number | null; modifiers: Modifier[] };
 export type Modifier =
   | "command"

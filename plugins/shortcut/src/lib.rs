@@ -31,12 +31,15 @@ fn make_specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             global::configure_annotate,
             global::validate_annotate,
             global::set_annotate_recording,
+            global::configure_capture,
+            global::validate_capture,
         ])
         .events(tauri_specta::collect_events![
             ShortcutEvent,
             PasteLastEvent,
             AnnotateShortcutEvent,
-            PasteLastAnnotationEvent
+            PasteLastAnnotationEvent,
+            CaptureShortcutEvent
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Result)
 }

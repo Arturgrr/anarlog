@@ -9,6 +9,8 @@ const COMMANDS: &[&str] = &[
     "configure_annotate",
     "validate_annotate",
     "set_annotate_recording",
+    "configure_capture",
+    "validate_capture",
 ];
 
 fn main() {
