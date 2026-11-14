@@ -304,6 +304,9 @@ impl WindowImpl for AppWindow {
                 builder.build()?
             }
             Self::CaptureEditor(id) => {
+                if !is_capture_id(id) {
+                    return Err(crate::Error::InvalidCaptureId(id.clone()));
+                }
                 let encoded_id: String =
                     url::form_urlencoded::byte_serialize(id.as_bytes()).collect();
                 self.window_builder(app, format!("/app/capture-editor/{encoded_id}"))
@@ -421,6 +424,14 @@ impl AppWindow {
 
         Ok(())
     }
+}
+
+/// A capture id fit for a window label and a route: `[A-Za-z0-9_-]{1,64}`.
+fn is_capture_id(id: &str) -> bool {
+    (1..=64).contains(&id.len())
+        && id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
 }
 
 fn staggered_note_window_position(
@@ -615,6 +626,14 @@ fn window_frame_at_scale(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_capture_editor_opens_only_for_a_plain_capture_id() {
+        assert!(is_capture_id("cap-1763128000000-ab12"));
+        for bad in ["", "../note", "cap 1", "cap/1", &"a".repeat(65)] {
+            assert!(!is_capture_id(bad), "{bad}");
+        }
+    }
 
     #[test]
     fn the_main_window_opens_at_ninety_percent_of_the_screen_centred() {

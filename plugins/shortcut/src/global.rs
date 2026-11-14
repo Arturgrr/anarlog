@@ -935,6 +935,17 @@ mod validation_tests {
     }
 
     #[test]
+    fn capture_takes_the_super_shortcuts_the_screenshot_settings_use() {
+        use tauri_plugin_global_shortcut::Modifiers;
+        for digit in 3..=6 {
+            let shortcut = format!("Super+Shift+Digit{digit}");
+            assert_eq!(validate_annotate_shortcut(&shortcut, &[], true), Ok(()));
+            let key = paste_last_key(&shortcut, true).unwrap();
+            assert_eq!(key.mods, Modifiers::SUPER | Modifiers::SHIFT);
+        }
+    }
+
+    #[test]
     fn plans_each_listed_shortcut_once_and_rejects_a_list_with_an_invalid_one() {
         let list = |items: &[&str]| items.iter().map(|s| s.to_string()).collect::<Vec<_>>();
         let sources =
