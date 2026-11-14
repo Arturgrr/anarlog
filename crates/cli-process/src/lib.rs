@@ -205,16 +205,8 @@ where
                     .stdin
                     .take()
                     .ok_or_else(|| E::from(ProcessError::MissingStdin))?;
-                stdin
-                    .write_all(input.as_bytes())
-                    .await
-                    .map_err(ProcessError::StdinWrite)
-                    .map_err(E::from)?;
-                stdin
-                    .shutdown()
-                    .await
-                    .map_err(ProcessError::StdinWrite)
-                    .map_err(E::from)?;
+                ignore_closed_stdin(stdin.write_all(input.as_bytes()).await).map_err(E::from)?;
+                ignore_closed_stdin(stdin.shutdown().await).map_err(E::from)?;
             }
 
             let mut lines = BufReader::new(stdout);
@@ -311,6 +303,16 @@ where
         events: Box::pin(ReceiverStream::new(rx)),
         shutdown,
     })
+}
+
+/// A child that stopped reading its input closed the pipe. What it wrote and
+/// how it exited tell what happened, so a broken pipe is not a failure by
+/// itself.
+fn ignore_closed_stdin(result: std::io::Result<()>) -> Result<(), ProcessError> {
+    match result {
+        Err(error) if error.kind() == std::io::ErrorKind::BrokenPipe => Ok(()),
+        other => other.map_err(ProcessError::StdinWrite),
+    }
 }
 
 async fn kill_child(child: &mut Child) -> Result<(), ProcessError> {
@@ -521,6 +523,30 @@ mod tests {
             .map(Result::unwrap)
             .collect();
         assert_eq!(lines, ["one", "two", "three"]);
+    }
+
+    #[tokio::test]
+    #[cfg(unix)]
+    async fn a_child_that_never_reads_its_input_still_delivers_its_output() {
+        let mut command = tokio::process::Command::new("sh");
+        command
+            .args(["-c", "exec 0<&-; printf 'done\n'"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        let child = command.spawn().unwrap();
+
+        // More than a pipe holds, so the write is still pending when the
+        // child closes its end.
+        let input = "x".repeat(1024 * 1024);
+        let stream =
+            spawn_streaming_lines::<String, ProcessError, _>(child, Some(input), None, Ok).unwrap();
+        let lines: Vec<_> = futures_util::StreamExt::collect::<Vec<_>>(stream)
+            .await
+            .into_iter()
+            .map(Result::unwrap)
+            .collect();
+        assert_eq!(lines, ["done"]);
     }
 
     #[tokio::test]
