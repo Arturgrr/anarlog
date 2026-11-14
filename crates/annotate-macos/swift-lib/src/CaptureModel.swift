@@ -481,6 +481,8 @@ struct CaptureEvent: Codable, Equatable {
     /// calls `record_stop` for its result.
     case recordStopped = "record_stopped"
     case cardAction = "card_action"
+    /// A card left the screen, for any reason; once per card.
+    case cardClosed = "card_closed"
   }
 
   var type: Kind
@@ -497,6 +499,10 @@ struct CaptureEvent: Codable, Equatable {
 
   static func card(_ id: String, _ action: CaptureCardAction) -> CaptureEvent {
     CaptureEvent(.cardAction, id: id, action: action)
+  }
+
+  static func closed(_ id: String) -> CaptureEvent {
+    CaptureEvent(.cardClosed, id: id)
   }
 }
 

@@ -120,12 +120,16 @@ final class CaptureModelTests: XCTestCase {
   func testEventsEncodeAsTheHostReadsThem() throws {
     let events = [
       CaptureEvent(.recordStop), CaptureEvent(.recordStopped, reason: "cap"),
-      CaptureEvent.card("cap-1-ab12", .edit),
+      CaptureEvent.card("cap-1-ab12", .edit), CaptureEvent.closed("cap-1-ab12"),
     ]
     XCTAssertEqual(
       try json(events),
       #"[{"type":"record_stop"},{"reason":"cap","type":"record_stopped"},"#
-        + #"{"action":"edit","id":"cap-1-ab12","type":"card_action"}]"#)
+        + #"{"action":"edit","id":"cap-1-ab12","type":"card_action"},"#
+        + #"{"id":"cap-1-ab12","type":"card_closed"}]"#)
+    let closed = try JSONDecoder().decode(
+      CaptureEvent.self, from: Data(#"{"type":"card_closed","id":"cap-2-0f0f"}"#.utf8))
+    XCTAssertEqual(closed, CaptureEvent.closed("cap-2-0f0f"))
   }
 
   func testOneCaptureAtATimeAndNeverBesideAnnotate() {

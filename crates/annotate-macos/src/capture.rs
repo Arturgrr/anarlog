@@ -65,7 +65,11 @@ pub fn record_status() -> Result<String, AnnotateError> {
 /// call, as a JSON array: `{"type": "record_stop"}`, `{"type":
 /// "record_discard"}`, `{"type": "record_stopped", "reason": "cap" |
 /// "stream_error"}`, `{"type": "card_action", "id", "action": "copy" |
-/// "save" | "edit" | "open" | "close" | "dragged"}`.
+/// "save" | "edit" | "open" | "close" | "dragged"}`, `{"type":
+/// "card_closed", "id"}` (a card left the screen for any reason: its timer,
+/// its close button, [`card_close`], a newer card pushing it out, a drag
+/// it waited for ending, or its display going away; once per card, after it
+/// is gone).
 pub fn poll_events() -> Result<String, AnnotateError> {
     value(&sys::poll_events())
 }

@@ -243,7 +243,8 @@ final class CaptureCards {
   private var lastTick: Double = 0
 
   func show(_ request: CaptureCardRequest) {
-    close(id: request.id)
+    // Replaced once the new card is up, so the id's card never leaves.
+    let replaced = cards.filter { $0.id == request.id }
     let screens = NSScreen.screens.compactMap { AnnotateScreen($0) }
     let chosen =
       screens.first(where: { $0.id == request.displayId })
@@ -288,6 +289,7 @@ final class CaptureCards {
       self.layout(display: card.display)
     }
     cards.append(card)
+    for old in replaced { close(old) }
     let mine = cards.filter { $0.display == screen.id }
     for old in mine.dropLast(CaptureCardLayout.perDisplay) { close(old) }
     layout(display: screen.id)
@@ -318,7 +320,10 @@ final class CaptureCards {
     if action == .close { close(id: id) }
   }
 
+  /// Every way a card leaves comes through here. `card_closed` goes out
+  /// once, after the card is gone, unless a newer card with its id is up.
   private func remove(_ card: Card) {
+    guard cards.contains(where: { $0 === card }) else { return }
     cards.removeAll { $0 === card }
     card.view.onClick = nil
     card.view.onDragged = nil
@@ -330,6 +335,9 @@ final class CaptureCards {
     if cards.isEmpty {
       timer?.invalidate()
       timer = nil
+    }
+    if !cards.contains(where: { $0.id == card.id }) {
+      CaptureSession.shared.post(CaptureEvent.closed(card.id))
     }
   }
 
@@ -350,7 +358,8 @@ final class CaptureCards {
     self.timer = timer
   }
 
-  /// Cards whose time is up leave; the pointer on a card holds it.
+  /// Cards whose time is up leave, the pointer on a card holding it, and
+  /// so do the cards of a display that went away.
   private func tickCards() {
     let now = AnnotateHostClock.timebase.seconds(AnnotateHostClock.now())
     let elapsed = now - lastTick
@@ -367,6 +376,8 @@ final class CaptureCards {
       remove(card)
       layout(display: card.display)
     }
+    let displays = Set(NSScreen.screens.compactMap { AnnotateScreen($0)?.id })
+    for card in cards where !displays.contains(card.display) { close(card) }
   }
 
   private static func load(_ url: URL) -> CGImage? {
