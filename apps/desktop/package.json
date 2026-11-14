@@ -32,6 +32,7 @@
     "@anlg/editor": "workspace:^",
     "@anlg/plugin-annotate": "workspace:*",
     "@anlg/plugin-apple-foundation": "workspace:*",
+    "@anlg/plugin-capture": "workspace:*",
     "@anlg/plugin-contacts": "workspace:*",
     "@anlg/plugin-db": "workspace:*",
     "@anlg/plugin-deeplink2": "workspace:*",

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-restore-system-shortcuts"
+description = "Enables the restore_system_shortcuts command without any pre-configured scope."
+commands.allow = ["restore_system_shortcuts"]
+
+[[permission]]
+identifier = "deny-restore-system-shortcuts"
+description = "Denies the restore_system_shortcuts command without any pre-configured scope."
+commands.deny = ["restore_system_shortcuts"]

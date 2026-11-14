@@ -166,6 +166,9 @@ importers:
       '@anlg/plugin-apple-foundation':
         specifier: workspace:*
         version: link:../../plugins/apple-foundation
+      '@anlg/plugin-capture':
+        specifier: workspace:*
+        version: link:../../plugins/capture
       '@anlg/plugin-contacts':
         specifier: workspace:*
         version: link:../../plugins/contacts
@@ -834,6 +837,12 @@ importers:
         version: 2.10.1
 
   plugins/apple-foundation:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: ^2.10.1
+        version: 2.10.1
+
+  plugins/capture:
     dependencies:
       '@tauri-apps/api':
         specifier: ^2.10.1

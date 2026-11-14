@@ -83,6 +83,7 @@
     "shortcut:default",
     "dictation:default",
     "annotate:default",
+    "capture:default",
     {
       "identifier": "http:default",
       "deny": [],

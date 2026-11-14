@@ -2953,6 +2953,7 @@ dependencies = [
  "tauri-plugin-annotate",
  "tauri-plugin-apple-foundation",
  "tauri-plugin-autostart",
+ "tauri-plugin-capture",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-contacts",
  "tauri-plugin-db",
@@ -12684,6 +12685,30 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "tauri-plugin-capture"
+version = "0.1.0"
+dependencies = [
+ "annotate-macos",
+ "base64 0.22.1",
+ "capture-core",
+ "image",
+ "objc2-foundation",
+ "plist",
+ "serde",
+ "serde_json",
+ "specta",
+ "specta-typescript",
+ "tauri",
+ "tauri-plugin",
+ "tauri-plugin-opener",
+ "tauri-specta",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

@@ -66,7 +66,10 @@ pub fn is_app_store_build() -> bool {
 #[tauri::command]
 #[specta::specta]
 pub async fn complete_app_exit<R: tauri::Runtime>(app: tauri::AppHandle<R>) {
-    tauri_plugin_annotate::shutdown(&app).await;
+    tokio::join!(
+        tauri_plugin_annotate::shutdown(&app),
+        tauri_plugin_capture::shutdown(&app),
+    );
     crate::mark_exit_flush_complete();
     app.exit(0);
 }
