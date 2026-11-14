@@ -94,6 +94,83 @@ pub fn move_file(from: &Path, to: &Path) -> std::io::Result<()> {
     std::fs::remove_file(from)
 }
 
+/// Where [`move_to_free_name`] put a file.
+#[derive(Debug)]
+pub struct Moved {
+    pub path: std::path::PathBuf,
+    /// The file was saved, but its source could not be removed.
+    pub leftover: Option<std::io::Error>,
+}
+
+/// Moves `from` into `dir` under the first of `name(1)`, `name(2)`… that no
+/// file holds, never replacing one, even when another process names a file
+/// the same moment. On one volume the file is hard-linked to its name (which
+/// fails when the name is taken) and then unlinked; across volumes, or where
+/// links are not supported, the name is created exclusively and the bytes
+/// copied into it and flushed before the source is removed.
+pub fn move_to_free_name(
+    from: &Path,
+    dir: &Path,
+    name: impl Fn(u32) -> String,
+) -> std::io::Result<Moved> {
+    use std::io::ErrorKind::AlreadyExists;
+    let mut link = true;
+    for copy in 1..10_000 {
+        let target = dir.join(name(copy));
+        if link {
+            match std::fs::hard_link(from, &target) {
+                Ok(()) => {
+                    let leftover = std::fs::remove_file(from).err();
+                    return Ok(Moved {
+                        path: target,
+                        leftover,
+                    });
+                }
+                Err(error) if error.kind() == AlreadyExists => continue,
+                // Another volume, or links not supported there.
+                Err(_) => link = false,
+            }
+        }
+        let mut file = match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&target)
+        {
+            Ok(file) => file,
+            Err(error) if error.kind() == AlreadyExists => continue,
+            Err(error) => return Err(error),
+        };
+        let copied = std::fs::File::open(from)
+            .and_then(|mut source| std::io::copy(&mut source, &mut file))
+            .and_then(|_| file.sync_all());
+        if let Err(error) = copied {
+            drop(file);
+            let _ = std::fs::remove_file(&target);
+            return Err(error);
+        }
+        let leftover = std::fs::remove_file(from).err();
+        return Ok(Moved {
+            path: target,
+            leftover,
+        });
+    }
+    Err(std::io::Error::new(AlreadyExists, "no free file name"))
+}
+
+/// Holds an exclusive lock on `path` (created when missing) until the file
+/// is dropped: serializes work between processes sharing a folder, such as
+/// the stable and Nightly apps.
+pub fn lock_exclusive(path: &Path) -> std::io::Result<std::fs::File> {
+    let file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(path)?;
+    file.lock()?;
+    Ok(file)
+}
+
 /// Creates `dir` when missing and proves a file can be written in it.
 pub fn ensure_writable(dir: &Path) -> std::io::Result<()> {
     std::fs::create_dir_all(dir)?;
@@ -154,5 +231,19 @@ mod tests {
         assert!(!write_new_atomic(&path, b"second", true).unwrap());
         assert_eq!(std::fs::read(&path).unwrap(), b"first");
         assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 1);
+    }
+
+    #[test]
+    fn a_capture_never_replaces_a_file_that_took_its_name() {
+        let dir = tempfile::tempdir().unwrap();
+        let name = |copy: u32| format!("shot {copy}.png");
+        std::fs::write(dir.path().join(name(1)), b"theirs").unwrap();
+        let source = dir.path().join(".capture-1.png");
+        std::fs::write(&source, b"mine").unwrap();
+        let moved = move_to_free_name(&source, dir.path(), name).unwrap();
+        assert_eq!(moved.path, dir.path().join(name(2)));
+        assert!(moved.leftover.is_none() && !source.exists());
+        assert_eq!(std::fs::read(dir.path().join(name(1))).unwrap(), b"theirs");
+        assert_eq!(std::fs::read(&moved.path).unwrap(), b"mine");
     }
 }

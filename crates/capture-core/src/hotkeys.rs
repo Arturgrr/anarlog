@@ -70,6 +70,16 @@ fn default_entry(id: u32, enabled: bool) -> Value {
     Value::Dictionary(entry)
 }
 
+/// Flips `enabled`, keeping its plist type: an integer 0/1 stays an
+/// integer, anything else becomes a boolean.
+fn set_enabled(entry: &mut Dictionary, on: bool) {
+    let value = match entry.get("enabled") {
+        Some(Value::Integer(_)) => Value::Integer(i64::from(on).into()),
+        _ => Value::Boolean(on),
+    };
+    entry.insert("enabled".into(), value);
+}
+
 pub fn from_xml(bytes: &[u8]) -> Result<Value, Error> {
     Ok(Value::from_reader(std::io::Cursor::new(bytes))?)
 }
@@ -141,9 +151,7 @@ pub fn disable(doc: &Value) -> Result<Value, Error> {
     for id in IDS {
         let key = id.to_string();
         match keys.get_mut(&key) {
-            Some(Value::Dictionary(entry)) => {
-                entry.insert("enabled".into(), Value::Boolean(false));
-            }
+            Some(Value::Dictionary(entry)) => set_enabled(entry, false),
             _ => {
                 keys.insert(key, default_entry(id, false));
             }
@@ -238,9 +246,7 @@ pub fn enable(doc: &Value) -> Result<Value, Error> {
             .and_then(Value::as_array)
             .is_some_and(|parameters| parameters.len() == 3);
         match existing {
-            Value::Dictionary(entry) if has_parameters => {
-                entry.insert("enabled".into(), Value::Boolean(true));
-            }
+            Value::Dictionary(entry) if has_parameters => set_enabled(entry, true),
             _ => *existing = default_entry(id, true),
         }
     }
@@ -331,6 +337,15 @@ mod tests {
                 .unwrap()["parameters"]
         );
         assert!(!is_on(entry(off, "29")));
+        // 184 said `enabled` with an integer; it still does.
+        assert_eq!(
+            entry(off, "184")
+                .unwrap()
+                .as_dictionary()
+                .unwrap()
+                .get("enabled"),
+            Some(&Value::Integer(0.into()))
+        );
         // It survives the trip through `defaults import`'s XML.
         assert_eq!(&from_xml(&to_xml(off).unwrap()).unwrap(), off);
     }

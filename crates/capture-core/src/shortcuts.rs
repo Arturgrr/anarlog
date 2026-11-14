@@ -6,11 +6,11 @@
 //! [`Domain`], which the plugin implements on macOS.
 
 use std::path::Path;
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 
 use plist::Value;
 
-use crate::fs::write_new_atomic;
+use crate::fs::{lock_exclusive, write_new_atomic};
 use crate::hotkeys::{self, Error, Status, from_xml, to_xml};
 
 /// The `com.apple.symbolichotkeys` preferences.
@@ -29,6 +29,7 @@ pub struct Shortcuts {
 }
 
 static LOCK: Mutex<()> = Mutex::new(());
+const LOCK_FILE: &str = "system-shortcuts.lock";
 
 enum Backup {
     Missing,
@@ -78,8 +79,19 @@ fn read_unlocked(domain: &dyn Domain, backup_path: &Path) -> Result<Shortcuts, E
     })
 }
 
+/// Both locks: this process's, then the file lock another app sharing the
+/// folder honours too.
+fn lock(backup_path: &Path) -> Result<(MutexGuard<'static, ()>, std::fs::File), Error> {
+    let guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(dir) = backup_path.parent() {
+        crate::fs::ensure_private_dir(dir)?;
+    }
+    let file = lock_exclusive(&backup_path.with_file_name(LOCK_FILE))?;
+    Ok((guard, file))
+}
+
 pub fn read(domain: &dyn Domain, backup_path: &Path) -> Result<Shortcuts, Error> {
-    let _lock = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let _lock = lock(backup_path)?;
     read_unlocked(domain, backup_path)
 }
 
@@ -87,18 +99,25 @@ pub fn read(domain: &dyn Domain, backup_path: &Path) -> Result<Shortcuts, Error>
 /// off and reports what is on afterwards. With an unreadable backup, what is
 /// remembered is "all on", so restoring turns them back on.
 pub fn replace(domain: &dyn Domain, backup_path: &Path) -> Result<Shortcuts, Error> {
-    let _lock = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let _lock = lock(backup_path)?;
     let doc = domain.export()?;
     let backup = match load_backup(backup_path)? {
         Backup::Usable(_) => None,
         Backup::Missing => Some(hotkeys::backup(&doc)?),
         Backup::SetAside => Some(hotkeys::backup(&hotkeys::enable(&doc)?)?),
     };
-    if let Some(backup) = backup {
-        // Another app may have written one meanwhile: theirs stays.
-        write_new_atomic(backup_path, &to_xml(&backup)?, true)?;
+    let created = match backup {
+        Some(backup) => write_new_atomic(backup_path, &to_xml(&backup)?, true)?,
+        None => false,
+    };
+    let imported = hotkeys::disable(&doc).and_then(|off| domain.import(&off));
+    if let Err(error) = imported {
+        // Nothing was turned off: a backup this call made would say otherwise.
+        if created {
+            let _ = std::fs::remove_file(backup_path);
+        }
+        return Err(error);
     }
-    domain.import(&hotkeys::disable(&doc)?)?;
     domain.activate();
     read_unlocked(domain, backup_path)
 }
@@ -106,13 +125,18 @@ pub fn replace(domain: &dyn Domain, backup_path: &Path) -> Result<Shortcuts, Err
 /// Puts the five shortcuts back as remembered and forgets the backup.
 /// Without a usable backup, any of them that is off is turned back on.
 pub fn restore(domain: &dyn Domain, backup_path: &Path) -> Result<Shortcuts, Error> {
-    let _lock = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let _lock = lock(backup_path)?;
     let doc = domain.export()?;
     match load_backup(backup_path)? {
         Backup::Usable(backup) => {
             domain.import(&hotkeys::restore(&doc, &backup)?)?;
             domain.activate();
-            std::fs::remove_file(backup_path)?;
+            match std::fs::remove_file(backup_path) {
+                Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
+                    return Err(error.into());
+                }
+                _ => {}
+            }
         }
         Backup::Missing | Backup::SetAside => {
             if !hotkeys::all_on(&doc) {
@@ -215,5 +239,32 @@ mod tests {
             .filter(|entry| entry.file_name().to_string_lossy().contains(".corrupt-"))
             .count();
         assert_eq!(aside, 2);
+    }
+
+    #[test]
+    fn a_failed_import_takes_back_the_backup_it_made() {
+        struct Refusing(Value);
+        impl Domain for Refusing {
+            fn export(&self) -> Result<Value, Error> {
+                Ok(self.0.clone())
+            }
+            fn import(&self, _: &Value) -> Result<(), Error> {
+                Err(Error::Command("defaults failed".into()))
+            }
+            fn activate(&self) {}
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let backup = dir.path().join("backup.plist");
+        assert!(replace(&Refusing(original()), &backup).is_err());
+        assert!(!backup.exists());
+
+        // One that was there before stays.
+        std::fs::write(
+            &backup,
+            to_xml(&hotkeys::backup(&original()).unwrap()).unwrap(),
+        )
+        .unwrap();
+        assert!(replace(&Refusing(original()), &backup).is_err());
+        assert!(backup.exists());
     }
 }
