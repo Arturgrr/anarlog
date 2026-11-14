@@ -9,6 +9,7 @@ import { SpeakerHigh, SpeakerX } from "@anlg/ui/components/icons";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 import { cn } from "@anlg/utils";
 
+import { CaptureStep, useSkipCapture } from "./capture";
 import {
   getInitialStep,
   getNextStep,
@@ -121,6 +122,7 @@ function OnboardingScreenContent({
     () => goTo(getPrevStep(currentStep)),
     [currentStep, goTo],
   );
+  const skipCapture = useSkipCapture(goNext);
 
   useMountEffect(() => {
     sfxCommands.play("BGM").catch(console.error);
@@ -277,6 +279,26 @@ function OnboardingScreenContent({
             onEdit={() => goTo("intelligence")}
           >
             <IntelligenceStep onBack={goBack} onContinue={goNext} />
+          </OnboardingSection>
+
+          <OnboardingSection
+            eyebrow={<Trans>Optional</Trans>}
+            title={<Trans>Screenshots and recordings</Trans>}
+            completedTitle={<Trans>Screenshots and recordings</Trans>}
+            description={
+              <Trans>
+                Capture an area, a window or the whole screen, record it as a
+                movie or a GIF, and mark it up, with shortcuts that work in any
+                app. Everything stays on this Mac.
+              </Trans>
+            }
+            status={getStepStatus("capture", currentStep)}
+            onBack={goBack}
+            onNext={goNext}
+            onSkip={skipCapture}
+            onEdit={() => goTo("capture")}
+          >
+            <CaptureStep onContinue={goNext} />
           </OnboardingSection>
 
           {currentStep === "final" ? (

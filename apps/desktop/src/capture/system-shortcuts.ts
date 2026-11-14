@@ -6,6 +6,8 @@ import {
 } from "@anlg/plugin-capture";
 import { commands as opener } from "@anlg/plugin-opener2";
 
+import { captureAvailable } from "./system";
+
 import { getStoredSettingValues, setSettingValues } from "~/settings/queries";
 import { SETTING_DEFINITIONS, type SettingValues } from "~/settings/schema";
 import { resolveConfigValues, useConfigValue } from "~/shared/config";
@@ -155,6 +157,7 @@ export function useSystemShortcuts() {
   const status = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => unwrap(await capture.systemShortcuts()),
+    enabled: captureAvailable(),
     refetchOnWindowFocus: true,
   });
   const onStatus = (next: SystemShortcuts) =>

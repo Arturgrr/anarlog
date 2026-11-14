@@ -2,16 +2,20 @@ import { platform } from "@tauri-apps/plugin-os";
 
 import type { SectionStatus } from "./shared";
 
+import { isAppStoreBuild } from "~/shared/app-store";
+
 export type OnboardingStep =
   | "permissions"
   | "transcription"
   | "intelligence"
+  | "capture"
   | "final";
 
 const STEPS_MACOS: OnboardingStep[] = [
   "permissions",
   "transcription",
   "intelligence",
+  "capture",
   "final",
 ];
 const STEPS_OTHER: OnboardingStep[] = [
@@ -23,7 +27,11 @@ const STEPS_OTHER: OnboardingStep[] = [
 const SAVED_STEP_KEY = "librelog.onboarding-step";
 
 export function getOnboardingSteps(): OnboardingStep[] {
-  return platform() === "macos" ? STEPS_MACOS : STEPS_OTHER;
+  if (platform() !== "macos") return STEPS_OTHER;
+  // Capture is not in the App Store build.
+  return isAppStoreBuild()
+    ? STEPS_MACOS.filter((step) => step !== "capture")
+    : STEPS_MACOS;
 }
 
 export function getInitialStep(): OnboardingStep {
