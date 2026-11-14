@@ -45,6 +45,8 @@ export type AnnotateDeps = {
     needsRestart: () => void;
     microphoneDenied: () => void;
     transcriptionFailed: (error: unknown) => void;
+    /** The narration waits for another recording's local transcription. */
+    transcriptionWaiting: () => void;
     nothingToPaste: () => void;
     error: (error: unknown) => void;
   };
@@ -58,6 +60,16 @@ const NOT_RECORDING = "No annotation is recording.";
 const CANCELLED = "The annotation was cancelled.";
 /** Batch transcription's answer for audio without speech. */
 export const NO_SPEECH = "No speech was detected in the audio.";
+/**
+ * The local model server's answer once it has kept the narration waiting
+ * for another recording's transcription, such as a meeting's that just
+ * stopped.
+ */
+export const TRANSCRIPTION_BUSY =
+  "Local transcription is busy with another recording. Try again when it finishes.";
+/** Each try already waits about 30 s at the server: a few minutes in all. */
+export const BUSY_RETRY_MS = 15_000;
+const BUSY_RETRIES = 6;
 
 function messageOf(error: unknown) {
   return error instanceof Error ? error.message : String(error);
@@ -70,6 +82,19 @@ function messageOf(error: unknown) {
  */
 export function shellEscapePath(path: string) {
   return path.replace(/[\s!"#$&'()*,;<=>?[\\\]^`{|}~]/gu, "\\$&");
+}
+
+/**
+ * The microphone a narration records: the one a meeting is recording, so
+ * both hear the same voice even when the meeting fell back to another input
+ * or replaced a Bluetooth default with a wired one; otherwise the chosen one.
+ */
+export async function narrationMicrophone(
+  meeting: () => Promise<string | null>,
+  chosen: string | null,
+) {
+  const recording = await meeting().catch(() => null);
+  return recording ?? chosen;
 }
 
 /**
@@ -141,14 +166,20 @@ export function createAnnotateFlow(deps: AnnotateDeps) {
   async function transcribe(stopped: Stopped) {
     if (heard?.id === stopped.id) return heard.transcript;
     let transcript: TranscriptInput | null = null;
-    if (stopped.audioPath) {
+    for (let busy = 0; stopped.audioPath; busy++) {
       try {
         transcript = await deps.transcribe(stopped.audioPath);
+        break;
       } catch (error) {
-        // The bundle is still worth having: frames and ink, without words.
-        if (messageOf(error) !== NO_SPEECH) {
-          deps.notify.transcriptionFailed(error);
+        const message = messageOf(error);
+        if (message.includes(TRANSCRIPTION_BUSY) && busy < BUSY_RETRIES) {
+          if (busy === 0) deps.notify.transcriptionWaiting();
+          await deps.sleep(BUSY_RETRY_MS);
+          continue;
         }
+        // The bundle is still worth having: frames and ink, without words.
+        if (message !== NO_SPEECH) deps.notify.transcriptionFailed(error);
+        break;
       }
     }
     heard = { id: stopped.id, transcript };
