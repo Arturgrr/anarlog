@@ -19,7 +19,8 @@ export function CaptureEditor(props: {
   scale: number;
   onCopy: (png: Blob) => Promise<void>;
   onSave: (png: Blob) => Promise<void>;
-  onSaveAs: (png: Blob) => Promise<void>;
+  /** Resolves false when the user cancelled choosing where. */
+  onSaveAs: (png: Blob) => Promise<void | false>;
   onClose: () => void;
 }) {
   const [client] = useState(() => new QueryClient());
@@ -55,7 +56,8 @@ const floating = cn([
 function Status({ editor }: { editor: Editor }) {
   const { t } = useLingui();
   const { action } = editor;
-  const message = action.isSuccess
+  // A Save As cancelled in its dialog succeeds with nothing to report.
+  const message = action.data
     ? action.variables === "copy"
       ? t`Copied`
       : t`Saved`

@@ -126,7 +126,8 @@ export function useEditor({
   scale: number;
   onCopy: (png: Blob) => Promise<void>;
   onSave: (png: Blob) => Promise<void>;
-  onSaveAs: (png: Blob) => Promise<void>;
+  /** Resolves false when the user cancelled choosing where. */
+  onSaveAs: (png: Blob) => Promise<void | false>;
   onClose: () => void;
 }) {
   const [history, setHistoryState] = useState<History<Doc>>(() => {
@@ -257,11 +258,11 @@ export function useEditor({
   const action = useMutation({
     mutationFn: async (kind: ActionKind) => {
       const current = historyRef.current.present;
-      await callbacks[kind](await flatten(current, image));
-      return current;
+      const done = await callbacks[kind](await flatten(current, image));
+      return done === false ? null : current;
     },
     onSuccess: (exported) => {
-      savedRef.current = exported;
+      if (exported) savedRef.current = exported;
     },
   });
   const { reset: resetAction, status: actionStatus } = action;
