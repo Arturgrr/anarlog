@@ -85,6 +85,13 @@ export function localizeExternalMessage(message: string): string {
       return t`Choose a folder and a file name to save to.`;
     case "Replacing the macOS screenshot shortcuts is only available on macOS.":
       return t`Replacing the macOS screenshot shortcuts is only available on macOS.`;
+    case "That file is a recording in your captures. Choose another name.":
+      return t`That file is a recording in your captures. Choose another name.`;
+    case "The Downloads folder could not be found.":
+      return t`The Downloads folder could not be found.`;
+    case "The macOS shortcut settings are not a dictionary.":
+    case "The saved macOS shortcut settings cannot be read.":
+      return t`The macOS shortcut settings could not be read.`;
     case "This shortcut is already used by Screenshots. Choose another one.":
       return t`This shortcut is already used by Screenshots. Choose another one.`;
     case "An annotation is already starting.":
@@ -116,6 +123,9 @@ export function localizeExternalMessage(message: string): string {
   const detail = (prefix: string) =>
     text.startsWith(prefix) ? text.slice(prefix.length) : null;
 
+  const captureMessage = localizeCaptureMessage(text);
+  if (captureMessage !== null) return captureMessage;
+
   let rest = detail("microphone capture failed: ");
   if (rest !== null) return t`Microphone capture failed: ${rest}`;
   rest = detail("voice recording failed: ");
@@ -139,8 +149,18 @@ export function localizeExternalMessage(message: string): string {
   rest = detail("The edited picture is not a usable PNG: ");
   if (rest !== null) return t`The edited picture is not a usable PNG: ${rest}`;
   rest = detail("Could not change the macOS screenshot shortcuts: ");
+  if (rest !== null) {
+    const reason = localizeExternalMessage(rest);
+    return t`Could not change the macOS screenshot shortcuts: ${reason}`;
+  }
+  rest = detail("Could not read the macOS shortcut settings: ");
   if (rest !== null)
-    return t`Could not change the macOS screenshot shortcuts: ${rest}`;
+    return t`Could not read the macOS shortcut settings: ${rest}`;
+  rest = detail("Could not keep the macOS shortcut settings: ");
+  if (rest !== null)
+    return t`Could not keep the macOS shortcut settings: ${rest}`;
+  rest = detail("The folder must be an absolute path: ");
+  if (rest !== null) return t`The folder must be an absolute path: ${rest}`;
   for (const [name, label] of [
     ["capture area", t`Capture area`],
     ["capture full screen", t`Capture full screen`],
@@ -160,6 +180,46 @@ export function localizeExternalMessage(message: string): string {
     return t`Could not show the dictation indicator. Please try again.`;
 
   return message;
+}
+
+// Capture's messages that carry paths and a reason in the middle of a sentence.
+function localizeCaptureMessage(text: string): string | null {
+  let match =
+    /^The recording could not be finished \((.*)\)\. What was recorded is kept at (.*), and Librelog adds it to your captures later\.$/su.exec(
+      text,
+    );
+  if (match) {
+    const [, reason, path] = match;
+    return t`The recording could not be finished (${reason}). What was recorded is kept at ${path}, and Librelog adds it to your captures later.`;
+  }
+  match =
+    /^Could not save the capture in (.*?): (.*)\. It was kept at (.*)\.$/su.exec(
+      text,
+    );
+  if (match) {
+    const [, dir, reason, path] = match;
+    return t`Could not save the capture in ${dir}: ${reason}. It was kept at ${path}.`;
+  }
+  match =
+    /^Could not make the GIF, so the recording was kept as a movie at (.*?): (.*)$/su.exec(
+      text,
+    );
+  if (match) {
+    const [, path, reason] = match;
+    return t`Could not make the GIF, so the recording was kept as a movie at ${path}: ${reason}`;
+  }
+  match = /^Librelog cannot save captures in (.*?): (.*)$/su.exec(text);
+  if (match) {
+    const [, dir, reason] = match;
+    return t`Librelog cannot save captures in ${dir}: ${reason}`;
+  }
+  match = /^The capture was kept at (.*?), but (.*)$/su.exec(text);
+  if (match) {
+    const [, path, reason] = match;
+    const problem = localizeExternalMessage(reason);
+    return t`The capture was kept at ${path}, but ${problem}`;
+  }
+  return null;
 }
 
 // The native transcript renderer labels unnamed voices in English.

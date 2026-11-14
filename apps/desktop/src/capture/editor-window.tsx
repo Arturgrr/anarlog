@@ -93,7 +93,7 @@ export function CaptureEditorWindow({ id }: { id: string }) {
     <div className="h-screen w-screen">
       <CaptureEditor
         image={image}
-        scale={entry.scale}
+        scale={entry.scale || 1}
         onCopy={async (png) => {
           await writeImage(new Uint8Array(await png.arrayBuffer()));
         }}
