@@ -157,9 +157,8 @@ enum CaptureMedia {
     } catch {
       return .failure(AnnotateFailure(.extract, "could not read the movie: \(error)"))
     }
-    let settings: [String: Any] = [
-      kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-    ]
+    let format = kCVPixelBufferPixelFormatTypeKey as String
+    let settings: [String: Any] = [format: kCVPixelFormatType_32BGRA]
     let output = AVAssetReaderTrackOutput(track: movie.track, outputSettings: settings)
     output.alwaysCopiesSampleData = false
     guard reader.canAdd(output) else {
@@ -197,37 +196,52 @@ enum CaptureMedia {
 
     var previous: CaptureGifFrame?
     var firstTime: Double?
-    while written < plan.frames {
+    var failure: String?
+    while written < plan.frames, failure == nil {
       guard let buffer = output.copyNextSampleBuffer() else { break }
-      let stamp = CMSampleBufferGetPresentationTimeStamp(buffer)
-      guard stamp.isValid, stamp.seconds.isFinite, CMSampleBufferGetImageBuffer(buffer) != nil
-      else {
-        continue
+      // Each frame's decoded and scaled pictures go before the next one.
+      failure = autoreleasepool { () -> String? in
+        let stamp = CMSampleBufferGetPresentationTimeStamp(buffer)
+        guard stamp.isValid, stamp.seconds.isFinite, CMSampleBufferGetImageBuffer(buffer) != nil
+        else {
+          return nil
+        }
+        let start = firstTime ?? stamp.seconds
+        firstTime = start
+        let current = CaptureGifFrame(time: stamp.seconds - start, buffer: buffer)
+        while written < plan.frames, plan.times[written] <= current.time {
+          let at = plan.times[written]
+          // The nearer of the frame before the sample time and this one.
+          let usePrevious = previous.map { at - $0.time < current.time - at } ?? false
+          let chosen = usePrevious ? previous : current
+          guard let image = chosen?.image(plan.width, plan.height) else {
+            return "could not convert the movie's frame at \(at) s"
+          }
+          add(image)
+        }
+        previous = current
+        return nil
       }
-      let start = firstTime ?? stamp.seconds
-      firstTime = start
-      let current = CaptureGifFrame(time: stamp.seconds - start, buffer: buffer)
-      while written < plan.frames, plan.times[written] <= current.time {
-        let at = plan.times[written]
-        // The nearer of the frame before the sample time and this one.
-        let usePrevious = previous.map { at - $0.time < current.time - at } ?? false
-        let chosen = usePrevious ? previous : current
-        guard let image = chosen?.image(plan.width, plan.height) else { break }
-        add(image)
+    }
+    if failure == nil, reader.status == .failed {
+      let detail = reader.error.map { "\($0)" } ?? "no reason given"
+      failure = "the movie could not be read: \(detail)"
+    }
+    // Sample times past the last frame (the reader finished) show the last
+    // frame.
+    if failure == nil, written < plan.frames {
+      if let image = previous?.image(plan.width, plan.height) {
+        while written < plan.frames { add(image) }
+      } else {
+        failure = "the movie has no frames"
       }
-      previous = current
     }
-    // Sample times past the last frame show the last frame.
-    if let last = previous, written < plan.frames, let image = last.image(plan.width, plan.height)
-    {
-      while written < plan.frames { add(image) }
-    }
-    guard written == plan.frames else {
-      let detail = reader.error.map { "\($0)" } ?? "the movie ended early"
-      return .failure(
-        AnnotateFailure(.extract, "wrote \(written) of \(plan.frames) frames: \(detail)"))
+    if let failure {
+      try? FileManager.default.removeItem(at: out)
+      return .failure(AnnotateFailure(.extract, failure))
     }
     guard CGImageDestinationFinalize(destination) else {
+      try? FileManager.default.removeItem(at: out)
       return .failure(AnnotateFailure(.io, "could not finish \(out.path)"))
     }
     return .success(
@@ -276,7 +290,7 @@ enum CaptureMedia {
       guard let data = pngData(url) else {
         return .failure(AnnotateFailure(.io, "could not read \(url.path) as a picture"))
       }
-      payload = (data, .png)
+      payload = (data, NSPasteboard.PasteboardType.png)
     case .gif:
       guard let data = try? Data(contentsOf: url) else {
         return .failure(AnnotateFailure(.io, "could not read \(url.path)"))

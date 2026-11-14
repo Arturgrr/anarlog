@@ -70,11 +70,20 @@ final class CaptureSelectorView: NSView {
 
   override func mouseMoved(with event: NSEvent) {
     NSCursor.crosshair.set()
+    takeKeys()
     onMove?(convert(event.locationInWindow, from: nil))
   }
 
   override func mouseDown(with event: NSEvent) {
+    takeKeys()
     onMouse?(.down, convert(event.locationInWindow, from: nil))
+  }
+
+  /// Takes the keyboard back after the user switched apps, so Escape,
+  /// Space and Return keep arriving. Activates nothing.
+  private func takeKeys() {
+    guard let window, !window.isKeyWindow else { return }
+    window.makeKey()
   }
 
   override func mouseDragged(with event: NSEvent) {
@@ -251,12 +260,10 @@ final class CaptureSelectorController {
     front?.panel.makeKey()
     // The panels hear keys while one of them is key; Escape also reaches
     // a global monitor while the app may monitor keys (Accessibility).
-    if let monitor = NSEvent.addGlobalMonitorForEvents(
-      matching: .keyDown,
-      handler: { [weak self] event in
-        if event.keyCode == CaptureKeys.escape { self?.finish(.cancelled) }
-      })
-    {
+    let onEscape: (NSEvent) -> Void = { [weak self] event in
+      if event.keyCode == CaptureKeys.escape { self?.finish(.cancelled) }
+    }
+    if let monitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: onEscape) {
       monitors.append(monitor)
     }
     let local = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -368,7 +375,7 @@ final class CaptureCountdown {
 
   /// `completion` gets true when the count ran out, false when cancelled.
   init(screen: AnnotateScreen, seconds: Int, completion: @escaping (Bool) -> Void) {
-    let size = Self.size
+    let size = CaptureCountdown.size
     let frame = CGRect(
       x: (screen.frame.midX - size.width / 2).rounded(),
       y: (screen.frame.midY - size.height / 2).rounded(), width: size.width,
@@ -386,12 +393,10 @@ final class CaptureCountdown {
     panel.onKey = { [weak self] key in
       if key == CaptureKeys.escape { self?.finish(false) }
     }
-    if let monitor = NSEvent.addGlobalMonitorForEvents(
-      matching: .keyDown,
-      handler: { [weak self] event in
-        if event.keyCode == CaptureKeys.escape { self?.finish(false) }
-      })
-    {
+    let onEscape: (NSEvent) -> Void = { [weak self] event in
+      if event.keyCode == CaptureKeys.escape { self?.finish(false) }
+    }
+    if let monitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: onEscape) {
       monitors.append(monitor)
     }
     let local = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in

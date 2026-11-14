@@ -35,6 +35,8 @@ struct AnnotateRecordingPlan {
   var samplesCandidates = true
   /// Other apps' sound, without this app's own.
   var systemAudio = false
+  /// The default microphone, as its own track.
+  var microphone = false
 
   var movieURL: URL { outputURL ?? dir.appendingPathComponent(AnnotateFiles.video) }
 }
@@ -103,6 +105,7 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
     if let sourceRect = plan.sourceRect { configuration.sourceRect = sourceRect }
     configuration.capturesAudio = plan.systemAudio
     if plan.systemAudio { configuration.excludesCurrentProcessAudio = true }
+    configuration.captureMicrophone = plan.microphone
     let stream = SCStream(filter: plan.filter, configuration: configuration, delegate: self)
     do {
       try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: frameQueue)
@@ -110,6 +113,9 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
       // for it logs each buffer it drops.
       if plan.systemAudio {
         try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: frameQueue)
+      }
+      if plan.microphone {
+        try stream.addStreamOutput(self, type: .microphone, sampleHandlerQueue: frameQueue)
       }
     } catch {
       return AnnotateFailure(.stream, "could not add the frame handler: \(error)")
@@ -241,6 +247,7 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
   private func removeOutputs(_ stream: SCStream) {
     try? stream.removeStreamOutput(self, type: .screen)
     if plan?.systemAudio == true { try? stream.removeStreamOutput(self, type: .audio) }
+    if plan?.microphone == true { try? stream.removeStreamOutput(self, type: .microphone) }
   }
 
   static func failure(_ error: Error?, _ what: String) -> AnnotateFailure {

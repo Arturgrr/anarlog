@@ -22,7 +22,7 @@ private struct CaptureBegin {
   var screens: [AnnotateScreen]
   var pointer: AnnotateScreen
   var front: AnnotateFrontApp
-  /// Front to back, other apps' only.
+  /// Front to back, at the normal level.
   var windows: [CaptureWindow]
 }
 
@@ -119,6 +119,8 @@ final class CaptureSession {
   private var countdown: CaptureCountdown?
   private var recording: CaptureRecording?
   private var timer: Timer?
+  /// The stream failed after it started but before the recording began.
+  private var failedEarly = false
 
   // MARK: Any thread
 
@@ -186,10 +188,10 @@ final class CaptureSession {
     } else {
       let shown = begin.screens.filter { images[$0.id] != nil }
       let mode: CaptureSelectMode = request.mode == .window ? .window : .area
-      switch select(
+      let selected = select(
         .screenshot, mode: mode, screens: shown, images: images, windows: begin.windows,
         hints: request.hints)
-      {
+      switch selected {
       case .failure(let failure):
         return .failure(failure)
       case .success(let selection):
@@ -207,9 +209,9 @@ final class CaptureSession {
 
   /// Every display in `screens` at its own pixels, this app's chrome left
   /// out. Waits up to `CaptureTimeouts.screenshot`.
-  private func freeze(_ screens: [AnnotateScreen], _ content: SCShareableContent, cursor: Bool)
-    -> Result<[UInt32: CGImage], AnnotateFailure>
-  {
+  private func freeze(
+    _ screens: [AnnotateScreen], _ content: SCShareableContent, cursor: Bool
+  ) -> Result<[UInt32: CGImage], AnnotateFailure> {
     let images = AnnotateLocked<[UInt32: CGImage]>([:])
     let errors = AnnotateLocked<[Error]>([])
     let group = DispatchGroup()
@@ -321,10 +323,10 @@ final class CaptureSession {
         kind: .fullscreen, window: nil)
     } else {
       let mode: CaptureSelectMode = request.mode == .window ? .window : .area
-      switch select(
+      let selected = select(
         .recording, mode: mode, screens: begin.screens, images: [:], windows: begin.windows,
         hints: request.hints)
-      {
+      switch selected {
       case .failure(let failure):
         return .failure(failure)
       case .success(let selection):
@@ -334,7 +336,12 @@ final class CaptureSession {
         target = chosen
       }
     }
-    guard annotateOnMain({ machine.selected() }) else { return .success(.cancelled) }
+    let counting = annotateOnMain { () -> Bool in
+      let next = machine.selected()
+      flush()
+      return next
+    }
+    guard counting else { return .success(.cancelled) }
     if request.countdown > 0 {
       guard runCountdown(request.countdown, on: target.screen) else { return .success(.cancelled) }
     }
@@ -371,8 +378,11 @@ final class CaptureSession {
     let filter = SCContentFilter(
       display: display, excludingWindows: Self.ownChrome(content, ids: ownWindows))
     var warnings: [String] = []
-    if request.microphone == true {
-      warnings.append("the microphone is not recorded: this build records only the screen's sound")
+    let systemAudio = request.systemAudio ?? false
+    let microphone = request.microphone ?? false
+    if systemAudio && microphone {
+      warnings.append(
+        "the movie has two audio tracks (system and microphone); some players play only the first")
     }
     let whole = target.region == CGRect(origin: .zero, size: screen.frame.size)
     let plan = AnnotateRecordingPlan(
@@ -380,10 +390,10 @@ final class CaptureSession {
       dir: url.deletingLastPathComponent(), anchorTicks: AnnotateHostClock.now(),
       outputURL: url, sourceRect: whole ? nil : target.region,
       frameRate: Int32(request.frameRate), showsCursor: request.cursor, samplesCandidates: false,
-      systemAudio: request.systemAudio ?? false)
+      systemAudio: systemAudio, microphone: microphone)
     let recorder = AnnotateRecorder()
     recorder.onFailure = { _ in
-      DispatchQueue.main.async { self.finishByItself(reason: "stream_error") }
+      DispatchQueue.main.async { self.streamFailed() }
     }
     wroteMovie = true
     if let failure = recorder.start(plan) { return .failure(failure) }
@@ -392,6 +402,13 @@ final class CaptureSession {
       current.recorder = recorder
       current.warnings = warnings
       startTicking(current)
+      flush()
+      if failedEarly {
+        // The host learns of it from `record_stopped`, as of any failure
+        // while recording.
+        failedEarly = false
+        finishByItself(reason: "stream_error")
+      }
       return true
     }
     guard began else {
@@ -557,9 +574,9 @@ final class CaptureSession {
     mailbox.update { mailbox in mailbox.events.removeAll { $0.type == .recordStopped } }
   }
 
-  private static func target(_ selection: CaptureSelection, screens: [AnnotateScreen])
-    -> CaptureTarget?
-  {
+  private static func target(
+    _ selection: CaptureSelection, screens: [AnnotateScreen]
+  ) -> CaptureTarget? {
     func find(_ id: UInt32) -> AnnotateScreen? { screens.first { $0.id == id } }
     switch selection {
     case .cancelled:
@@ -622,6 +639,7 @@ final class CaptureSession {
       flush()
       return .failure(AnnotateFailure(.noDisplay, "no display"))
     }
+    failedEarly = false
     let begin = CaptureBegin(
       screens: screens, pointer: pointer, front: AnnotateFront.read(),
       windows: CaptureWindowList.read())
@@ -682,6 +700,16 @@ final class CaptureSession {
     flush()
     return CaptureFinishing(
       recording: current, recorder: recorder, durationMs: durationMs, endedBy: endedBy)
+  }
+
+  /// The stream or its output stopped by itself: finish now while
+  /// recording, or as soon as the recording begins.
+  private func streamFailed() {
+    switch machine.phase {
+    case .recording: finishByItself(reason: "stream_error")
+    case .countdown: failedEarly = true
+    case .idle, .selecting, .finishing: break
+    }
   }
 
   /// The cap or a stream failure: finish on a worker; `record_stop`
@@ -762,16 +790,17 @@ enum CaptureWindowList {
   static let minSize = CGSize(width: 60, height: 40)
 
   /// Front to back: on screen, the normal level, at least 60 × 40 points.
-  /// Titles show only with Screen Recording.
+  /// This app's own normal windows count too; its panels, cards and
+  /// selector are never at the normal level. Titles show only with Screen
+  /// Recording.
   static func read() -> [CaptureWindow] {
     let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
     guard let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]]
     else {
       return []
     }
-    let own = ProcessInfo.processInfo.processIdentifier
     return list.compactMap { info -> CaptureWindow? in
-      guard let pid = (info[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value, pid != own,
+      guard let pid = (info[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value,
         (info[kCGWindowLayer as String] as? NSNumber)?.intValue == 0,
         let number = (info[kCGWindowNumber as String] as? NSNumber)?.uint32Value,
         let bounds = info[kCGWindowBounds as String] as? NSDictionary,

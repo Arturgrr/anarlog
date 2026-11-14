@@ -67,9 +67,12 @@ final class CaptureCardView: NSView, NSDraggingSource {
   var onClick: (() -> Void)?
   var onDragged: (() -> Void)?
   var onHover: ((Bool) -> Void)?
+  /// Every drag's end, whatever it dropped.
+  var onDragEnded: (() -> Void)?
+  /// A file drag from this card is under way.
+  private(set) var dragging = false
   private var buttons: [CaptureCardButton] = []
   private var pressedAt: NSPoint?
-  private var dragging = false
 
   override var isOpaque: Bool { false }
 
@@ -153,6 +156,7 @@ final class CaptureCardView: NSView, NSDraggingSource {
     dragging = false
     pressedAt = nil
     if !operation.isEmpty { onDragged?() }
+    onDragEnded?()
   }
 
   override func draw(_ dirtyRect: NSRect) {
@@ -216,6 +220,9 @@ final class CaptureCards {
     let view: CaptureCardView
     var timer = CaptureCardTimer()
     var hovered = false
+    /// Closed while its file was being dragged: it goes when the drag ends,
+    /// so the drag never reaches a released view.
+    var closeAfterDrag = false
 
     init(id: String, display: UInt32, area: CGRect, size: CGSize) {
       self.id = id
@@ -275,9 +282,14 @@ final class CaptureCards {
     card.view.onClick = { [weak self] in self?.act(id, click) }
     card.view.onDragged = { [weak self] in self?.act(id, .dragged) }
     card.view.onHover = { [weak card] inside in card?.hovered = inside }
+    card.view.onDragEnded = { [weak self, weak card] in
+      guard let self, let card, card.closeAfterDrag else { return }
+      self.remove(card)
+      self.layout(display: card.display)
+    }
     cards.append(card)
     let mine = cards.filter { $0.display == screen.id }
-    for old in mine.dropLast(CaptureCardLayout.perDisplay) { remove(old) }
+    for old in mine.dropLast(CaptureCardLayout.perDisplay) { close(old) }
     layout(display: screen.id)
     card.panel.orderFrontRegardless()
     startTimer()
@@ -285,12 +297,20 @@ final class CaptureCards {
 
   func close(id: String) {
     guard let card = cards.first(where: { $0.id == id }) else { return }
-    remove(card)
-    layout(display: card.display)
+    close(card)
   }
 
   func closeAll() {
-    for card in cards { remove(card) }
+    for card in cards { close(card) }
+  }
+
+  private func close(_ card: Card) {
+    if card.view.dragging {
+      card.closeAfterDrag = true
+      return
+    }
+    remove(card)
+    layout(display: card.display)
   }
 
   private func act(_ id: String, _ action: CaptureCardAction) {
@@ -303,6 +323,7 @@ final class CaptureCards {
     card.view.onClick = nil
     card.view.onDragged = nil
     card.view.onHover = nil
+    card.view.onDragEnded = nil
     card.view.setButtons([]) { _ in }
     card.panel.orderOut(nil)
     card.panel.close()
@@ -335,8 +356,12 @@ final class CaptureCards {
     let elapsed = now - lastTick
     lastTick = now
     var expired: [Card] = []
-    for card in cards {
-      if card.timer.tick(elapsed, hovered: card.hovered) { expired.append(card) }
+    // A card whose file is being dragged out waits, as one under the
+    // pointer does.
+    for card in cards where !card.closeAfterDrag {
+      if card.timer.tick(elapsed, hovered: card.hovered || card.view.dragging) {
+        expired.append(card)
+      }
     }
     for card in expired {
       remove(card)

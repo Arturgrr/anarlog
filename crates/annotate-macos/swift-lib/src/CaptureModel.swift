@@ -552,9 +552,9 @@ struct CaptureMachine {
 
   /// Idle to selecting; false when a capture is under way or Annotate
   /// isn't idle.
-  mutating func reserve(_ purpose: CapturePurpose, annotateIdle: Bool, maxDuration: Double = 1800)
-    -> Bool
-  {
+  mutating func reserve(
+    _ purpose: CapturePurpose, annotateIdle: Bool, maxDuration: Double = 1800
+  ) -> Bool {
     guard phase == .idle, annotateIdle else { return false }
     phase = .selecting
     self.purpose = purpose

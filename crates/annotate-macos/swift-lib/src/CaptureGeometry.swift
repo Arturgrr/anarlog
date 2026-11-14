@@ -35,9 +35,11 @@ enum CaptureGeometry {
   /// The smallest area the selector takes, points a side; a smaller drag is
   /// a click.
   static let minAreaSide: CGFloat = 36
-  /// H.264's largest frame the encoder takes: a 5K display's full screen
-  /// records at 4096 × 2304.
+  /// H.264's largest frame (level 5.2): at most 4096 pixels a side and
+  /// 4096 × 2304 pixels in all, so a 16:9 5K display records at 4096 × 2304
+  /// and a 16:10 one a little smaller.
   static let videoLongEdge = 4096
+  static let videoMaxArea = 4096 * 2304
 
   static func clamp(_ point: CGPoint, _ size: CGSize) -> CGPoint {
     CGPoint(x: min(max(point.x, 0), size.width), y: min(max(point.y, 0), size.height))
@@ -117,9 +119,9 @@ enum CaptureGeometry {
   /// The pixels of a frozen display image under `region` (display points
   /// from its top-left corner): rounded outward to whole pixels, cut to the
   /// image. Nil when nothing is left.
-  static func cropRect(_ region: CGRect, display size: CGSize, imageWidth: Int, imageHeight: Int)
-    -> CGRect?
-  {
+  static func cropRect(
+    _ region: CGRect, display size: CGSize, imageWidth: Int, imageHeight: Int
+  ) -> CGRect? {
     guard size.width > 0, size.height > 0, imageWidth > 0, imageHeight > 0 else { return nil }
     let (width, height) = (CGFloat(imageWidth), CGFloat(imageHeight))
     let (sx, sy) = (width / size.width, height / size.height)
@@ -134,19 +136,26 @@ enum CaptureGeometry {
   }
 
   /// The movie's size for a region: its points × `scale`, never above the
-  /// display's own pixels nor `longEdge`, both sides even. Nil for an
-  /// empty region.
+  /// display's own pixels, `longEdge` a side nor `maxArea` in all, the
+  /// aspect kept and both sides even. Nil for an empty region.
   static func recordingSize(
     _ region: CGSize, scale: CGFloat, nativeWidth: Int, nativeHeight: Int,
-    longEdge: Int = CaptureGeometry.videoLongEdge
+    longEdge: Int = CaptureGeometry.videoLongEdge, maxArea: Int = CaptureGeometry.videoMaxArea
   ) -> (width: Int, height: Int)? {
     let factor = scale.isFinite && scale > 0 ? Double(scale) : 1
     let width = min(Double(region.width) * factor, Double(max(nativeWidth, 2)))
     let height = min(Double(region.height) * factor, Double(max(nativeHeight, 2)))
     guard width.isFinite, height.isFinite, width > 0, height > 0 else { return nil }
-    let fit = min(1, Double(longEdge) / max(width, height))
+    var fit = min(1, Double(longEdge) / max(width, height))
+    var rule = FloatingPointRoundingRule.toNearestOrAwayFromZero
+    // The pixel past the area's edge allows for float noise in an exact fit.
+    if width * fit * height * fit > Double(maxArea) + 1 {
+      fit = (Double(maxArea) / (width * height)).squareRoot()
+      // Rounded down, so the area stays within the limit.
+      rule = .down
+    }
     func even(_ value: Double) -> Int {
-      let pixels = (value * fit).rounded()
+      let pixels = (value * fit).rounded(rule)
       guard pixels < Double(Int32.max) else { return 2 }
       return max(Int(pixels) & ~1, 2)
     }
@@ -239,8 +248,8 @@ enum CaptureCardLayout {
     }
     if actions.contains(.close) {
       let y = size.height - closeInset - closeButton
-      placed.append(
-        (.close, CGRect(x: closeInset, y: y, width: closeButton, height: closeButton)))
+      let rect = CGRect(x: closeInset, y: y, width: closeButton, height: closeButton)
+      placed.append((CaptureCardAction.close, rect))
     }
     return placed
   }
@@ -255,6 +264,11 @@ struct CaptureGifPlan: Equatable {
   static let minDelay = 0.02
   private static let minHundredths = 2.0
   static let maxFps = 50.0
+  /// ImageIO keeps every frame until the file is finished: the frames'
+  /// pixels together stay under this, but there are always at least
+  /// `minFrames`.
+  static let maxPixels = 150_000_000
+  static let minFrames = 10
 
   var fps: Double
   /// Seconds into the movie, one per frame.
@@ -267,16 +281,24 @@ struct CaptureGifPlan: Equatable {
 
   var frames: Int { times.count }
 
-  /// Frames at `fps`, lowered so there are at most `maxFrames`; the width
-  /// at most `maxWidth`, never scaled up. Nil for a movie with no length
-  /// or no picture.
+  /// Frames at `fps`, lowered so there are at most `maxFrames` (and at
+  /// most `maxPixels` of them in all); the width at most `maxWidth`, never
+  /// scaled up. Nil for a movie with no length or no picture.
   static func make(
     duration: Double, fps requested: Double, maxFrames: Int, width: Int, height: Int,
     maxWidth: Int
   ) -> CaptureGifPlan? {
     guard duration.isFinite, duration > 0, width > 0, height > 0 else { return nil }
+    let size: (width: Int, height: Int)
+    if width <= maxWidth || maxWidth <= 0 {
+      size = (width, height)
+    } else {
+      let scaled = (Double(height) * Double(maxWidth) / Double(width)).rounded()
+      size = (maxWidth, max(Int(scaled), 1))
+    }
     let wanted = requested.isFinite && requested > 0 ? min(requested, maxFps) : 15
-    let limit = max(maxFrames, 1)
+    let budget = max(maxPixels / max(size.width * size.height, 1), minFrames)
+    let limit = min(max(maxFrames, 1), budget)
     let needed = max(Int((duration * wanted - 1e-9).rounded(.up)), 1)
     let (fps, count) = needed <= limit ? (wanted, needed) : (Double(limit) / duration, limit)
     let times = (0..<count).map { Double($0) / fps }
@@ -285,13 +307,6 @@ struct CaptureGifPlan: Equatable {
     let ends = times.map { ($0 * 100).rounded() } + [(duration * 100).rounded()]
     let delays = (0..<count).map { index in
       max(ends[index + 1] - ends[index], minHundredths) / 100
-    }
-    let size: (width: Int, height: Int)
-    if width <= maxWidth || maxWidth <= 0 {
-      size = (width, height)
-    } else {
-      let scaled = (Double(height) * Double(maxWidth) / Double(width)).rounded()
-      size = (maxWidth, max(Int(scaled), 1))
     }
     return CaptureGifPlan(
       fps: fps, times: times, delays: delays, width: size.width, height: size.height)

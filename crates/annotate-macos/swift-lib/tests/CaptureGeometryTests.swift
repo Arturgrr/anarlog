@@ -93,7 +93,7 @@ final class CaptureGeometryTests: XCTestCase {
         imageHeight: 1964))
   }
 
-  func testTheMovieIsTheRegionsPixelsWithEvenSidesAndNeverAboveTheDisplay() {
+  func testTheMovieIsTheRegionsPixelsWithEvenSidesAndNeverAboveTheDisplay() throws {
     let retina = CaptureGeometry.recordingSize(
       CGSize(width: 400.5, height: 300), scale: 2, nativeWidth: 3024, nativeHeight: 1964)
     XCTAssertEqual(retina?.width, 800)
@@ -110,6 +110,13 @@ final class CaptureGeometryTests: XCTestCase {
       CGSize(width: 2560, height: 1440), scale: 2, nativeWidth: 5120, nativeHeight: 2880)
     XCTAssertEqual(fiveK?.width, 4096)
     XCTAssertEqual(fiveK?.height, 2304)
+    // 16:10 at 4096 wide is past H.264's frame area: smaller, rounded down.
+    let wide = try XCTUnwrap(
+      CaptureGeometry.recordingSize(
+        CGSize(width: 2560, height: 1600), scale: 2, nativeWidth: 5120, nativeHeight: 3200))
+    XCTAssertEqual(wide.width, 3884)
+    XCTAssertEqual(wide.height, 2428)
+    XCTAssertLessThanOrEqual(wide.width * wide.height, 4096 * 2304)
     let past = CaptureGeometry.recordingSize(
       CGSize(width: 2000, height: 100), scale: 2, nativeWidth: 3024, nativeHeight: 1964)
     XCTAssertEqual(past?.width, 3024)
@@ -207,13 +214,33 @@ final class CaptureGeometryTests: XCTestCase {
   func testALongMovieLowersTheFpsToFitTheFrameLimit() throws {
     let plan = try XCTUnwrap(
       CaptureGifPlan.make(
-        duration: 100, fps: 15, maxFrames: 900, width: 640, height: 480, maxWidth: 720))
-    XCTAssertEqual(plan.frames, 900)
-    XCTAssertEqual(plan.fps, 9, accuracy: 1e-12)
+        duration: 100, fps: 15, maxFrames: 400, width: 320, height: 240, maxWidth: 720))
+    XCTAssertEqual(plan.frames, 400)
+    XCTAssertEqual(plan.fps, 4, accuracy: 1e-12)
     XCTAssertLessThan(try XCTUnwrap(plan.times.last), 100)
     // Never scaled up.
-    XCTAssertEqual(plan.width, 640)
-    XCTAssertEqual(plan.height, 480)
+    XCTAssertEqual(plan.width, 320)
+    XCTAssertEqual(plan.height, 240)
+  }
+
+  func testLargeFramesLowerTheFrameLimitButNeverBelowTen() throws {
+    // 640 × 480: 150,000,000 / 307,200 pixels allows 488 frames, not 900.
+    let vga = try XCTUnwrap(
+      CaptureGifPlan.make(
+        duration: 100, fps: 15, maxFrames: 900, width: 640, height: 480, maxWidth: 720))
+    XCTAssertEqual(vga.frames, 488)
+    XCTAssertEqual(vga.fps, 4.88, accuracy: 1e-12)
+    // 4000 × 3000 allows 12.
+    let large = try XCTUnwrap(
+      CaptureGifPlan.make(
+        duration: 10, fps: 15, maxFrames: 900, width: 4000, height: 3000, maxWidth: 4000))
+    XCTAssertEqual(large.frames, 12)
+    XCTAssertEqual(large.fps, 1.2, accuracy: 1e-12)
+    // A frame past the whole budget still gets ten.
+    let huge = try XCTUnwrap(
+      CaptureGifPlan.make(
+        duration: 10, fps: 15, maxFrames: 900, width: 20000, height: 10000, maxWidth: 20000))
+    XCTAssertEqual(huge.frames, 10)
   }
 
   func testAShortMovieIsOneFrameAndNoDelayIsBelowTheFloor() throws {
