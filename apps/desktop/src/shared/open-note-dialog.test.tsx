@@ -16,6 +16,10 @@ vi.mock("~/annotate/system", () => ({
   annotateAvailable: () => false,
 }));
 
+vi.mock("~/capture/system", () => ({
+  captureAvailable: () => false,
+}));
+
 vi.mock("~/session/queries", () => ({
   useSessionSummaries: () => mocks.sessions,
 }));
