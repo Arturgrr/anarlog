@@ -99,8 +99,8 @@ enum CaptureGeometry {
       let gap = CaptureLook.pointerGap
       let (afterX, beforeX) = (px + gap, px - gap - bw)
       let (afterY, beforeY) = (py + gap, py - gap - bh)
-      let fitsX = { (x: CGFloat) in x >= margin && x + bw <= size.width - margin }
-      let fitsY = { (y: CGFloat) in y >= margin && y + bh <= size.height - margin }
+      let fitsX = { (left: CGFloat) in left >= margin && left + bw <= size.width - margin }
+      let fitsY = { (top: CGFloat) in top >= margin && top + bh <= size.height - margin }
       let (firstX, secondX) = px >= target.midX ? (afterX, beforeX) : (beforeX, afterX)
       let (firstY, secondY) = py >= target.midY ? (afterY, beforeY) : (beforeY, afterY)
       x = fitsX(firstX) ? firstX : secondX
@@ -138,7 +138,7 @@ enum CaptureGeometry {
   /// empty region.
   static func recordingSize(
     _ region: CGSize, scale: CGFloat, nativeWidth: Int, nativeHeight: Int,
-    longEdge: Int = videoLongEdge
+    longEdge: Int = CaptureGeometry.videoLongEdge
   ) -> (width: Int, height: Int)? {
     let factor = scale.isFinite && scale > 0 ? Double(scale) : 1
     let width = min(Double(region.width) * factor, Double(max(nativeWidth, 2)))
@@ -211,14 +211,14 @@ enum CaptureCardLayout {
   /// after it.
   static func slots(_ sizes: [CGSize], in area: CGRect) -> [CGRect] {
     var bottom = area.minY + inset
-    var slots: [CGRect] = []
+    var placed: [CGRect] = []
     for size in sizes.reversed() {
-      slots.append(
+      placed.append(
         CGRect(
           x: area.maxX - inset - size.width, y: bottom, width: size.width, height: size.height))
       bottom += size.height + gap
     }
-    return slots.reversed()
+    return placed.reversed()
   }
 
   /// The hover buttons on a card of `size` (its own points, y up): ✕ in the

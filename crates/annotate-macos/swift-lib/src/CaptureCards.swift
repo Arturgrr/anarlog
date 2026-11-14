@@ -259,12 +259,16 @@ final class CaptureCards {
     }
     let labels = (request.labels ?? CaptureLabels()).card
     let saved = request.saved ?? true
+    let saveSymbol = saved ? "folder" : "square.and.arrow.down"
+    let saveLabel = saved ? labels.show : labels.save
     var items: [(action: CaptureCardAction, symbol: String, label: String)] = [
-      (.copy, "doc.on.doc", labels.copy),
-      (.save, saved ? "folder" : "square.and.arrow.down", saved ? labels.show : labels.save),
+      (action: CaptureCardAction.copy, symbol: "doc.on.doc", label: labels.copy),
+      (action: CaptureCardAction.save, symbol: saveSymbol, label: saveLabel),
     ]
-    if request.kind == .screenshot { items.append((.edit, "pencil", labels.edit)) }
-    items.append((.close, "xmark", labels.close))
+    if request.kind == .screenshot {
+      items.append((action: CaptureCardAction.edit, symbol: "pencil", label: labels.edit))
+    }
+    items.append((action: CaptureCardAction.close, symbol: "xmark", label: labels.close))
     let id = request.id
     card.view.setButtons(items) { [weak self] action in self?.act(id, action) }
     let click: CaptureCardAction = request.kind == .screenshot ? .edit : .open
