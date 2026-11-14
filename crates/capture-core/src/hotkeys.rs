@@ -24,6 +24,11 @@ pub enum Error {
     BadBackup,
     #[error("Could not read the macOS shortcut settings: {0}")]
     Plist(#[from] plist::Error),
+    #[error("Could not keep the macOS shortcut settings: {0}")]
+    Io(#[from] std::io::Error),
+    /// `defaults` or `activateSettings` failed.
+    #[error("{0}")]
+    Command(String),
 }
 
 /// Which of macOS's screenshot shortcuts are on.
@@ -184,11 +189,6 @@ pub fn restore(doc: &Value, backup: &Value) -> Result<Value, Error> {
         .iter()
         .filter_map(Value::as_string)
         .collect();
-    let had_dictionary = saved
-        .get("had_dictionary")
-        .and_then(Value::as_boolean)
-        .unwrap_or(true);
-
     let mut doc = doc.clone();
     let root = doc.as_dictionary_mut().ok_or(Error::NotADictionary)?;
     if !matches!(root.get(DICTIONARY), Some(Value::Dictionary(_))) {
@@ -205,8 +205,44 @@ pub fn restore(doc: &Value, backup: &Value) -> Result<Value, Error> {
             keys.remove(&key);
         }
     }
-    if !had_dictionary && keys.is_empty() {
-        root.remove(DICTIONARY);
+    // An empty dictionary, never a removed key, where there was none: right
+    // whether `defaults import` replaces the domain or merges into it.
+    Ok(doc)
+}
+
+/// Whether all five shortcuts are on.
+pub fn all_on(doc: &Value) -> bool {
+    IDS.iter()
+        .all(|id| is_on(hotkeys(doc).and_then(|keys| keys.get(&id.to_string()))))
+}
+
+/// `doc` with the five shortcuts on: what restoring does without a usable
+/// backup. An entry keeps its keys, or gets the default ones when it has
+/// none; a missing entry is already on and stays missing.
+pub fn enable(doc: &Value) -> Result<Value, Error> {
+    let mut doc = doc.clone();
+    let root = doc.as_dictionary_mut().ok_or(Error::NotADictionary)?;
+    let Some(Value::Dictionary(keys)) = root.get_mut(DICTIONARY) else {
+        return Ok(doc);
+    };
+    for id in IDS {
+        let key = id.to_string();
+        let Some(existing) = keys.get_mut(&key) else {
+            continue;
+        };
+        let has_parameters = existing
+            .as_dictionary()
+            .and_then(|entry| entry.get("value"))
+            .and_then(Value::as_dictionary)
+            .and_then(|value| value.get("parameters"))
+            .and_then(Value::as_array)
+            .is_some_and(|parameters| parameters.len() == 3);
+        match existing {
+            Value::Dictionary(entry) if has_parameters => {
+                entry.insert("enabled".into(), Value::Boolean(true));
+            }
+            _ => *existing = default_entry(id, true),
+        }
     }
     Ok(doc)
 }
@@ -312,12 +348,45 @@ mod tests {
         assert_eq!(restored, doc);
         assert!(entry(&restored, "29").is_none());
 
-        // A domain that had no shortcuts dictionary at all comes back without one.
+        // A domain that had no shortcuts dictionary gets an empty one back.
         let mut bare = Dictionary::new();
         bare.insert("OtherSetting".into(), Value::String("kept".into()));
         let bare = Value::Dictionary(bare);
         let replaced = replace(&bare, None).unwrap();
         assert!(!status(&replaced.doc).area);
-        assert_eq!(restore(&replaced.doc, &replaced.backup).unwrap(), bare);
+        let restored = restore(&replaced.doc, &replaced.backup).unwrap();
+        let root = restored.as_dictionary().unwrap();
+        assert_eq!(
+            root.get("OtherSetting"),
+            bare.as_dictionary().unwrap().get("OtherSetting")
+        );
+        assert_eq!(
+            root.get(DICTIONARY),
+            Some(&Value::Dictionary(Dictionary::new()))
+        );
+        assert!(all_on(&restored));
+    }
+
+    #[test]
+    fn turning_them_back_on_without_a_backup_keeps_their_keys_and_the_rest() {
+        let mut doc = disable(&export()).unwrap();
+        // 31 lost its keys.
+        let Some(Value::Dictionary(keys)) = doc.as_dictionary_mut().unwrap().get_mut(DICTIONARY)
+        else {
+            unreachable!()
+        };
+        keys.insert("31".into(), Value::Dictionary(Dictionary::new()));
+        assert!(!all_on(&doc));
+        let on = enable(&doc).unwrap();
+        assert!(all_on(&on));
+        let parameters = |doc: &Value, id: &str| {
+            entry(doc, id).unwrap().as_dictionary().unwrap()["value"]
+                .as_dictionary()
+                .unwrap()["parameters"]
+                .clone()
+        };
+        assert_eq!(parameters(&on, "28"), parameters(&export(), "28"));
+        assert_eq!(entry(&on, "31"), Some(&default_entry(31, true)));
+        assert_eq!(entry(&on, "64"), entry(&export(), "64"));
     }
 }

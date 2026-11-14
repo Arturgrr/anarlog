@@ -9,6 +9,7 @@ pub mod hotkeys;
 pub mod index;
 pub mod layout;
 pub mod names;
+pub mod shortcuts;
 
 pub use index::{Entry, Index, Kind};
 pub use layout::Layout;

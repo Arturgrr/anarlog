@@ -11,6 +11,7 @@ mod events;
 mod export;
 mod library;
 mod native;
+mod process;
 mod session;
 mod system;
 mod types;
@@ -30,8 +31,9 @@ use tauri_specta::Event;
 use session::Session;
 
 const PLUGIN_NAME: &str = "capture";
-/// How long quitting waits for a selector or recording to be cancelled.
-const SHUTDOWN_WITHIN: Duration = Duration::from_secs(5);
+/// How long quitting waits to keep a recording (or cancel a selector):
+/// inside the app's 10 s wait for the frontend and its 12 s hard exit.
+const SHUTDOWN_WITHIN: Duration = Duration::from_secs(9);
 
 /// Closes the cards and cancels whatever selects or records, for an app
 /// that is quitting; returns at once when nothing does or Capture isn't

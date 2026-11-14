@@ -31,5 +31,11 @@ tauri = { workspace = true, features = ["test"] }
 tauri-plugin-opener = { workspace = true }
 tauri-specta = { workspace = true, features = ["derive", "typescript"] }
 
+[features]
+default = []
+# Turning macOS's own screenshot shortcuts off runs `defaults import`; only
+# for builds outside the App Store.
+system-shortcuts = []
+
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2-foundation = { workspace = true, features = ["NSError", "NSFileManager", "NSString", "NSURL"] }

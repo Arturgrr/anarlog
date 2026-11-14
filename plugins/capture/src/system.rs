@@ -1,125 +1,119 @@
-//! Turning macOS's own screenshot shortcuts off and back on: a thin shell
-//! around `defaults` and `activateSettings` over the pure logic in
-//! `anlg_capture_core::hotkeys`. Only macOS runs it.
-
-use std::io::Write;
-use std::path::Path;
-use std::process::{Command, Stdio};
+//! Turning macOS's own screenshot shortcuts off and back on. The logic, the
+//! lock and the backup are `anlg_capture_core::shortcuts`; this is the shell
+//! around `defaults` and `activateSettings`, built only with the
+//! `system-shortcuts` feature (the direct-distribution app, never the App
+//! Store one) and run only on macOS.
 
 use anlg_capture_core::Layout;
-use anlg_capture_core::fs::{ensure_private_dir, write_atomic};
-use anlg_capture_core::hotkeys::{self, from_xml, to_xml};
+use anlg_capture_core::shortcuts::Shortcuts;
 
 use crate::Error;
 use crate::types::SystemShortcuts;
 
-const DEFAULTS: &str = "/usr/bin/defaults";
-const DOMAIN: &str = "com.apple.symbolichotkeys";
-const ACTIVATE: &str =
-    "/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings";
+impl From<Shortcuts> for SystemShortcuts {
+    fn from(shortcuts: Shortcuts) -> Self {
+        Self {
+            area: shortcuts.status.area,
+            fullscreen: shortcuts.status.fullscreen,
+            options: shortcuts.status.options,
+            replaced: shortcuts.replaced,
+        }
+    }
+}
 
-fn available() -> Result<(), Error> {
+#[cfg(feature = "system-shortcuts")]
+mod defaults {
+    use std::time::Duration;
+
+    use anlg_capture_core::hotkeys::{Error, from_xml, to_xml};
+    use anlg_capture_core::shortcuts::Domain;
+    use plist::Value;
+
+    use crate::process::run;
+
+    const DEFAULTS: &str = "/usr/bin/defaults";
+    const DOMAIN: &str = "com.apple.symbolichotkeys";
+    const ACTIVATE: &str = "/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings";
+    const WITHIN: Duration = Duration::from_secs(10);
+
+    pub struct Defaults;
+
+    impl Domain for Defaults {
+        /// A failed export is an error, never an empty domain: importing
+        /// that would wipe every other shortcut.
+        fn export(&self) -> Result<Value, Error> {
+            from_xml(&run(DEFAULTS, &["export", DOMAIN, "-"], None, WITHIN)?)
+        }
+
+        fn import(&self, doc: &Value) -> Result<(), Error> {
+            run(
+                DEFAULTS,
+                &["import", DOMAIN, "-"],
+                Some(to_xml(doc)?),
+                WITHIN,
+            )
+            .map(drop)
+        }
+
+        /// When it fails the change still applies at the next login.
+        fn activate(&self) {
+            if let Err(error) = run(ACTIVATE, &["-u"], None, WITHIN) {
+                tracing::warn!(%error, "activateSettings");
+            }
+        }
+    }
+}
+
+fn backup_path(layout: &Layout) -> std::path::PathBuf {
+    layout.shortcuts_backup_path()
+}
+
+#[cfg(feature = "system-shortcuts")]
+fn domain() -> Result<defaults::Defaults, Error> {
     if cfg!(target_os = "macos") {
-        Ok(())
+        Ok(defaults::Defaults)
     } else {
         Err(Error::ShortcutsUnavailable)
     }
 }
 
-/// The whole domain. A failed export is an error, never an empty domain:
-/// importing that would wipe every other shortcut.
-fn export() -> Result<plist::Value, Error> {
-    let output = Command::new(DEFAULTS)
-        .args(["export", DOMAIN, "-"])
-        .output()?;
-    if !output.status.success() {
-        return Err(Error::Shortcuts(
-            String::from_utf8_lossy(&output.stderr).trim().to_owned(),
-        ));
-    }
-    Ok(from_xml(&output.stdout)?)
+#[cfg(not(feature = "system-shortcuts"))]
+fn domain() -> Result<NoDomain, Error> {
+    Err(Error::ShortcutsUnavailable)
 }
 
-fn import(doc: &plist::Value) -> Result<(), Error> {
-    let xml = to_xml(doc)?;
-    let mut child = Command::new(DEFAULTS)
-        .args(["import", DOMAIN, "-"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::null())
-        .stderr(Stdio::piped())
-        .spawn()?;
-    if let Some(mut stdin) = child.stdin.take() {
-        stdin.write_all(&xml)?;
-    }
-    let output = child.wait_with_output()?;
-    if !output.status.success() {
-        return Err(Error::Shortcuts(
-            String::from_utf8_lossy(&output.stderr).trim().to_owned(),
-        ));
-    }
-    Ok(())
-}
+#[cfg(not(feature = "system-shortcuts"))]
+enum NoDomain {}
 
-/// Applies the change without logging out; when it fails the change still
-/// applies at the next login.
-fn activate() {
-    match Command::new(ACTIVATE).arg("-u").output() {
-        Ok(output) if output.status.success() => {}
-        Ok(output) => tracing::warn!(status = %output.status, "activateSettings"),
-        Err(error) => tracing::warn!(%error, "activateSettings"),
+#[cfg(not(feature = "system-shortcuts"))]
+impl anlg_capture_core::shortcuts::Domain for NoDomain {
+    fn export(&self) -> Result<plist::Value, anlg_capture_core::hotkeys::Error> {
+        match *self {}
     }
-}
-
-fn read_backup(path: &Path) -> Result<Option<plist::Value>, Error> {
-    match std::fs::read(path) {
-        Ok(bytes) => Ok(Some(from_xml(&bytes)?)),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
-        Err(error) => Err(error.into()),
+    fn import(&self, _: &plist::Value) -> Result<(), anlg_capture_core::hotkeys::Error> {
+        match *self {}
     }
-}
-
-fn status_of(doc: &plist::Value, layout: &Layout) -> SystemShortcuts {
-    let status = hotkeys::status(doc);
-    SystemShortcuts {
-        area: status.area,
-        fullscreen: status.fullscreen,
-        options: status.options,
-        replaced: layout.shortcuts_backup_path().is_file(),
+    fn activate(&self) {
+        match *self {}
     }
 }
 
 pub fn read(layout: &Layout) -> Result<SystemShortcuts, Error> {
-    available()?;
-    Ok(status_of(&export()?, layout))
+    let domain = domain()?;
+    Ok(anlg_capture_core::shortcuts::read(&domain, &backup_path(layout))?.into())
 }
 
 /// Remembers the five shortcuts (unless a backup already does), turns them
 /// off and reports what is on afterwards.
 pub fn replace(layout: &Layout) -> Result<SystemShortcuts, Error> {
-    available()?;
-    let backup_path = layout.shortcuts_backup_path();
-    let doc = export()?;
-    let kept = read_backup(&backup_path)?;
-    let replaced = hotkeys::replace(&doc, kept.as_ref())?;
-    if replaced.new_backup {
-        ensure_private_dir(layout.root())?;
-        write_atomic(&backup_path, &to_xml(&replaced.backup)?, true)?;
-    }
-    import(&replaced.doc)?;
-    activate();
-    read(layout)
+    let domain = domain()?;
+    anlg_capture_core::fs::ensure_private_dir(layout.root())?;
+    Ok(anlg_capture_core::shortcuts::replace(&domain, &backup_path(layout))?.into())
 }
 
-/// Puts the five shortcuts back as remembered and forgets the backup.
+/// Puts the five shortcuts back as remembered, or turns them back on when
+/// nothing usable is remembered, and forgets the backup.
 pub fn restore(layout: &Layout) -> Result<SystemShortcuts, Error> {
-    available()?;
-    let backup_path = layout.shortcuts_backup_path();
-    let Some(backup) = read_backup(&backup_path)? else {
-        return read(layout);
-    };
-    let doc = export()?;
-    import(&hotkeys::restore(&doc, &backup)?)?;
-    activate();
-    std::fs::remove_file(&backup_path)?;
-    read(layout)
+    let domain = domain()?;
+    Ok(anlg_capture_core::shortcuts::restore(&domain, &backup_path(layout))?.into())
 }
