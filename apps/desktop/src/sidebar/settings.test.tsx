@@ -71,6 +71,10 @@ vi.mock("~/annotate/system", () => ({
   annotateAvailable: () => false,
 }));
 
+vi.mock("~/capture/system", () => ({
+  captureAvailable: () => true,
+}));
+
 vi.mock("./custom-sidebar-header", () => ({
   CustomSidebarHeader: () => <div />,
 }));
@@ -118,6 +122,7 @@ describe("SettingsNav", () => {
   it.each([
     ["Permissions", "permissions"],
     ["Dictation", "dictation"],
+    ["Screenshots", "capture"],
   ])("opens %s inside settings", (label, tab) => {
     render(<SettingsNav />);
 

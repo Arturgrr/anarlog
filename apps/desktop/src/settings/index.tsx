@@ -13,6 +13,7 @@ import { LlmModelPicker } from "~/settings/ai/llm";
 import { SttModelPicker } from "~/settings/ai/stt";
 import { SettingsAnnotate } from "~/settings/annotate";
 import { SettingsAppearance } from "~/settings/appearance";
+import { SettingsCapture } from "~/settings/capture";
 import { SettingsDevelopers } from "~/settings/developers";
 import { SettingsDictation } from "~/settings/dictation";
 import { SettingsDictionary } from "~/settings/dictionary";
@@ -73,6 +74,8 @@ function SettingsView({ tab }: { tab: Extract<Tab, { type: "settings" }> }) {
         return <SettingsDictationHistory />;
       case "annotate":
         return <SettingsAnnotate />;
+      case "capture":
+        return <SettingsCapture />;
       case "note-types":
         return <SettingsNoteTypes />;
       case "transcription":

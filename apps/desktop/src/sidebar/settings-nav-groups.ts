@@ -3,6 +3,7 @@ import { useLingui } from "@lingui/react/macro";
 import {
   Bell,
   BookOpen,
+  Camera,
   ChartLineUp,
   ClockCounterClockwise,
   Code,
@@ -24,6 +25,7 @@ import {
 } from "@anlg/ui/components/icons";
 
 import { annotateAvailable } from "~/annotate/system";
+import { captureAvailable } from "~/capture/system";
 import { privacyMessages } from "~/settings/general/app-settings";
 import { type SettingsTab, type TabInput } from "~/store/zustand/tabs";
 
@@ -67,6 +69,9 @@ export function useSettingsNavGroups(): SettingsNavGroup[] {
         },
         ...(annotateAvailable()
           ? [{ id: "annotate" as const, label: t`Annotate`, icon: Highlighter }]
+          : []),
+        ...(captureAvailable()
+          ? [{ id: "capture" as const, label: t`Screenshots`, icon: Camera }]
           : []),
         { id: "intelligence", label: t`Intelligence`, icon: Sparkle },
         { id: "dictionary", label: t`Dictionary`, icon: BookOpen },
