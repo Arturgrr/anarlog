@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { CaptureEntry } from "@anlg/plugin-capture";
+import type { CaptureEntry, RecordingStart } from "@anlg/plugin-capture";
 
 import {
   BUSY,
@@ -82,6 +82,7 @@ function setup(
       entry: { ...entry, kind: "video" as const },
     })),
     listCaptures: vi.fn(async () => [entry]),
+    cancelRecording: vi.fn(async () => {}),
     ...overrides,
   };
   const deps: CaptureDeps = {
@@ -220,5 +221,24 @@ describe("Capture flow", () => {
 
     await flow.onShortcut("window");
     expect(plugin.screenshot).toHaveBeenCalledOnce();
+  });
+
+  it("cancels a recording whose selector is still up when its shortcut is pressed again", async () => {
+    let resolve: (value: { status: "cancelled" }) => void = () => {};
+    const { flow, plugin } = setup({
+      startRecording: vi.fn(
+        () => new Promise<RecordingStart>((done) => (resolve = done)),
+      ),
+      cancelRecording: vi.fn(async () => resolve({ status: "cancelled" })),
+    });
+    const starting = flow.onShortcut("record");
+    await vi.waitFor(() => expect(plugin.startRecording).toHaveBeenCalled());
+
+    await flow.onShortcut("gif");
+    await starting;
+    expect(plugin.cancelRecording).toHaveBeenCalledOnce();
+    expect(plugin.stopRecording).not.toHaveBeenCalled();
+    expect(plugin.startRecording).toHaveBeenCalledOnce();
+    expect(flow.phase).toBe("idle");
   });
 });

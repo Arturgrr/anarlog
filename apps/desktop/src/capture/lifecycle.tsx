@@ -161,6 +161,9 @@ function ActiveCapture() {
         startRecording: async (request) =>
           unwrap(await capture.startRecording(request)),
         stopRecording: async () => unwrap(await capture.stopRecording()),
+        cancelRecording: async () => {
+          unwrap(await capture.cancelRecording());
+        },
         listCaptures: async () => unwrap(await capture.listCaptures()),
       },
       settings: () => current.current.settings,

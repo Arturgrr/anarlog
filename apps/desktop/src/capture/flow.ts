@@ -41,6 +41,7 @@ export type CaptureDeps = {
     screenshot: (request: ScreenshotRequest) => Promise<CaptureOutcome>;
     startRecording: (request: RecordingRequest) => Promise<RecordingStart>;
     stopRecording: () => Promise<CaptureOutcome>;
+    cancelRecording: () => Promise<void>;
     listCaptures: () => Promise<CaptureEntry[]>;
   };
   settings: () => CaptureSettings;
@@ -121,6 +122,9 @@ export function recordingRequest(
  */
 export function createCaptureFlow(deps: CaptureDeps) {
   let phase: CapturePhase = "idle";
+  // A recording's selector or countdown is up: `startRecording` has not
+  // resolved yet.
+  let recordingSelector = false;
 
   // Read through a call: events change the phase while a command awaits.
   const now = () => phase;
@@ -172,10 +176,19 @@ export function createCaptureFlow(deps: CaptureDeps) {
         deps.notify.microphoneDenied();
         return set("idle");
       }
-      const started = await deps.plugin.startRecording(
-        recordingRequest(output, settings, deps.labels()),
-      );
+      recordingSelector = true;
+      const started = await deps.plugin
+        .startRecording(recordingRequest(output, settings, deps.labels()))
+        .finally(() => (recordingSelector = false));
       set(started.status === "recording" ? "recording" : "idle");
+    } catch (error) {
+      await failed(error);
+    }
+  }
+
+  async function cancelRecording() {
+    try {
+      await deps.plugin.cancelRecording();
     } catch (error) {
       await failed(error);
     }
@@ -195,7 +208,9 @@ export function createCaptureFlow(deps: CaptureDeps) {
   async function record(output: RecordingOutput) {
     if (phase === "recording") return stopRecording();
     if (phase === "idle") return startRecording(output);
-    // A selector, a countdown or a recording being finished: wait for it.
+    // Pressed again over its own selector or countdown: never mind.
+    if (recordingSelector) return cancelRecording();
+    // A screenshot's selector or a recording being finished: wait for it.
   }
 
   async function onShortcut(action: CaptureAction) {
