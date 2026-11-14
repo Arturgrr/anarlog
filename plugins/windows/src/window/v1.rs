@@ -8,6 +8,9 @@ const MAIN_WINDOW_HEIGHT: f64 = 600.0;
 const MAIN_WINDOW_SCREEN_SHARE: f64 = 0.9;
 const NOTE_WINDOW_WIDTH: f64 = 720.0;
 const NOTE_WINDOW_HEIGHT: f64 = 820.0;
+const CAPTURE_EDITOR_SIZE: (f64, f64) = (1100.0, 760.0);
+const CAPTURE_EDITOR_MIN_SIZE: (f64, f64) = (640.0, 480.0);
+const CAPTURE_EDITOR_PREFIX: &str = "capture-editor-";
 const NOTE_WINDOW_POSITION_TOLERANCE: f64 = 1.0;
 const WINDOW_TITLEBAR_HEIGHT: f64 = 64.0;
 const MIN_VISIBLE_TITLEBAR_WIDTH: f64 = 128.0;
@@ -55,6 +58,9 @@ pub enum AppWindow {
     Composer,
     #[serde(rename = "note")]
     Note(String),
+    /// The screenshot editor for the capture with this id.
+    #[serde(rename = "captureEditor")]
+    CaptureEditor(String),
 }
 
 impl std::fmt::Display for AppWindow {
@@ -63,6 +69,7 @@ impl std::fmt::Display for AppWindow {
             Self::Main => write!(f, "main"),
             Self::Composer => write!(f, "composer"),
             Self::Note(id) => write!(f, "note-{id}"),
+            Self::CaptureEditor(id) => write!(f, "{CAPTURE_EDITOR_PREFIX}{id}"),
         }
     }
 }
@@ -79,6 +86,13 @@ impl std::str::FromStr for AppWindow {
 
         if let Some(id) = s.strip_prefix("note-").filter(|id| !id.is_empty()) {
             return Ok(Self::Note(id.to_string()));
+        }
+
+        if let Some(id) = s
+            .strip_prefix(CAPTURE_EDITOR_PREFIX)
+            .filter(|id| !id.is_empty())
+        {
+            return Ok(Self::CaptureEditor(id.to_string()));
         }
 
         Err(strum::ParseError::VariantNotFound)
@@ -240,6 +254,7 @@ impl WindowImpl for AppWindow {
             Self::Main => "Librelog".into(),
             Self::Composer => "Composer".into(),
             Self::Note(_) => "Note".into(),
+            Self::CaptureEditor(_) => "Edit capture".into(),
         }
     }
 
@@ -287,6 +302,19 @@ impl WindowImpl for AppWindow {
                     .min_inner_size(420.0, 500.0)
                     .inner_size(NOTE_WINDOW_WIDTH, NOTE_WINDOW_HEIGHT);
                 builder.build()?
+            }
+            Self::CaptureEditor(id) => {
+                let encoded_id: String =
+                    url::form_urlencoded::byte_serialize(id.as_bytes()).collect();
+                self.window_builder(app, format!("/app/capture-editor/{encoded_id}"))
+                    .title(self.title())
+                    .resizable(true)
+                    .maximizable(true)
+                    .minimizable(true)
+                    .min_inner_size(CAPTURE_EDITOR_MIN_SIZE.0, CAPTURE_EDITOR_MIN_SIZE.1)
+                    .inner_size(CAPTURE_EDITOR_SIZE.0, CAPTURE_EDITOR_SIZE.1)
+                    .center()
+                    .build()?
             }
         };
 
