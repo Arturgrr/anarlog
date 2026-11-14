@@ -90,3 +90,43 @@ common_event_derives! {
     /// item chosen.
     pub struct PasteLastEvent {}
 }
+
+/// What a Capture shortcut, or its menu bar item, asks for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "lowercase")]
+pub enum CaptureAction {
+    Area,
+    Fullscreen,
+    Window,
+    Record,
+    Gif,
+}
+
+impl CaptureAction {
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Area => "capture area",
+            Self::Fullscreen => "capture full screen",
+            Self::Window => "capture window",
+            Self::Record => "record video",
+            Self::Gif => "record GIF",
+        }
+    }
+}
+
+common_event_derives! {
+    /// A Capture shortcut was pressed, or its menu bar item chosen.
+    pub struct CaptureShortcutEvent {
+        pub action: CaptureAction,
+    }
+}
+
+/// Capture's shortcuts; null or empty leaves one unbound.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+pub struct CaptureShortcuts {
+    pub area: Option<String>,
+    pub fullscreen: Option<String>,
+    pub window: Option<String>,
+    pub record: Option<String>,
+    pub gif: Option<String>,
+}

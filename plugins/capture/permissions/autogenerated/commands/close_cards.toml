@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-close-cards"
+description = "Enables the close_cards command without any pre-configured scope."
+commands.allow = ["close_cards"]
+
+[[permission]]
+identifier = "deny-close-cards"
+description = "Denies the close_cards command without any pre-configured scope."
+commands.deny = ["close_cards"]

@@ -1,8 +1,11 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ platform: "macos" }));
+const mocks = vi.hoisted(() => ({ platform: "macos", appStore: false }));
 
 vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => mocks.platform }));
+vi.mock("~/shared/app-store", () => ({
+  isAppStoreBuild: () => mocks.appStore,
+}));
 
 import {
   getInitialStep,
@@ -13,16 +16,23 @@ import {
 
 beforeEach(() => {
   localStorage.clear();
+  mocks.appStore = false;
 });
 
 it.each([
-  ["macos", ["permissions", "transcription", "intelligence", "final"]],
-  ["windows", ["transcription", "intelligence", "final"]],
-  ["linux", ["transcription", "intelligence", "final"]],
+  [
+    "macos",
+    false,
+    ["permissions", "transcription", "intelligence", "capture", "final"],
+  ],
+  ["macos", true, ["permissions", "transcription", "intelligence", "final"]],
+  ["windows", false, ["transcription", "intelligence", "final"]],
+  ["linux", false, ["transcription", "intelligence", "final"]],
 ])(
-  "sets up transcription and intelligence before finishing on %s",
-  (platform, steps) => {
+  "sets up transcription and intelligence (and offers Capture outside the App Store build) before finishing on %s, App Store %s",
+  (platform, appStore, steps) => {
     mocks.platform = platform;
+    mocks.appStore = appStore;
     expect(getOnboardingSteps()).toEqual(steps);
     expect(getInitialStep()).toBe(steps[0]);
   },

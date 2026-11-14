@@ -35,6 +35,19 @@ pub async fn set_tray_paste_last_visible(
         .map_err(|error| error.to_string())
 }
 
+/// Shows "Capture Area" and "Record Screen" in the menu bar icon's menu
+/// while Capture is on.
+#[tauri::command]
+#[specta::specta]
+pub async fn set_tray_capture_visible(
+    app: tauri::AppHandle<tauri::Wry>,
+    visible: bool,
+) -> Result<(), String> {
+    app.tray()
+        .set_capture_visible(visible)
+        .map_err(|error| error.to_string())
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn set_tray_recording_title(

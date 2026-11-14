@@ -87,7 +87,8 @@ struct AnnotateCapsuleLayout {
   /// The buttons that show, front to back.
   var targets: [(AnnotateCapsuleTarget, CGRect)]
 
-  static func make(asking: Bool) -> AnnotateCapsuleLayout {
+  /// Without the pen (Capture's recording) the clock takes its place.
+  static func make(asking: Bool, pen withPen: Bool = true) -> AnnotateCapsuleLayout {
     let (width, height) = (size.width, size.height)
     let buttonY = (height - button) / 2
     func square(_ x: CGFloat) -> CGRect {
@@ -105,8 +106,15 @@ struct AnnotateCapsuleLayout {
     let discard = square(width - trailing - button)
     let stop = square(discard.minX - gap - button)
     let divider = CGRect(x: stop.minX - 6 - 1, y: (height - 16) / 2, width: 1, height: 16)
-    let pen = square(divider.minX - 6 - button)
     let dot = CGRect(x: padding + 2, y: (height - 8) / 2, width: 8, height: 8)
+    guard withPen else {
+      let clock = CGRect(
+        x: dot.maxX + 6, y: 0, width: divider.minX - 6 - dot.maxX - 6, height: height)
+      return AnnotateCapsuleLayout(
+        dot: dot, clock: clock, divider: divider, question: .zero,
+        targets: [(.stop, stop), (.discard, discard)])
+    }
+    let pen = square(divider.minX - 6 - button)
     let clock = CGRect(x: dot.maxX + 6, y: 0, width: pen.minX - 4 - dot.maxX - 6, height: height)
     return AnnotateCapsuleLayout(
       dot: dot, clock: clock, divider: divider, question: .zero,

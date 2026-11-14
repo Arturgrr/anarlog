@@ -19,6 +19,7 @@
 //! for its result). [`set_ink_mode`] follows the host's shortcut. [`status`]
 //! tells where a host that lost track stands.
 
+pub mod capture;
 mod reply;
 
 pub use reply::{AnnotateError, codes};

@@ -103,7 +103,10 @@ fn restore_window_state(
 
 /// Windows the Dock icon follows; the composer and the overlays are panels.
 pub(crate) fn is_regular_window(window: &AppWindow) -> bool {
-    matches!(window, AppWindow::Main | AppWindow::Note(_))
+    matches!(
+        window,
+        AppWindow::Main | AppWindow::Note(_) | AppWindow::CaptureEditor(_)
+    )
 }
 
 /// Runs after any hide or show already queued for the main thread, so it sees

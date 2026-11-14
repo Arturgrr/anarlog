@@ -40,6 +40,7 @@ anlg-audio-sync = { path = "crates/audio-sync", package = "audio-sync" }
 anlg-audio-utils = { path = "crates/audio-utils", package = "audio-utils" }
 anlg-buffer = { path = "crates/buffer", package = "buffer" }
 anlg-bundle = { path = "crates/bundle", package = "bundle" }
+anlg-capture-core = { path = "crates/capture-core", package = "capture-core" }
 anlg-claude = { path = "crates/claude", package = "claude" }
 anlg-cli-process = { path = "crates/cli-process", package = "cli-process" }
 anlg-codex = { path = "crates/codex", package = "codex" }
@@ -137,6 +138,7 @@ tauri-plugin-window-state = "2.4"
 tauri-plugin-agent = { path = "plugins/agent" }
 tauri-plugin-annotate = { path = "plugins/annotate" }
 tauri-plugin-apple-foundation = { path = "plugins/apple-foundation" }
+tauri-plugin-capture = { path = "plugins/capture" }
 tauri-plugin-contacts = { path = "plugins/contacts" }
 tauri-plugin-db = { path = "plugins/db" }
 tauri-plugin-deeplink2 = { path = "plugins/deeplink2" }
@@ -205,6 +207,7 @@ isolang = "2.4"
 lazy_static = "1.5.0"
 libloading = "0.8"
 open = "5"
+plist = "1.8"
 regex = "1.12"
 schemars = "1"
 semver = "1"

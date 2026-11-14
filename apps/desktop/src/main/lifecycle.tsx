@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 
 import { useLanguageModel } from "~/ai/hooks";
 import { AnnotateLifecycle, AnnotateRetention } from "~/annotate/lifecycle";
+import { CaptureLifecycle } from "~/capture/lifecycle";
 import { useSessionTab } from "~/chat/components/use-session-tab";
 import { buildChatTools } from "~/chat/tools";
 import { searchContacts } from "~/contacts/queries";
@@ -55,6 +56,7 @@ export function ClassicMainServices() {
       <DictationHistoryRetention />
       <AnnotateLifecycle />
       <AnnotateRetention />
+      <CaptureLifecycle />
       <ToolRegistration />
       <EnhancerInit />
     </>

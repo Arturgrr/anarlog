@@ -270,7 +270,7 @@ final class AnnotateSession {
         startedWallMs: wallMs, display: info))
   }
 
-  private static func shareableContent() -> Result<SCShareableContent, AnnotateFailure> {
+  static func shareableContent() -> Result<SCShareableContent, AnnotateFailure> {
     let reply = AnnotateLocked<(content: SCShareableContent?, error: Error?)?>(nil)
     let done = DispatchSemaphore(value: 0)
     SCShareableContent.getExcludingDesktopWindows(false, onScreenWindowsOnly: false) {
@@ -342,6 +342,9 @@ final class AnnotateSession {
 
   // MARK: Main thread
 
+  /// Nothing starting, recording or finishing.
+  var isIdle: Bool { machine.phase == .idle }
+
   private enum FinishStep {
     case run(AnnotateFinishing, AnnotateFinish)
     case wait(AnnotateFinish)
@@ -354,6 +357,11 @@ final class AnnotateSession {
       // An unclaimed result of a recording that ended by itself; its files
       // stay where they are.
       claim()
+    }
+    // One capture or Annotate recording at a time; Capture checks the
+    // other way round, both on the main thread.
+    guard CaptureSession.shared.isIdle else {
+      return .failure(AnnotateFailure(.busy, "a screenshot or screen recording is under way"))
     }
     guard machine.reserve() else {
       return .failure(AnnotateFailure(.busy, "a recording is \(machine.phase.rawValue)"))

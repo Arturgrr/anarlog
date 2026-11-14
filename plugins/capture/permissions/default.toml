@@ -1,0 +1,20 @@
+[default]
+description = "Default permissions for the plugin"
+permissions = [
+  "allow-status",
+  "allow-screenshot",
+  "allow-start-recording",
+  "allow-stop-recording",
+  "allow-cancel-recording",
+  "allow-list-captures",
+  "allow-delete-capture",
+  "allow-copy-capture",
+  "allow-save-capture-as",
+  "allow-save-edited",
+  "allow-show-card",
+  "allow-close-cards",
+  "allow-system-shortcuts",
+  "allow-replace-system-shortcuts",
+  "allow-restore-system-shortcuts",
+  "allow-export-png",
+]

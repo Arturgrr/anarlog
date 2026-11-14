@@ -305,12 +305,32 @@ msgstr ""
 msgid "1 week"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "10 fps"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "1080 pixels"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "15 fps"
+msgstr ""
+
 #: src/onboarding/index.tsx
 msgid "2 of 2 · Intelligence"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "20 fps"
+msgstr ""
+
 #: src/settings/general/audio-settings.tsx
 msgid "3 days"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "3 seconds"
 msgstr ""
 
 #: src/dictation/history/page.tsx
@@ -318,9 +338,25 @@ msgstr ""
 msgid "30 days"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "30 fps"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "480 pixels"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "60 fps"
+msgstr ""
+
 #: src/dictation/history/page.tsx
 #: src/settings/stats/date-range.tsx
 msgid "7 days"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "720 pixels"
 msgstr ""
 
 #: src/settings/ai/stt/index.tsx
@@ -351,12 +387,20 @@ msgstr ""
 msgid "A participant declined recording. Librelog stopped listening."
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "A preview in the corner of the screen to copy, save or edit the capture, or drag it into another app."
+msgstr ""
+
 #: src/onboarding/welcome-note.ts
 msgid "A quick introduction to Librelog."
 msgstr ""
 
 #: src/settings/annotate.tsx
 msgid "A recording holds everything shown on the display under the pointer, what your microphone hears, your red marks, and the name and title of the app in front. Each one is a folder on this computer, in Librelog's data folder under annotations, with the video, the audio, the key frames, a contact sheet and a summary. Your narration is transcribed by your transcription provider. Nothing else leaves this computer until you paste it somewhere: then it goes to that app and its provider."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "A screenshot or recording is already in progress."
 msgstr ""
 
 #: src/templates/template-sidebar.tsx
@@ -555,6 +599,10 @@ msgstr "Basa lisan tambahan"
 msgid "Advanced"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "After capturing"
+msgstr ""
+
 #: src/settings/automations/workflow-builder.tsx
 msgid "After every speaker is named"
 msgstr ""
@@ -628,6 +676,7 @@ msgid "Allow Accessibility"
 msgstr ""
 
 #: src/annotate/lifecycle.tsx
+#: src/capture/lifecycle.tsx
 msgid "Allow Librelog in System Settings › Privacy & Security › Screen Recording, then try again."
 msgstr ""
 
@@ -640,15 +689,21 @@ msgid "Allow…"
 msgstr ""
 
 #: src/settings/annotate.tsx
+#: src/settings/capture.tsx
 msgid "Allowed"
 msgstr ""
 
 #: src/settings/annotate.tsx
+#: src/settings/capture.tsx
 msgid "Allowed. Quit and reopen Librelog to use it."
 msgstr ""
 
 #: src/onboarding/final.tsx
 msgid "Almost ready"
+msgstr ""
+
+#: src/capture/lifecycle.tsx
+msgid "Also copied to the clipboard."
 msgstr ""
 
 #: src/settings/dictation-audio.tsx
@@ -702,6 +757,10 @@ msgstr ""
 
 #: src/annotate/lifecycle.tsx
 msgid "Annotation ready"
+msgstr ""
+
+#: src/annotate/lifecycle.tsx
+msgid "Another recording is being transcribed on this Mac. The annotation will be ready when it finishes."
 msgstr ""
 
 #: src/stt/start-failure.ts
@@ -802,6 +861,10 @@ msgstr ""
 msgid "Are you in a meeting?"
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+msgid "Arrow"
+msgstr ""
+
 #: src/chat/components/input/index.tsx
 #: src/shared/chat-cta.tsx
 msgid "Ask anything"
@@ -825,6 +888,10 @@ msgstr ""
 
 #: src/session/components/outer-header/overflow/index.tsx
 msgid "Assign speakers…"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "At most; smaller areas keep their size."
 msgstr ""
 
 #: src/templates/auto-format-examples-dialog.tsx
@@ -881,6 +948,10 @@ msgstr ""
 
 #: src/stt/useUploadFile.ts
 msgid "Audio files without a native path must be smaller than 4 MB"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Audio in recordings is experimental. A movie with both has two audio tracks. GIFs have no sound."
 msgstr ""
 
 #: src/stt/useStartListening.ts
@@ -1027,6 +1098,10 @@ msgstr ""
 msgid "Batch transcription mode"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Before the recording starts."
+msgstr ""
+
 #: src/settings/general/timezone.tsx
 msgid "Berlin"
 msgstr ""
@@ -1045,8 +1120,16 @@ msgstr ""
 msgid "Beta"
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+msgid "Black"
+msgstr ""
+
 #: src/settings/general/notification.tsx
 msgid "Bloom"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Blue"
 msgstr ""
 
 #: src/settings/dictation-indicator.tsx
@@ -1112,9 +1195,11 @@ msgstr ""
 msgid "Can’t transcribe all your languages together."
 msgstr ""
 
+#: src/capture/editor/index.tsx
 #: src/i18n/native-labels.tsx
 #: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
 #: src/settings/ai/llm/subscriptions/connect.tsx
+#: src/settings/capture-recent.tsx
 #: src/settings/dictionary/index.tsx
 #: src/settings/general/storage/legacy-cleanup.tsx
 #: src/settings/note-types/index.tsx
@@ -1138,8 +1223,26 @@ msgstr ""
 msgid "Cancel download"
 msgstr ""
 
+#: src/onboarding/index.tsx
+msgid "Capture an area, a window or the whole screen, record it as a movie or a GIF, and mark it up, with shortcuts that work in any app. Everything stays on this Mac."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+#: src/settings/capture-shortcuts.tsx
+msgid "Capture area"
+msgstr ""
+
+#: src/i18n/native-labels.tsx
+msgid "Capture Area"
+msgstr ""
+
 #: src/settings/stats/insights.tsx
 msgid "Capture at least 5 conversations in this period to see patterns."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+#: src/settings/capture-shortcuts.tsx
+msgid "Capture full screen"
 msgstr ""
 
 #: src/settings/general/meeting-settings.tsx
@@ -1148,6 +1251,15 @@ msgstr ""
 
 #: src/settings/general/meeting-settings.tsx
 msgid "Capture shared screens in Memos"
+msgstr ""
+
+#: src/i18n/external-messages.ts
+#: src/settings/capture-shortcuts.tsx
+msgid "Capture window"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Captures stay on this Mac, in the folder you choose or in Librelog's data folder. Nothing leaves it until you paste or share a capture: then it goes wherever you paste it."
 msgstr ""
 
 #: src/settings/general/timezone.tsx
@@ -1173,6 +1285,7 @@ msgid "Change photo"
 msgstr ""
 
 #: src/settings/annotate.tsx
+#: src/settings/capture-shortcuts.tsx
 #: src/settings/dictation-paste-last.tsx
 #: src/settings/dictation-shortcut.tsx
 msgid "Change shortcut {keys}"
@@ -1196,6 +1309,10 @@ msgstr ""
 
 #: src/settings/ai/llm/shared.tsx
 msgid "ChatGPT plans"
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "Check again"
 msgstr ""
 
 #: src/i18n/native-labels.tsx
@@ -1238,6 +1355,7 @@ msgstr ""
 #: src/settings/ai/shared/in-use-bar.tsx
 #: src/settings/ai/stt/index.tsx
 #: src/settings/annotate.tsx
+#: src/settings/capture.tsx
 #: src/settings/developers/cli.tsx
 msgid "Checking…"
 msgstr ""
@@ -1262,8 +1380,16 @@ msgstr ""
 msgid "Choose a folder"
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "Choose a folder and a file name to save to."
+msgstr ""
+
 #: src/automations/engine.ts
 msgid "choose a folder first"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Choose a folder for captures"
 msgstr ""
 
 #: src/settings/ai/llm/in-use.tsx
@@ -1394,6 +1520,10 @@ msgstr ""
 msgid "Choose which day begins your calendar week."
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Choose…"
+msgstr ""
+
 #: src/onboarding/model-setup.tsx
 msgid "Chosen:"
 msgstr ""
@@ -1450,6 +1580,10 @@ msgstr ""
 msgid "Clear selection"
 msgstr ""
 
+#: src/settings/capture-shortcuts.tsx
+msgid "Clear shortcut"
+msgstr ""
+
 #: src/i18n/external-messages.ts
 msgid "Clear the text selection before dictating, or copy your last dictation to replace it."
 msgstr ""
@@ -1458,10 +1592,20 @@ msgstr ""
 msgid "CLI & MCP"
 msgstr ""
 
+#: src/capture/lifecycle.tsx
+msgid "Click a window · Space for an area · Esc to cancel"
+msgstr ""
+
 #: src/settings/dictation.tsx
 msgid "Click here, then use a dictation shortcut."
 msgstr ""
 
+#: src/settings/capture-shortcuts.tsx
+msgid "Click the window you want."
+msgstr ""
+
+#: src/capture/editor-window.tsx
+#: src/capture/lifecycle.tsx
 #: src/changelog/index.tsx
 #: src/i18n/component-labels.tsx
 #: src/main/windows-title-bar.tsx
@@ -1510,6 +1654,10 @@ msgstr ""
 
 #: src/settings/automations/markdown-export-options.tsx
 msgid "Collect action items"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Color"
 msgstr ""
 
 #: src/settings/appearance/theme.tsx
@@ -1616,6 +1764,7 @@ msgstr ""
 msgid "Context length too small"
 msgstr ""
 
+#: src/onboarding/capture.tsx
 #: src/onboarding/model-setup.tsx
 msgid "Continue"
 msgstr ""
@@ -1648,10 +1797,17 @@ msgstr ""
 msgid "Conversations: {total}"
 msgstr ""
 
+#: src/capture/editor/index.tsx
 #: src/settings/dictation.tsx
 msgid "Copied"
 msgstr ""
 
+#: src/capture/lifecycle.tsx
+msgid "Copied to clipboard"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+#: src/capture/lifecycle.tsx
 #: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 #: src/session/components/note-input/header-enhanced.tsx
@@ -1659,6 +1815,7 @@ msgstr ""
 #: src/session/components/note-input/header-transcript.tsx
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
 #: src/settings/ai/llm/subscriptions/connect.tsx
+#: src/settings/capture-recent.tsx
 #: src/settings/developers/webhooks.tsx
 msgid "Copy"
 msgstr ""
@@ -1683,6 +1840,10 @@ msgstr ""
 msgid "Copy this signing secret now — it is only shown once."
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Copy to the clipboard"
+msgstr ""
+
 #: src/settings/note-types/index.tsx
 msgid "Could not add it. Please try again."
 msgstr ""
@@ -1693,6 +1854,14 @@ msgstr ""
 
 #: src/session/components/outer-header/overflow/assign-speakers-dialog.tsx
 msgid "Could not assign {failedLabel}. Speakers listed before it were saved; try again to finish."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Could not capture the screen: {rest}"
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Could not change the macOS screenshot shortcuts: {reason}"
 msgstr ""
 
 #. placeholder {0}: error.message
@@ -1780,8 +1949,16 @@ msgstr ""
 msgid "Could not insert text. Copy your last dictation from Settings > Dictation."
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "Could not keep the macOS shortcut settings: {rest}"
+msgstr ""
+
 #: src/settings/ai/stt/health.tsx
 msgid "Could not load the local speech-to-text model."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Could not make the GIF, so the recording was kept as a movie at {path}: {reason}"
 msgstr ""
 
 #: src/i18n/external-messages.ts
@@ -1790,6 +1967,10 @@ msgstr ""
 
 #: src/i18n/external-messages.ts
 msgid "Could not preserve the clipboard. Copy your last dictation from Settings > Dictation."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Could not read the macOS shortcut settings: {rest}"
 msgstr ""
 
 #: src/settings/ai/llm/subscriptions/oauth.ts
@@ -1810,6 +1991,10 @@ msgstr ""
 
 #: src/i18n/external-messages.ts
 msgid "Could not register dictation shortcut. It may be used by another app: {rest}"
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Could not register the {label} shortcut. {reason}"
 msgstr ""
 
 #: src/i18n/external-messages.ts
@@ -1835,6 +2020,10 @@ msgstr ""
 
 #: src/settings/automations/index.tsx
 msgid "Could not save the automation draft"
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Could not save the capture in {dir}: {reason}. It was kept at {path}."
 msgstr ""
 
 #: src/shared/edit-note-dialog.tsx
@@ -1895,6 +2084,10 @@ msgstr ""
 msgid "Could not use the selected model"
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "Could not write the capture: {rest}"
+msgstr ""
+
 #: src/contexts/notifications.tsx
 msgid "Couldn’t download {modelName}"
 msgstr ""
@@ -1926,6 +2119,14 @@ msgstr ""
 
 #: src/onboarding/final.tsx
 msgid "Couldn't open Librelog. Please try again."
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Countdown"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Counter"
 msgstr ""
 
 #: src/settings/ai/stt/speech-engine.tsx
@@ -1996,6 +2197,11 @@ msgstr ""
 #: src/settings/ai/shared/provider-connection.tsx
 #: src/settings/ai/stt/health.tsx
 msgid "Credentials will be checked when transcription starts."
+msgstr ""
+
+#: src/capture/editor/index.tsx
+#: src/capture/editor/toolbar.tsx
+msgid "Crop"
 msgstr ""
 
 #: src/settings/general/audio-settings.tsx
@@ -2079,6 +2285,7 @@ msgstr ""
 #: src/session/components/outer-header/overflow/delete.tsx
 #: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
+#: src/settings/capture-recent.tsx
 #: src/settings/note-types/index.tsx
 #: src/sidebar/automations.tsx
 #: src/sidebar/timeline/index.tsx
@@ -2102,6 +2309,7 @@ msgid "Delete {label}?"
 msgstr ""
 
 #: src/settings/ai/llm/builtin.tsx
+#: src/settings/capture-recent.tsx
 msgid "Delete {name}"
 msgstr ""
 
@@ -2280,10 +2488,17 @@ msgid "Disable all notifications"
 msgstr ""
 
 #: src/annotate/lifecycle.tsx
+#: src/capture/editor/index.tsx
+#: src/capture/lifecycle.tsx
 msgid "Discard"
 msgstr ""
 
+#: src/capture/editor/index.tsx
+msgid "Discard changes?"
+msgstr ""
+
 #: src/annotate/lifecycle.tsx
+#: src/capture/lifecycle.tsx
 msgid "Discard?"
 msgstr ""
 
@@ -2407,6 +2622,10 @@ msgstr ""
 msgid "Downloading..."
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Downloads"
+msgstr ""
+
 #: src/settings/automations/index.tsx
 #: src/settings/automations/workflow-builder.tsx
 #: src/sidebar/automations.tsx
@@ -2425,8 +2644,20 @@ msgstr ""
 msgid "Draft follow-up email."
 msgstr ""
 
+#: src/settings/capture-shortcuts.tsx
+msgid "Drag over what you want. Space switches to picking a window."
+msgstr ""
+
 #: src/i18n/native-labels.tsx
 msgid "Drag the app below into the list above."
+msgstr ""
+
+#: src/capture/lifecycle.tsx
+msgid "Drag to capture · Space for a window · Esc to cancel"
+msgstr ""
+
+#: src/capture/lifecycle.tsx
+msgid "Drag to record · Space for a window · Return for the whole screen · Esc to cancel"
 msgstr ""
 
 #: src/session/components/note-input/audio-drop-target.tsx
@@ -2466,9 +2697,11 @@ msgstr ""
 msgid "Eastern Time"
 msgstr ""
 
+#: src/capture/lifecycle.tsx
 #: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
+#: src/settings/capture-recent.tsx
 #: src/sidebar/automations.tsx
 msgid "Edit"
 msgstr ""
@@ -2499,6 +2732,10 @@ msgstr ""
 
 #: src/settings/dictionary/index.tsx
 msgid "Edit: {term}"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Ellipse"
 msgstr ""
 
 #: src/contacts/details.tsx
@@ -2540,6 +2777,14 @@ msgstr ""
 
 #: src/dictation/lifecycle.tsx
 msgid "Enable microphone permission in Settings > Permissions before dictating."
+msgstr ""
+
+#: src/capture/lifecycle.tsx
+msgid "Enable microphone permission in Settings > Permissions, or turn off recording the microphone for screen recordings."
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Enable screenshots and recordings"
 msgstr ""
 
 #: src/settings/automations/index.tsx
@@ -2819,6 +3064,7 @@ msgid "Focus an editable text field in an application with accessibility enabled
 msgstr ""
 
 #: src/settings/appearance/sidebar-item-fields.tsx
+#: src/settings/capture.tsx
 #: src/sidebar/note-filter-menu.tsx
 msgid "Folder"
 msgstr ""
@@ -2856,14 +3102,26 @@ msgstr ""
 msgid "For enabled notifications"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "For screenshots."
+msgstr ""
+
 #: src/dictation/history/page.tsx
 #: src/settings/annotate.tsx
 #: src/settings/general/audio-settings.tsx
 msgid "Forever"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Format"
+msgstr ""
+
 #: src/i18n/component-labels.tsx
 msgid "Format selection"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Frame rate"
 msgstr ""
 
 #: src/store/zustand/listener/general-live.ts
@@ -2920,6 +3178,14 @@ msgstr ""
 msgid "Get your attention when a summary is ready in the background."
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "GIF frame rate"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "GIF width"
+msgstr ""
+
 #: src/settings/ai/llm/shared.tsx
 msgid "GitHub Copilot"
 msgstr ""
@@ -2972,6 +3238,10 @@ msgstr ""
 
 #: src/settings/appearance/app-icon.tsx
 msgid "Graphite"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Green"
 msgstr ""
 
 #: src/settings/ai/llm/subscriptions/oauth.ts
@@ -3104,6 +3374,10 @@ msgstr ""
 msgid "High reasoning"
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+msgid "Highlighter"
+msgstr ""
+
 #: src/session/components/note-conflict-banner.tsx
 #: src/settings/dictation.tsx
 msgid "History"
@@ -3229,6 +3503,10 @@ msgstr ""
 msgid "Include meeting ID"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Include the pointer"
+msgstr ""
+
 #: src/settings/general/timezone.tsx
 msgid "India"
 msgstr ""
@@ -3308,6 +3586,7 @@ msgid "Join our community and stay updated:"
 msgstr ""
 
 #: src/annotate/lifecycle.tsx
+#: src/capture/lifecycle.tsx
 msgid "Keep"
 msgstr ""
 
@@ -3323,6 +3602,10 @@ msgstr ""
 msgid "Keep dictations for"
 msgstr ""
 
+#: src/capture/editor/index.tsx
+msgid "Keep editing"
+msgstr ""
+
 #: src/settings/dictation-paste-last.tsx
 msgid "Keep last dictation on the clipboard"
 msgstr ""
@@ -3333,6 +3616,10 @@ msgstr ""
 
 #: src/settings/dictation.tsx
 msgid "Keep Librelog running to use your dictation shortcuts in other apps."
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "Keep the macOS shortcuts"
 msgstr ""
 
 #: src/session/components/note-conflict-banner.tsx
@@ -3374,6 +3661,10 @@ msgstr ""
 
 #: src/onboarding/language-picker.tsx
 msgid "Language: {languageName}"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Large"
 msgstr ""
 
 #. placeholder {0}: webhook.last_delivery_status
@@ -3457,8 +3748,16 @@ msgstr ""
 msgid "Librelog can read meeting details"
 msgstr ""
 
+#: src/capture/lifecycle.tsx
+msgid "Librelog can't capture the screen."
+msgstr ""
+
 #: src/annotate/lifecycle.tsx
 msgid "Librelog can't record the screen."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Librelog cannot save captures in {dir}: {reason}"
 msgstr ""
 
 #: src/settings/developers/cli.tsx
@@ -3577,6 +3876,10 @@ msgstr ""
 
 #: src/chat/components/message/tool/search-meetings.tsx
 msgid "Limit: {limit}"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Line"
 msgstr ""
 
 #: src/contacts/details.tsx
@@ -3745,6 +4048,10 @@ msgstr ""
 msgid "London"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Long GIFs use a lower frame rate to stay small."
+msgstr ""
+
 #: src/settings/ai/llm/models.tsx
 msgid "Low"
 msgstr ""
@@ -3766,11 +4073,32 @@ msgid "Lower to"
 msgstr ""
 
 #: src/annotate/lifecycle.tsx
+#: src/capture/lifecycle.tsx
 msgid "macOS applies the Screen Recording permission after a relaunch."
+msgstr ""
+
+#: src/onboarding/capture.tsx
+msgid "macOS asks you to allow Screen Recording the first time you capture."
 msgstr ""
 
 #: src/settings/ai/shared/provider-connection.tsx
 msgid "macOS cannot access your login Keychain. Repairing briefly locks it and asks for your Mac password before Librelog retries this API key."
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "macOS kept some of its screenshot shortcuts on. Open System Settings → Keyboard → Keyboard Shortcuts → Screenshots and turn the shortcuts off, then check again."
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "macOS shortcuts: off."
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "macOS shortcuts: on."
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "macOS shortcuts: replaced by Librelog."
 msgstr ""
 
 #: src/settings/general/main-language.tsx
@@ -3831,6 +4159,7 @@ msgstr ""
 msgid "Median transcribed time. Conversations with timing: {0}."
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
 #: src/settings/ai/llm/models.tsx
 msgid "Medium"
 msgstr ""
@@ -4123,6 +4452,18 @@ msgstr ""
 msgid "New automation"
 msgstr ""
 
+#: src/settings/capture-shortcuts.tsx
+msgid "New Capture area shortcut"
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "New Capture full screen shortcut"
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "New Capture window shortcut"
+msgstr ""
+
 #: src/chat/components/toolbar-controls.tsx
 #: src/chat/store/chat-title.ts
 msgid "New chat"
@@ -4157,6 +4498,14 @@ msgstr ""
 
 #: src/settings/dictation-paste-last.tsx
 msgid "New paste last dictation shortcut"
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "New Record GIF shortcut"
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "New Record screen shortcut"
 msgstr ""
 
 #: src/shared/new-note-dialog.tsx
@@ -4369,6 +4718,10 @@ msgstr ""
 msgid "No recent chats"
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "No recording is running."
+msgstr ""
+
 #: src/contacts/related-notes.tsx
 msgid "No related notes found"
 msgstr ""
@@ -4452,6 +4805,7 @@ msgid "Not a chat model"
 msgstr ""
 
 #: src/settings/annotate.tsx
+#: src/settings/capture.tsx
 msgid "Not allowed"
 msgstr ""
 
@@ -4461,6 +4815,10 @@ msgstr ""
 
 #: src/settings/annotate.tsx
 msgid "Not asked yet. macOS asks the first time you annotate."
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Not asked yet. macOS asks the first time you capture."
 msgstr ""
 
 #: src/settings/stats/insights.tsx
@@ -4516,6 +4874,10 @@ msgstr ""
 msgid "Not running. It starts with the first summary or chat and stops after 5 idle minutes to free memory."
 msgstr ""
 
+#: src/settings/capture-shortcuts.tsx
+msgid "Not set"
+msgstr ""
+
 #: src/onboarding/model-setup.tsx
 msgid "not set up"
 msgstr ""
@@ -4563,6 +4925,10 @@ msgstr ""
 msgid "Notes with this subtype will show no subtype."
 msgstr ""
 
+#: src/settings/capture-recent.tsx
+msgid "Nothing captured yet. Your screenshots and recordings appear here."
+msgstr ""
+
 #: src/note-types/picker.tsx
 msgid "Nothing here yet."
 msgstr ""
@@ -4597,6 +4963,7 @@ msgid "Of the volume your computer had when dictation started."
 msgstr ""
 
 #: src/dictation/history/page.tsx
+#: src/settings/capture.tsx
 msgid "Off"
 msgstr ""
 
@@ -4643,6 +5010,10 @@ msgstr ""
 msgid "Only notes of this subtype."
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "Only screenshots can be edited."
+msgstr ""
+
 #: src/lock/auth.ts
 msgctxt "device authentication reason"
 msgid "open"
@@ -4681,6 +5052,10 @@ msgstr ""
 msgid "Open in right panel"
 msgstr ""
 
+#: src/settings/capture-shortcuts.tsx
+msgid "Open Keyboard Settings"
+msgstr ""
+
 #: src/composer/index.tsx
 #: src/onboarding/final.tsx
 #: src/services/enhancer/summary-notification.ts
@@ -4696,8 +5071,14 @@ msgid "Open permissions"
 msgstr ""
 
 #: src/annotate/lifecycle.tsx
+#: src/capture/lifecycle.tsx
 #: src/settings/annotate.tsx
+#: src/settings/capture.tsx
 msgid "Open System Settings"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Open the editor right away"
 msgstr ""
 
 #: src/settings/ai/llm/subscriptions/connect.tsx
@@ -4718,8 +5099,16 @@ msgstr ""
 msgid "Opens when the models finish installing"
 msgstr ""
 
+#: src/onboarding/index.tsx
+msgid "Optional"
+msgstr ""
+
 #: src/settings/todo/permission.tsx
 msgid "or"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Orange"
 msgstr ""
 
 #: src/sidebar/note-filter-menu.tsx
@@ -4882,6 +5271,10 @@ msgstr ""
 msgid "Pauses Music, Spotify, and VLC if they are playing, and resumes them when dictation ends."
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+msgid "Pen"
+msgstr ""
+
 #: src/contacts/organization-details.tsx
 #: src/session/components/note-input/transcript/renderer/speaker-assign.tsx
 msgid "People"
@@ -4934,6 +5327,10 @@ msgstr ""
 msgid "Pinned organization"
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+msgid "Pixelate"
+msgstr ""
+
 #: src/audio-player/timeline.tsx
 msgid "Play"
 msgstr ""
@@ -4948,6 +5345,10 @@ msgstr ""
 
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
 msgid "Play from here"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "PNG keeps every pixel; JPEG makes smaller files."
 msgstr ""
 
 #: src/settings/ai/stt/provider-context.ts
@@ -5081,6 +5482,10 @@ msgstr ""
 msgid "Quit {app} Completely?"
 msgstr ""
 
+#: src/capture/lifecycle.tsx
+msgid "Quit and reopen Librelog to capture the screen."
+msgstr ""
+
 #: src/annotate/lifecycle.tsx
 msgid "Quit and reopen Librelog to record the screen."
 msgstr ""
@@ -5179,6 +5584,10 @@ msgstr ""
 msgid "Recent"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Recent captures"
+msgstr ""
+
 #: src/chat/components/toolbar-controls.tsx
 msgid "Recent Chats"
 msgstr ""
@@ -5191,8 +5600,30 @@ msgstr ""
 msgid "Record"
 msgstr ""
 
+#: src/i18n/external-messages.ts
+#: src/settings/capture-shortcuts.tsx
+msgid "Record GIF"
+msgstr ""
+
 #: src/settings/general/permissions.tsx
 msgid "Record other participants in meetings."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+#: src/settings/capture-shortcuts.tsx
+msgid "Record screen"
+msgstr ""
+
+#: src/i18n/native-labels.tsx
+msgid "Record Screen"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Record system audio"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Record the microphone"
 msgstr ""
 
 #: src/settings/general/permissions.tsx
@@ -5225,6 +5656,10 @@ msgstr ""
 msgid "Recording not found. It may have been deleted."
 msgstr ""
 
+#: src/capture/lifecycle.tsx
+msgid "Recording saved"
+msgstr ""
+
 #: src/stt/meeting-disclosure.ts
 msgid "Recording started, but Librelog could not post the meeting chat disclosure."
 msgstr ""
@@ -5241,10 +5676,31 @@ msgstr ""
 msgid "Recording…"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Recordings"
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "Records a movie (MP4) of an area, a window or the whole screen. Press it again to stop."
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "Records an animated GIF. Press it again to stop."
+msgstr ""
+
 #: src/session/components/note-input/transcript/index.tsx
 msgid "Recovery did not finish before the meeting ended. Audio was deleted according to your retention setting."
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+msgid "Rectangle"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Red"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
 #: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 msgid "Redo"
@@ -5377,8 +5833,16 @@ msgstr ""
 msgid "Replace all"
 msgstr ""
 
+#: src/settings/capture-shortcuts.tsx
+msgid "Replace the macOS screenshot shortcuts"
+msgstr ""
+
 #: src/session/components/note-input/search/bar.tsx
 msgid "Replace with..."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Replacing the macOS screenshot shortcuts is only available on macOS."
 msgstr ""
 
 #: src/main/windows-title-bar.tsx
@@ -5418,6 +5882,10 @@ msgstr ""
 #: src/settings/ai/shared/provider-connection.tsx
 #: src/settings/todo/permission.tsx
 msgid "Reset"
+msgstr ""
+
+#: src/capture/editor/index.tsx
+msgid "Reset crop"
 msgstr ""
 
 #: src/templates/auto-form.tsx
@@ -5557,6 +6025,8 @@ msgstr ""
 msgid "Sao Paulo"
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+#: src/capture/lifecycle.tsx
 #: src/settings/dictionary/index.tsx
 #: src/settings/note-types/index.tsx
 #: src/shared/edit-note-dialog.tsx
@@ -5566,6 +6036,10 @@ msgstr ""
 
 #: src/settings/automations/index.tsx
 msgid "Save & enable"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Save As…"
 msgstr ""
 
 #: src/automations/starters.tsx
@@ -5588,10 +6062,19 @@ msgstr ""
 msgid "Save slides and screens others share in meetings. Requires Screen Recording."
 msgstr ""
 
+#: src/capture/editor-window.tsx
+msgid "Save the screenshot as"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Save to a folder"
+msgstr ""
+
 #: src/settings/general/meeting-settings.tsx
 msgid "Save visible chat from supported meetings using Accessibility."
 msgstr ""
 
+#: src/capture/editor/index.tsx
 #: src/settings/ai/stt/index.tsx
 msgid "Saved"
 msgstr ""
@@ -5601,11 +6084,37 @@ msgid "Saving…"
 msgstr ""
 
 #: src/settings/annotate.tsx
+#: src/settings/capture.tsx
 msgid "Screen Recording"
 msgstr ""
 
 #: src/i18n/external-messages.ts
 msgid "Screen Recording is not allowed for Librelog."
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Screenshot editor"
+msgstr ""
+
+#: src/capture/lifecycle.tsx
+msgid "Screenshot saved"
+msgstr ""
+
+#: src/settings/capture.tsx
+#: src/sidebar/settings-nav-groups.ts
+msgid "Screenshots"
+msgstr ""
+
+#: src/onboarding/index.tsx
+msgid "Screenshots and recordings"
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "Screenshots and recordings are only available in the macOS app."
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Screenshots and screen recordings are available in the macOS app downloaded from the website."
 msgstr ""
 
 #: src/session/components/note-input/transcript/renderer/index.tsx
@@ -5741,6 +6250,10 @@ msgstr ""
 msgid "Segment timing"
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+msgid "Select"
+msgstr ""
+
 #: src/contacts/details.tsx
 msgid "Select a person to view details"
 msgstr ""
@@ -5845,6 +6358,10 @@ msgstr ""
 msgid "Set {providerName} as the current provider?"
 msgstr ""
 
+#: src/settings/capture-shortcuts.tsx
+msgid "Set a shortcut"
+msgstr ""
+
 #: src/settings/ai/shared/provider-selection-prompt.ts
 msgid "Set as current"
 msgstr ""
@@ -5906,6 +6423,14 @@ msgstr ""
 msgid "Shared screens"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Shortcuts"
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Show a card"
+msgstr ""
+
 #: src/i18n/native-labels.tsx
 msgid "Show All"
 msgstr ""
@@ -5930,6 +6455,10 @@ msgstr ""
 msgid "Show Audio in Folder"
 msgstr ""
 
+#: src/settings/capture-recent.tsx
+msgid "Show captures folder"
+msgstr ""
+
 #: src/settings/ai/shared/provider-list.tsx
 msgid "Show fewer"
 msgstr ""
@@ -5944,8 +6473,10 @@ msgid "Show ignored models"
 msgstr ""
 
 #: src/annotate/lifecycle.tsx
+#: src/capture/lifecycle.tsx
 #: src/settings/ai/llm/builtin.tsx
 #: src/settings/ai/stt/model-rows.tsx
+#: src/settings/capture-recent.tsx
 #: src/sidebar/timeline/item.tsx
 msgid "Show in Finder"
 msgstr ""
@@ -5991,6 +6522,10 @@ msgstr ""
 
 #: src/settings/appearance/sidebar-item-fields.tsx
 msgid "Show the folder above the title."
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Show the pointer"
 msgstr ""
 
 #: src/settings/general/timezone.tsx
@@ -6059,12 +6594,20 @@ msgstr ""
 msgid "Singapore"
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+msgid "Size"
+msgstr ""
+
 #: src/settings/developers/skills.tsx
 msgid "Skill installed"
 msgstr ""
 
 #: src/onboarding/shared.tsx
 msgid "Skip"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "Small"
 msgstr ""
 
 #: src/templates/template-icon-picker.tsx
@@ -6087,6 +6630,7 @@ msgstr ""
 msgid "Some audio has not been transcribed yet, so Librelog kept it temporarily. It will be deleted automatically once transcription succeeds."
 msgstr ""
 
+#: src/capture/editor/index.tsx
 #: src/session/components/note-input/transcript/renderer/selection-menu.tsx
 #: src/shared/control.tsx
 msgid "Something went wrong"
@@ -6437,6 +6981,18 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Take screenshots, record the screen as a movie or a GIF, and mark them up, with shortcuts that work in any app."
+msgstr ""
+
+#: src/settings/capture.tsx
+msgid "Take screenshots, record the screen as a movie or a GIF, and mark them up, with shortcuts that work in any app. Turning this off gives macOS its screenshot shortcuts back: turn it off before uninstalling Librelog."
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "Takes the display under the pointer at once."
+msgstr ""
+
 #: src/i18n/component-labels.tsx
 msgid "Task List"
 msgstr ""
@@ -6482,8 +7038,14 @@ msgstr ""
 msgid "Test runs are not available yet."
 msgstr ""
 
+#: src/capture/editor/canvas.tsx
+#: src/capture/editor/toolbar.tsx
 #: src/i18n/component-labels.tsx
 msgid "Text"
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "That file is a recording in your captures. Choose another name."
 msgstr ""
 
 #: src/i18n/external-messages.ts
@@ -6515,8 +7077,20 @@ msgstr ""
 msgid "The built-in model failed to start three times in a row. Open Settings › Intelligence to try again."
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "The capture was kept at {path}, but {problem}"
+msgstr ""
+
 #: src/onboarding/model-setup.tsx
 msgid "The download stopped before it finished."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "The Downloads folder could not be found."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "The edited picture is not a usable PNG: {rest}"
 msgstr ""
 
 #: src/i18n/component-labels.tsx
@@ -6527,6 +7101,10 @@ msgstr ""
 msgid "The focused text field changed. Copy your last dictation from Settings > Dictation."
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "The folder must be an absolute path: {rest}"
+msgstr ""
+
 #: src/onboarding/model-status.ts
 #: src/settings/ai/llm/models.tsx
 msgid "The key was rejected. Check it above."
@@ -6534,6 +7112,10 @@ msgstr ""
 
 #: src/stt/capture-lifecycle.ts
 msgid "The live transcript was kept. Re-transcribe the meeting to try again."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "The macOS shortcut settings could not be read."
 msgstr ""
 
 #: src/settings/ai/llm/builtin.tsx
@@ -6582,6 +7164,10 @@ msgstr ""
 
 #: src/settings/ai/shared/list-common.ts
 msgid "The provider returned a model list Librelog can’t read."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "The recording could not be finished ({reason}). What was recorded is kept at {path}, and Librelog adds it to your captures later."
 msgstr ""
 
 #: src/stt/useRunBatch.ts
@@ -6669,6 +7255,10 @@ msgstr ""
 msgid "This built-in model isn’t downloaded. Download it in Settings › Intelligence."
 msgstr ""
 
+#: src/i18n/external-messages.ts
+msgid "This capture is no longer in the list."
+msgstr ""
+
 #: src/session/components/version-history-dialog.tsx
 msgid "This device"
 msgstr ""
@@ -6737,6 +7327,14 @@ msgstr ""
 msgid "This recording is using batch transcription, so the transcript isn't available to chat yet. Ask again after transcription finishes, or switch to a Pro model for live transcription."
 msgstr ""
 
+#: src/capture/editor-window.tsx
+msgid "This screenshot could not be opened."
+msgstr ""
+
+#: src/capture/editor-window.tsx
+msgid "This screenshot is no longer in your captures."
+msgstr ""
+
 #: src/i18n/external-messages.ts
 msgid "This shortcut already pastes the last dictation. Choose another one."
 msgstr ""
@@ -6755,6 +7353,10 @@ msgstr ""
 
 #: src/i18n/external-messages.ts
 msgid "This shortcut is already used by another Librelog shortcut. Choose another one."
+msgstr ""
+
+#: src/i18n/external-messages.ts
+msgid "This shortcut is already used by Screenshots. Choose another one."
 msgstr ""
 
 #: src/settings/ai/llm/subscriptions/connect.tsx
@@ -6969,6 +7571,14 @@ msgstr ""
 msgid "Turn on Apple Intelligence in System Settings."
 msgstr ""
 
+#: src/onboarding/capture.tsx
+msgid "Turn on screenshots and recordings"
+msgstr ""
+
+#: src/settings/capture-shortcuts.tsx
+msgid "Turns off macOS's ⌘⇧3, ⌘⇧4 and ⌘⇧5 and uses them for Capture full screen, Capture area and Record screen (⌘⇧6 records a GIF). Turning this off gives them back to macOS."
+msgstr ""
+
 #: src/note-types/picker.tsx
 msgid "Type"
 msgstr ""
@@ -6981,6 +7591,7 @@ msgstr ""
 msgid "Unavailable"
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
 #: src/i18n/native-labels.tsx
 #: src/main/windows-title-bar.tsx
 #: src/sidebar/toast/undo-delete-toast.tsx
@@ -7278,6 +7889,10 @@ msgstr ""
 msgid "Use Alibaba Cloud Model Studio's Qwen ASR for **live transcription**. The default endpoint is the Singapore region; change it under Advanced when your API key belongs to another region."
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "Use Downloads"
+msgstr ""
+
 #: src/settings/general/index.tsx
 msgid "Use main language for summaries"
 msgstr ""
@@ -7432,6 +8047,10 @@ msgstr ""
 msgid "Waiting for authorization in your browser…"
 msgstr ""
 
+#: src/annotate/lifecycle.tsx
+msgid "Waiting to transcribe the narration"
+msgstr ""
+
 #: src/settings/ai/llm/provider-context.ts
 msgid "We only support **OpenAI-compatible** endpoints for now."
 msgstr ""
@@ -7516,6 +8135,10 @@ msgstr ""
 msgid "When this happens"
 msgstr ""
 
+#: src/settings/capture.tsx
+msgid "When this is off, captures are kept in Librelog's data folder and listed below."
+msgstr ""
+
 #: src/settings/ai/stt/index.tsx
 msgid "Where and how your meetings become text."
 msgstr ""
@@ -7531,6 +8154,10 @@ msgstr ""
 
 #: src/settings/dictation-audio.tsx
 msgid "While dictating"
+msgstr ""
+
+#: src/capture/editor/toolbar.tsx
+msgid "White"
 msgstr ""
 
 #: src/onboarding/index.tsx
@@ -7569,6 +8196,10 @@ msgstr ""
 msgid "Write to a folder"
 msgstr ""
 
+#: src/capture/editor/toolbar.tsx
+msgid "Yellow"
+msgstr ""
+
 #: src/stt/detect-events.ts
 msgid "Yes"
 msgstr ""
@@ -7588,6 +8219,10 @@ msgstr ""
 
 #: src/settings/todo/permission.tsx
 msgid "You can"
+msgstr ""
+
+#: src/onboarding/capture.tsx
+msgid "You can change this later in Settings › Screenshots."
 msgstr ""
 
 #: src/shared/note-details-form.tsx
@@ -7648,4 +8283,16 @@ msgstr ""
 
 #: src/i18n/native-labels.tsx
 msgid "Zoom"
+msgstr ""
+
+#: src/capture/editor/index.tsx
+msgid "Zoom in"
+msgstr ""
+
+#: src/capture/editor/index.tsx
+msgid "Zoom out"
+msgstr ""
+
+#: src/capture/editor/index.tsx
+msgid "Zoom to fit"
 msgstr ""

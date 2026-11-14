@@ -28,6 +28,7 @@ import {
   annotateAvailable,
   openScreenRecordingSettings,
 } from "~/annotate/system";
+import { useCaptureShortcuts } from "~/capture/system";
 import { localizeExternalMessage } from "~/i18n/external-messages";
 import { SettingsPageTitle } from "~/settings/page-title";
 import { setSettingValue, useSetSettingValue } from "~/settings/queries";
@@ -195,12 +196,14 @@ function AnnotateShortcutSettings() {
   const paste = useConfigValue("annotate_paste_shortcut");
   const dictation = useConfigValue("dictation_shortcuts");
   const pasteLastDictation = useConfigValue("dictation_paste_last_shortcut");
+  const captureShortcuts = useCaptureShortcuts();
   const recorder = useShortcutRecorder<Slot>({
     validate: async (value, slot) => {
       const taken = [
         ...dictation,
         pasteLastDictation,
         slot === "annotate" ? paste : shortcut,
+        ...captureShortcuts,
       ];
       const result = await shortcutCommands.validateAnnotate(value, taken);
       return result.status === "error"

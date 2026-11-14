@@ -13,6 +13,7 @@
     "core:window:allow-minimize",
     "core:window:allow-maximize",
     "core:window:allow-close",
+    "core:window:allow-set-title",
     "core:window:allow-show",
     "core:window:allow-center",
     "core:window:allow-set-size",
@@ -83,6 +84,7 @@
     "shortcut:default",
     "dictation:default",
     "annotate:default",
+    "capture:default",
     {
       "identifier": "http:default",
       "deny": [],

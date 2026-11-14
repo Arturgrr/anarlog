@@ -12,10 +12,11 @@ import { commands as dictation } from "@anlg/plugin-dictation";
 import { commands as opener } from "@anlg/plugin-opener2";
 import { commands as permissions } from "@anlg/plugin-permissions";
 import { commands as shortcuts, events } from "@anlg/plugin-shortcut";
+import { commands as transcription } from "@anlg/plugin-transcription";
 import { toast } from "@anlg/ui/components/ui/toast";
 import { useMountEffect } from "@anlg/ui/hooks/use-mount-effect";
 
-import { createAnnotateFlow } from "./flow";
+import { createAnnotateFlow, narrationMicrophone } from "./flow";
 import { chainRegistration } from "./registration";
 import { annotateRuns, useAnnotateStatus } from "./state";
 import { annotateAvailable, openScreenRecordingSettings } from "./system";
@@ -97,14 +98,20 @@ function ActiveAnnotate() {
         screenRecording: async () => unwrap(await annotate.screenRecording()),
         requestScreenRecording: async () =>
           unwrap(await annotate.requestScreenRecording()),
-        start: async () =>
-          unwrap(
-            await annotate.start(current.current.microphone || null, {
+        start: async () => {
+          const microphone = await narrationMicrophone(
+            async () =>
+              unwrap(await transcription.getCurrentMicrophoneDevice()),
+            current.current.microphone || null,
+          );
+          return unwrap(
+            await annotate.start(microphone, {
               discardQuestion: t`Discard?`,
               discard: t`Discard`,
               keep: t`Keep`,
             }),
-          ),
+          );
+        },
         stop: async () => unwrap(await annotate.stop()),
         finalize: async (annotation, transcript) =>
           unwrap(await annotate.finalize(annotation, transcript)),
@@ -191,6 +198,10 @@ function ActiveAnnotate() {
             t`The narration could not be transcribed. The annotation is saved without it.`,
           );
         },
+        transcriptionWaiting: () =>
+          toast(t`Waiting to transcribe the narration`, {
+            description: t`Another recording is being transcribed on this Mac. The annotation will be ready when it finishes.`,
+          }),
         nothingToPaste: () => toast(t`There's no annotation to paste yet.`),
         error: (error) => {
           if (!disposed) toast.error(describe(error));

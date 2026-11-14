@@ -9,6 +9,11 @@ pub struct TrayLabels {
     pub open_app: String,
     pub start_meeting: String,
     pub paste_last_dictation: String,
+    /// Sent by frontends that know Capture; English otherwise.
+    #[serde(default = "english_capture_area")]
+    pub capture_area: String,
+    #[serde(default = "english_record_screen")]
+    pub record_screen: String,
     pub settings: String,
     pub check_for_updates: String,
     pub downloading_update: String,
@@ -59,12 +64,22 @@ pub struct TrayLabels {
     pub check_failed_message: String,
 }
 
+fn english_capture_area() -> String {
+    "Capture Area".into()
+}
+
+fn english_record_screen() -> String {
+    "Record Screen".into()
+}
+
 impl Default for TrayLabels {
     fn default() -> Self {
         Self {
             open_app: "Open {app}".into(),
             start_meeting: "Start a new meeting".into(),
             paste_last_dictation: "Paste last dictation".into(),
+            capture_area: english_capture_area(),
+            record_screen: english_record_screen(),
             settings: "Settings".into(),
             check_for_updates: "Check for Updates".into(),
             downloading_update: "Downloading...".into(),

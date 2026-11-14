@@ -59,13 +59,18 @@ impl Drop for CaptureStreamInner {
     }
 }
 
+/// A microphone opened on its own (an annotation's narration, a dictation)
+/// waits this long for another stream's startup, such as a meeting's, rather
+/// than failing; the meeting's own capture retries instead.
+const MIC_STARTUP_WAIT: std::time::Duration = std::time::Duration::from_secs(3);
+
 pub(crate) fn setup_mic_stream(
     sample_rate: u32,
     chunk_size: usize,
     mic_device: Option<String>,
 ) -> Result<ChunkStream, Error> {
     let mic = MicInput::new(mic_device).map_err(|_| Error::MicOpenFailed)?;
-    mic.stream()?
+    mic.stream_within(MIC_STARTUP_WAIT)?
         .resampled_chunks(sample_rate, chunk_size)
         .map(|stream| Box::pin(stream) as ChunkStream)
         .map_err(|_| Error::MicStreamSetupFailed)

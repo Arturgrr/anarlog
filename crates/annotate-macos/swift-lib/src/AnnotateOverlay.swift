@@ -155,6 +155,10 @@ final class AnnotateCapsuleView: NSView {
   var penOn = false {
     didSet { if penOn != oldValue { needsDisplay = true } }
   }
+  /// Capture's recording has no pen.
+  var showsPen = true {
+    didSet { if showsPen != oldValue { needsDisplay = true } }
+  }
   var labels = AnnotateLabels()
   var onAction: ((AnnotateCapsuleTarget) -> Void)?
 
@@ -163,14 +167,14 @@ final class AnnotateCapsuleView: NSView {
   override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
   override func mouseDown(with event: NSEvent) {
-    let layout = AnnotateCapsuleLayout.make(asking: asking)
+    let layout = AnnotateCapsuleLayout.make(asking: asking, pen: showsPen)
     if let target = layout.target(at: convert(event.locationInWindow, from: nil)) {
       onAction?(target)
     }
   }
 
   override func draw(_ dirtyRect: NSRect) {
-    let layout = AnnotateCapsuleLayout.make(asking: asking)
+    let layout = AnnotateCapsuleLayout.make(asking: asking, pen: showsPen)
     let red = NSColor(
       srgbRed: AnnotateInkLook.red.r, green: AnnotateInkLook.red.g,
       blue: AnnotateInkLook.red.b, alpha: 1)

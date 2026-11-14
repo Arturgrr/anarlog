@@ -225,15 +225,24 @@ pub(crate) fn startup_pending() -> bool {
 struct StartupPermit;
 
 impl StartupPermit {
-    fn acquire() -> Result<Self, crate::Error> {
-        MIC_STARTING
-            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-            .map(|_| Self)
-            .map_err(|_| {
-                crate::Error::MicStreamInitializationFailed(
+    /// Waits up to `wait` for another stream's startup to finish. A startup
+    /// stuck in the driver keeps the permit, so the wait is bounded.
+    fn acquire_within(wait: std::time::Duration) -> Result<Self, crate::Error> {
+        let deadline = std::time::Instant::now() + wait;
+        loop {
+            if MIC_STARTING
+                .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+                .is_ok()
+            {
+                return Ok(Self);
+            }
+            if std::time::Instant::now() >= deadline {
+                return Err(crate::Error::MicStreamInitializationFailed(
                     "previous microphone startup is still pending".into(),
-                )
-            })
+                ));
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
     }
 }
 
@@ -497,8 +506,18 @@ impl MicInput {
 }
 
 impl MicInput {
+    /// Fails at once while another stream is starting.
     pub fn stream(&self) -> Result<MicStream, crate::Error> {
-        let startup_permit = StartupPermit::acquire()?;
+        self.stream_within(std::time::Duration::ZERO)
+    }
+
+    /// Waits up to `wait` for another stream's startup to finish first: one
+    /// capture may open while another, such as a meeting's, is starting.
+    pub(crate) fn stream_within(
+        &self,
+        wait: std::time::Duration,
+    ) -> Result<MicStream, crate::Error> {
+        let startup_permit = StartupPermit::acquire_within(wait)?;
         let config = self.config.clone();
         let device = self.capture.handles.device().clone();
         let (drop_tx, drop_rx) = std::sync::mpsc::channel();
@@ -726,6 +745,21 @@ impl AsyncSource for MicStream {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[serial_test::serial]
+    fn a_stream_opened_while_another_starts_waits_for_it_instead_of_failing() {
+        let first = StartupPermit::acquire_within(std::time::Duration::ZERO).unwrap();
+        let finishes = std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            drop(first);
+        });
+        let second = StartupPermit::acquire_within(std::time::Duration::from_secs(5));
+        finishes.join().unwrap();
+        let _second = second.unwrap();
+        // A startup that never finishes is still given up on.
+        assert!(StartupPermit::acquire_within(std::time::Duration::from_millis(30)).is_err());
+    }
 
     #[test]
     fn capture_keeps_default_handoff_active_until_the_last_stream_stops() {

@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  BUSY_RETRY_MS,
   createAnnotateFlow,
+  narrationMicrophone,
   NO_SPEECH,
   PASTE_GAP_MS,
   shellEscapePath,
+  TRANSCRIPTION_BUSY,
   type AnnotateDeps,
 } from "./flow";
 import { annotateRuns } from "./state";
@@ -32,6 +35,7 @@ function setup(overrides: Partial<AnnotateDeps["plugin"]> = {}) {
     needsRestart: vi.fn(),
     microphoneDenied: vi.fn(),
     transcriptionFailed: vi.fn(),
+    transcriptionWaiting: vi.fn(),
     nothingToPaste: vi.fn(),
     error: vi.fn(),
   };
@@ -228,6 +232,47 @@ describe("Annotate flow", () => {
     expect(notify.transcriptionFailed).not.toHaveBeenCalled();
     expect(plugin.finalize).toHaveBeenCalledWith(stopped.id, null);
     expect(notify.ready).toHaveBeenCalledWith(finalized);
+  });
+
+  it("waits for a local transcription busy with a meeting's recording, then finalizes with the words", async () => {
+    const { flow, deps, plugin, notify } = setup();
+    vi.mocked(deps.transcribe)
+      .mockRejectedValueOnce(TRANSCRIPTION_BUSY)
+      .mockRejectedValueOnce(TRANSCRIPTION_BUSY);
+    await flow.start();
+    await flow.stop();
+    expect(deps.sleep).toHaveBeenCalledWith(BUSY_RETRY_MS);
+    expect(notify.transcriptionWaiting).toHaveBeenCalledOnce();
+    expect(notify.transcriptionFailed).not.toHaveBeenCalled();
+    expect(plugin.finalize).toHaveBeenCalledWith(
+      stopped.id,
+      expect.objectContaining({ text: "Look here." }),
+    );
+
+    // A model that stays busy: the annotation is still finalized, without words.
+    const busy = setup();
+    vi.mocked(busy.deps.transcribe).mockRejectedValue(TRANSCRIPTION_BUSY);
+    await busy.flow.start();
+    await busy.flow.stop();
+    expect(busy.notify.transcriptionFailed).toHaveBeenCalledOnce();
+    expect(busy.plugin.finalize).toHaveBeenCalledWith(stopped.id, null);
+    expect(busy.flow.phase).toBe("idle");
+  });
+
+  it("narrates into the microphone a meeting records, else the chosen one", async () => {
+    expect(
+      await narrationMicrophone(
+        async () => "MacBook Pro Microphone",
+        "AirPods",
+      ),
+    ).toBe("MacBook Pro Microphone");
+    // No meeting, or one that records no microphone.
+    expect(
+      await narrationMicrophone(async () => {
+        throw new Error("actor not found: active source");
+      }, "AirPods"),
+    ).toBe("AirPods");
+    expect(await narrationMicrophone(async () => null, null)).toBeNull();
   });
 
   it("retries a failed finalize once with the same words", async () => {

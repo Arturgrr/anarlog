@@ -43,6 +43,17 @@ The summary lists each numbered key frame with what you marked and what you said
 
 Agents can also read annotations themselves through the [MCP server](/reference/mcp#list_annotations): `get_annotation` returns the newest one, with its summary, transcript and contact sheet.
 
+## Annotate during a meeting
+
+You can annotate while Librelog records a meeting, and start recording a meeting while you annotate. Starting, finishing or discarding one doesn't stop or pause the other.
+
+- **Your voice goes to both.** The annotation records the microphone the meeting records, even when that isn't the one chosen in Settings, for example a wired microphone used in place of a Bluetooth headset. What you say while annotating is in the annotation's narration and also in the meeting's recording and transcript.
+- **Muting the meeting's microphone** keeps your narration out of the meeting, but the annotation still records it.
+- **The call's audio is not in the annotation.** The screen recording has no sound. Annotate uses the microphone without echo cancellation, though: if the call plays through your speakers, the other people's voices can reach the narration and its transcript. Use headphones to avoid it.
+- **Nothing is added to the call.** Annotate plays no sounds and doesn't lower or pause other audio.
+- **Windows.** The meeting's floating bar is not in the annotation's video. While you draw, the red layer covers the recorded display, the floating bar included; stop drawing to click it.
+- **Transcription.** The narration is transcribed after you finish, separately from the meeting's live transcript. If a local transcription model on this Mac is busy with another recording, such as a meeting that just ended, Librelog shows **Waiting to transcribe the narration** and keeps trying for a few minutes. If it is still busy, the annotation is written without a transcript.
+
 ## Where annotations are kept
 
 Each annotation is a folder in Librelog's data folder, under `annotations`. **Show annotations folder** in **Settings → Annotate** opens it. A folder holds:

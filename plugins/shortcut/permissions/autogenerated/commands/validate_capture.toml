@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-validate-capture"
+description = "Enables the validate_capture command without any pre-configured scope."
+commands.allow = ["validate_capture"]
+
+[[permission]]
+identifier = "deny-validate-capture"
+description = "Denies the validate_capture command without any pre-configured scope."
+commands.deny = ["validate_capture"]

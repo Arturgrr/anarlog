@@ -24,6 +24,7 @@ vi.mock("~/dictation/lifecycle", () => ({
 vi.mock("~/dictation/paste-last", () => ({
   waitForPasteLastCleanup: () => Promise.resolve(),
 }));
+vi.mock("~/capture/system", () => ({ useCaptureShortcuts: () => [] }));
 vi.mock("~/shared/config", () => ({
   useConfigValue: (key: string) =>
     ({
@@ -98,6 +99,7 @@ describe("dictation shortcut recorder", () => {
     expect(mocks.validate).toHaveBeenCalledWith(
       "Control+Alt+KeyD",
       "Alt+Shift+KeyV",
+      [],
       [],
     );
     await waitFor(() =>

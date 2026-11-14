@@ -375,7 +375,11 @@ export type Anchor =
 export type AppWindow =
   | { type: "main" }
   | { type: "composer" }
-  | { type: "note"; value: string };
+  | { type: "note"; value: string }
+  /**
+   * The screenshot editor for the capture with this id.
+   */
+  | { type: "captureEditor"; value: string };
 export type ChangelogState = { previous: string | null; current: string };
 export type ContactsSelection =
   | { type: "person"; id: string }

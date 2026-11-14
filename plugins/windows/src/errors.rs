@@ -12,6 +12,8 @@ pub enum Error {
     PanelError(String),
     #[error("window not found: {0}")]
     WindowNotFound(String),
+    #[error("not a capture id: {0}")]
+    InvalidCaptureId(String),
 }
 
 impl Serialize for Error {

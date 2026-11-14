@@ -12,6 +12,8 @@ Default permissions for the plugin
 - `allow-configure-annotate`
 - `allow-validate-annotate`
 - `allow-set-annotate-recording`
+- `allow-configure-capture`
+- `allow-validate-capture`
 - `allow-register-hotkey`
 - `allow-unregister-hotkey`
 
@@ -72,6 +74,32 @@ Enables the configure_annotate command without any pre-configured scope.
 <td>
 
 Denies the configure_annotate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:allow-configure-capture`
+
+</td>
+<td>
+
+Enables the configure_capture command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:deny-configure-capture`
+
+</td>
+<td>
+
+Denies the configure_capture command without any pre-configured scope.
 
 </td>
 </tr>
@@ -254,6 +282,32 @@ Enables the validate_annotate command without any pre-configured scope.
 <td>
 
 Denies the validate_annotate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:allow-validate-capture`
+
+</td>
+<td>
+
+Enables the validate_capture command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`shortcut:deny-validate-capture`
+
+</td>
+<td>
+
+Denies the validate_capture command without any pre-configured scope.
 
 </td>
 </tr>

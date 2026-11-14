@@ -67,6 +67,23 @@ export const commands = {
     }
   },
   /**
+   * Shows "Capture Area" and "Record Screen" in the menu bar icon's menu
+   * while Capture is on.
+   */
+  async setTrayCaptureVisible(visible: boolean): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("plugin:anlg-tray|set_tray_capture_visible", {
+          visible,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
+  /**
    * Claims a "Start a new meeting" click from the menu bar icon. Returns true
    * once per click, so it starts one recording however many times it is asked.
    */
@@ -96,6 +113,11 @@ export type TrayLabels = {
   openApp: string;
   startMeeting: string;
   pasteLastDictation: string;
+  /**
+   * Sent by frontends that know Capture; English otherwise.
+   */
+  captureArea?: string;
+  recordScreen?: string;
   settings: string;
   checkForUpdates: string;
   downloadingUpdate: string;

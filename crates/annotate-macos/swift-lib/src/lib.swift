@@ -1,7 +1,7 @@
-// The C entry points `crates/annotate-macos/src/lib.rs` declares. Each
-// answers with the JSON envelope `AnnotateReply` writes and never traps.
-// The blocking ones refuse the main thread, whose run loop the windows and
-// ScreenCaptureKit's waits need.
+// The C entry points `crates/annotate-macos/src/lib.rs` and `capture.rs`
+// declare. Each answers with the JSON envelope `AnnotateReply` writes and
+// never traps. The blocking ones refuse the main thread, whose run loop the
+// windows and ScreenCaptureKit's waits need.
 
 import AppKit
 import Foundation
@@ -98,5 +98,127 @@ public func annotateExtractFrames(request: SRString) -> SRString {
       AnnotateReply.decode(AnnotateExtractRequest.self, from: json).flatMap {
         AnnotateFrames.extract($0)
       })
+  }
+}
+
+// MARK: Capture
+
+@_cdecl("_capture_screenshot")
+public func captureScreenshot(request: SRString) -> SRString {
+  let json = request.toString()
+  return blocking {
+    AnnotateReply.from(
+      AnnotateReply.decode(CaptureScreenshotRequest.self, from: json).flatMap {
+        CaptureSession.shared.screenshot($0)
+      })
+  }
+}
+
+@_cdecl("_capture_record_start")
+public func captureRecordStart(request: SRString) -> SRString {
+  let json = request.toString()
+  return blocking {
+    AnnotateReply.from(
+      AnnotateReply.decode(CaptureRecordRequest.self, from: json).flatMap {
+        CaptureSession.shared.recordStart($0)
+      })
+  }
+}
+
+@_cdecl("_capture_record_stop")
+public func captureRecordStop() -> SRString {
+  blocking { AnnotateReply.from(CaptureSession.shared.recordStop()) }
+}
+
+@_cdecl("_capture_record_cancel")
+public func captureRecordCancel() -> SRString {
+  blocking { AnnotateReply.from(CaptureSession.shared.recordCancel()) }
+}
+
+@_cdecl("_capture_record_status")
+public func captureRecordStatus() -> SRString {
+  reply { AnnotateReply.ok(CaptureSession.shared.status()) }
+}
+
+@_cdecl("_capture_poll_events")
+public func capturePollEvents() -> SRString {
+  reply { AnnotateReply.ok(CaptureSession.shared.drainEvents()) }
+}
+
+@_cdecl("_capture_make_gif")
+public func captureMakeGif(request: SRString) -> SRString {
+  let json = request.toString()
+  return blocking {
+    AnnotateReply.from(
+      AnnotateReply.decode(CaptureGifRequest.self, from: json).flatMap {
+        CaptureMedia.makeGif($0)
+      })
+  }
+}
+
+@_cdecl("_capture_thumbnail")
+public func captureThumbnail(request: SRString) -> SRString {
+  let json = request.toString()
+  return blocking {
+    AnnotateReply.from(
+      AnnotateReply.decode(CaptureThumbnailRequest.self, from: json).flatMap {
+        CaptureMedia.thumbnail($0)
+      })
+  }
+}
+
+@_cdecl("_capture_copy")
+public func captureCopy(request: SRString) -> SRString {
+  let json = request.toString()
+  return blocking {
+    AnnotateReply.from(
+      AnnotateReply.decode(CaptureCopyRequest.self, from: json).flatMap {
+        CaptureMedia.copy($0)
+      })
+  }
+}
+
+/// Runs `work` on the main thread: at once there, else soon.
+private func onMainSoon(_ work: @escaping () -> Void) {
+  if Thread.isMainThread {
+    work()
+  } else {
+    DispatchQueue.main.async(execute: work)
+  }
+}
+
+@_cdecl("_capture_card_show")
+public func captureCardShow(request: SRString) -> SRString {
+  let json = request.toString()
+  return reply {
+    switch AnnotateReply.decode(CaptureCardRequest.self, from: json) {
+    case .failure(let failure):
+      return AnnotateReply.failure(failure)
+    case .success(let card):
+      if let problem = card.problem() { return AnnotateReply.failure(problem) }
+      onMainSoon { CaptureCards.shared.show(card) }
+      return AnnotateReply.ok(AnnotateNothing())
+    }
+  }
+}
+
+@_cdecl("_capture_card_close")
+public func captureCardClose(request: SRString) -> SRString {
+  let json = request.toString()
+  return reply {
+    switch AnnotateReply.decode(CaptureCardCloseRequest.self, from: json) {
+    case .failure(let failure):
+      return AnnotateReply.failure(failure)
+    case .success(let close):
+      if let problem = close.problem() { return AnnotateReply.failure(problem) }
+      onMainSoon {
+        if close.all == true {
+          CaptureCards.shared.closeAll()
+        } else if let id = close.id {
+          CaptureCards.shared.close(id: id)
+        }
+      }
+      return AnnotateReply.ok(AnnotateNothing())
+    }
   }
 }

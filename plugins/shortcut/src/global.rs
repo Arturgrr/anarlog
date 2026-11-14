@@ -8,8 +8,8 @@ use tauri_plugin_global_shortcut::{Code, Shortcut, ShortcutState};
 use tauri_specta::Event;
 
 use crate::{
-    AnnotateShortcutEvent, PasteLastAnnotationEvent, PasteLastEvent, ShortcutEvent,
-    ShortcutPluginExt, annotate, press,
+    AnnotateShortcutEvent, CaptureAction, CaptureShortcutEvent, CaptureShortcuts,
+    PasteLastAnnotationEvent, PasteLastEvent, ShortcutEvent, ShortcutPluginExt, annotate, press,
 };
 
 pub fn uses_portal() -> bool {
@@ -22,6 +22,7 @@ const TAKEN_BY_DICTATION: &str = "This shortcut already starts dictation. Choose
 const TAKEN_BY_PASTE_LAST: &str =
     "This shortcut already pastes the last dictation. Choose another one.";
 const TAKEN_BY_ANNOTATE: &str = "This shortcut is already used by Annotate. Choose another one.";
+const TAKEN_BY_CAPTURE: &str = "This shortcut is already used by Screenshots. Choose another one.";
 const TAKEN: &str =
     "This shortcut is already used by another Librelog shortcut. Choose another one.";
 
@@ -51,6 +52,9 @@ struct Keys {
     paste_last: Option<Shortcut>,
     annotate: Option<Shortcut>,
     annotate_paste: Option<Shortcut>,
+    /// Capture's shortcuts, each held on its own; they give way to every
+    /// other family's.
+    capture: Vec<(CaptureAction, Shortcut)>,
     /// The Escape keys held, for dictation's cancel, Annotate's ink, or
     /// both: one handler serves both, so a key either still wants stays.
     escape: Vec<Shortcut>,
@@ -70,6 +74,7 @@ enum Action {
     /// Annotate's start, stop and hold-to-ink key.
     Annotate,
     PasteLastAnnotation,
+    Capture(CaptureAction),
 }
 
 trait Backend {
@@ -88,6 +93,7 @@ impl Keys {
                 return Err(TAKEN_BY_PASTE_LAST.into());
             }
             self.yield_annotate(backend, key)?;
+            self.yield_capture(backend, key)?;
             backend
                 .register(key, Action::Dictate(source))
                 .map_err(|e| {
@@ -114,6 +120,20 @@ impl Keys {
                 *slot = None;
                 tracing::warn!("an Annotate shortcut gave way to a dictation shortcut");
             }
+        }
+        Ok(())
+    }
+
+    /// Capture never keeps a key another Librelog shortcut asks for: it lets
+    /// it go, so the others behave as they would without Capture.
+    fn yield_capture(&mut self, backend: &impl Backend, key: Shortcut) -> Result<(), String> {
+        if let Some(index) = self.capture.iter().position(|(_, held)| *held == key) {
+            backend.unregister(key)?;
+            let (action, _) = self.capture.remove(index);
+            tracing::warn!(
+                shortcut = action.name(),
+                "a Capture shortcut gave way to another Librelog shortcut"
+            );
         }
         Ok(())
     }
@@ -187,6 +207,7 @@ impl Keys {
             return Err(TAKEN_BY_DICTATION.into());
         }
         self.yield_annotate(backend, key)?;
+        self.yield_capture(backend, key)?;
         backend.register(key, Action::PasteLast).map_err(|e| {
             format!(
                 "Could not register the paste last dictation shortcut. It may be used by another app: {e}"
@@ -226,6 +247,7 @@ impl Keys {
             if self.paste_last == Some(key) {
                 return Err(TAKEN_BY_PASTE_LAST.into());
             }
+            self.yield_capture(backend, key)?;
             backend.register(key, action).map_err(|e| {
                 format!(
                     "Could not register the Annotate shortcut. It may be used by another app: {e}"
@@ -249,6 +271,56 @@ impl Keys {
     fn remove_annotate_escape(&mut self, backend: &impl Backend) -> Result<(), String> {
         self.annotate_escape_wanted = false;
         self.sync_escape(backend)
+    }
+}
+
+impl Keys {
+    /// Replaces Capture's shortcuts. Each registers on its own: one that
+    /// another Librelog shortcut holds, that an earlier one in `keys` took,
+    /// that did not parse (`Err`), or that the system refused is left out,
+    /// and the error names every one left out.
+    fn set_capture(
+        &mut self,
+        backend: &impl Backend,
+        keys: Vec<(CaptureAction, Result<Shortcut, String>)>,
+    ) -> Result<(), String> {
+        while let Some((_, key)) = self.capture.last().copied() {
+            backend.unregister(key)?;
+            self.capture.pop();
+        }
+        let mut failed = Vec::new();
+        for (action, key) in keys {
+            let registered = key.and_then(|key| {
+                if self.dictation.contains(&key) {
+                    return Err(TAKEN_BY_DICTATION.to_string());
+                }
+                if self.paste_last == Some(key) {
+                    return Err(TAKEN_BY_PASTE_LAST.to_string());
+                }
+                if self.annotate == Some(key) || self.annotate_paste == Some(key) {
+                    return Err(TAKEN_BY_ANNOTATE.to_string());
+                }
+                if self.capture.iter().any(|(_, held)| *held == key) {
+                    return Err(TAKEN.to_string());
+                }
+                backend
+                    .register(key, Action::Capture(action))
+                    .map_err(|e| format!("It may be used by another app: {e}"))?;
+                self.capture.push((action, key));
+                Ok(())
+            });
+            if let Err(error) = registered {
+                failed.push(format!(
+                    "Could not register the {} shortcut. {error}",
+                    action.name()
+                ));
+            }
+        }
+        if failed.is_empty() {
+            Ok(())
+        } else {
+            Err(failed.join("\n"))
+        }
     }
 }
 
@@ -307,6 +379,11 @@ impl Backend for Global<'_> {
             Action::PasteLast => self.shortcuts.on_shortcut(key, |app, _, event| {
                 if event.state == ShortcutState::Pressed {
                     let _ = PasteLastEvent {}.emit(app);
+                }
+            }),
+            Action::Capture(action) => self.shortcuts.on_shortcut(key, move |app, _, event| {
+                if event.state == ShortcutState::Pressed {
+                    let _ = CaptureShortcutEvent { action }.emit(app);
                 }
             }),
         };
@@ -553,14 +630,69 @@ pub async fn set_annotate_escape(app: &tauri::AppHandle, enabled: bool) -> Resul
     }
 }
 
+/// Registers Capture's shortcuts, replacing the previous ones; null or
+/// empty leaves one unbound. Each needs a key with modifiers and none may be
+/// another Librelog shortcut. Each registers on its own: when some cannot
+/// be, the others still are, and the error names those that were not. Capture
+/// always gives way: a dictation, paste-last or Annotate shortcut registered
+/// later takes its key.
+#[tauri::command]
+#[specta::specta]
+pub async fn configure_capture(
+    app: tauri::AppHandle,
+    shortcuts: CaptureShortcuts,
+) -> Result<(), String> {
+    let global_available = app.try_state::<GlobalShortcut>().is_some();
+    let keys: Vec<_> = [
+        (CaptureAction::Area, shortcuts.area),
+        (CaptureAction::Fullscreen, shortcuts.fullscreen),
+        (CaptureAction::Window, shortcuts.window),
+        (CaptureAction::Record, shortcuts.record),
+        (CaptureAction::Gif, shortcuts.gif),
+    ]
+    .into_iter()
+    .filter_map(|(action, shortcut)| {
+        let shortcut = shortcut.filter(|shortcut| !shortcut.trim().is_empty())?;
+        Some((action, paste_last_key(&shortcut, global_available)))
+    })
+    .collect();
+    let state = app.state::<GlobalState>();
+    let mut registration = state.registration.lock().await;
+    let Some(global) = global(&app, &state) else {
+        return if keys.is_empty() {
+            Ok(())
+        } else {
+            Err(UNAVAILABLE.into())
+        };
+    };
+    registration.keys.set_capture(&global, keys)
+}
+
+/// Checks a Capture shortcut: a key with modifiers that none of `taken` (the
+/// other Librelog shortcuts, the other Capture ones included) uses.
+#[tauri::command]
+#[specta::specta]
+pub fn validate_capture(
+    app: tauri::AppHandle,
+    shortcut: String,
+    taken: Vec<String>,
+) -> Result<(), String> {
+    validate_annotate_shortcut(
+        &shortcut,
+        &taken,
+        app.try_state::<GlobalShortcut>().is_some(),
+    )
+}
+
 #[cfg(target_os = "linux")]
 mod portal;
 #[cfg(any(target_os = "linux", test))]
 mod trigger;
 
 /// Checks a dictation shortcut, which must differ from the `paste_last`
-/// shortcut when there is one, and from Annotate's shortcuts (`annotate`,
-/// empty while Annotate is off).
+/// shortcut when there is one, from Annotate's shortcuts (`annotate`, empty
+/// while Annotate is off) and from Capture's (`capture`, empty while Capture
+/// is off).
 #[tauri::command]
 #[specta::specta]
 pub fn validate(
@@ -568,17 +700,20 @@ pub fn validate(
     shortcut: String,
     paste_last: Option<String>,
     annotate: Vec<String>,
+    capture: Vec<String>,
 ) -> Result<(), String> {
     validate_dictation(
         &shortcut,
         paste_last.as_deref(),
         &annotate,
+        &capture,
         app.try_state::<GlobalShortcut>().is_some(),
     )
 }
 
 /// Checks a paste-last shortcut: a key with modifiers that none of the
-/// `dictation` shortcuts or Annotate's (`annotate`) uses.
+/// `dictation` shortcuts, Annotate's (`annotate`) or Capture's (`capture`)
+/// uses.
 #[tauri::command]
 #[specta::specta]
 pub fn validate_paste_last(
@@ -586,11 +721,13 @@ pub fn validate_paste_last(
     shortcut: String,
     dictation: Vec<String>,
     annotate: Vec<String>,
+    capture: Vec<String>,
 ) -> Result<(), String> {
     validate_paste_last_shortcut(
         &shortcut,
         &dictation,
         &annotate,
+        &capture,
         app.try_state::<GlobalShortcut>().is_some(),
     )
 }
@@ -605,6 +742,7 @@ fn validate_dictation(
     shortcut: &str,
     paste_last: Option<&str>,
     annotate: &[String],
+    capture: &[String],
     global_available: bool,
 ) -> Result<(), String> {
     validate_shortcut(shortcut, global_available)?;
@@ -617,6 +755,9 @@ fn validate_dictation(
     if uses(annotate, key) {
         return Err(TAKEN_BY_ANNOTATE.into());
     }
+    if uses(capture, key) {
+        return Err(TAKEN_BY_CAPTURE.into());
+    }
     Ok(())
 }
 
@@ -624,6 +765,7 @@ fn validate_paste_last_shortcut(
     shortcut: &str,
     dictation: &[String],
     annotate: &[String],
+    capture: &[String],
     global_available: bool,
 ) -> Result<(), String> {
     let key = paste_last_key(shortcut, global_available)?;
@@ -632,6 +774,9 @@ fn validate_paste_last_shortcut(
     }
     if uses(annotate, key) {
         return Err(TAKEN_BY_ANNOTATE.into());
+    }
+    if uses(capture, key) {
+        return Err(TAKEN_BY_CAPTURE.into());
     }
     Ok(())
 }
@@ -771,21 +916,32 @@ mod validation_tests {
     #[test]
     fn rejects_a_paste_last_shortcut_that_dictation_uses_and_the_other_way_round() {
         let dictation = ["DoubleTap+AltLeft".to_string(), "Control+Alt+KeyV".into()];
-        assert!(validate_paste_last_shortcut("Alt+Shift+KeyV", &dictation, &[], true).is_ok());
+        assert!(validate_paste_last_shortcut("Alt+Shift+KeyV", &dictation, &[], &[], true).is_ok());
         assert_eq!(
-            validate_paste_last_shortcut("Alt+Control+KeyV", &dictation, &[], true),
+            validate_paste_last_shortcut("Alt+Control+KeyV", &dictation, &[], &[], true),
             Err(TAKEN_BY_DICTATION.into())
         );
         assert_eq!(
-            validate_dictation("Shift+Alt+KeyV", Some("Alt+Shift+KeyV"), &[], true),
+            validate_dictation("Shift+Alt+KeyV", Some("Alt+Shift+KeyV"), &[], &[], true),
             Err(TAKEN_BY_PASTE_LAST.into())
         );
-        assert!(validate_dictation("Shift+Alt+KeyV", None, &[], true).is_ok());
+        assert!(validate_dictation("Shift+Alt+KeyV", None, &[], &[], true).is_ok());
         for modifier_only in ["Fn", "RightCommand", "DoubleTap+AltLeft", "KeyV"] {
             assert_eq!(
-                validate_paste_last_shortcut(modifier_only, &[], &[], true),
+                validate_paste_last_shortcut(modifier_only, &[], &[], &[], true),
                 Err(NEEDS_MODIFIER.into())
             );
+        }
+    }
+
+    #[test]
+    fn capture_takes_the_super_shortcuts_the_screenshot_settings_use() {
+        use tauri_plugin_global_shortcut::Modifiers;
+        for digit in 3..=6 {
+            let shortcut = format!("Super+Shift+Digit{digit}");
+            assert_eq!(validate_annotate_shortcut(&shortcut, &[], true), Ok(()));
+            let key = paste_last_key(&shortcut, true).unwrap();
+            assert_eq!(key.mods, Modifiers::SUPER | Modifiers::SHIFT);
         }
     }
 
@@ -982,11 +1138,23 @@ mod registration_tests {
             HashSet::from([key("Alt+Shift+KeyS"), key("Alt+Shift+KeyA")])
         );
         assert_eq!(
-            validate_dictation("Alt+Shift+KeyX", None, &["Shift+Alt+KeyX".into()], true),
+            validate_dictation(
+                "Alt+Shift+KeyX",
+                None,
+                &["Shift+Alt+KeyX".into()],
+                &[],
+                true
+            ),
             Err(TAKEN_BY_ANNOTATE.into())
         );
         assert_eq!(
-            validate_paste_last_shortcut("Alt+Shift+KeyX", &[], &["Shift+Alt+KeyX".into()], true),
+            validate_paste_last_shortcut(
+                "Alt+Shift+KeyX",
+                &[],
+                &["Shift+Alt+KeyX".into()],
+                &[],
+                true
+            ),
             Err(TAKEN_BY_ANNOTATE.into())
         );
     }
@@ -1019,6 +1187,68 @@ mod registration_tests {
         assert_eq!(
             os.0.borrow().clone(),
             HashSet::from([key("Alt+Shift+KeyS")])
+        );
+    }
+
+    #[test]
+    fn capture_gives_way_to_every_other_shortcut_and_registers_the_rest_on_its_own() {
+        let key = |shortcut: &str| parse_shortcut(shortcut).unwrap();
+        let os = Os::default();
+        let mut keys = Keys::default();
+        keys.add_dictation(&os, vec![(0, key("Control+Alt+Space"))])
+            .unwrap();
+        keys.set_paste_last(&os, Some(key("Alt+Shift+KeyV")))
+            .unwrap();
+        keys.set_annotate(&os, Some(key("Alt+Shift+KeyS")), None)
+            .unwrap();
+        // Another app holds this one.
+        os.0.borrow_mut().insert(key("Alt+Shift+Digit6"));
+
+        let error = keys
+            .set_capture(
+                &os,
+                vec![
+                    (CaptureAction::Area, Ok(key("Alt+Shift+Digit4"))),
+                    (CaptureAction::Fullscreen, Ok(key("Shift+Alt+KeyV"))),
+                    (CaptureAction::Window, Err(NEEDS_MODIFIER.into())),
+                    (CaptureAction::Record, Ok(key("Alt+Shift+Digit5"))),
+                    (CaptureAction::Gif, Ok(key("Alt+Shift+Digit6"))),
+                ],
+            )
+            .unwrap_err();
+        assert_eq!(
+            keys.capture,
+            [
+                (CaptureAction::Area, key("Alt+Shift+Digit4")),
+                (CaptureAction::Record, key("Alt+Shift+Digit5")),
+            ]
+        );
+        for failed in ["capture full screen", "capture window", "record GIF"] {
+            assert!(error.contains(failed), "{error}");
+        }
+        assert!(!error.contains("capture area") && error.contains(TAKEN_BY_PASTE_LAST));
+
+        // Dictation and Annotate registered later take Capture's keys.
+        keys.add_dictation(&os, vec![(1, key("Shift+Alt+Digit4"))])
+            .unwrap();
+        keys.set_annotate(
+            &os,
+            Some(key("Alt+Shift+KeyS")),
+            Some(key("Shift+Alt+Digit5")),
+        )
+        .unwrap();
+        assert!(keys.capture.is_empty());
+        assert_eq!(keys.annotate_paste, Some(key("Alt+Shift+Digit5")));
+        assert!(os.0.borrow().contains(&key("Alt+Shift+Digit4")));
+
+        let capture = ["Shift+Alt+Digit3".to_string()];
+        assert_eq!(
+            validate_dictation("Alt+Shift+Digit3", None, &[], &capture, true),
+            Err(TAKEN_BY_CAPTURE.into())
+        );
+        assert_eq!(
+            validate_paste_last_shortcut("Alt+Shift+Digit3", &[], &[], &capture, true),
+            Err(TAKEN_BY_CAPTURE.into())
         );
     }
 }

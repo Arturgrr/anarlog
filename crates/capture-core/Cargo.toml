@@ -1,0 +1,16 @@
+[package]
+name = "capture-core"
+version = "0.1.0"
+edition = "2024"
+description = "Capture's files: names, destinations, the captures index and the macOS screenshot shortcut settings"
+
+[dependencies]
+chrono = { workspace = true, features = ["clock"] }
+plist = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true, features = ["v4"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }

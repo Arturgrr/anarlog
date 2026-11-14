@@ -17,6 +17,7 @@ import { Route as AppFloatingBarRouteImport } from './routes/app/floating-bar'
 import { Route as AppComposerRouteImport } from './routes/app/composer'
 import { Route as AppNoteSessionIdRouteImport } from './routes/app/note.$sessionId'
 import { Route as AppMainLayoutRouteImport } from './routes/app/main/_layout'
+import { Route as AppCaptureEditorIdRouteImport } from './routes/app/capture-editor.$id'
 import { Route as AppMainLayoutIndexRouteImport } from './routes/app/main/_layout.index'
 
 const AppRouteRoute = AppRouteRouteImport.update({
@@ -59,6 +60,11 @@ const AppMainLayoutRoute = AppMainLayoutRouteImport.update({
   path: '/main',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppCaptureEditorIdRoute = AppCaptureEditorIdRouteImport.update({
+  id: '/capture-editor/$id',
+  path: '/capture-editor/$id',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppMainLayoutIndexRoute = AppMainLayoutIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/app/live-caption': typeof AppLiveCaptionRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/': typeof AppIndexRoute
+  '/app/capture-editor/$id': typeof AppCaptureEditorIdRoute
   '/app/main': typeof AppMainLayoutRouteWithChildren
   '/app/note/$sessionId': typeof AppNoteSessionIdRoute
   '/app/main/': typeof AppMainLayoutIndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/app/live-caption': typeof AppLiveCaptionRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app': typeof AppIndexRoute
+  '/app/capture-editor/$id': typeof AppCaptureEditorIdRoute
   '/app/note/$sessionId': typeof AppNoteSessionIdRoute
   '/app/main': typeof AppMainLayoutIndexRoute
 }
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/app/live-caption': typeof AppLiveCaptionRoute
   '/app/onboarding': typeof AppOnboardingRoute
   '/app/': typeof AppIndexRoute
+  '/app/capture-editor/$id': typeof AppCaptureEditorIdRoute
   '/app/main/_layout': typeof AppMainLayoutRouteWithChildren
   '/app/note/$sessionId': typeof AppNoteSessionIdRoute
   '/app/main/_layout/': typeof AppMainLayoutIndexRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/app/live-caption'
     | '/app/onboarding'
     | '/app/'
+    | '/app/capture-editor/$id'
     | '/app/main'
     | '/app/note/$sessionId'
     | '/app/main/'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/app/live-caption'
     | '/app/onboarding'
     | '/app'
+    | '/app/capture-editor/$id'
     | '/app/note/$sessionId'
     | '/app/main'
   id:
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/app/live-caption'
     | '/app/onboarding'
     | '/app/'
+    | '/app/capture-editor/$id'
     | '/app/main/_layout'
     | '/app/note/$sessionId'
     | '/app/main/_layout/'
@@ -193,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMainLayoutRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/capture-editor/$id': {
+      id: '/app/capture-editor/$id'
+      path: '/capture-editor/$id'
+      fullPath: '/app/capture-editor/$id'
+      preLoaderRoute: typeof AppCaptureEditorIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/main/_layout/': {
       id: '/app/main/_layout/'
       path: '/'
@@ -221,6 +240,7 @@ interface AppRouteRouteChildren {
   AppLiveCaptionRoute: typeof AppLiveCaptionRoute
   AppOnboardingRoute: typeof AppOnboardingRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppCaptureEditorIdRoute: typeof AppCaptureEditorIdRoute
   AppMainLayoutRoute: typeof AppMainLayoutRouteWithChildren
   AppNoteSessionIdRoute: typeof AppNoteSessionIdRoute
 }
@@ -231,6 +251,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppLiveCaptionRoute: AppLiveCaptionRoute,
   AppOnboardingRoute: AppOnboardingRoute,
   AppIndexRoute: AppIndexRoute,
+  AppCaptureEditorIdRoute: AppCaptureEditorIdRoute,
   AppMainLayoutRoute: AppMainLayoutRouteWithChildren,
   AppNoteSessionIdRoute: AppNoteSessionIdRoute,
 }
