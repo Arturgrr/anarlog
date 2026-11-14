@@ -179,6 +179,16 @@ final class CaptureGeometryTests: XCTestCase {
     XCTAssertEqual(thin.map { $0.0 }, [.close])
   }
 
+  func testTheRecordingCapsuleWithoutAPenGivesItsRoomToTheClock() {
+    let withPen = AnnotateCapsuleLayout.make(asking: false)
+    let without = AnnotateCapsuleLayout.make(asking: false, pen: false)
+    XCTAssertEqual(without.targets.map { $0.0 }, [.stop, .discard])
+    XCTAssertEqual(without.targets.map { $0.1 }, Array(withPen.targets.map { $0.1 }.dropFirst()))
+    XCTAssertEqual(without.clock.maxX, without.divider.minX - 6)
+    XCTAssertGreaterThan(without.clock.width, withPen.clock.width)
+    XCTAssertEqual(AnnotateCapsuleLayout.make(asking: true, pen: false).targets.count, 2)
+  }
+
   func testAGifSamplesAtItsFpsWithDelaysThatAddUpToTheMovie() throws {
     let plan = try XCTUnwrap(
       CaptureGifPlan.make(

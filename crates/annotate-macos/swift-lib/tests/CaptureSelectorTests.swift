@@ -42,7 +42,7 @@ final class CaptureSelectorTests: XCTestCase {
       CaptureScene(
         kind: .area, target: CGRect(x: 10, y: 10, width: 290, height: 190), badge: "290 × 190",
         pointer: CGPoint(x: 300, y: 200)))
-    XCTAssertEqual(selector.scene(on: 2).kind, .none)
+    XCTAssertEqual(selector.scene(on: 2).kind, .nothing)
     XCTAssertEqual(
       selector.up(CGPoint(x: 300, y: 200)),
       .area(display: 1, rect: CGRect(x: 10, y: 10, width: 290, height: 190)))
@@ -84,7 +84,7 @@ final class CaptureSelectorTests: XCTestCase {
       CaptureScene(
         kind: .window, target: CGRect(x: 100, y: 100, width: 800, height: 600),
         badge: "Safari — Apple", pointer: CGPoint(x: 150, y: 150)))
-    XCTAssertEqual(selector.scene(on: 2).kind, .none)
+    XCTAssertEqual(selector.scene(on: 2).kind, .nothing)
     selector.down(CGPoint(x: 150, y: 150), on: 1)
     XCTAssertEqual(
       selector.up(CGPoint(x: 150, y: 150)),
@@ -128,7 +128,7 @@ final class CaptureSelectorTests: XCTestCase {
     XCTAssertEqual(selector.scene(on: 1).kind, .window)
     selector.toggleMode()
     XCTAssertEqual(selector.mode, .area)
-    XCTAssertEqual(selector.scene(on: 1).kind, .none)
+    XCTAssertEqual(selector.scene(on: 1).kind, .nothing)
     // A button that comes up after the switch takes nothing.
     XCTAssertNil(selector.up(CGPoint(x: 300, y: 300)))
   }

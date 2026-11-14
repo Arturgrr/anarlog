@@ -45,7 +45,7 @@ enum CaptureSelection: Equatable {
 struct CaptureScene: Equatable {
   enum Kind: Equatable {
     /// Dim everywhere, the hint showing.
-    case none
+    case nothing
     case area
     case window
     /// A click takes the whole display.
@@ -60,7 +60,7 @@ struct CaptureScene: Equatable {
   /// The pointer, which an area's badge sits beside.
   var pointer: CGPoint?
 
-  static let empty = CaptureScene(kind: .none, target: .zero, badge: nil, pointer: nil)
+  static let empty = CaptureScene(kind: .nothing, target: .zero, badge: nil, pointer: nil)
 }
 
 struct CaptureSelector {
@@ -168,7 +168,7 @@ struct CaptureSelector {
     switch mode {
     case .area:
       guard let press, press.display == display, let dragTo else {
-        return CaptureScene(kind: .none, target: .zero, badge: nil, pointer: here)
+        return CaptureScene(kind: .nothing, target: .zero, badge: nil, pointer: here)
       }
       let rect = CaptureGeometry.dragRect(press.point, dragTo, size: size)
       return CaptureScene(
@@ -176,7 +176,7 @@ struct CaptureSelector {
         pointer: CaptureGeometry.clamp(dragTo, size))
     case .window:
       guard let here else {
-        return CaptureScene(kind: .none, target: .zero, badge: nil, pointer: nil)
+        return CaptureScene(kind: .nothing, target: .zero, badge: nil, pointer: nil)
       }
       guard let hovered = hit(here, on: display) else {
         return CaptureScene(

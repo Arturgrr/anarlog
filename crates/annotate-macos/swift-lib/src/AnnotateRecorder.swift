@@ -23,6 +23,20 @@ struct AnnotateRecordingPlan {
   var dir: URL
   /// `mach_absolute_time()` taken just before the stream starts.
   var anchorTicks: UInt64
+  // Capture's settings; the defaults are Annotate's recording.
+  /// The movie; nil for `recording.mp4` in `dir`.
+  var outputURL: URL? = nil
+  /// Part of the display, in its points from its top-left corner; nil for
+  /// all of it.
+  var sourceRect: CGRect? = nil
+  var frameRate: Int32 = AnnotateRecorder.frameRate
+  var showsCursor = true
+  /// Annotate's 480 px candidates beside the movie.
+  var samplesCandidates = true
+  /// Other apps' sound, without this app's own.
+  var systemAudio = false
+
+  var movieURL: URL { outputURL ?? dir.appendingPathComponent(AnnotateFiles.video) }
 }
 
 struct AnnotateRecordingOutcome {
@@ -72,7 +86,7 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
   private var sampler: DispatchSourceTimer?
   private var plan: AnnotateRecordingPlan?
 
-  var videoURL: URL? { plan?.dir.appendingPathComponent(AnnotateFiles.video) }
+  var videoURL: URL? { plan?.movieURL }
 
   /// Starts the stream with the recording output attached, then the
   /// sampler. Blocks until the movie is being written (up to twice
@@ -82,27 +96,34 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
     let configuration = SCStreamConfiguration()
     configuration.width = plan.videoSize.width
     configuration.height = plan.videoSize.height
-    configuration.minimumFrameInterval = CMTime(value: 1, timescale: Self.frameRate)
-    configuration.showsCursor = true
+    configuration.minimumFrameInterval = CMTime(value: 1, timescale: plan.frameRate)
+    configuration.showsCursor = plan.showsCursor
     configuration.queueDepth = 6
     configuration.pixelFormat = kCVPixelFormatType_32BGRA
-    configuration.capturesAudio = false
+    if let sourceRect = plan.sourceRect { configuration.sourceRect = sourceRect }
+    configuration.capturesAudio = plan.systemAudio
+    if plan.systemAudio { configuration.excludesCurrentProcessAudio = true }
     let stream = SCStream(filter: plan.filter, configuration: configuration, delegate: self)
     do {
       try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: frameQueue)
+      // The recording output writes the sound; a stream with no handler
+      // for it logs each buffer it drops.
+      if plan.systemAudio {
+        try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: frameQueue)
+      }
     } catch {
       return AnnotateFailure(.stream, "could not add the frame handler: \(error)")
     }
 
     let recording = SCRecordingOutputConfiguration()
-    recording.outputURL = plan.dir.appendingPathComponent(AnnotateFiles.video)
+    recording.outputURL = plan.movieURL
     recording.videoCodecType = .h264
     recording.outputFileType = .mp4
     let output = SCRecordingOutput(configuration: recording, delegate: self)
     do {
       try stream.addRecordingOutput(output)
     } catch {
-      try? stream.removeStreamOutput(self, type: .screen)
+      removeOutputs(stream)
       return AnnotateFailure(.recording, "could not add the recording output: \(error)")
     }
     self.stream = stream
@@ -130,7 +151,7 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
       abandon()
       return AnnotateFailure(.recording, why)
     }
-    startSampler(plan)
+    if plan.samplesCandidates { startSampler(plan) }
     return nil
   }
 
@@ -172,7 +193,7 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
     if !finished {
       finished = waitForOutput(5)
     }
-    try? stream.removeStreamOutput(self, type: .screen)
+    removeOutputs(stream)
     self.stream = nil
     self.output = nil
 
@@ -210,11 +231,16 @@ final class AnnotateRecorder: NSObject, SCStreamDelegate, SCStreamOutput,
     state.update { $0.stopping = true }
     if let stream {
       if let output { try? stream.removeRecordingOutput(output) }
-      try? stream.removeStreamOutput(self, type: .screen)
+      removeOutputs(stream)
       stream.stopCapture { _ in }
     }
     stream = nil
     output = nil
+  }
+
+  private func removeOutputs(_ stream: SCStream) {
+    try? stream.removeStreamOutput(self, type: .screen)
+    if plan?.systemAudio == true { try? stream.removeStreamOutput(self, type: .audio) }
   }
 
   static func failure(_ error: Error?, _ what: String) -> AnnotateFailure {
