@@ -1874,8 +1874,8 @@ msgid "Could not capture the screen: {rest}"
 msgstr "Could not capture the screen: {rest}"
 
 #: src/i18n/external-messages.ts
-msgid "Could not change the macOS screenshot shortcuts: {rest}"
-msgstr "Could not change the macOS screenshot shortcuts: {rest}"
+msgid "Could not change the macOS screenshot shortcuts: {reason}"
+msgstr "Could not change the macOS screenshot shortcuts: {reason}"
 
 #. placeholder {0}: error.message
 #: src/settings/developers/cli.tsx
@@ -1962,9 +1962,17 @@ msgstr "Could not generate the summary after repeated attempts."
 msgid "Could not insert text. Copy your last dictation from Settings > Dictation."
 msgstr "Could not insert text. Copy your last dictation from Settings > Dictation."
 
+#: src/i18n/external-messages.ts
+msgid "Could not keep the macOS shortcut settings: {rest}"
+msgstr "Could not keep the macOS shortcut settings: {rest}"
+
 #: src/settings/ai/stt/health.tsx
 msgid "Could not load the local speech-to-text model."
 msgstr "Could not load the local speech-to-text model."
+
+#: src/i18n/external-messages.ts
+msgid "Could not make the GIF, so the recording was kept as a movie at {path}: {reason}"
+msgstr "Could not make the GIF, so the recording was kept as a movie at {path}: {reason}"
 
 #: src/i18n/external-messages.ts
 msgid "Could not prepare dictation for insertion."
@@ -1973,6 +1981,10 @@ msgstr "Could not prepare dictation for insertion."
 #: src/i18n/external-messages.ts
 msgid "Could not preserve the clipboard. Copy your last dictation from Settings > Dictation."
 msgstr "Could not preserve the clipboard. Copy your last dictation from Settings > Dictation."
+
+#: src/i18n/external-messages.ts
+msgid "Could not read the macOS shortcut settings: {rest}"
+msgstr "Could not read the macOS shortcut settings: {rest}"
 
 #: src/settings/ai/llm/subscriptions/oauth.ts
 msgid "Could not refresh ChatGPT subscription."
@@ -2022,6 +2034,10 @@ msgstr "Could not restore deleted note"
 #: src/settings/automations/index.tsx
 msgid "Could not save the automation draft"
 msgstr "Could not save the automation draft"
+
+#: src/i18n/external-messages.ts
+msgid "Could not save the capture in {dir}: {reason}. It was kept at {path}."
+msgstr "Could not save the capture in {dir}: {reason}. It was kept at {path}."
 
 #: src/shared/edit-note-dialog.tsx
 msgid "Could not save the changes. Try again."
@@ -3752,6 +3768,10 @@ msgstr "Librelog can't capture the screen."
 #: src/annotate/lifecycle.tsx
 msgid "Librelog can't record the screen."
 msgstr "Librelog can't record the screen."
+
+#: src/i18n/external-messages.ts
+msgid "Librelog cannot save captures in {dir}: {reason}"
+msgstr "Librelog cannot save captures in {dir}: {reason}"
 
 #: src/settings/developers/cli.tsx
 msgid "Librelog CLI"
@@ -7038,6 +7058,10 @@ msgid "Text"
 msgstr "Text"
 
 #: src/i18n/external-messages.ts
+msgid "That file is a recording in your captures. Choose another name."
+msgstr "That file is a recording in your captures. Choose another name."
+
+#: src/i18n/external-messages.ts
 msgid "The AI model is overloaded right now. Wait a moment, then retry."
 msgstr "The AI model is overloaded right now. Wait a moment, then retry."
 
@@ -7066,9 +7090,17 @@ msgstr "The built-in model couldn’t start: {0}"
 msgid "The built-in model failed to start three times in a row. Open Settings › Intelligence to try again."
 msgstr "The built-in model failed to start three times in a row. Open Settings › Intelligence to try again."
 
+#: src/i18n/external-messages.ts
+msgid "The capture was kept at {path}, but {problem}"
+msgstr "The capture was kept at {path}, but {problem}"
+
 #: src/onboarding/model-setup.tsx
 msgid "The download stopped before it finished."
 msgstr "The download stopped before it finished."
+
+#: src/i18n/external-messages.ts
+msgid "The Downloads folder could not be found."
+msgstr "The Downloads folder could not be found."
 
 #: src/i18n/external-messages.ts
 msgid "The edited picture is not a usable PNG: {rest}"
@@ -7082,6 +7114,10 @@ msgstr "The editor failed to render. Your recording is still running."
 msgid "The focused text field changed. Copy your last dictation from Settings > Dictation."
 msgstr "The focused text field changed. Copy your last dictation from Settings > Dictation."
 
+#: src/i18n/external-messages.ts
+msgid "The folder must be an absolute path: {rest}"
+msgstr "The folder must be an absolute path: {rest}"
+
 #: src/onboarding/model-status.ts
 #: src/settings/ai/llm/models.tsx
 msgid "The key was rejected. Check it above."
@@ -7090,6 +7126,10 @@ msgstr "The key was rejected. Check it above."
 #: src/stt/capture-lifecycle.ts
 msgid "The live transcript was kept. Re-transcribe the meeting to try again."
 msgstr "The live transcript was kept. Re-transcribe the meeting to try again."
+
+#: src/i18n/external-messages.ts
+msgid "The macOS shortcut settings could not be read."
+msgstr "The macOS shortcut settings could not be read."
 
 #: src/settings/ai/llm/builtin.tsx
 msgid "The model file is removed from this computer. You can download it again later."
@@ -7138,6 +7178,10 @@ msgstr "The provider didn’t answer within 5 seconds."
 #: src/settings/ai/shared/list-common.ts
 msgid "The provider returned a model list Librelog can’t read."
 msgstr "The provider returned a model list Librelog can’t read."
+
+#: src/i18n/external-messages.ts
+msgid "The recording could not be finished ({reason}). What was recorded is kept at {path}, and Librelog adds it to your captures later."
+msgstr "The recording could not be finished ({reason}). What was recorded is kept at {path}, and Librelog adds it to your captures later."
 
 #: src/stt/useRunBatch.ts
 msgid "the selected speech-to-text provider"
