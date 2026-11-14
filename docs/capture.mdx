@@ -1,0 +1,136 @@
+---
+title: "Screenshots and recordings"
+description: "Capture an area, a window or the whole screen, record it as a movie or a GIF, and mark it up."
+---
+
+Librelog can take screenshots and record the screen with shortcuts that work in any app. A recording becomes a movie (MP4) or an animated GIF. After a capture, Librelog can copy it to the clipboard, save it to a folder, show a card in the corner of the screen and open the editor, where you can draw arrows, boxes and text, blur what should stay private and crop.
+
+Screenshots and recordings are available only in the macOS app downloaded from the website, not in the App Store version or on Windows and Linux.
+
+## Turn it on
+
+1. Open **Settings → Screenshots** and turn on **Enable screenshots and recordings**. It is off by default. You can also turn it on during onboarding.
+2. Allow Screen Recording. macOS asks the first time you capture. If you allowed it in System Settings while Librelog was open, quit and reopen Librelog. **Screen Recording** in **Settings → Screenshots** shows whether it is allowed, and **Open System Settings** takes you there.
+3. To record your voice in screen recordings, turn on **Record the microphone** and allow microphone access in **Settings → Permissions**.
+
+Keep Librelog running to use the shortcuts in other apps. While it is on, the menu bar icon's menu also has **Capture Area** and **Record Screen**.
+
+## Shortcuts
+
+| Shortcut                | Default             | What it does                                            |
+| ----------------------- | ------------------- | ------------------------------------------------------- |
+| **Capture area**        | Option + Shift + 4  | Drag over what you want, or press Space to pick a window. |
+| **Capture full screen** | Option + Shift + 3  | Takes the display under the pointer at once.             |
+| **Capture window**      | None                | Starts in window mode: click the window you want.        |
+| **Record screen**       | Option + Shift + 5  | Records a movie. Press it again to stop.                 |
+| **Record GIF**          | Option + Shift + 6  | Records an animated GIF. Press it again to stop.         |
+
+Click a shortcut in **Settings → Screenshots** to change it, press the keys you want, then press Enter to save. The **×** next to a shortcut clears it. A shortcut needs a modifier key and can't be the same as another Librelog shortcut. If another app already uses one, Librelog says which one could not be set up; the others still work.
+
+To use ⌘⇧3, ⌘⇧4 and ⌘⇧5 instead, see [Replace the macOS shortcuts](#replace-the-macos-shortcuts).
+
+## Take a screenshot
+
+Press **Capture area**. Every display freezes and dims, so menus and hover effects stay in the picture.
+
+- **Drag** over the part you want. The size shows next to the pointer.
+- **Space** switches to window mode: the window under the pointer is highlighted, and a click takes it. Press Space again to go back to dragging an area.
+- **Esc** cancels.
+
+A window is captured as you saw it, without its shadow. **Capture full screen** takes the display under the pointer without showing the selector. Choose PNG or JPEG under **Format**, and whether the pointer is in the picture with **Include the pointer**.
+
+## Record the screen
+
+Press **Record screen** for a movie or **Record GIF** for a GIF. The selector is live, not frozen:
+
+- **Drag** over an area to record it.
+- **Space** switches to window mode; click a window to record its area. The recording keeps that area of the screen: if you move the window, it does not follow.
+- **Return**, or a click without dragging, records the whole display under the pointer.
+- **Esc** cancels.
+
+With **Countdown** set to 3 seconds, a 3-2-1 countdown comes first. While you record, a thin outline marks the area and a small capsule shows the time, with **Stop** and **Discard**. Neither is in the recording. **Discard** asks **Discard?**: choose **Discard** to delete the recording or **Keep** to go on.
+
+To stop, press the same shortcut again (either record shortcut stops any recording), choose **Stop** in the capsule, or pick **Record Screen** in the menu bar icon's menu. Pressing a record shortcut while its selector or countdown is still up cancels it. A recording stops by itself after 30 minutes. Quitting Librelog while recording stops the recording and keeps the movie.
+
+Movies are H.264 MP4 at 30 or 60 frames per second (**Frame rate**), at most 4096 × 2304 pixels: a larger area is scaled down. **Show the pointer** chooses whether the pointer is in them.
+
+A GIF is made from the movie when you stop, and the movie is then removed. Choose its **GIF frame rate** (10, 15 or 20 frames per second) and **GIF width** (480, 720 or 1080 pixels at most; a smaller area keeps its size). Long GIFs use a lower frame rate to stay a reasonable size. GIFs have no sound and loop forever.
+
+### Audio
+
+Audio in recordings is experimental. **Record the microphone** records your voice and **Record system audio** records what the Mac plays. A movie with both has two audio tracks, which some players play one at a time. Both are off by default.
+
+## After a capture
+
+What happens next is set under **After capturing**:
+
+- **Copy to the clipboard** (on by default). A screenshot is copied as an image, so you can paste it into a message or a document. A GIF or a movie is copied as a file.
+- **Save to a folder** (on by default) saves it to Downloads, or to the folder you pick with **Choose…**. **Use Downloads** goes back to Downloads. When this is off, captures are kept in Librelog's data folder and listed under **Recent captures**.
+- **Show a card** (on by default) shows a preview in the bottom-right corner of the screen for 8 seconds, longer while the pointer is over it. Up to four cards stack there. Hover over a card for **Copy**, **Save** (or **Show in Finder** once the capture is in a folder), **Edit** for screenshots, and **Close**. Click a card to edit a screenshot or open a recording, or drag it into another app to drop the file there. Cards are never in your captures.
+- **Open the editor right away** opens every new screenshot in the editor.
+
+When cards are off and Librelog is in front, a short message says the capture was saved or copied, with **Show in Finder**.
+
+**Recent captures** in **Settings → Screenshots** shows the twelve newest captures, with **Edit**, **Copy**, **Show in Finder** and **Delete**. Deleting a capture in Librelog's data folder removes it; deleting one in your folder moves it to the Trash. **Show captures folder** opens where new captures go.
+
+## Edit a screenshot
+
+The editor opens in its own window from a card, from **Recent captures**, or after every screenshot if you chose so. Its tools have one-key shortcuts:
+
+| Tool            | Key | Use                                                     |
+| --------------- | --- | ------------------------------------------------------- |
+| **Select**      | V   | Click a mark to select it, drag to move it, drag its handles to resize. |
+| **Arrow**       | A   | Drag from the tail to the point.                        |
+| **Line**        | L   | Drag. Hold Shift for angles in steps of 45°.            |
+| **Rectangle**   | R   | Drag. Hold Shift for a square.                          |
+| **Ellipse**     | O   | Drag. Hold Shift for a circle.                          |
+| **Pen**         | P   | Draw freehand.                                          |
+| **Highlighter** | H   | Draw a translucent stroke.                              |
+| **Text**        | T   | Click and type.                                         |
+| **Pixelate**    | X   | Drag over what should not be readable.                  |
+| **Counter**     | N   | Click to place numbered steps: 1, 2, 3…                 |
+| **Crop**        | C   | Drag the area to keep, then press Return.               |
+
+Pick a colour and a size in the toolbar. Delete or Backspace removes the selected mark, and the arrow keys nudge it (with Shift, further). Hold Space and drag to move around; ⌘+ and ⌘− zoom, and ⌘0 fits the picture to the window. ⌘Z undoes and ⇧⌘Z redoes.
+
+- **Save** (⌘S) replaces the capture's file with the edited picture. A JPEG stays a JPEG.
+- **Save As…** (⇧⌘S) saves a PNG where you choose and leaves the capture as it was.
+- **Copy** (⌘C) puts the edited picture on the clipboard.
+
+Esc or ⌘W closes the editor, and asks first if there are changes you haven't saved or copied.
+
+## Files and names
+
+Captures are named by the time you took them:
+
+- `Librelog Screenshot 2026-11-14 at 14.03.22.png` (or `.jpg`)
+- `Librelog Recording 2026-11-14 at 14.03.22.mp4` (or `.gif`)
+
+If a file with that name exists, Librelog adds ` (2)`, ` (3)` and so on. Librelog keeps a list of the last 200 captures. A capture in Librelog's data folder is deleted when it drops off that list; files saved to your folder are never deleted by Librelog.
+
+## Replace the macOS shortcuts
+
+macOS has its own screenshot shortcuts: ⌘⇧3 for the screen, ⌘⇧4 for an area and ⌘⇧5 for the screenshot toolbar. To use these keys for Librelog instead, turn on **Replace the macOS screenshot shortcuts** in **Settings → Screenshots**. Librelog then:
+
+1. Turns off macOS's screenshot shortcuts in its keyboard settings, remembering how they were.
+2. Sets **Capture full screen** to ⌘⇧3, **Capture area** to ⌘⇧4, **Record screen** to ⌘⇧5 and **Record GIF** to ⌘⇧6, remembering your own shortcuts.
+
+The page shows whether macOS's shortcuts are on or replaced by Librelog. If macOS keeps one of them on, the switch stays off and Librelog asks you to turn them off yourself in **System Settings → Keyboard → Keyboard Shortcuts → Screenshots**; **Open Keyboard Settings** takes you there and **Check again** finishes the switch once they are off.
+
+Turning the option off gives macOS its shortcuts back and restores your own. Turning off **Enable screenshots and recordings** does the same, so the Mac is never left without a screenshot shortcut. Turn it off before uninstalling Librelog: otherwise macOS's screenshot shortcuts stay off, and you would turn them back on in **System Settings → Keyboard → Keyboard Shortcuts → Screenshots**.
+
+## During a meeting
+
+You can take screenshots and record the screen while Librelog records a meeting; neither stops the other. Turn off **Record the microphone** and **Record system audio** if the screen recording shouldn't hear the call.
+
+## Limits
+
+- Only in the macOS app downloaded from the website.
+- One capture at a time: a shortcut pressed while a selector is up or a recording runs is ignored, except a record shortcut, which stops the recording.
+- A window recording records the window's area, not the window itself.
+- Long GIFs get a lower frame rate.
+- Turning off **Enable screenshots and recordings** while you record doesn't stop the recording: the record shortcut still stops it.
+
+## Privacy
+
+Captures stay on your Mac, in the folder you chose or in Librelog's data folder. Nothing is uploaded. When you paste or drop a capture somewhere, it goes to that app and wherever that app sends it.
