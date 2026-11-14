@@ -11,6 +11,9 @@ use serde::Deserialize;
 /// `record_cancel`, `make_gif`, `thumbnail`, `copy` and `trash` block and
 /// must run on a worker thread.
 pub trait Native: Send + Sync + 'static {
+    /// False where nothing captures (off macOS): no command then touches
+    /// the disk.
+    fn available(&self) -> bool;
     fn screenshot(&self, request: &str) -> Result<String, AnnotateError>;
     fn record_start(&self, request: &str) -> Result<String, AnnotateError>;
     fn record_stop(&self) -> Result<String, AnnotateError>;
@@ -37,6 +40,10 @@ fn failure(code: &str, message: impl std::fmt::Display) -> AnnotateError {
 }
 
 impl Native for System {
+    fn available(&self) -> bool {
+        cfg!(target_os = "macos")
+    }
+
     fn screenshot(&self, request: &str) -> Result<String, AnnotateError> {
         capture::screenshot(request)
     }
@@ -131,9 +138,11 @@ pub struct RecordStartReply {
     pub scale: f64,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+/// What `record_stop` answers; every field may be missing.
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(default)]
 pub struct RecordStopReply {
-    pub video_path: String,
+    pub video_path: Option<String>,
     #[serde(default)]
     pub duration_ms: u64,
     #[serde(default)]
@@ -154,7 +163,8 @@ pub struct RecordStatus {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct GifReply {
-    pub path: String,
+    #[serde(default)]
+    pub path: Option<String>,
     #[serde(default)]
     pub width_px: u32,
     #[serde(default)]

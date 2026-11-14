@@ -63,34 +63,62 @@ pub struct Index {
     entries: Vec<Entry>,
 }
 
+#[derive(Debug, Default, PartialEq)]
+pub struct Loaded {
+    pub index: Index,
+    /// Where an unreadable index was renamed to.
+    pub set_aside: Option<PathBuf>,
+    /// Entries left out because they could not be read.
+    pub skipped: usize,
+}
+
+/// A capture's file is gone: missing from a folder that is there. A file in
+/// a folder that cannot be reached (an unplugged drive, no permission) is
+/// not gone.
+pub fn gone(path: &Path) -> bool {
+    !path.exists() && path.parent().is_some_and(Path::is_dir)
+}
+
 impl Index {
     /// Reads the index. A missing one is empty; one that cannot be read as an
-    /// index is renamed aside (the second value says where) and an empty one
-    /// takes its place, so it is never silently overwritten.
-    pub fn load(path: &Path) -> std::io::Result<(Self, Option<PathBuf>)> {
+    /// index at all is renamed aside and an empty one takes its place, so it
+    /// is never silently overwritten. Single entries that cannot be read are
+    /// left out and counted.
+    pub fn load(path: &Path) -> std::io::Result<Loaded> {
         let bytes = match std::fs::read(path) {
             Ok(bytes) => bytes,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                return Ok((Self::default(), None));
+                return Ok(Loaded::default());
             }
             Err(error) => return Err(error),
         };
-        match serde_json::from_slice::<File>(&bytes) {
-            Ok(file) => Ok((
-                Self {
-                    entries: file.entries,
-                },
-                None,
-            )),
-            Err(_) => {
-                let millis = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .map_or(0, |since| since.as_millis());
-                let aside = path.with_file_name(format!("index.corrupt-{millis}.json"));
-                std::fs::rename(path, &aside)?;
-                Ok((Self::default(), Some(aside)))
-            }
-        }
+        let entries = serde_json::from_slice::<serde_json::Value>(&bytes)
+            .ok()
+            .and_then(|mut file| match file.get_mut("entries")?.take() {
+                serde_json::Value::Array(entries) => Some(entries),
+                _ => None,
+            });
+        let Some(entries) = entries else {
+            let millis = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |since| since.as_millis());
+            let aside = path.with_file_name(format!("index.corrupt-{millis}.json"));
+            std::fs::rename(path, &aside)?;
+            return Ok(Loaded {
+                set_aside: Some(aside),
+                ..Loaded::default()
+            });
+        };
+        let total = entries.len();
+        let entries: Vec<Entry> = entries
+            .into_iter()
+            .filter_map(|entry| serde_json::from_value(entry).ok())
+            .collect();
+        Ok(Loaded {
+            skipped: total - entries.len(),
+            index: Self { entries },
+            set_aside: None,
+        })
     }
 
     /// Writes it atomically, readable by this user only.
@@ -210,6 +238,14 @@ mod tests {
         }
         let gone = index.entries()[5].clone();
         std::fs::remove_file(&gone.path).unwrap();
+        // A file on a drive that is not plugged in is not gone.
+        let mut unplugged = index.entries()[6].clone();
+        unplugged.path = dir
+            .path()
+            .join("Volumes/USB/a.png")
+            .to_string_lossy()
+            .into_owned();
+        index.update(unplugged.clone());
         // Two more push the two oldest out.
         let overflow = [
             entry(&layout, 1000, true, &user),
@@ -219,13 +255,14 @@ mod tests {
         for entry in overflow {
             dropped.extend(index.add(entry));
         }
-        dropped.extend(index.prune(|path| path.exists()));
+        dropped.extend(index.prune(|path| !super::gone(path)));
         forget(&layout, &dropped);
 
         let ids: Vec<_> = dropped.iter().map(|entry| entry.id.as_str()).collect();
         assert_eq!(ids, [oldest_user.id.as_str(), &oldest_library.id, &gone.id]);
         assert_eq!(index.entries().len(), MAX_ENTRIES - 1);
         assert_eq!(index.entries()[0].created_ms, 1001);
+        assert!(index.get(&unplugged.id).is_some());
         assert!(Path::new(&oldest_user.path).exists());
         assert!(!Path::new(&oldest_library.path).exists());
         assert!(!Path::new(&oldest_user.thumbnail_path).exists());
@@ -238,18 +275,32 @@ mod tests {
         let layout = Layout::new(dir.path().to_path_buf());
         layout.ensure().unwrap();
         let path = layout.index_path();
-        assert_eq!(Index::load(&path).unwrap(), (Index::default(), None));
+        assert_eq!(Index::load(&path).unwrap(), Loaded::default());
 
         std::fs::write(&path, b"{ not json").unwrap();
-        let (index, aside) = Index::load(&path).unwrap();
-        assert!(index.entries().is_empty());
-        let aside = aside.unwrap();
+        let loaded = Index::load(&path).unwrap();
+        assert!(loaded.index.entries().is_empty());
+        let aside = loaded.set_aside.unwrap();
         assert_eq!(std::fs::read(&aside).unwrap(), b"{ not json");
         assert!(!path.exists());
 
         let mut index = Index::default();
         index.add(entry(&layout, 7, true, dir.path()));
         index.save(&path).unwrap();
-        assert_eq!(Index::load(&path).unwrap(), (index, None));
+        assert_eq!(Index::load(&path).unwrap().index, index);
+
+        // One entry that cannot be read leaves the others in place.
+        let mut file: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        file["entries"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({ "id": "cap-8-0000", "kind": "hologram" }));
+        std::fs::write(&path, serde_json::to_vec(&file).unwrap()).unwrap();
+        let loaded = Index::load(&path).unwrap();
+        assert_eq!(
+            (loaded.index, loaded.skipped, loaded.set_aside),
+            (index, 1, None)
+        );
     }
 }

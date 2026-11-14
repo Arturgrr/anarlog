@@ -19,7 +19,18 @@ struct Fake {
     calls: Mutex<Vec<String>>,
     movie: Mutex<Option<PathBuf>>,
     screenshot_delay: Mutex<Option<Duration>>,
+    record_start_delay: Mutex<Option<Duration>>,
+    copy_delay: Mutex<Option<Duration>>,
+    gif_delay: Mutex<Option<Duration>>,
     fail_gif: AtomicBool,
+    garbled_stop: AtomicBool,
+    unavailable: AtomicBool,
+}
+
+fn wait(delay: &Mutex<Option<Duration>>) {
+    if let Some(delay) = *delay.lock().unwrap() {
+        std::thread::sleep(delay);
+    }
 }
 
 fn field(request: &str, name: &str) -> serde_json::Value {
@@ -45,10 +56,13 @@ impl Fake {
 }
 
 impl Native for Fake {
+    fn available(&self) -> bool {
+        !self.unavailable.load(Ordering::SeqCst)
+    }
+
     fn screenshot(&self, request: &str) -> Result<String, AnnotateError> {
-        if let Some(delay) = *self.screenshot_delay.lock().unwrap() {
-            std::thread::sleep(delay);
-        }
+        self.call("screenshot".into());
+        wait(&self.screenshot_delay);
         let out = path_field(request, "out_path");
         image::RgbImage::from_pixel(40, 20, image::Rgb([200, 30, 30]))
             .save(&out)
@@ -63,6 +77,10 @@ impl Native for Fake {
     }
 
     fn record_start(&self, request: &str) -> Result<String, AnnotateError> {
+        wait(&self.record_start_delay);
+        if self.calls().contains(&"record_cancel".to_string()) {
+            return Ok(r#"{"status":"cancelled"}"#.into());
+        }
         let out = path_field(request, "out_path");
         std::fs::write(&out, b"mp4").unwrap();
         *self.movie.lock().unwrap() = Some(out);
@@ -72,6 +90,9 @@ impl Native for Fake {
     }
 
     fn record_stop(&self) -> Result<String, AnnotateError> {
+        if self.garbled_stop.load(Ordering::SeqCst) {
+            return Ok("[\"not what you asked for\"]".into());
+        }
         let movie = self.movie.lock().unwrap().clone().unwrap();
         Ok(serde_json::json!({
             "video_path": movie, "duration_ms": 1500, "width_px": 100, "height_px": 50,
@@ -99,13 +120,19 @@ impl Native for Fake {
 
     fn make_gif(&self, request: &str) -> Result<String, AnnotateError> {
         assert_eq!(field(request, "max_frames"), 900);
+        self.call(format!(
+            "make_gif {}",
+            field(request, "out_path").as_str().unwrap()
+        ));
+        let out = path_field(request, "out_path");
+        std::fs::write(&out, b"GIF8").unwrap();
+        wait(&self.gif_delay);
         if self.fail_gif.load(Ordering::SeqCst) {
             return Err(AnnotateError {
                 code: "io".into(),
                 message: "no frames".into(),
             });
         }
-        let out = path_field(request, "out_path");
         std::fs::write(&out, b"GIF89a").unwrap();
         Ok(serde_json::json!({
             "path": out, "width_px": 72, "height_px": 36, "frames": 10, "fps": 15, "bytes": 6,
@@ -119,6 +146,7 @@ impl Native for Fake {
     }
 
     fn copy(&self, request: &str) -> Result<(), AnnotateError> {
+        wait(&self.copy_delay);
         self.call(format!("copy {}", field(request, "path").as_str().unwrap()));
         Ok(())
     }
@@ -276,6 +304,7 @@ async fn a_screenshot_is_saved_indexed_copied_and_shown_while_a_second_one_is_re
     assert_eq!(
         h.fake.calls(),
         [
+            "screenshot".to_string(),
             format!("copy {}", entry.path),
             format!("card_show {} saved=false", entry.id)
         ]
@@ -491,15 +520,240 @@ async fn deleting_removes_a_library_file_and_trashes_a_saved_one() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn quitting_cancels_a_recording_and_deletes_its_movie() {
+async fn quitting_keeps_a_recording_as_a_movie_and_cancels_a_selector() {
     let h = Harness::new();
+    h.session
+        .start_recording(recording(RecordingOutput::Gif, Some("")))
+        .await
+        .unwrap();
+    h.session.shutdown(Duration::from_secs(5)).await;
+    assert_eq!(h.session.status().phase, CapturePhase::Idle);
+    let listed = h.session.list_captures().unwrap();
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].kind, CaptureKind::Video);
+    assert!(Path::new(&listed[0].path).starts_with(h.downloads()));
+    assert!(Path::new(&listed[0].path).is_file());
+    let calls = h.fake.calls();
+    assert!(
+        !calls
+            .iter()
+            .any(|call| call == "record_cancel" || call.starts_with("make_gif"))
+    );
+
+    *h.fake.record_start_delay.lock().unwrap() = Some(Duration::from_millis(300));
+    let starting = tokio::spawn({
+        let session = h.session.clone();
+        async move {
+            session
+                .start_recording(recording(RecordingOutput::Mp4, None))
+                .await
+        }
+    });
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    h.session.shutdown(Duration::from_secs(5)).await;
+    assert_eq!(starting.await.unwrap().unwrap(), RecordingStart::Cancelled);
+    assert_eq!(h.session.list_captures().unwrap().len(), 1);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn quitting_while_a_gif_is_written_removes_the_partial_gif_when_time_runs_out() {
+    let h = Harness::new();
+    *h.fake.gif_delay.lock().unwrap() = Some(Duration::from_secs(2));
+    h.session
+        .start_recording(recording(RecordingOutput::Gif, None))
+        .await
+        .unwrap();
+    let stopping = tokio::spawn({
+        let session = h.session.clone();
+        async move { session.stop_recording().await }
+    });
+    let partial = tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            if let Some(call) = h
+                .fake
+                .calls()
+                .iter()
+                .find(|call| call.starts_with("make_gif "))
+            {
+                return PathBuf::from(call.trim_start_matches("make_gif "));
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert!(partial.exists());
+    h.session.shutdown(Duration::from_millis(300)).await;
+    assert!(!partial.exists());
+    let _ = stopping.await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_stopped_recording_is_kept_when_its_reply_is_garbled_or_its_folder_goes_away() {
+    let h = Harness::new();
+    h.fake.garbled_stop.store(true, Ordering::SeqCst);
     h.session
         .start_recording(recording(RecordingOutput::Mp4, Some("")))
         .await
         .unwrap();
-    let movie = h.fake.movie.lock().unwrap().clone().unwrap();
-    h.session.shutdown(Duration::from_secs(5)).await;
+    let Ok(CaptureOutcome::Captured { entry }) = h.session.stop_recording().await else {
+        panic!("not captured");
+    };
+    assert!(Path::new(&entry.path).is_file() && Path::new(&entry.path).starts_with(h.downloads()));
+    h.fake.garbled_stop.store(false, Ordering::SeqCst);
+
+    // The GIF fails and its folder vanished: the movie stays in the library.
+    h.fake.fail_gif.store(true, Ordering::SeqCst);
+    let gone = h.dir.path().join("Gone");
+    h.session
+        .start_recording(recording(
+            RecordingOutput::Gif,
+            Some(&gone.to_string_lossy()),
+        ))
+        .await
+        .unwrap();
+    std::fs::remove_dir_all(&gone).unwrap();
+    std::fs::write(&gone, b"now a file").unwrap();
+    let Ok(CaptureOutcome::Captured { entry }) = h.session.stop_recording().await else {
+        panic!("not captured");
+    };
+    assert_eq!(entry.kind, CaptureKind::Video);
+    assert!(entry.in_library && Path::new(&entry.path).is_file());
+    assert!(entry.path.contains("Librelog Recording "));
+    assert!(h.events().iter().any(|event| matches!(
+        event,
+        CaptureEvent::Failed { message } if message.contains(&entry.path)
+    )));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_card_click_counts_only_while_its_card_is_up() {
+    let h = Harness::new();
+    let entry = h.screenshot(ImageFormat::Png, None).await;
+    let copies = || {
+        h.fake
+            .calls()
+            .iter()
+            .filter(|call| call.starts_with("copy "))
+            .count()
+    };
+    let copied = copies();
+    // An id that never had a card, then this card after it left.
+    h.fake
+        .push(r#"{"type":"card_action","id":"cap-1-0000","action":"copy"}"#);
+    h.fake
+        .push(&format!(r#"{{"type":"card_closed","id":"{}"}}"#, entry.id));
+    h.fake.push(&format!(
+        r#"{{"type":"card_action","id":"{}","action":"copy"}}"#,
+        entry.id
+    ));
+    tokio::time::sleep(Duration::from_millis(400)).await;
+    assert_eq!(copies(), copied);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_malformed_event_is_skipped_without_losing_the_rest_of_its_batch() {
+    let h = Harness::new();
+    let entry = h.screenshot(ImageFormat::Png, None).await;
+    h.fake.push("42");
+    h.fake.push(r#"{"type":"from_the_future"}"#);
+    h.fake.push(&format!(
+        r#"{{"type":"card_action","id":"{}","action":"edit"}}"#,
+        entry.id
+    ));
+    tokio::time::sleep(Duration::from_millis(400)).await;
+    assert!(h.events().contains(&CaptureEvent::CardAction {
+        id: entry.id,
+        action: CardActionKind::Edit
+    }));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn saving_a_screenshot_reads_as_finishing_and_a_stop_during_the_selector_cancels() {
+    let h = Harness::new();
+    *h.fake.copy_delay.lock().unwrap() = Some(Duration::from_millis(300));
+    let taking = tokio::spawn({
+        let session = h.session.clone();
+        async move { session.screenshot(screenshot(ImageFormat::Png, None)).await }
+    });
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while h.session.status().phase != CapturePhase::Finishing {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .unwrap();
+    taking.await.unwrap().unwrap();
+
+    *h.fake.record_start_delay.lock().unwrap() = Some(Duration::from_millis(300));
+    let starting = tokio::spawn({
+        let session = h.session.clone();
+        async move {
+            session
+                .start_recording(recording(RecordingOutput::Mp4, None))
+                .await
+        }
+    });
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    assert_eq!(
+        h.session.stop_recording().await.unwrap(),
+        CaptureOutcome::Cancelled
+    );
+    assert_eq!(starting.await.unwrap().unwrap(), RecordingStart::Cancelled);
     assert_eq!(h.session.status().phase, CapturePhase::Idle);
-    assert!(h.fake.calls().contains(&"record_cancel".to_string()));
-    assert!(!movie.exists());
+}
+
+#[cfg(unix)]
+#[tokio::test(flavor = "multi_thread")]
+async fn saving_a_capture_as_itself_by_another_spelling_leaves_it_whole() {
+    let h = Harness::new();
+    let entry = h.screenshot(ImageFormat::Png, Some("")).await;
+    let alias = h.dir.path().join("alias");
+    std::os::unix::fs::symlink(h.downloads(), &alias).unwrap();
+    let name = Path::new(&entry.path).file_name().unwrap();
+    h.session
+        .save_capture_as(&entry.id, &alias.join(name).to_string_lossy())
+        .unwrap();
+    assert_eq!(std::fs::metadata(&entry.path).unwrap().len(), entry.bytes);
+    assert!(entry.bytes > 0);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_folder_that_cannot_be_written_fails_before_the_selector_and_no_temp_is_left() {
+    let h = Harness::new();
+    let blocked = h.dir.path().join("file");
+    std::fs::write(&blocked, b"").unwrap();
+    let error = h
+        .session
+        .screenshot(screenshot(
+            ImageFormat::Png,
+            Some(&blocked.join("Shots").to_string_lossy()),
+        ))
+        .await
+        .unwrap_err();
+    assert!(matches!(error, Error::NotWritable(..)), "{error}");
+    assert!(!h.fake.calls().contains(&"screenshot".to_string()));
+
+    h.screenshot(ImageFormat::Png, None).await;
+    let hidden = std::fs::read_dir(h.dir.path().join("captures/files"))
+        .unwrap()
+        .filter_map(Result::ok)
+        .filter(|file| file.file_name().to_string_lossy().starts_with('.'))
+        .count();
+    assert_eq!(hidden, 0);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn off_macos_nothing_touches_the_disk() {
+    let h = Harness::new();
+    h.fake.unavailable.store(true, Ordering::SeqCst);
+    assert!(h.session.list_captures().unwrap().is_empty());
+    assert!(matches!(
+        h.session
+            .screenshot(screenshot(ImageFormat::Png, None))
+            .await,
+        Err(Error::Unavailable)
+    ));
+    assert!(!h.session.status().available);
+    assert!(!h.dir.path().join("captures").exists());
 }

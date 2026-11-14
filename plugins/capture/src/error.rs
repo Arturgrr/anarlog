@@ -26,6 +26,10 @@ pub enum Error {
     Shortcuts(String),
     #[error("Could not capture the screen: {0}")]
     Native(String),
+    #[error("Librelog cannot save captures in {0}: {1}")]
+    NotWritable(String, std::io::Error),
+    #[error("The capture was kept at {0}, but {1}")]
+    Kept(String, String),
     #[error("Could not write the capture: {0}")]
     Io(#[from] std::io::Error),
     #[error("{0}")]

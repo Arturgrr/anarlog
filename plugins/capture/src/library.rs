@@ -6,13 +6,13 @@ use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use anlg_capture_core::fs::write_atomic;
+use anlg_capture_core::fs::{copy_atomic, move_file, same_file, write_atomic};
 use anlg_capture_core::layout::{THUMBNAIL_LONG_EDGE, new_id, user_folder};
-use anlg_capture_core::{Entry, ImageFormat, Index, Kind, Stamp, names};
+use anlg_capture_core::{Entry, ImageFormat, Index, Kind, Stamp, index, names};
 use base64::Engine;
 
 use crate::Error;
-use crate::session::{Session, move_file, now_ms};
+use crate::session::{Session, now_ms};
 use crate::types::CaptureEntry;
 
 /// The largest edited picture `save_edited` takes, decoded.
@@ -27,15 +27,25 @@ impl Session {
         &self,
         change: impl FnOnce(&mut Index) -> Result<T, Error>,
     ) -> Result<T, Error> {
+        if !self.native.available() {
+            return Err(Error::Unavailable);
+        }
         let _guard = self.index.lock().unwrap_or_else(|e| e.into_inner());
         self.layout.ensure()?;
         let path = self.layout.index_path();
-        let (mut index, aside) = Index::load(&path)?;
-        if let Some(aside) = aside {
+        let loaded = Index::load(&path)?;
+        if let Some(aside) = loaded.set_aside {
             tracing::warn!(aside = %aside.display(), "capture index was unreadable; set aside");
         }
+        if loaded.skipped > 0 {
+            tracing::warn!(
+                skipped = loaded.skipped,
+                "capture index entries could not be read"
+            );
+        }
+        let mut index = loaded.index;
         let before = index.clone();
-        let dropped = index.prune(|path| path.is_file());
+        let dropped = index.prune(|path| !index::gone(path));
         self.forget(&dropped);
         let result = change(&mut index);
         if index != before {
@@ -55,6 +65,9 @@ impl Session {
     }
 
     pub fn list_captures(&self) -> Result<Vec<CaptureEntry>, Error> {
+        if !self.native.available() {
+            return Ok(Vec::new());
+        }
         self.with_index(|index| Ok(index.entries().iter().cloned().map(Into::into).collect()))
     }
 
@@ -98,16 +111,17 @@ impl Session {
         Ok(())
     }
 
-    /// Copies the capture's file to `dest`, an absolute file path. The
-    /// entry stays as it is.
+    /// Copies the capture's file to `dest`, an absolute file path, through a
+    /// hidden file renamed into place. The entry stays as it is; `dest` that
+    /// is the capture's own file, however spelled, is left alone.
     pub fn save_capture_as(&self, id: &str, dest: &str) -> Result<CaptureEntry, Error> {
         let dest = PathBuf::from(dest);
         if !dest.is_absolute() || dest.file_name().is_none() || dest.is_dir() {
             return Err(Error::BadDestination);
         }
         let entry = self.entry(id)?;
-        if Path::new(&entry.path) != dest {
-            std::fs::copy(&entry.path, &dest)?;
+        if !same_file(Path::new(&entry.path), &dest) {
+            copy_atomic(Path::new(&entry.path), &dest)?;
         }
         Ok(entry.into())
     }
@@ -176,8 +190,8 @@ impl Session {
             })?;
         } else {
             let mut cards = self.lock_cards();
-            if let Some(meta) = cards.meta.get(&entry.id).cloned() {
-                cards.meta.insert(saved.id.clone(), meta);
+            if let Some(meta) = cards.meta(&entry.id).cloned() {
+                cards.remember(saved.id.clone(), meta);
             }
             drop(cards);
             self.add_entry(saved.clone())?;
@@ -206,8 +220,7 @@ impl Session {
         }
         let folder = self
             .lock_cards()
-            .meta
-            .get(id)
+            .meta(id)
             .and_then(|meta| meta.folder.clone());
         let folder = user_folder(folder.as_deref(), self.downloads.as_deref())?;
         std::fs::create_dir_all(&folder)?;

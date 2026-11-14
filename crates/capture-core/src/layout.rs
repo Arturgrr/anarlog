@@ -10,6 +10,8 @@ use crate::fs::ensure_private_dir;
 pub const INDEX_FILE: &str = "index.json";
 pub const SHORTCUTS_BACKUP_FILE: &str = "system-shortcuts-backup.plist";
 pub const THUMBNAIL_LONG_EDGE: u32 = 480;
+/// What the native layer writes into before a capture gets its name.
+const TEMP_PREFIXES: [&str; 2] = [".capture-", ".recording-"];
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum PathError {
@@ -52,6 +54,40 @@ impl Layout {
     /// Only for ids this crate made ([`new_id`]); never for one from outside.
     pub fn thumbnail_path(&self, id: &str) -> PathBuf {
         self.thumbs_dir().join(format!("{id}.png"))
+    }
+
+    /// A hidden file in the library for a capture being written:
+    /// `.capture-<random>.<extension>`.
+    pub fn temp_path(&self, extension: &str) -> PathBuf {
+        self.files_dir().join(format!(
+            "{}{}.{extension}",
+            TEMP_PREFIXES[0],
+            uuid::Uuid::new_v4().simple()
+        ))
+    }
+
+    /// Deletes hidden capture files in the library last written more than
+    /// `older_than` ago: what a quit or crash left. Fresh ones may belong to
+    /// a recording another copy of the app (stable or Nightly) is making.
+    pub fn sweep_temps(&self, older_than: std::time::Duration) -> usize {
+        let Ok(files) = std::fs::read_dir(self.files_dir()) else {
+            return 0;
+        };
+        files
+            .filter_map(Result::ok)
+            .filter(|file| {
+                let name = file.file_name().to_string_lossy().into_owned();
+                TEMP_PREFIXES.iter().any(|prefix| name.starts_with(prefix))
+            })
+            .filter(|file| {
+                file.metadata()
+                    .and_then(|metadata| metadata.modified())
+                    .ok()
+                    .and_then(|modified| modified.elapsed().ok())
+                    .is_some_and(|age| age > older_than)
+            })
+            .filter(|file| std::fs::remove_file(file.path()).is_ok())
+            .count()
     }
 
     /// Creates the folders, readable by this user only.
@@ -146,5 +182,42 @@ mod tests {
         assert!(layout.in_library(Path::new("/data/captures/files/a.png")));
         assert!(!layout.in_library(Path::new("/data/captures/files/x/a.png")));
         assert!(!layout.in_library(Path::new("/data/captures/index.json")));
+    }
+
+    #[test]
+    fn only_old_hidden_capture_files_are_swept() {
+        let dir = tempfile::tempdir().unwrap();
+        let layout = Layout::new(dir.path().to_path_buf());
+        layout.ensure().unwrap();
+        let hours_ago = std::time::SystemTime::now() - std::time::Duration::from_secs(3 * 3600);
+        let old = [
+            layout.temp_path("mp4"),
+            layout.files_dir().join(".recording-cap-1-0000.mp4"),
+        ];
+        let kept = [
+            layout.temp_path("gif"),
+            layout
+                .files_dir()
+                .join("Librelog Recording 2026-11-14 at 14.03.22.mp4"),
+        ];
+        for path in old.iter().chain(&kept) {
+            std::fs::write(path, b"mp4").unwrap();
+        }
+        let old_file = |path: &PathBuf| {
+            std::fs::File::options()
+                .write(true)
+                .open(path)
+                .unwrap()
+                .set_modified(hours_ago)
+                .unwrap();
+        };
+        old.iter().for_each(old_file);
+        old_file(&kept[1]);
+        assert_eq!(
+            layout.sweep_temps(std::time::Duration::from_secs(2 * 3600)),
+            2
+        );
+        assert!(old.iter().all(|path| !path.exists()));
+        assert!(kept.iter().all(|path| path.exists()));
     }
 }
