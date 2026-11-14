@@ -17,6 +17,8 @@ export function NativeLabelsSync() {
       openApp: t`Open ${app}`,
       startMeeting: t`Start a new meeting`,
       pasteLastDictation: t`Paste last dictation`,
+      captureArea: t`Capture Area`,
+      recordScreen: t`Record Screen`,
       settings: t`Settings`,
       checkForUpdates: t`Check for Updates`,
       downloadingUpdate: t`Downloading...`,
